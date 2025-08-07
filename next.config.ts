@@ -5,8 +5,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "mheback.onrender.com",
-        pathname: "/media/**", // This is important for dynamic media paths
+        hostname: "api.mhebazar.in",
+        pathname: "/media/**", // This is crucial for Vercel to allow images from api.mhebazar.in
       },
       {
         protocol: "https",
@@ -15,10 +15,6 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "mhebazar.in",
-      },
-      {
-        protocol: "https",
-        hostname: "mheback.onrender.com",
       },
       {
         protocol: "https",
