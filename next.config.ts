@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "api.mhebazar.in",
-        pathname: "/media/**", // This is crucial for Vercel to allow images from api.mhebazar.in
+        pathname: "/media/**", // may be it is needed to be chnaged according to ssl
       },
       {
         protocol: "https",
