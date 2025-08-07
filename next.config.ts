@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
+        protocol: "http",
         hostname: "api.mhebazar.in",
         pathname: "/media/**", // This is crucial for Vercel to allow images from api.mhebazar.in
       },
