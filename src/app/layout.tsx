@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 // A simple version number to force browser to re-fetch the favicon
-const FAVICON_VERSION = 'v1.1'; 
+const FAVICON_VERSION = 'v1.2'; // Changed version to force cache refresh
 
 export const metadata: Metadata = {
   title: "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
@@ -43,6 +43,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Yahaan par hum manual favicon link add kar rahe hain */}
+        <link rel="icon" href={`/favicon.ico?v=${FAVICON_VERSION}`} sizes="any" />
+        {/* Cache-control meta tag to prevent caching */}
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta http-equiv="Pragma" content="no-cache" />
+        <meta http-equiv="Expires" content="0" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-inter`}>
         <Toaster
           position="top-right"
