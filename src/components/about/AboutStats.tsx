@@ -54,8 +54,9 @@ const AnimatedCircle = ({
   duration = 1.5,
 }: AnimatedCircleProps) => {
   const controls = useAnimation();
-  const radius = 60;
-  const stroke = 13;
+  // Adjusted radius and stroke for a larger, thinner circle
+  const radius = 75;
+  const stroke = 8;
   const circumference = 2 * Math.PI * radius;
   const valueRef = useRef<HTMLSpanElement>(null);
   const [ref, inView] = useInView({ triggerOnce: false, threshold: 0.3 });
@@ -98,17 +99,19 @@ const AnimatedCircle = ({
   return (
     <div
       ref={ref}
-      className={`flex flex-col items-center w-40 min-w-[140px] mx-auto transition-transform duration-300 ${
+      // Adjusted width and spacing for the circle container
+      className={`flex flex-col items-center w-56 min-w-[140px] mx-auto transition-transform duration-300 ${
         isSpecial
           ? "hover:scale-[1.1] hover:shadow-[0_8px_30px_rgba(38,71,117,0.4)]"
           : "hover:scale-[1.05] hover:shadow-md"
       }`}
     >
       <div className="relative flex items-center justify-center">
-        <svg width={140} height={140} className="mb-2 block">
+        {/* Adjusted SVG dimensions to match the new radius */}
+        <svg width={160} height={160} className="mb-2 block">
           <circle
-            cx={70}
-            cy={70}
+            cx={80}
+            cy={80}
             r={radius}
             fill="none"
             stroke="#E5ECE3"
@@ -116,21 +119,21 @@ const AnimatedCircle = ({
           />
           {isSpecial ? (
             <circle
-              cx={70}
-              cy={70}
+              cx={80}
+              cy={80}
               r={radius}
               fill="none"
               stroke="#264775"
               strokeWidth={stroke}
               strokeLinecap="round"
-              transform="rotate(-90 70 70)"
+              transform="rotate(-90 80 80)"
               strokeDasharray={circumference}
               strokeDashoffset={0}
             />
           ) : (
             <motion.circle
-              cx={70}
-              cy={70}
+              cx={80}
+              cy={80}
               r={radius}
               fill="none"
               stroke={color}
@@ -138,7 +141,7 @@ const AnimatedCircle = ({
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={circumference}
-              transform="rotate(-90 70 70)"
+              transform="rotate(-90 80 80)"
               animate={controls}
               transition={{ duration, ease: "easeInOut" }}
             />
@@ -158,7 +161,8 @@ const AnimatedCircle = ({
         ) : (
           <span
             ref={valueRef}
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[1.8rem] md:text-3xl font-extrabold"
+            // Adjusted text size for better visual alignment
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl md:text-4xl font-extrabold"
             style={{ color }}
           >
             0{suffix}
@@ -179,10 +183,11 @@ const AnimatedCircle = ({
 const AboutStats = () => (
   <section className="w-full py-16 bg-white">
     <div className="max-w-7xl mx-auto px-4">
-      <h2 className="text-3xl md:text-4xl font-extrabold mb-14 text-center text-gray-900 tracking-tight">
+      {/* Adjusted heading style to be less bold and better aligned */}
+      <h2 className="text-2xl font-semibold mb-10 text-center text-gray-900 tracking-tight md:text-3xl">
         Brand Presence Globally
       </h2>
-      <div className="flex flex-wrap justify-center gap-10 md:gap-14">
+      <div className="flex flex-wrap justify-center gap-10 md:gap-24">
         {stats.map((stat, i) => (
           <AnimatedCircle key={i} {...stat} duration={1.2 + i * 0.2} />
         ))}
