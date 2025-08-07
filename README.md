@@ -191,7 +191,6 @@ This project includes a comprehensive `Rules` file for AI assistance:
 3. Test responsive design on mobile devices
 4. Maintain accessibility standards
 5. Add appropriate error handling
-Thank You
 ---
 
 **MHE Bazar** - Empowering India's Material Handling Equipment Industry
