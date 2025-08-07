@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import Loading from "./loading";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
-import WhatsAppChat from "@/components/elements/WhatsAppChat"; // Import the new WhatsAppChat component
+import WhatsAppChat from "@/components/elements/WhatsAppChat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +40,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Yahaan par hum manual favicon link add kar rahe hain */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-inter`}>
         <Toaster
           position="top-right"
@@ -60,7 +64,7 @@ export default function RootLayout({
               {children}
             </Suspense>
           </SiteLayout>
-          <WhatsAppChat /> {/* Use the imported WhatsAppChat component here */}
+          <WhatsAppChat />
         </UserProvider>
       </body>
     </html>
