@@ -1,0 +1,138 @@
+# Project Rules - AI Development Guide
+
+project:
+  name: MHE Bazar
+  description: >-
+    Comprehensive e-commerce platform for Material Handling Equipment (MHE) in
+    India. Marketplace for forklifts, pallet trucks, stackers, reach trucks, and
+    related equipment, offering sales, rentals, spare parts, and services.
+
+business_domain:
+  industry: Material Handling Equipment & Industrial Machinery
+  target_market: Indian businesses, warehouses, logistics companies
+  core_services:
+    - Equipment sales
+    - Rentals
+    - Spare parts
+    - Maintenance
+    - Training
+  equipment_types:
+    - Forklifts
+    - Pallet Trucks
+    - Stackers
+    - Reach Trucks
+    - Order Pickers
+    - Tow Tractors
+    - Conveyor Systems
+    - Loading Equipment
+
+technical_architecture:
+  framework: Next.js
+  version: 15.3.4
+  language: TypeScript
+  typescript_version: 5.x
+  styling: Tailwind CSS
+  tailwind_version: 4.x
+  components: shadcn/ui
+  state_management: React Hook Form
+  animation: Framer Motion
+  build_tool: Turbopack
+  package_manager: npm
+
+technology_stack:
+  frontend:
+    framework: React
+    version: 19.x
+  middleware:
+    tool: axios
+
+project_structure:
+  src:
+    app:
+      - category: Dynamic category pages
+      - product: Product pages
+      - vendor-listing: Vendor pages
+      - layout.tsx: Root layout
+    components:
+      - elements: Reusable UI elements
+      - forms: Form components
+      - home: Homepage sections
+      - layout: Layout components
+      - products: Product-related components
+      - ui: shadcn/ui components
+      - vendor-listing: Vendor components
+    lib:
+      - utils.ts: Utility functions
+
+platform_info:
+  node:
+    required_version: "18.18.0+ | 20.0.0+"
+  editor: VS Code recommended
+  package_manager: npm
+
+scripts:
+  dev: npm run dev -- Development with Turbopack
+  build: npm run build -- Production build
+  start: npm run start -- Production server
+  lint: npm run lint -- ESLint checking
+
+ai_guidelines:
+  type_safety:
+    - All code must be type-safe
+    - Use explicit return types for functions
+  component_guidelines:
+    - Use functional components with hooks
+    - Component naming: PascalCase for components, camelCase for functions
+  styling:
+    - Use Tailwind CSS utility classes
+    - Use cn() utility for conditional classes
+    - shadcn/ui components for consistent UI elements
+  seo_standards:
+    meta_tags:
+      - Dynamic meta tags for products and categories
+      - Canonical URLs
+    content_strategy:
+      - SEO-friendly URLs
+      - Alt text for images
+
+browsers:
+  modern_browsers:
+    - Chrome
+    - Firefox
+    - Safari
+    - Edge
+  mobile_browsers:
+    - iOS Safari
+    - Android Chrome
+
+common_tasks:
+  - Adding new product categories or equipment types
+  - Creating inquiry/quote forms
+  - Implementing search and filter functionality
+
+security:
+  input_validation:
+    - Sanitize all inputs
+    - Validate on both client and server side
+  authentication:
+    - Secure authentication implementation
+
+mobile_considerations:
+  touch_interactions:
+    - Minimum 44px touch targets for buttons
+    - Swipe gestures for carousels
+
+optimization:
+  core_web_vitals:
+    - LCP < 2.5s
+    - FID < 100ms
+    - CLS < 0.1
+
+maintenance:
+  code:
+    - Regular dependency updates with testing
+    - Performance monitoring
+  content:
+    - Image optimization
+    - Product information accuracy
+
