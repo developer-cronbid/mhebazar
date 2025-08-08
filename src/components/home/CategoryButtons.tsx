@@ -76,7 +76,7 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
         variants={itemVariants}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-[144px] h-[144px] rounded-full bg-gradient-to-b from-blue-100 to-white flex items-center justify-center mb-2 overflow-hidden shadow-md"
+        className="w-[144px] h-[144px] rounded-full bg-gradient-to-b from-blue-100 to-white flex items-center justify-center mb-2 overflow-hidden "
       >
         {fullImageUrl && !showInitials ? (
           <div className="relative w-[80%] h-[80%]">
@@ -160,7 +160,7 @@ export default function CategoriesSection(): JSX.Element {
                 onClick={() => setShowAll(!showAll)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center justify-center w-[144px] h-[144px] rounded-full border-2 border-blue-500 bg-white text-blue-500 hover:bg-blue-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md"
+                className="flex flex-col items-center justify-center w-[144px] h-[144px] rounded-full border-2 border-blue-300 bg-white text-blue-500 hover:bg-blue-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 "
               >
                 <LayoutGrid size={32} className="mb-2" />
                 <span className="text-sm font-medium text-center">

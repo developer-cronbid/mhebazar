@@ -5,15 +5,20 @@ import { Search, Mic } from "lucide-react";
 import { useRef, useState, useEffect, useCallback, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Category, Subcategory } from "./Nav";
+import { motion, AnimatePresence } from "framer-motion";
+
 // Assuming you have a toast library like react-hot-toast imported globally or passed as prop
-// For this example, I'll add a simple console.error for toast.error calls if not available.
 declare const toast: { error: (message: string) => void };
 
-// TypeScript support for SpeechRecognition
+// TypeScript support for SpeechRecognition without 'any'
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition: {
+      new (): SpeechRecognition;
+    };
+    webkitSpeechRecognition: {
+      new (): SpeechRecognition;
+    };
   }
 }
 type SpeechRecognition = any;
@@ -29,6 +34,13 @@ type SearchBarProps = {
 const createSlug = (name: string): string =>
   name.toLowerCase().replace(/\s+/g, "-");
 
+const TYPE_CHOICES = [
+  { name: "New", slug: "new" },
+  { name: "Used", slug: "used" },
+  { name: "Rental", slug: "rental" },
+  { name: "Attachments", slug: "attachments" },
+];
+
 export default function SearchBar({
   categories,
   searchQuery,
@@ -36,7 +48,7 @@ export default function SearchBar({
 }: SearchBarProps): JSX.Element {
   const [listening, setListening] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<
-    Array<(Category | Subcategory) & { type: "category" | "subcategory"; category_name?: string }>
+    Array<(Category | Subcategory) & { type: string; category_name?: string }>
   >([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -48,6 +60,13 @@ export default function SearchBar({
     if (searchQuery.length > 0) {
       const lowerCaseQuery = searchQuery.toLowerCase();
       let combinedSuggestions: (Category | Subcategory)[] = [];
+
+      // Add product types to suggestions
+      TYPE_CHOICES.forEach((type) => {
+        if (type.name.toLowerCase().includes(lowerCaseQuery)) {
+          combinedSuggestions.push({ ...type, id: Date.now() + Math.random(), type: "product_type" });
+        }
+      });
 
       categories.forEach((category) => {
         // Check if category name matches
@@ -73,7 +92,7 @@ export default function SearchBar({
         ).values()
       );
 
-      setSuggestions(uniqueSuggestions.slice(0, 10) as Array<(Category | Subcategory) & { type: "category" | "subcategory"; category_name?: string }>); // Limit suggestions
+      setSuggestions(uniqueSuggestions.slice(0, 10) as Array<(Category | Subcategory) & { type: string; category_name?: string }>);
       setShowSuggestions(true);
     } else {
       setSuggestions([]);
@@ -97,8 +116,6 @@ export default function SearchBar({
   // Start/stop voice recognition
   const handleMicClick = useCallback((): void => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      // Using a toast message instead of alert()
-      // Fallback if toast is not defined
       if (typeof toast !== 'undefined' && toast.error) {
         toast.error("Voice search is not supported in this browser.");
       } else {
@@ -108,7 +125,7 @@ export default function SearchBar({
     }
 
     if (!recognitionRef.current) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.lang = "en-IN";
       recognitionRef.current.interimResults = false;
@@ -118,7 +135,7 @@ export default function SearchBar({
         const transcript: string = event.results[0][0].transcript;
         setSearchQuery(transcript);
         setListening(false);
-        setShowSuggestions(true); // Show suggestions after voice input
+        setShowSuggestions(true);
       };
 
       recognitionRef.current.onerror = (): void => {
@@ -140,7 +157,7 @@ export default function SearchBar({
   }, [listening, setSearchQuery]);
 
   const handleSuggestionClick = useCallback(
-    (item: (Category | Subcategory) & { type: "category" | "subcategory"; category_name?: string }) => {
+    (item: (Category | Subcategory) & { type: string; category_name?: string }) => {
       setShowSuggestions(false);
       setSearchQuery("");
 
@@ -150,6 +167,8 @@ export default function SearchBar({
         const subCategoryItem = item as Subcategory & { category_name: string };
         const categorySlug = createSlug(subCategoryItem.category_name);
         router.push(`/${categorySlug}/${createSlug(subCategoryItem.name)}`);
+      } else if (item.type === "product_type") {
+        router.push(`/${createSlug(item.name)}`);
       }
     },
     [router, setSearchQuery]
@@ -159,56 +178,64 @@ export default function SearchBar({
     <div className="relative w-full" ref={searchBarRef}>
       <input
         type="text"
-        placeholder="Search by Products, Category..."
+        placeholder="Search by Products, Categories, Types..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
-        // Adjusted height to h-8 and padding to match smaller search bar in image
-        className="w-full px-3 py-1 pl-9 pr-9 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm transition-shadow h-8" // Changed h-10 to h-8, text-base to text-sm, adjusted padding
+        className="w-full px-4 py-2 pl-12 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base transition-shadow h-10"
         autoComplete="off"
       />
-      {/* Adjusted icon positioning for smaller input field */}
-      <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" /> {/* Changed left-3 to left-2.5, w-5 h-5 to w-4 h-4 */}
+      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
       <button
         type="button"
-        className={`absolute right-2.5 top-1/2 transform -translate-y-1/2 rounded-full p-0.5 transition
+        className={`absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full p-1 transition
           ${listening ? "bg-green-100 animate-pulse shadow-lg" : "hover:bg-gray-100"}
         `}
         aria-label={listening ? "Stop voice input" : "Start voice input"}
         onClick={handleMicClick}
       >
-        {/* Adjusted icon size */}
-        <Mic className={`w-4 h-4 ${listening ? "text-green-600" : "text-gray-400"}`} /> {/* Changed w-5 h-5 to w-4 h-4 */}
+        <Mic className={`w-5 h-5 ${listening ? "text-green-600" : "text-gray-400"}`} />
         {listening && (
           <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
         )}
       </button>
       {listening && (
-        <div className="absolute right-10 top-1/2 -translate-y-1/2 bg-white border border-green-200 rounded px-2 py-1 text-xs text-green-700 shadow animate-fade-in">
+        <div className="absolute right-12 top-1/2 -translate-y-1/2 bg-white border border-green-200 rounded px-2 py-1 text-xs text-green-700 shadow animate-fade-in">
           Listening...
         </div>
       )}
 
-      {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-          {suggestions.map((item, index) => (
-            <div
-              key={index}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm flex justify-between items-center"
-              onClick={() => handleSuggestionClick(item)}
-            >
-              <span>
-                {item.name}
-                {" "}
-                {'category_name' in item && item.category_name && (
-                  <span className="text-gray-500 text-xs"> (Category: {item.category_name})</span>
-                )}
-              </span>
-              <span className="text-xs text-gray-400 capitalize">{item.type}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {showSuggestions && suggestions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto"
+          >
+            {suggestions.map((item, index) => (
+              <div
+                key={index}
+                className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex justify-between items-center transition border-b border-gray-100 last:border-b-0"
+                onClick={() => handleSuggestionClick(item)}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-800">
+                    {item.name}
+                  </span>
+                  {'category_name' in item && item.category_name && (
+                    <span className="text-gray-500 text-xs"> (Category: {item.category_name})</span>
+                  )}
+                </div>
+                <span className="text-xs text-green-600 capitalize font-semibold bg-green-50 px-2 py-1 rounded-full">
+                  {item.type.replace('_', ' ')}
+                </span>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

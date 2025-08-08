@@ -107,7 +107,7 @@ export default function ExportProductsFeatured() {
       variants={sectionVariants}
       className="w-full mx-auto px-4 py-10"
     >
-      <motion.h2 variants={itemVariants} className="text-3xl font-bold mb-8 text-gray-900">
+      <motion.h2 variants={itemVariants} className="text-3xl font-bold mb-8 text-[#000000]">
         Export Products
       </motion.h2>
       {loading ? (
