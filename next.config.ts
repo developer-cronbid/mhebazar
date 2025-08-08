@@ -12,7 +12,12 @@ const nextConfig: NextConfig = {
         protocol: "https", // Allowing https protocol as well
         hostname: "api.mhebazar.in",
         pathname: "/media/**",
-        pathname: "/media/**",
+      },
+      {
+        protocol: 'https',
+        hostname: 'mheback.onrender.com',
+        port: '',
+        pathname: '/media/**', // Or be more specific if needed
       },
       {
         protocol: "https",

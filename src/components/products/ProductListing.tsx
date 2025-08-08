@@ -111,7 +111,7 @@ function ProductGrid({
 
                   {/* Price */}
                   <div className="flex items-center gap-2">
-                    {(product.hide_price == true || product.price <= 0) ? ( // Changed "0" to 0 for number comparison
+                    {(product.hide_price == true || Number(product.price) <= 0) ? ( // Changed "0" to 0 for number comparison
                       <span className="text-xl md:text-2xl font-bold text-gray-400 tracking-wider">
                         {product.currency} *******
                       </span>
