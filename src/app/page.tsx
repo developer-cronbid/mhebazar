@@ -124,7 +124,7 @@ export default function HomePage() {
       </div>
 
       <div className="w-full bg-[#F5F7F8] ">
-        <div className="max-w-[95vw] mx-auto">
+        <div className="max-w-[100vw] mx-auto">
           <SectionWrapper>
             <TestimonialsCarousel />
           </SectionWrapper>

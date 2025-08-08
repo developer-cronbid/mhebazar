@@ -91,8 +91,8 @@ const AboutPage = () => {
         </div>
       </section>
     <section className="w-full bg-gray-50 py-16">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="bg-white rounded-3xl shadow-xl overflow-hidden mb-8">
+  <div className="max-w-7xl mx-auto  sm:px-6 lg:px-8">
+    <div className="bg-white rounded-3xl overflow-hidden mb-8">
       <div className="relative w-full h-72 md:h-96">
         <Image
           src="/about/three.png"
@@ -103,7 +103,7 @@ const AboutPage = () => {
         />
       </div>
     </div>
-    <div className="p-8 md:p-12 lg:p-16 rounded-3xl  grid md:grid-cols-2 gap-10 md:gap-16">
+    <div className=" md:p-12 lg:p-16 rounded-3xl  grid md:grid-cols-2 gap-10 md:gap-16">
       {/* Vision */}
       <div> 
         <h2 className="text-3xl font-bold mb-5 text-gray-900">Our Vision</h2>
