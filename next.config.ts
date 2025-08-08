@@ -4,9 +4,14 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "http",
+        protocol: "http", // Allowing http protocol
         hostname: "api.mhebazar.in",
-        pathname: "/media/**", // may be it is needed to be chnaged according to ssl
+        pathname: "/media/**",
+      },
+      {
+        protocol: "https", // Allowing https protocol as well
+        hostname: "api.mhebazar.in",
+        pathname: "/media/**",
       },
       {
         protocol: "https",
@@ -32,7 +37,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "ui-avatars.com",
       },
-       {
+      {
         protocol: "http",
         hostname: "localhost",
       },
