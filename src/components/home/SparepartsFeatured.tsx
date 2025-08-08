@@ -6,12 +6,9 @@ import api from "@/lib/api";
 import ProductCard from "@/components/elements/Product";
 import {
   Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel";
 import { motion, useInView } from "framer-motion";
+import Autoplay from "embla-carousel-autoplay";
 
 interface SparePart {
   type: string;
@@ -49,9 +46,11 @@ const itemVariants = {
 export default function SparePartsFeatured() {
   const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scrollIndex, setScrollIndex] = useState(0);
 
   const sectionRef = useRef(null);
   const inView = useInView(sectionRef, { once: true, amount: 0.3 });
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchSpareParts = async () => {
@@ -74,6 +73,17 @@ export default function SparePartsFeatured() {
     fetchSpareParts();
   }, []);
 
+  const handleDotClick = (index: number) => {
+    if (scrollContainerRef.current) {
+      const carouselContent = scrollContainerRef.current;
+      const itemWidth = carouselContent.children[0].clientWidth + 16;
+      carouselContent.scrollTo({
+        left: index * itemWidth,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   return (
     <motion.section
       ref={sectionRef}
@@ -90,43 +100,69 @@ export default function SparePartsFeatured() {
           Loading...
         </div>
       ) : spareParts.length > 0 ? (
-        <div className="relative px-4 sm:px-6">
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-4">
-              {spareParts.map((spare) => (
-                <CarouselItem
-                  key={spare.id}
-                  className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/5"
-                >
-                  <motion.div variants={itemVariants}>
-                    <ProductCard
-                      id={Number(spare.id)}
-                      image={spare.images[0].image}
-                      title={spare.name}
-                      subtitle={spare.subtitle}
-                      price={spare.price}
-                      currency={spare.currency}
-                      directSale={spare.direct_sale}
-                      is_active={spare.is_active}
-                      hide_price={spare.hide_price}
-                      stock_quantity={spare.stock_quantity} 
-                      type={spare.type} 
-                      category_image={spare.image}   
-                                       />
-                  </motion.div>
-                </CarouselItem>
+        <>
+          <div className="relative">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 4000,
+                }),
+              ]}
+              className="w-full"
+            >
+              <div
+                ref={scrollContainerRef}
+                className="flex overflow-x-auto snap-x snap-mandatory -ml-4"
+                style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+                onScroll={(e) => {
+                  const carouselContent = e.currentTarget;
+                  const itemWidth = carouselContent.children[0].clientWidth + 16;
+                  const newIndex = Math.round(carouselContent.scrollLeft / itemWidth);
+                  setScrollIndex(newIndex);
+                }}
+              >
+                {spareParts.map((spare) => (
+                  <div
+                    key={spare.id}
+                    className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/5"
+                  >
+                    <motion.div variants={itemVariants}>
+                      <ProductCard
+                        id={Number(spare.id)}
+                        image={spare.images[0]?.image || "/placeholder-image.png"}
+                        title={spare.name}
+                        subtitle={spare.subtitle}
+                        price={spare.price}
+                        currency={spare.currency}
+                        directSale={spare.direct_sale}
+                        is_active={spare.is_active}
+                        hide_price={spare.hide_price}
+                        stock_quantity={spare.stock_quantity} 
+                        type={spare.type} 
+                        category_image={spare.image}
+                      />
+                    </motion.div>
+                  </div>
+                ))}
+              </div>
+            </Carousel>
+            <div className="flex justify-center space-x-2 mt-4">
+              {spareParts.map((_, idx) => (
+                <span
+                  key={idx}
+                  onClick={() => handleDotClick(idx)}
+                  className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
+                    idx === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"
+                  }`}
+                ></span>
               ))}
-            </CarouselContent>
-            <CarouselPrevious className="flex -left-4 sm:-left-6" />
-            <CarouselNext className="flex -right-4 sm:-right-6" />
-          </Carousel>
-        </div>
+            </div>
+          </div>
+        </>
       ) : (
         <div className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.04)]">
           <Image

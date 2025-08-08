@@ -1,8 +1,8 @@
 "use client";
 
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// Removed ArrowLeft, ArrowRight as navigation buttons are removed
 import { useCallback, useEffect, useState } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
@@ -10,15 +10,9 @@ export default function ReviewCarousel() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [api, setApi] = useState<any>(null);
   const [current, setCurrent] = useState(0);
-  // const [read, setRead] = useState(false);
 
-  const scrollPrev = useCallback(() => {
-    api?.scrollPrev();
-  }, [api]);
-
-  const scrollNext = useCallback(() => {
-    api?.scrollNext();
-  }, [api]);
+  // Removed scrollPrev and scrollNext functions since arrow buttons are removed
+  // Removed the keyboard navigation useEffect
 
   useEffect(() => {
     if (!api) return;
@@ -34,29 +28,12 @@ export default function ReviewCarousel() {
     };
   }, [api]);
 
-  // Add keyboard navigation
-  useEffect(() => {
-    const handleKeyDown = (e: { key: string }) => {
-      if (e.key === "ArrowLeft") {
-        scrollPrev();
-      } else if (e.key === "ArrowRight") {
-        scrollNext();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [scrollPrev, scrollNext]);
-
   const reviews = [
     {
       name: "Mr. Manohari Lal",
       role: "M/s. A.M. Enterprises",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/photo/M_s. AM Enterprises, Mr. Manohari Lal.png",
+        "/css/newassets/imgs/page/testimonials/photo/M_s. AM Enterprises, Mr. Manohari Lal.png",
       fallback: "ML",
       content: (
         <div>
@@ -98,7 +75,7 @@ export default function ReviewCarousel() {
       name: "Mr. Nitish Hirve",
       role: "Operations Head",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/photo/M_s. Asmita Engineering, Mr. Nitish Hirve.png",
+        "/css/newassets/imgs/page/testimonials/photo/M_s. Asmita Engineering, Mr. Nitish Hirve.png",
       fallback: "NH",
       content: (
         <div>
@@ -132,7 +109,7 @@ export default function ReviewCarousel() {
       name: "Mr. Pathan Nawaz",
       role: "M/s. R S Global",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/photo/M_s. R S Global, Mr. Pathan Nawaz.png",
+        "/css/newassets/imgs/page/testimonials/photo/M_s. R S Global, Mr. Pathan Nawaz.png",
       fallback: "NH",
       content: (
         <div>
@@ -189,7 +166,7 @@ export default function ReviewCarousel() {
       name: "Mr. Perumal",
       role: "M/s. Prime Forklifters Pvt. Ltd.",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/e-forklifters-pvt-ltd-mr-perumal.webp",
+        "/css/newassets/imgs/page/testimonials/e-forklifters-pvt-ltd-mr-perumal.webp",
       fallback: "PN",
       content: (
         <div>
@@ -256,7 +233,7 @@ export default function ReviewCarousel() {
       name: "Customer",
       role: "",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/ting-engineers-mr-prasad-dhaniwale.webp",
+        "/css/newassets/imgs/page/testimonials/ting-engineers-mr-prasad-dhaniwale.webp",
       fallback: "PN",
       content: (
         <div>
@@ -323,7 +300,7 @@ export default function ReviewCarousel() {
       name: "Customer",
       role: "",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/s-prt-enterprises-mr-ram-thanash.webp",
+        "/css/newassets/imgs/page/testimonials/s-prt-enterprises-mr-ram-thanash.webp",
       fallback: "PN",
       content: (
         <div>
@@ -355,7 +332,7 @@ export default function ReviewCarousel() {
       name: "Customer",
       role: "",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/r-mills-pvt-ltd-mr-bharat-ganesh.webp",
+        "/css/newassets/imgs/page/testimonials/r-mills-pvt-ltd-mr-bharat-ganesh.webp",
       fallback: "PN",
       content: (
         <div>
@@ -401,7 +378,7 @@ export default function ReviewCarousel() {
       name: "Customer",
       role: "",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/mbey-developers-mr-manoj-shekhawat.webp",
+        "/css/newassets/imgs/page/testimonials/mbey-developers-mr-manoj-shekhawat.webp",
       fallback: "PN",
       content: (
         <div>
@@ -458,7 +435,7 @@ export default function ReviewCarousel() {
       name: "Mr. Rajappa ",
       role: "Sunray Material Handling Pvt. Ltd.",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/rial-handling-pvt-ltd-mr-rajappa.webp",
+        "/css/newassets/imgs/page/testimonials/rial-handling-pvt-ltd-mr-rajappa.webp",
       fallback: "PN",
       content: (
         <div>
@@ -516,7 +493,7 @@ export default function ReviewCarousel() {
       name: "Mrs. Divya Roy,",
       role: "M/s. Watrana Traction Pvt. Ltd.",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/a-traction-pvt-ltd-mrs-divya-roy.webp",
+        "/css/newassets/imgs/page/testimonials/a-traction-pvt-ltd-mrs-divya-roy.webp",
       fallback: "PN",
       content: (
         <div>
@@ -557,10 +534,10 @@ export default function ReviewCarousel() {
       ),
     },
     {
-      name: "Customer",
-      role: "",
+      name: "Mr. Jayanta Dutta",
+      role: "MAC SPARES",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/mr-jayanta-dutta-mac-spares.webp",
+        "/css/newassets/imgs/page/testimonials/mr-jayanta-dutta-mac-spares.webp",
       fallback: "PN",
       content: (
         <div>
@@ -594,7 +571,7 @@ export default function ReviewCarousel() {
       name: "Mr. Xavier",
       role: "M/s. Asian Engineering Group",
       avatar:
-        "https://www.mhebazar.in/css/newassets/imgs/page/testimonials/engineering-group-mr-benzie-xavier.webp",
+        "/css/newassets/imgs/page/testimonials/engineering-group-mr-benzie-xavier.webp",
       fallback: "PN",
       content: (
         <div>
@@ -632,46 +609,17 @@ export default function ReviewCarousel() {
     },
   ];
 
-  const getCardStyles = (index: number) => {
-    const isActive = current === index;
-    const isPrev = (current - 1 + reviews.length) % reviews.length === index;
-    const isNext = (current + 1) % reviews.length === index;
-
-    if (isActive) {
-      return {
-        transform: 'scale(1.05)',
-        opacity: 1,
-        zIndex: 10,
-        backgroundColor: 'white',
-        boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-      };
-    } else if (isPrev || isNext) {
-      return {
-        transform: 'scale(0.9)',
-        opacity: 0.7,
-        zIndex: 5,
-        backgroundColor: '#f8f9fa',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-      };
-    } else {
-      return {
-        transform: 'scale(0.8)',
-        opacity: 0.4,
-        zIndex: 1,
-        backgroundColor: '#f1f3f4',
-        boxShadow: 'none',
-      };
-    }
-  };
+  // Removed getCardStyles as the design is now fixed and responsive via Tailwind
+  // and the carousel center and side items are handled by the Carousel component itself.
 
   return (
-    <section className="w-full overflow-hidden bg-white py-16 font-general">
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="w-full py-16 font-general">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 text-center sm:mb-12 flex items-center justify-between">
           <h2 className="text-3xl font-bold text-black">
             Testimonials
           </h2>
-          <a href="#" className="text-green-600 text-sm hover:underline">
+          <a href="/testimonials" className="text-[#5CA131] text-sm hover:underline">
             View more
           </a>
         </div>
@@ -685,100 +633,65 @@ export default function ReviewCarousel() {
               loop: true,
             }}>
             <CarouselContent className="flex items-center">
-              {reviews.map((review, index) => {
-                const cardStyles = getCardStyles(index);
-                const isActive = current === index;
-
-                return (
-                  <CarouselItem
-                    key={index}
-                    className="basis-full md:basis-1/3 flex justify-center py-12">
-                    <div
-                      className="w-full mx-2 rounded-lg p-6 transition-all duration-500 ease-out border"
-                      style={cardStyles}>
-
-                      {/* Quote icon */}
+              {reviews.map((review, index) => (
+                <CarouselItem
+                  key={index}
+                  // Updated the basis to display one main card and parts of the side cards,
+                  // while maintaining responsiveness.
+                  className="basis-full md:basis-[60%] lg:basis-[40%] flex justify-center py-12"
+                >
+                  <div
+                    // Set fixed width and height as requested
+                    className="w-[850px] max-w-[90vw] h-[256px] bg-white rounded-2xl p-6 md:p-8 lg:p-10 shadow-lg border border-gray-100 flex flex-col justify-between"
+                  >
+                    <div>
                       <div className="mb-4">
-                        <svg width="32" height="24" viewBox="0 0 32 24" fill="none" className="text-gray-400">
-                          <path d="M0 12.8V24h11.2V12.8H5.6c0-3.11 2.53-5.6 5.6-5.6V0C4.98 0 0 4.98 0 12.8zM20.8 12.8V24H32V12.8h-5.6c0-3.11 2.53-5.6 5.6-5.6V0c-6.22 0-11.2 4.98-11.2 12.8z" fill="currentColor" />
+                        <svg
+                          width="32"
+                          height="24"
+                          viewBox="0 0 32 24"
+                          fill="none"
+                          className="text-[#3E7451]"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M0 12.8V24h11.2V12.8H5.6c0-3.11 2.53-5.6 5.6-5.6V0C4.98 0 0 4.98 0 12.8zM20.8 12.8V24H32V12.8h-5.6c0-3.11 2.53-5.6 5.6-5.6V0c-6.22 0-11.2 4.98-11.2 12.8z"
+                            fill="currentColor"
+                          />
                         </svg>
                       </div>
-
-                      {/* Content */}
-                      <div className={`mb-6 text-gray-700 text-sm leading-relaxed ${isActive ? 'line-clamp-4' : 'line-clamp-4'}`}>
+                      <div className="mb-6 text-gray-700 text-base leading-relaxed line-clamp-4">
                         {typeof review.content === 'string' ? (
                           <p>{review.content}</p>
                         ) : (
                           <div className="space-y-2">
-                            {review.content.props.children.slice(0, isActive ? undefined : 2)}
+                            {/* Render only the first paragraph for the compact view */}
+                            <p>{review.content.props.children[0]}</p>
                           </div>
                         )}
                       </div>
-
-                      {/* User info */}
-                      <div className="flex items-center">
-                        <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
-                          <AvatarImage src={review.avatar} alt={review.name} />
-                          <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
-                            {review.fallback}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-semibold text-black">
-                            {review.name}
-                          </h3>
-                          {review.role && (
-                            <p className="text-xs text-gray-500">
-                              {review.role}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Read More Dialog */}
-                      {(
-                        <div className="mt-4">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <button className="text-green-600 text-sm hover:underline">
-                                Read More
-                              </button>
-                            </DialogTrigger>
-                            <DialogContent className="bg-white w-full max-w-2xl ">
-                              <div className="mb-4 ">
-                                <svg width="32" height="24" viewBox="0 0 32 24" fill="none" className="text-gray-400 mb-4">
-                                  <path d="M0 12.8V24h11.2V12.8H5.6c0-3.11 2.53-5.6 5.6-5.6V0C4.98 0 0 4.98 0 12.8zM20.8 12.8V24H32V12.8h-5.6c0-3.11 2.53-5.6 5.6-5.6V0c-6.22 0-11.2 4.98-11.2 12.8z" fill="currentColor" />
-                                </svg>
-                                <div className="mb-6 text-gray-700 text-sm leading-relaxed">
-                                  {review.content}
-                                </div>
-                                <div className="flex items-center">
-                                  <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
-                                    <AvatarImage src={review.avatar} alt={review.name} />
-                                    <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
-                                      {review.fallback}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="ml-3">
-                                    <h3 className="text-sm font-semibold text-black">
-                                      {review.name}
-                                    </h3>
-                                    {review.role && (
-                                      <p className="text-xs text-gray-500">
-                                        {review.role}
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      )}
                     </div>
-                  </CarouselItem>
-                );
-              })}
+                    <div className="flex items-center mt-auto">
+                      <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
+                        <AvatarImage src={review.avatar} alt={review.name} />
+                        <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
+                          {review.fallback}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="ml-3">
+                        <h3 className="text-base font-semibold text-gray-800">
+                          {review.name}
+                        </h3>
+                        {review.role && (
+                          <p className="text-sm text-gray-500">
+                            {review.role}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
             </CarouselContent>
           </Carousel>
 
@@ -788,34 +701,16 @@ export default function ReviewCarousel() {
               <button
                 key={index}
                 onClick={() => api?.scrollTo(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${current === index
-                    ? 'bg-[#5CA131]'
-                    : index === 1
-                      ? 'bg-gray-400'
-                      : 'bg-gray-300'
-                  }`}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  current === index ? 'bg-[#5CA131]' : 'bg-gray-300'
+                }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
-          </div>
-
-          {/* Navigation Arrows */}
-          <div className="absolute top-1/2 -translate-y-1/2 left-4 right-4 flex justify-between pointer-events-none">
-            <button
-              onClick={scrollPrev}
-              className="pointer-events-auto rounded-full bg-white p-3 shadow-lg hover:shadow-xl transition-shadow duration-200 border border-gray-200"
-              aria-label="Previous slide">
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
-            </button>
-            <button
-              onClick={scrollNext}
-              className="pointer-events-auto rounded-full bg-white p-3 shadow-lg hover:shadow-xl transition-shadow duration-200 border border-gray-200"
-              aria-label="Next slide">
-              <ArrowRight className="h-5 w-5 text-gray-600" />
-            </button>
           </div>
         </div>
       </div>
     </section>
   );
+
 }

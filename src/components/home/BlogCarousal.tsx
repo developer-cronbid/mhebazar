@@ -8,12 +8,9 @@ import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from '@/components/ui/carousel';
 import { ArrowUpRight } from 'lucide-react';
+import Autoplay from "embla-carousel-autoplay";
 
 // Define the structure of a blog post based on your API response
 interface BlogPost {
@@ -35,18 +32,15 @@ export function BlogCarousel() {
   const [blogs, setBlogs] = React.useState<BlogPost[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [scrollIndex, setScrollIndex] = React.useState(0);
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
-  // FIX: This function now correctly assumes the API returns a full URL,
-  // extracts the filename, and builds the URL from the public folder.
   const getImageUrl = (imagePath: string | null) => {
     if (!imagePath) {
       return "/mhe-logo.png"; // Fallback image
     }
     
-    // Extract the filename from the URL provided by the API
     const filename = imagePath.split('/').pop();
-
-    // Construct the correct URL from the Next.js public directory
     return `/css/asset/blogimg/${filename}`;
   };
 
@@ -68,13 +62,26 @@ export function BlogCarousel() {
         setLoading(false);
       }
     };
-
     fetchBlogs();
   }, []);
+
+  const handleDotClick = (index: number) => {
+    if (scrollContainerRef.current) {
+      const carouselContent = scrollContainerRef.current;
+      const itemWidth = carouselContent.children[0].clientWidth + 16;
+      carouselContent.scrollTo({
+        left: index * itemWidth,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   if (loading) {
     return (
       <div className="w-full max-w-6xl mx-auto px-4 py-8">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
+          Our Blogs
+        </h2>
         <div className="flex space-x-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex-1 p-1">
@@ -87,7 +94,14 @@ export function BlogCarousel() {
   }
 
   if (error) {
-    return <p className="text-center text-red-500">{error}</p>;
+    return (
+      <div className="w-full px-4 py-8">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
+          Our Blogs
+        </h2>
+        <p className="text-center text-red-500">{error}</p>
+      </div>
+    );
   }
 
   return (
@@ -100,11 +114,29 @@ export function BlogCarousel() {
           align: 'start',
           loop: true,
         }}
+        plugins={[
+          Autoplay({
+            delay: 4000,
+          }),
+        ]}
         className="w-full max-w-none"
       >
-        <CarouselContent className="-ml-4">
+        <div
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto snap-x snap-mandatory -ml-4"
+          style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+          onScroll={(e) => {
+            const carouselContent = e.currentTarget;
+            const itemWidth = carouselContent.children[0].clientWidth + 16;
+            const newIndex = Math.round(carouselContent.scrollLeft / itemWidth);
+            setScrollIndex(newIndex);
+          }}
+        >
           {blogs.map((blog) => (
-            <CarouselItem key={blog.id} className="pl-4 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+            <div
+              key={blog.id}
+              className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+            >
               <Card className="bg-white border-0 rounded-2xl overflow-hidden h-full flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 mx-2">
                 <CardContent className="flex flex-col p-0 flex-grow">
                   <div className="relative w-full h-48 overflow-hidden rounded-t-2xl">
@@ -134,12 +166,21 @@ export function BlogCarousel() {
                   </div>
                 </CardContent>
               </Card>
-            </CarouselItem>
+            </div>
           ))}
-        </CarouselContent>
-        <CarouselPrevious className="absolute left-[-20px] top-1/2 -translate-y-1/2 sm:flex hidden bg-white border-gray-200 hover:bg-gray-50 text-gray-600 hover:text-gray-900" />
-        <CarouselNext className="absolute right-[-20px] top-1/2 -translate-y-1/2 sm:flex hidden bg-white border-gray-200 hover:bg-gray-50 text-gray-600 hover:text-gray-900" />
+        </div>
       </Carousel>
+      <div className="flex justify-center space-x-2 mt-4">
+        {blogs.map((_, idx) => (
+          <span
+            key={idx}
+            onClick={() => handleDotClick(idx)}
+            className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
+              idx === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"
+            }`}
+          ></span>
+        ))}
+      </div>
     </div>
   );
 }

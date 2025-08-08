@@ -12,7 +12,6 @@ const nextConfig: NextConfig = {
         protocol: "https", // Allowing https protocol as well
         hostname: "api.mhebazar.in",
         pathname: "/media/**",
-        pathname: "/media/**",
       },
       {
         protocol: "https",
