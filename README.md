@@ -6,7 +6,7 @@ a
 
 ## 🚀 Technology Stack
 
-- **Framework**: Next.js 15.3.4 with App Router 
+- **Framework**: Next.js 15.3.4 with App Router eslint
 - **Language**: TypeScript 5.x (Strict mode)
 - **Styling**: Tailwind CSS 4.x with shadcn/ui components
 - **State Management**: React Hook Form for forms
