@@ -135,11 +135,11 @@ export function BlogCarousel() {
           {blogs.map((blog) => (
             <div
               key={blog.id}
-              className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
+              className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3"
             >
               <Card className="bg-white border-0 rounded-2xl overflow-hidden h-full flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 mx-2">
                 <CardContent className="flex flex-col p-0 flex-grow">
-                  <div className="relative w-full h-48 overflow-hidden rounded-t-2xl">
+                  <div className="relative w-full aspect-video overflow-hidden rounded-t-2xl">
                     <Image
                       src={getImageUrl(blog.image1)}
                       alt={blog.blog_title}

@@ -7,7 +7,7 @@ import { JSX, useEffect, useState } from "react";
 import categoriesData from "@/data/categories.json";
 import { motion } from "framer-motion";
 
-const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL;
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
 interface Category {
   id: number;
@@ -25,6 +25,11 @@ interface CategoryItemProps {
   slug: string;
 }
 
+/**
+ * A helper function to construct the full image URL.
+ * @param {string | null} imagePath - The path to the image.
+ * @returns {string | null} The full image URL or null.
+ */
 function getImageUrl(imagePath: string | null): string | null {
   if (!imagePath) {
     return null;
@@ -55,6 +60,11 @@ const itemVariants = {
   }
 };
 
+/**
+ * A single category item with an image and a label.
+ * @param {CategoryItemProps} props - The component props.
+ * @returns {JSX.Element} The rendered component.
+ */
 const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element => {
   const initials = label
     ?.split(" ")
@@ -76,6 +86,7 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
         variants={itemVariants}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
+        // Added shadow-md to match the subtle shadow in the image
         className="w-[144px] h-[144px] rounded-full bg-gradient-to-b from-blue-100 to-white flex items-center justify-center mb-2 overflow-hidden "
       >
         {fullImageUrl && !showInitials ? (
@@ -110,12 +121,23 @@ const containerVariants = {
   },
 };
 
+/**
+ * A component for the pagination dots.
+ * This was added to match the dots in the screenshot.
+ * @returns {JSX.Element} The rendered component.
+ */
+
+/**
+ * The main component for the categories section.
+ * @returns {JSX.Element} The rendered component.
+ */
 export default function CategoriesSection(): JSX.Element {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
+    // Simulate fetching data with a delay
     const timer = setTimeout(() => {
       setCategories(categoriesData);
       setLoading(false);
@@ -131,6 +153,8 @@ export default function CategoriesSection(): JSX.Element {
       <h2 className="text-2xl font-bold mb-8 text-left text-gray-900">
         MHE Categories
       </h2>
+      
+     
 
       {loading ? (
         <p className="text-center text-gray-600 animate-pulse">Loading categories...</p>

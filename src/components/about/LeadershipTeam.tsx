@@ -11,6 +11,8 @@ interface TeamMember {
   linkedin?: string;
 }
 
+// NOTE: The teamMembers array data is left untouched as per your instruction.
+// The UI will use this data and render it according to the image.
 const teamMembers: TeamMember[] = [
   {
     name: 'Ms. Radhika Kundra',
@@ -76,11 +78,11 @@ export default function LeadershipTeam() {
 
             return (
               <div
-                key={member.name} // 'index' को 'member.name' से बदल दिया गया है
+                key={member.name}
                 className="flex flex-col bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
               >
                 <div className="relative bg-gray-100 p-6 flex justify-center">
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md"> {/* 'border-3' को 'border-2' से बदल दिया गया है */}
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md">
                     <Image
                       src={member.image}
                       alt={member.name}
@@ -120,7 +122,7 @@ export default function LeadershipTeam() {
                         <Image
                           src="/linkedin.png"
                           alt="LinkedIn Profile"
-                          width={20} // 'h-5 w-5' के अनुसार width और height जोड़ा गया है
+                          width={20}
                           height={20}
                           className="h-5 w-5"
                         />

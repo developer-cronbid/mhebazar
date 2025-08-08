@@ -474,10 +474,10 @@ export default function Navbar(): JSX.Element {
                   <Link
                     key={index}
                     href={link.href}
-                    className={`px-4 py-3 text-sm font-normal transition ${
+                    className={`px-4 py-3 text-sm transition ${
                       pathname === link.href
                         ? "text-gray-900 font-bold"
-                        : "text-gray-700 hover:text-gray-900"
+                        : "text-gray-700 hover:text-gray-900 font-normal"
                     }`}
                   >
                     {link.name}
@@ -493,7 +493,7 @@ export default function Navbar(): JSX.Element {
                 className={`flex items-center gap-2 px-4 py-3 transition ${
                   pathname === "/contact"
                     ? "text-gray-900 font-bold"
-                    : "text-gray-600 hover:text-gray-900"
+                    : "text-gray-600 hover:text-gray-900 font-normal"
                 }`}
               >
                 <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
@@ -516,7 +516,7 @@ export default function Navbar(): JSX.Element {
                     className={`flex items-center gap-2 px-4 py-3 transition ${
                       pathname.includes("/vendor/dashboard")
                         ? "text-gray-900 font-bold"
-                        : "text-gray-600 hover:text-gray-900"
+                        : "text-gray-600 hover:text-gray-900 font-normal"
                     }`}
                   >
                     <User className="w-5 h-5" />
@@ -532,7 +532,7 @@ export default function Navbar(): JSX.Element {
                     className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
                       pathname === "/become-a-vendor"
                         ? "text-gray-900 font-bold"
-                        : "text-gray-600 hover:text-gray-900"
+                        : "text-gray-600 hover:text-gray-900 font-normal"
                     }`}
                   >
                     <User className="w-5 h-5" />
@@ -548,7 +548,7 @@ export default function Navbar(): JSX.Element {
                   className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
                     pathname === "/become-a-vendor"
                       ? "text-gray-900 font-bold"
-                      : "text-gray-600 hover:text-gray-900"
+                      : "text-gray-600 hover:text-gray-900 font-normal"
                   }`}
                 >
                   <User className="w-5 h-5" />
@@ -561,7 +561,7 @@ export default function Navbar(): JSX.Element {
                 className={`flex items-center gap-2 px-4 py-3 transition ${
                   pathname === "/services/subscription-plan"
                     ? "text-gray-900 font-bold"
-                    : "text-gray-600 hover:text-gray-900"
+                    : "text-gray-600 hover:text-gray-900 font-normal"
                 }`}
               >
                 <Tag className="w-5 h-5" />
@@ -710,7 +710,7 @@ export default function Navbar(): JSX.Element {
                       href={link.href}
                       className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
                         pathname === link.href
-                          ? "text-gray-900 bg-gray-50"
+                          ? "text-gray-900 bg-gray-50 font-bold"
                           : "text-gray-700 hover:bg-gray-50"
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
@@ -722,7 +722,7 @@ export default function Navbar(): JSX.Element {
                     href="/vendor-listing"
                     className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${
                       pathname === "/vendor-listing"
-                        ? "text-gray-900 bg-gray-50"
+                        ? "text-gray-900 bg-gray-50 font-bold"
                         : "hover:bg-gray-50"
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
@@ -741,7 +741,7 @@ export default function Navbar(): JSX.Element {
                     href="/contact"
                     className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
                       pathname === "/contact"
-                        ? "text-gray-900 bg-gray-50"
+                        ? "text-gray-900 bg-gray-50 font-bold"
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
@@ -757,7 +757,7 @@ export default function Navbar(): JSX.Element {
                       href="/vendor/dashboard"
                       className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${
                         pathname.includes("/vendor/dashboard")
-                          ? "text-gray-900 bg-gray-50"
+                          ? "text-gray-900 bg-gray-50 font-bold"
                           : "text-gray-700 hover:bg-gray-50"
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
@@ -780,7 +780,7 @@ export default function Navbar(): JSX.Element {
                     href="/services/subscription-plan"
                     className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
                       pathname === "/services/subscription-plan"
-                        ? "text-gray-900 bg-gray-50"
+                        ? "text-gray-900 bg-gray-50 font-bold"
                         : "text-gray-700 hover:bg-gray-50"
                     }`}
                     onClick={() => setMobileMenuOpen(false)}

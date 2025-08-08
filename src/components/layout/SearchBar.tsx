@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Category, Subcategory } from "./Nav";
 import { motion, AnimatePresence } from "framer-motion";
 
+
 // Assuming you have a toast library like react-hot-toast imported globally or passed as prop
 declare const toast: { error: (message: string) => void };
 
@@ -30,6 +31,16 @@ type SearchBarProps = {
   setSearchQuery: (value: string) => void;
 };
 
+// Define Product interface based on API response
+interface Product {
+  id: number;
+  name: string;
+  category_name: string;
+  subcategory_name: string;
+}
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 // Helper function to create slugs
 const createSlug = (name: string): string =>
   name.toLowerCase().replace(/\s+/g, "-");
@@ -48,56 +59,84 @@ export default function SearchBar({
 }: SearchBarProps): JSX.Element {
   const [listening, setListening] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<
-    Array<(Category | Subcategory) & { type: string; category_name?: string }>
+    Array<
+      (Category | Subcategory | Product) & {
+        type: string;
+        category_name?: string;
+      }
+    >
   >([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Filter suggestions based on search query
+  // Filter suggestions based on search query and fetch from API
   useEffect(() => {
-    if (searchQuery.length > 0) {
-      const lowerCaseQuery = searchQuery.toLowerCase();
-      let combinedSuggestions: (Category | Subcategory)[] = [];
+    const handler = setTimeout(async () => {
+      if (searchQuery.length > 0) {
+        const lowerCaseQuery = searchQuery.toLowerCase();
+        let combinedSuggestions: (Category | Subcategory | Product)[] = [];
 
-      // Add product types to suggestions
-      TYPE_CHOICES.forEach((type) => {
-        if (type.name.toLowerCase().includes(lowerCaseQuery)) {
-          combinedSuggestions.push({ ...type, id: Date.now() + Math.random(), type: "product_type" });
+        // Fetch products directly from the API endpoint
+        let productsFromApi: Product[] = [];
+        try {
+          const response = await fetch(`${API_BASE_URL}/products/?search=${lowerCaseQuery}`);
+          if (response.ok) {
+            const data = await response.json();
+            productsFromApi = data.results || [];
+          } else {
+            console.error("API request failed with status:", response.status);
+          }
+        } catch (error) {
+          console.error("Error fetching products:", error);
         }
-      });
 
-      categories.forEach((category) => {
-        // Check if category name matches
-        if (category.name.toLowerCase().includes(lowerCaseQuery)) {
-          combinedSuggestions.push({ ...category, type: "category" });
-        }
-
-        // Check if any subcategory name matches
-        category.subcategories.forEach((subcategory) => {
-          if (subcategory.name.toLowerCase().includes(lowerCaseQuery)) {
-            combinedSuggestions.push({
-              ...subcategory,
-              type: "subcategory",
-              category_name: category.name, // Add parent category name for display
-            });
+        // Add product types to suggestions
+        TYPE_CHOICES.forEach((type) => {
+          if (type.name.toLowerCase().includes(lowerCaseQuery)) {
+            combinedSuggestions.push({ ...type, id: Date.now() + Math.random(), type: "product_type" });
           }
         });
-      });
 
-      const uniqueSuggestions = Array.from(
-        new Map(
-          combinedSuggestions.map((item) => [`${item.type}-${item.name}`, item])
-        ).values()
-      );
+        // Add categories to suggestions
+        categories.forEach((category) => {
+          if (category.name.toLowerCase().includes(lowerCaseQuery)) {
+            combinedSuggestions.push({ ...category, type: "category" });
+          }
+          category.subcategories.forEach((subcategory) => {
+            if (subcategory.name.toLowerCase().includes(lowerCaseQuery)) {
+              combinedSuggestions.push({
+                ...subcategory,
+                type: "subcategory",
+                category_name: category.name,
+              });
+            }
+          });
+        });
 
-      setSuggestions(uniqueSuggestions.slice(0, 10) as Array<(Category | Subcategory) & { type: string; category_name?: string }>);
-      setShowSuggestions(true);
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
+        // Add fetched products to suggestions
+        productsFromApi.forEach((product) => {
+          combinedSuggestions.push({ ...product, type: "product" });
+        });
+
+        const uniqueSuggestions = Array.from(
+          new Map(
+            combinedSuggestions.map((item) => [`${item.type}-${item.name}`, item])
+          ).values()
+        );
+
+        setSuggestions(uniqueSuggestions.slice(0, 10) as Array<(Category | Subcategory | Product) & { type: string; category_name?: string }>);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300); // Debounce time of 300ms
+
+    return () => {
+      clearTimeout(handler);
+    };
   }, [searchQuery, categories]);
 
   // Handle click outside to close suggestions
@@ -157,7 +196,7 @@ export default function SearchBar({
   }, [listening, setSearchQuery]);
 
   const handleSuggestionClick = useCallback(
-    (item: (Category | Subcategory) & { type: string; category_name?: string }) => {
+    (item: (Category | Subcategory | Product) & { type: string; category_name?: string }) => {
       setShowSuggestions(false);
       setSearchQuery("");
 
@@ -169,6 +208,9 @@ export default function SearchBar({
         router.push(`/${categorySlug}/${createSlug(subCategoryItem.name)}`);
       } else if (item.type === "product_type") {
         router.push(`/${createSlug(item.name)}`);
+      } else if (item.type === "product") {
+        const productItem = item as Product;
+        router.push(`/product/${createSlug(productItem.name)}?id=${productItem.id}`);
       }
     },
     [router, setSearchQuery]

@@ -2,17 +2,23 @@
 
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-// Removed ArrowLeft, ArrowRight as navigation buttons are removed
+// import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import Image from "next/image";
 
 export default function ReviewCarousel() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [api, setApi] = useState<any>(null);
   const [current, setCurrent] = useState(0);
 
-  // Removed scrollPrev and scrollNext functions since arrow buttons are removed
-  // Removed the keyboard navigation useEffect
+  const scrollPrev = useCallback(() => {
+    api?.scrollPrev();
+  }, [api]);
+
+  const scrollNext = useCallback(() => {
+    api?.scrollNext();
+  }, [api]);
 
   useEffect(() => {
     if (!api) return;
@@ -27,6 +33,23 @@ export default function ReviewCarousel() {
       api.off("select", handleSelect);
     };
   }, [api]);
+
+  // Add keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: { key: string }) => {
+      if (e.key === "ArrowLeft") {
+        scrollPrev();
+      } else if (e.key === "ArrowRight") {
+        scrollNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [scrollPrev, scrollNext]);
 
   const reviews = [
     {
@@ -534,8 +557,8 @@ export default function ReviewCarousel() {
       ),
     },
     {
-      name: "Mr. Jayanta Dutta",
-      role: "MAC SPARES",
+      name: "Customer",
+      role: "",
       avatar:
         "/css/newassets/imgs/page/testimonials/mr-jayanta-dutta-mac-spares.webp",
       fallback: "PN",
@@ -609,17 +632,46 @@ export default function ReviewCarousel() {
     },
   ];
 
-  // Removed getCardStyles as the design is now fixed and responsive via Tailwind
-  // and the carousel center and side items are handled by the Carousel component itself.
+  const getCardStyles = (index: number) => {
+    const isActive = current === index;
+    const isPrev = (current - 1 + reviews.length) % reviews.length === index;
+    const isNext = (current + 1) % reviews.length === index;
+
+    if (isActive) {
+      return {
+        transform: 'scale(1.05)',
+        opacity: 1,
+        zIndex: 10,
+        backgroundColor: 'white',
+        boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+      };
+    } else if (isPrev || isNext) {
+      return {
+        transform: 'scale(0.9)',
+        opacity: 0.7,
+        zIndex: 5,
+        backgroundColor: '#f8f9fa',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+      };
+    } else {
+      return {
+        transform: 'scale(0.8)',
+        opacity: 0.4,
+        zIndex: 1,
+        backgroundColor: '#f1f3f4',
+        boxShadow: 'none',
+      };
+    }
+  };
 
   return (
-    <section className="w-full py-16 font-general">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="w-full overflow-hidden bg-white py-14 font-sans">
+      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8 text-center sm:mb-12 flex items-center justify-between">
           <h2 className="text-3xl font-bold text-black">
             Testimonials
           </h2>
-          <a href="/testimonials" className="text-[#5CA131] text-sm hover:underline">
+          <a href="/testimonials" className="text-green-600 text-sm hover:underline">
             View more
           </a>
         </div>
@@ -633,65 +685,106 @@ export default function ReviewCarousel() {
               loop: true,
             }}>
             <CarouselContent className="flex items-center">
-              {reviews.map((review, index) => (
-                <CarouselItem
-                  key={index}
-                  // Updated the basis to display one main card and parts of the side cards,
-                  // while maintaining responsiveness.
-                  className="basis-full md:basis-[60%] lg:basis-[40%] flex justify-center py-12"
-                >
-                  <div
-                    // Set fixed width and height as requested
-                    className="w-[850px] max-w-[90vw] h-[256px] bg-white rounded-2xl p-6 md:p-8 lg:p-10 shadow-lg border border-gray-100 flex flex-col justify-between"
-                  >
-                    <div>
+              {reviews.map((review, index) => {
+                const cardStyles = getCardStyles(index);
+                const isActive = current === index;
+
+                return (
+                  <CarouselItem
+                    key={index}
+                    className="basis-full md:basis-1/3 flex justify-center py-12">
+                    <div
+                      className="w-full mx-2 h-[280px] rounded-2xl p-6 transition-all duration-500 ease-out border"
+                      style={cardStyles}>
+                      {/* Quote icon */}
                       <div className="mb-4">
-                        <svg
-                          width="32"
-                          height="24"
-                          viewBox="0 0 32 24"
-                          fill="none"
-                          className="text-[#3E7451]"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M0 12.8V24h11.2V12.8H5.6c0-3.11 2.53-5.6 5.6-5.6V0C4.98 0 0 4.98 0 12.8zM20.8 12.8V24H32V12.8h-5.6c0-3.11 2.53-5.6 5.6-5.6V0c-6.22 0-11.2 4.98-11.2 12.8z"
-                            fill="currentColor"
-                          />
-                        </svg>
+                        <Image
+                          src="/home/Vector.png"
+                          alt="Quote icon"
+                          width={32}
+                          height={24}
+                        />
                       </div>
-                      <div className="mb-6 text-gray-700 text-base leading-relaxed line-clamp-4">
+
+                      {/* Content */}
+                      <div className="mb-6 text-gray-700 text-sm leading-relaxed line-clamp-4">
                         {typeof review.content === 'string' ? (
                           <p>{review.content}</p>
                         ) : (
                           <div className="space-y-2">
-                            {/* Render only the first paragraph for the compact view */}
-                            <p>{review.content.props.children[0]}</p>
+                            {review.content}
                           </div>
                         )}
                       </div>
-                    </div>
-                    <div className="flex items-center mt-auto">
-                      <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
-                        <AvatarImage src={review.avatar} alt={review.name} />
-                        <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
-                          {review.fallback}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="ml-3">
-                        <h3 className="text-base font-semibold text-gray-800">
-                          {review.name}
-                        </h3>
-                        {review.role && (
-                          <p className="text-sm text-gray-500">
-                            {review.role}
-                          </p>
-                        )}
+
+                      {/* User info */}
+                      <div className="flex items-center mt-auto">
+                        <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
+                          <AvatarImage src={review.avatar} alt={review.name} />
+                          <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
+                            {review.fallback}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-semibold text-black">
+                            {review.name}
+                          </h3>
+                          {review.role && (
+                            <p className="text-xs text-gray-500">
+                              {review.role}
+                            </p>
+                          )}
+                        </div>
                       </div>
+
+                      {/* Read More Dialog (unchanged, but can be improved for better UX if needed) */}
+                      {(
+                        <div className="mt-4">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="text-green-600 text-sm hover:underline">
+                                Read More
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="bg-white w-full max-w-2xl ">
+                              <div className="mb-4 ">
+                                <Image
+                                  src="/home/Vector.png"
+                                  alt="Quote icon"
+                                  width={32}
+                                  height={24}
+                                  className="mb-4"
+                                />
+                                <div className="mb-6 text-gray-700 text-sm leading-relaxed">
+                                  {review.content}
+                                </div>
+                                <div className="flex items-center">
+                                  <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
+                                    <AvatarImage src={review.avatar} alt={review.name} />
+                                    <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
+                                      {review.fallback}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="ml-3">
+                                    <h3 className="text-sm font-semibold text-black">
+                                      {review.name}
+                                    </h3>
+                                    {review.role && (
+                                      <p className="text-xs text-gray-500">
+                                        {review.role}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </CarouselItem>
-              ))}
+                  </CarouselItem>
+                );
+              })}
             </CarouselContent>
           </Carousel>
 
@@ -708,9 +801,11 @@ export default function ReviewCarousel() {
               />
             ))}
           </div>
+
+          {/* Navigation Arrows */}
+        
         </div>
       </div>
     </section>
   );
-
 }
