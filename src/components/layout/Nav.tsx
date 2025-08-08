@@ -134,7 +134,9 @@ export default function Navbar(): JSX.Element {
     <header className="bg-white shadow-sm z-50 sticky top-0">
       <style>{tingAnimation}</style>
       {/* Top Green Banner */}
-      <div className="bg-[#5CA131] text-white"> {/* Original green, matches image */}
+      <div className="bg-[#5CA131] text-white">
+        {" "}
+        {/* Original green, matches image */}
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-2">
             <div className="flex items-center gap-2 text-sm">
@@ -146,12 +148,22 @@ export default function Navbar(): JSX.Element {
                 <span>Loading...</span>
               ) : user ? (
                 <span className="font-semibold">
-                  Welcome, {typeof user.username === 'string' ? user.username : user.email}!
+                  Welcome,{" "}
+                  {typeof user.username === "string"
+                    ? user.username
+                    : user.email}
+                  !
                 </span>
               ) : (
-                <span className="font-semibold">
-                  Welcome, John Doe
-                </span>
+                <>
+                  <Link href="/login" className="hover:underline">
+                    Sign In
+                  </Link>
+                  <span>|</span>
+                  <Link href="/register" className="hover:underline">
+                    Sign Up
+                  </Link>
+                </>
               )}
             </div>
           </div>
@@ -194,16 +206,17 @@ export default function Navbar(): JSX.Element {
                 setSearchQuery={setSearchQuery}
               />
               {/* Brand Store Image with animation and shadow */}
-              <Link
-                href="/vendor-listing"
-                className="flex-shrink-0"
-              >
+              <Link href="/vendor-listing" className="flex-shrink-0">
                 <motion.div
                   animate={{ rotate: [0, 3, 0, -3, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  style={{ transformOrigin: 'bottom center' }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  style={{ transformOrigin: "bottom center" }}
                   className="rounded-md" // Removed shadow-md, will use custom shadow
-                  style={{boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'}} // Custom natural shadow
+                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }} // Custom natural shadow
                 >
                   <Image
                     src="/brand-image.png"
@@ -254,7 +267,8 @@ export default function Navbar(): JSX.Element {
                   ) : user ? (
                     <>
                       {/* Check if user.username is an array and has an image */}
-                      {Array.isArray(user.username) && user.username[0]?.image ? (
+                      {Array.isArray(user.username) &&
+                      user.username[0]?.image ? (
                         <Image
                           src={user.username[0].image}
                           alt="Profile"
@@ -411,10 +425,7 @@ export default function Navbar(): JSX.Element {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
-              <Link
-                href="/vendor-listing"
-                className="flex-shrink-0"
-              >
+              <Link href="/vendor-listing" className="flex-shrink-0">
                 <Image
                   src="/brand-image.png"
                   alt="Brand Store"
@@ -422,7 +433,7 @@ export default function Navbar(): JSX.Element {
                   height={40}
                   priority
                   className="object-contain"
-                  style={{boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'}} // Custom natural shadow
+                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }} // Custom natural shadow
                 />
               </Link>
             </div>
@@ -459,8 +470,11 @@ export default function Navbar(): JSX.Element {
                   <Link
                     key={index}
                     href={link.href}
-                    className={`px-4 py-3 text-sm font-normal transition ${ // Changed font-medium to font-normal
-                      pathname === link.href ? "text-gray-900 font-bold" : "text-gray-700 hover:text-gray-900" // Changed active state to dark font
+                    className={`px-4 py-3 text-sm font-normal transition ${
+                      // Changed font-medium to font-normal
+                      pathname === link.href
+                        ? "text-gray-900 font-bold"
+                        : "text-gray-700 hover:text-gray-900" // Changed active state to dark font
                     }`}
                   >
                     {link.name}
@@ -474,18 +488,25 @@ export default function Navbar(): JSX.Element {
               <Link
                 href="/contact"
                 className={`flex items-center gap-2 px-4 py-3 transition ${
-                  pathname === "/contact" ? "text-gray-900 font-bold" : "text-gray-600 hover:text-gray-900" // Changed active state and hover
+                  pathname === "/contact"
+                    ? "text-gray-900 font-bold"
+                    : "text-gray-600 hover:text-gray-900" // Changed active state and hover
                 }`}
               >
-                <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm"> {/* Changed bg-gray-200 to border, font-semibold to font-normal */}
+                <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
+                  {" "}
+                  {/* Changed bg-gray-200 to border, font-semibold to font-normal */}
                   ?
                 </div>
-                <span className="text-sm font-normal">Help</span> {/* Changed font-medium to font-normal */}
+                <span className="text-sm font-normal">Help</span>{" "}
+                {/* Changed font-medium to font-normal */}
               </Link>
 
               {/* Conditional rendering for Become a Vendor / My Vendor Dashboard */}
               {isLoading ? (
-                <span className="px-4 py-3 text-sm text-gray-600 font-normal"> {/* Changed font-medium to font-normal */}
+                <span className="px-4 py-3 text-sm text-gray-600 font-normal">
+                  {" "}
+                  {/* Changed font-medium to font-normal */}
                   Loading...
                 </span>
               ) : user ? (
@@ -493,11 +514,15 @@ export default function Navbar(): JSX.Element {
                   <Link
                     href="/vendor/dashboard"
                     className={`flex items-center gap-2 px-4 py-3 transition ${
-                      pathname === "/vendor/dashboard" ? "text-gray-900 font-bold" : "text-gray-600 hover:text-gray-900" // Changed active state and hover
+                      pathname === "/vendor/dashboard"
+                        ? "text-gray-900 font-bold"
+                        : "text-gray-600 hover:text-gray-900" // Changed active state and hover
                     }`}
                   >
                     <User className="w-5 h-5" />
-                    <span className="text-sm font-normal"> {/* Changed font-semibold to font-normal */}
+                    <span className="text-sm font-normal">
+                      {" "}
+                      {/* Changed font-semibold to font-normal */}
                       My Vendor Dashboard
                     </span>
                   </Link>
@@ -506,11 +531,16 @@ export default function Navbar(): JSX.Element {
                     type="button"
                     onClick={() => setVendorDrawerOpen(true)}
                     className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
-                      pathname === "/become-a-vendor" ? "text-gray-900 font-bold" : "text-gray-600 hover:text-gray-900" // Changed active state and hover
+                      pathname === "/become-a-vendor"
+                        ? "text-gray-900 font-bold"
+                        : "text-gray-600 hover:text-gray-900" // Changed active state and hover
                     }`}
                   >
                     <User className="w-5 h-5" />
-                    <span className="text-sm font-normal">Become a Vendor</span> {/* Changed font-medium to font-normal */}
+                    <span className="text-sm font-normal">
+                      Become a Vendor
+                    </span>{" "}
+                    {/* Changed font-medium to font-normal */}
                   </button>
                 )
               ) : null}
@@ -518,11 +548,14 @@ export default function Navbar(): JSX.Element {
               <Link
                 href="/services/subscription-plan"
                 className={`flex items-center gap-2 px-4 py-3 transition ${
-                  pathname === "/services/subscription-plan" ? "text-gray-900 font-bold" : "text-gray-600 hover:text-gray-900" // Changed active state and hover
+                  pathname === "/services/subscription-plan"
+                    ? "text-gray-900 font-bold"
+                    : "text-gray-600 hover:text-gray-900" // Changed active state and hover
                 }`}
               >
                 <Tag className="w-5 h-5" />
-                <span className="text-sm font-normal">Price Plan</span> {/* Changed font-medium to font-normal */}
+                <span className="text-sm font-normal">Price Plan</span>{" "}
+                {/* Changed font-medium to font-normal */}
               </Link>
             </div>
           </div>
@@ -585,10 +618,14 @@ export default function Navbar(): JSX.Element {
                     <div key={category.id} className="border-b border-gray-100">
                       <button
                         onClick={() => {
-                          setOpenCategory(openCategory === category.id ? null : category.id);
+                          setOpenCategory(
+                            openCategory === category.id ? null : category.id
+                          );
                         }}
                         className={`w-full flex justify-between items-center px-6 py-3 text-left transition ${
-                          pathname.startsWith(`/${createSlug(category.name)}`) ? "text-gray-900 font-bold" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                          pathname.startsWith(`/${createSlug(category.name)}`)
+                            ? "text-gray-900 font-bold"
+                            : "text-gray-700 hover:bg-gray-50" // Changed active state
                         }`}
                       >
                         <span>{category.name}</span>
@@ -613,7 +650,9 @@ export default function Navbar(): JSX.Element {
                             <Link
                               href={`/${createSlug(category.name)}`}
                               className={`block pl-10 pr-6 py-3 font-medium transition ${
-                                pathname === `/${createSlug(category.name)}` ? "text-gray-900 font-bold" : "text-gray-800 hover:bg-gray-50" // Changed active state
+                                pathname === `/${createSlug(category.name)}`
+                                  ? "text-gray-900 font-bold"
+                                  : "text-gray-800 hover:bg-gray-50" // Changed active state
                               }`}
                               onClick={() => setMobileMenuOpen(false)}
                             >
@@ -625,11 +664,16 @@ export default function Navbar(): JSX.Element {
                               category.subcategories.map((sub) => (
                                 <Link
                                   key={sub.id}
-                                  href={`/${createSlug(category.name)}/${createSlug(
-                                    sub.name
-                                  )}`}
+                                  href={`/${createSlug(
+                                    category.name
+                                  )}/${createSlug(sub.name)}`}
                                   className={`block pl-10 pr-6 py-3 transition ${
-                                    pathname === `/${createSlug(category.name)}/${createSlug(sub.name)}` ? "text-gray-900 font-bold" : "text-gray-600 hover:bg-gray-50" // Changed active state
+                                    pathname ===
+                                    `/${createSlug(category.name)}/${createSlug(
+                                      sub.name
+                                    )}`
+                                      ? "text-gray-900 font-bold"
+                                      : "text-gray-600 hover:bg-gray-50" // Changed active state
                                   }`}
                                   onClick={() => setMobileMenuOpen(false)}
                                 >
@@ -655,7 +699,9 @@ export default function Navbar(): JSX.Element {
                       key={index}
                       href={link.href}
                       className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
-                        pathname === link.href ? "text-gray-900 bg-gray-50" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                        pathname === link.href
+                          ? "text-gray-900 bg-gray-50"
+                          : "text-gray-700 hover:bg-gray-50" // Changed active state
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
@@ -665,7 +711,9 @@ export default function Navbar(): JSX.Element {
                   <Link
                     href="/vendor-listing"
                     className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${
-                      pathname === "/vendor-listing" ? "text-gray-900 bg-gray-50" : "hover:bg-gray-50" // Changed active state
+                      pathname === "/vendor-listing"
+                        ? "text-gray-900 bg-gray-50"
+                        : "hover:bg-gray-50" // Changed active state
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -676,13 +724,15 @@ export default function Navbar(): JSX.Element {
                       height={40}
                       priority
                       className="object-contain"
-                      style={{boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'}} // Custom natural shadow
+                      style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }} // Custom natural shadow
                     />
                   </Link>
                   <Link
                     href="/contact"
                     className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
-                      pathname === "/contact" ? "text-gray-900 bg-gray-50" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                      pathname === "/contact"
+                        ? "text-gray-900 bg-gray-50"
+                        : "text-gray-700 hover:bg-gray-50" // Changed active state
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -696,7 +746,9 @@ export default function Navbar(): JSX.Element {
                     <Link
                       href="/vendor/dashboard"
                       className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${
-                        pathname === "/vendor/dashboard" ? "text-gray-900 bg-gray-50" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                        pathname === "/vendor/dashboard"
+                          ? "text-gray-900 bg-gray-50"
+                          : "text-gray-700 hover:bg-gray-50" // Changed active state
                       }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
@@ -717,7 +769,9 @@ export default function Navbar(): JSX.Element {
                   <Link
                     href="/services/subscription-plan"
                     className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
-                      pathname === "/services/subscription-plan" ? "text-gray-900 bg-gray-50" : "text-gray-700 hover:bg-gray-50" // Changed active state
+                      pathname === "/services/subscription-plan"
+                        ? "text-gray-900 bg-gray-50"
+                        : "text-gray-700 hover:bg-gray-50" // Changed active state
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >

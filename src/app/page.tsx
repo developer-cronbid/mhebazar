@@ -123,7 +123,7 @@ export default function HomePage() {
         </SectionWrapper>
       </div>
 
-      <div className="w-full bg-[#F5F7F8] py-10 md:py-12">
+      <div className="w-full bg-[#F5F7F8] ">
         <div className="max-w-[95vw] mx-auto">
           <SectionWrapper>
             <TestimonialsCarousel />

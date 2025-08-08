@@ -33,7 +33,7 @@ const stats = [
   {
     value: 1,
     label: "MHE Solution Provider",
-    color: "#264775", // Custom professional shade
+    color: "#264775",
     suffix: "st",
   },
 ];
@@ -54,9 +54,8 @@ const AnimatedCircle = ({
   duration = 1.5,
 }: AnimatedCircleProps) => {
   const controls = useAnimation();
-  // Adjusted radius and stroke for a larger, thinner circle
-  const radius = 75;
-  const stroke = 8;
+  const radius = 60;
+  const stroke = 6;
   const circumference = 2 * Math.PI * radius;
   const valueRef = useRef<HTMLSpanElement>(null);
   const [ref, inView] = useInView({ triggerOnce: false, threshold: 0.3 });
@@ -99,41 +98,39 @@ const AnimatedCircle = ({
   return (
     <div
       ref={ref}
-      // Adjusted width and spacing for the circle container
-      className={`flex flex-col items-center w-56 min-w-[140px] mx-auto transition-transform duration-300 ${
+      className={`flex flex-col items-center transition-transform duration-300 ${
         isSpecial
           ? "hover:scale-[1.1] hover:shadow-[0_8px_30px_rgba(38,71,117,0.4)]"
           : "hover:scale-[1.05] hover:shadow-md"
       }`}
     >
       <div className="relative flex items-center justify-center">
-        {/* Adjusted SVG dimensions to match the new radius */}
-        <svg width={160} height={160} className="mb-2 block">
+        <svg width={140} height={140} className="mb-3">
           <circle
-            cx={80}
-            cy={80}
+            cx={70}
+            cy={70}
             r={radius}
             fill="none"
-            stroke="#E5ECE3"
+            stroke="#E5E7EB"
             strokeWidth={stroke}
           />
           {isSpecial ? (
             <circle
-              cx={80}
-              cy={80}
+              cx={70}
+              cy={70}
               r={radius}
               fill="none"
               stroke="#264775"
               strokeWidth={stroke}
               strokeLinecap="round"
-              transform="rotate(-90 80 80)"
+              transform="rotate(-90 70 70)"
               strokeDasharray={circumference}
               strokeDashoffset={0}
             />
           ) : (
             <motion.circle
-              cx={80}
-              cy={80}
+              cx={70}
+              cy={70}
               r={radius}
               fill="none"
               stroke={color}
@@ -141,7 +138,7 @@ const AnimatedCircle = ({
               strokeLinecap="round"
               strokeDasharray={circumference}
               strokeDashoffset={circumference}
-              transform="rotate(-90 80 80)"
+              transform="rotate(-90 70 70)"
               animate={controls}
               transition={{ duration, ease: "easeInOut" }}
             />
@@ -149,20 +146,19 @@ const AnimatedCircle = ({
         </svg>
 
         {isSpecial ? (
-          <div className="absolute left-1/2 top-1/2 w-[80px] h-[80px] -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center">
+          <div className="absolute left-1/2 top-1/2 w-[60px] h-[60px] -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden flex items-center justify-center">
             <Image
               src="/first.png"
               alt="1st Badge"
-              width={70}
-              height={70}
+              width={55}
+              height={55}
               className="object-contain"
             />
           </div>
         ) : (
           <span
             ref={valueRef}
-            // Adjusted text size for better visual alignment
-            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl md:text-4xl font-extrabold"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl md:text-3xl font-bold"
             style={{ color }}
           >
             0{suffix}
@@ -170,7 +166,7 @@ const AnimatedCircle = ({
         )}
       </div>
       <span
-        className={`text-base md:text-lg text-gray-900 text-center mt-2 font-medium leading-tight ${
+        className={`text-sm md:text-base text-gray-700 text-center font-medium leading-tight max-w-[120px] ${
           isSpecial ? "text-[#264775] font-semibold" : ""
         }`}
       >
@@ -181,13 +177,12 @@ const AnimatedCircle = ({
 };
 
 const AboutStats = () => (
-  <section className="w-full py-16 bg-white">
-    <div className="max-w-7xl mx-auto px-4">
-      {/* Adjusted heading style to be less bold and better aligned */}
-      <h2 className="text-2xl font-semibold mb-10 text-center text-gray-900 tracking-tight md:text-3xl">
+  <section className="w-full py-12 bg-white">
+    <div className="max-w-6xl mx-auto px-4">
+      <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center text-gray-900">
         Brand Presence Globally
       </h2>
-      <div className="flex flex-wrap justify-center gap-10 md:gap-24">
+      <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
         {stats.map((stat, i) => (
           <AnimatedCircle key={i} {...stat} duration={1.2 + i * 0.2} />
         ))}

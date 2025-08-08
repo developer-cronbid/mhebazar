@@ -3,16 +3,14 @@
 import { useState } from 'react';
 import Image from 'next/image';
 
-// Define a TypeScript interface for the team member data
 interface TeamMember {
   name: string;
   role: string;
   description: string;
   image: string;
-  linkedin?: string; // Added optional LinkedIn field
+  linkedin?: string;
 }
 
-// Reordered team members as per the request and added LinkedIn URLs
 const teamMembers: TeamMember[] = [
   {
     name: 'Ms. Radhika Kundra',
@@ -34,7 +32,7 @@ const teamMembers: TeamMember[] = [
     name: 'Mr. Ulhas Makeshwar',
     role: 'Advisor',
     description:
-      'One of our esteemed Advisor at MHE Bazar. With a BE in mechanical engineering and advanced degrees in business management and marketing, Mr. Makeshwar brings a wealth of knowledge and expertise to the team. His strategic vision and deep understanding of the market are instrumental in shaping our company’s direction and ensuring our long-term success. He is a driving force behind our innovative approaches and a mentor to our leadership. His extensive experience allows us to navigate complex challenges with confidence.',
+      'One of our esteemed Advisor at MHE Bazar. With a BE in mechanical engineering and advanced degrees in business management and marketing, Mr. Makeshwar brings a wealth of knowledge and expertise to the team. His strategic vision and deep understanding of the market are instrumental in shaping our company\'s direction and ensuring our long-term success. He is a driving force behind our innovative approaches and a mentor to our leadership. His extensive experience allows us to navigate complex challenges with confidence.',
     image: '/about/advisor1.png',
     linkedin: 'https://www.linkedin.com/in/ulhas-makeshwar-77b0a450/',
   },
@@ -48,7 +46,6 @@ const teamMembers: TeamMember[] = [
   },
 ];
 
-// Custom object positions for better image display
 const customPositions = ['50% 40%', '50% 0%', '50% 25%', '50% 25%'];
 const DESCRIPTION_LIMIT = 150;
 
@@ -63,12 +60,12 @@ export default function LeadershipTeam() {
   };
 
   return (
-    <section className="w-full bg-[#f9f9f9] py-10 px-4 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8">
+    <section className="w-full bg-gray-50 py-12 px-4">
+      <div className="mx-auto max-w-6xl">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-10 text-left">
           Leadership Team
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {teamMembers.map((member, index) => {
             const isExpanded = !!expandedCards[index];
             const isLongContent = member.description.length > DESCRIPTION_LIMIT;
@@ -79,47 +76,56 @@ export default function LeadershipTeam() {
 
             return (
               <div
-                key={index}
-                className="flex flex-col bg-white rounded-xl overflow-hidden shadow-md transition-shadow hover:shadow-lg"
+                key={member.name} // 'index' को 'member.name' से बदल दिया गया है
+                className="flex flex-col bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
               >
-                <div className="relative w-full aspect-square rounded-t-xl overflow-hidden">
-                  <div className="w-[120px] h-[120px] absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                <div className="relative bg-gray-100 p-6 flex justify-center">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-md"> {/* 'border-3' को 'border-2' से बदल दिया गया है */}
                     <Image
                       src={member.image}
                       alt={member.name}
-                      fill
+                      width={96}
+                      height={96}
+                      className="w-full h-full object-cover"
                       style={{
-                        objectFit: 'cover',
                         objectPosition: customPositions[index],
                       }}
                     />
                   </div>
                 </div>
                 <div className="flex flex-col flex-grow p-4 text-center">
-                  <h3 className="text-xl font-semibold text-gray-900 mt-14">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
                     {member.name}
                   </h3>
-                  <p className="text-sm text-gray-500 mb-2">{member.role}</p>
-                  <div className="text-sm text-gray-700 mb-4 flex-grow">
+                  <p className="text-sm text-blue-600 font-medium mb-3">{member.role}</p>
+                  <div className="text-xs text-gray-600 leading-relaxed mb-4 flex-grow text-left">
                     {descriptionToShow}
                   </div>
                   {isLongContent && (
                     <button
                       onClick={() => toggleExpanded(index)}
-                      className="text-blue-600 hover:underline text-center text-sm mt-auto"
+                      className="text-blue-600 hover:underline text-xs font-medium mt-auto mb-2"
                     >
                       {isExpanded ? 'Read less' : 'Read more'}
                     </button>
                   )}
                   {member.linkedin && (
-                    <a
-                      href={member.linkedin}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 text-gray-500 hover:text-blue-600 transition-colors"
-                    >
-                      <img src="/linkedin.png" alt="LinkedIn Profile" className="mx-auto h-6 w-6" />
-                    </a>
+                    <div className="flex justify-center mt-2">
+                      <a
+                        href={member.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-gray-400 hover:text-blue-600 transition-colors"
+                      >
+                        <Image
+                          src="/linkedin.png"
+                          alt="LinkedIn Profile"
+                          width={20} // 'h-5 w-5' के अनुसार width और height जोड़ा गया है
+                          height={20}
+                          className="h-5 w-5"
+                        />
+                      </a>
+                    </div>
                   )}
                 </div>
               </div>

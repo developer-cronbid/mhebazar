@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Carousel,
-  CarouselContent,
-  CarouselNext,
-  CarouselPrevious,
-  CarouselItem,
+
 } from "../ui/carousel";
 import api from "@/lib/api";
 import { ProductCardContainer } from "../elements/Product";
+import Autoplay from "embla-carousel-autoplay";
 
 // Define the structure of a product based on your API response
 interface Product {
@@ -32,11 +30,12 @@ const VendorProductsFeatured: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [scrollIndex, setScrollIndex] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // Fetch products instead of vendors
         const response = await api.get("/products/");
         if (response.data && response.data.results) {
           setProducts(response.data.results || []);
@@ -50,13 +49,26 @@ const VendorProductsFeatured: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
+
+  const handleDotClick = (index: number) => {
+    if (scrollContainerRef.current) {
+      const carouselContent = scrollContainerRef.current;
+      const itemWidth = carouselContent.children[0].clientWidth + 16; // 16 for gap
+      carouselContent.scrollTo({
+        left: index * itemWidth,
+        behavior: 'smooth',
+      });
+    }
+  };
 
   if (loading) {
     return (
       <div className="w-full mx-auto px-4 py-10">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
+          Vendor Products
+        </h2>
         <div className="flex space-x-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex-1 p-1">
@@ -69,7 +81,14 @@ const VendorProductsFeatured: React.FC = () => {
   }
 
   if (error) {
-    return <p className="text-center text-red-500">{error}</p>;
+    return (
+      <section className="w-full mx-auto px-4 py-10">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
+          Vendor Products
+        </h2>
+        <p className="text-center text-red-500">{error}</p>
+      </section>
+    );
   }
 
   return (
@@ -77,18 +96,33 @@ const VendorProductsFeatured: React.FC = () => {
       <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
         Vendor Products
       </h2>
-      <div className="relative px-4 sm:px-6">
+      <div className="relative">
         <Carousel
           opts={{
             align: "start",
             loop: true,
           }}
+          plugins={[
+            Autoplay({
+              delay: 4000,
+            }),
+          ]}
         >
-          <CarouselContent className="-ml-4">
+          <div
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto snap-x snap-mandatory -ml-4"
+            style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
+            onScroll={(e) => {
+              const carouselContent = e.currentTarget;
+              const itemWidth = carouselContent.children[0].clientWidth + 16;
+              const newIndex = Math.round(carouselContent.scrollLeft / itemWidth);
+              setScrollIndex(newIndex);
+            }}
+          >
             {products.map((product) => (
-              <CarouselItem
+              <div
                 key={product.id}
-                className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
+                className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
               >
                 <div className="p-1">
                   <ProductCardContainer
@@ -97,7 +131,7 @@ const VendorProductsFeatured: React.FC = () => {
                     title={product.name}
                     subtitle={product.description}
                     price={product.price}
-                    currency="₹" // Assuming INR based on your API response
+                    currency="₹"
                     directSale={product.direct_sale}
                     is_active={product.is_active}
                     hide_price={product.hide_price}
@@ -106,12 +140,21 @@ const VendorProductsFeatured: React.FC = () => {
                     category_image={product.category_image || null}
                   />
                 </div>
-              </CarouselItem>
+              </div>
             ))}
-          </CarouselContent>
-          <CarouselPrevious className="absolute left-[-20px] top-1/2 -translate-y-1/2 sm:flex hidden" />
-          <CarouselNext className="absolute right-[-20px] top-1/2 -translate-y-1/2 sm:flex hidden" />
+          </div>
         </Carousel>
+        <div className="flex justify-center space-x-2 mt-4">
+          {products.map((_, idx) => (
+            <span
+              key={idx}
+              onClick={() => handleDotClick(idx)}
+              className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
+                idx === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"
+              }`}
+            ></span>
+          ))}
+        </div>
       </div>
     </section>
   );
