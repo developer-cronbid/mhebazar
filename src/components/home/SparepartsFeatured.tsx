@@ -23,7 +23,7 @@ interface SparePart {
   subtitle: string;
   price: number;
   currency: string;
-  image: string;
+  category: number;
 }
 
 const sectionVariants = {
@@ -143,7 +143,7 @@ export default function SparePartsFeatured() {
                         hide_price={spare.hide_price}
                         stock_quantity={spare.stock_quantity} 
                         type={spare.type} 
-                        category_image={spare.image}
+                        category_id={spare.category}
                       />
                     </motion.div>
                   </div>

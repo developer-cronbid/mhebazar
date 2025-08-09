@@ -23,7 +23,7 @@ interface Product {
   stock_quantity: number;
   type: string;
   category: number | null;
-  category_image: string | null;
+  // category_image: string | null;
 }
 
 const VendorProductsFeatured: React.FC = () => {
@@ -137,7 +137,7 @@ const VendorProductsFeatured: React.FC = () => {
                     hide_price={product.hide_price}
                     stock_quantity={product.stock_quantity}
                     type={product.type}
-                    category_image={product.category_image || null}
+                    category_id={product.category}
                   />
                 </div>
               </div>

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Heart, Repeat, Share2, ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,6 +18,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import DOMPurify from 'dompurify';
+import categories from '@/data/categories.json';
+
+const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL;
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
@@ -36,7 +39,8 @@ const slugify = (text: string): string => {
 interface ProductCardDisplayProps {
   id: number;
   image: string;
-  category_image: string | null; // Added category image
+  // CHANGE 1: Corrected prop name to 'category_id' for type consistency.
+  category_id: number | null;
   title: string;
   subtitle: string | null | undefined;
   price: string | number;
@@ -92,9 +96,9 @@ const FallbackImage = ({
   const handleError = () => {
     if (!error) {
       if (fallbackSrc) {
-        setImgSrc(fallbackSrc);
+        setImgSrc(imgUrl + fallbackSrc);
       } else {
-        setImgSrc("/placeholder-image.png");
+        setImgSrc("/placeholder-image.png"); // Default placeholder
       }
       setError(true);
     }
@@ -119,7 +123,7 @@ const FallbackImage = ({
 const ProductCard = ({
   id,
   image,
-  category_image,
+  category_id,
   title,
   subtitle,
   price,
@@ -162,11 +166,29 @@ const ProductCard = ({
     </span>
   );
 
-  // ADDED CONSOLE LOGS HERE
-  useEffect(() => {
-    console.log(`[ProductCard RENDER] Product ID: ${id}, Title: "${title}"`);
-    console.log(`[ProductCard STATE] isWishlisted: ${isWishlisted}, isInCart: ${isInCart}, currentCartQuantity: ${currentCartQuantity}, cartItemId: ${cartItemId}`);
-  }, [id, title, isWishlisted, isInCart, currentCartQuantity, cartItemId]);
+  // Create a lookup map for category images for fast access
+  const categoryImageMap = useMemo(() => {
+    const map: { [key: number]: string } = {};
+
+    const processCategory = (category: any) => {
+      if (category.id && category.image_url) {
+        map[category.id] = category.image_url;
+      }
+      if (category.subcategories && category.subcategories.length > 0) {
+        category.subcategories.forEach(processCategory);
+      }
+    };
+
+    categories.forEach(processCategory);
+    return map;
+  }, []);
+
+
+  // CHANGE 2: Look up the image URL from the map using the category_id.
+  const categoryFallbackImage = category_id ? categoryImageMap[category_id] : null;
+
+  console.log(`catId: "${category_id}"`);
+  console.log(`categoryFallbackImage: "${categoryFallbackImage}"`);
 
   return (
     <div
@@ -179,15 +201,16 @@ const ProductCard = ({
           <FallbackImage
             src={image}
             alt={title}
-            width={320} // Adjusted width for better quality in grid
-            height={224} // Adjusted height for better quality in grid
-            className="object-cover w-full h-full" // Removed rounded-t-2xl here, handled by parent div
+            width={320}
+            height={224}
+            className="object-cover w-full h-full"
             quality={85}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
-            fallbackSrc={category_image}
+            // Pass the looked-up URL string, not the raw ID.
+            fallbackSrc={categoryFallbackImage}
           />
         </Link>
-        {/* Action Icons Top-Left (Reverted wishlist icon background) */}
+        {/* Action Icons Top-Left */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           <button
             onClick={() => onWishlistClick(id)}
@@ -349,10 +372,9 @@ interface ProductCardContainerProps {
   hide_price: boolean;
   stock_quantity: number;
   type: string;
-  category_image: string | null; // Added category image to container props
+  category_id: number | null;
 }
 
-// Full product data interface matching API for internal use in container
 interface ApiProductData {
   id: number;
   category_name?: string;
@@ -368,7 +390,7 @@ interface ApiProductData {
   stock_quantity: number;
   manufacturer?: string;
   average_rating?: number | null;
-  category_image?: string | null; // Added category image
+  category_id?: number | null;
 }
 
 interface CartItemApi {
@@ -398,7 +420,7 @@ export const ProductCardContainer = ({
   hide_price,
   stock_quantity,
   type,
-  category_image, // Destructure category image
+  category_id,
 }: ProductCardContainerProps) => {
   const { user } = useUser();
   const router = useRouter();
@@ -409,7 +431,7 @@ export const ProductCardContainer = ({
   const [cartItemId, setCartItemId] = useState<number | null>(null);
 
   const productFullData: ProductCardContainerProps = {
-    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_image
+    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_id
   };
 
   const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
@@ -418,7 +440,7 @@ export const ProductCardContainer = ({
   }, [currentCartQuantity, cartItemId, isInCart]);
 
   const fetchInitialStatus = useCallback(async () => {
-    console.log(`[fetchInitialStatus] Fetching status for Product ID: ${id}`);
+    // console.log(`[fetchInitialStatus] Fetching status for Product ID: ${id}`);
     if (user) {
       try {
         // --- WISHLIST CHECK ---
@@ -457,7 +479,7 @@ export const ProductCardContainer = ({
       setIsInCart(false);
       setCurrentCartQuantity(0);
       setCartItemId(null);
-      console.log(`[fetchInitialStatus] User not logged in, resetting state for Product ID ${id}`);
+      // console.log(`[fetchInitialStatus] User not logged in, resetting state for Product ID ${id}`);
     }
   }, [user, id]);
 
@@ -708,7 +730,7 @@ export const ProductCardContainer = ({
     <ProductCard
       id={id}
       image={image}
-      category_image={category_image}
+      category_id={category_id}
       title={title}
       subtitle={subtitle}
       price={price}
