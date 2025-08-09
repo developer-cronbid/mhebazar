@@ -1,9 +1,7 @@
-// BannerCarousel.tsx
-
-"use client";
+'use client';
 
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -12,29 +10,51 @@ import {
 } from "@/components/ui/carousel";
 import { DotButton, useDotButton } from "@/components/ui/carousel-dots";
 import { cn } from "@/lib/utils";
-// import { motion } from "framer-motion";
+import { useRouter } from 'next/navigation';
 
 type BannerCarouselProps = {
   className?: string;
 };
 
+// Define the banner data with specific links for each banner.
+// The fourth banner has a special 'splitUrls' property for two different click targets.
+const BANNER_DATA = [
+  {
+    image: "/Banner1.png",
+    alt: "Forklift rentals and purchases",
+    url: '/forklift'
+  },
+  {
+    image: "/Banner2.png",
+    alt: "Industrial Forklifts & Spare Parts Hub",
+    url: '/spare-parts'
+  },
+  {
+    image: "/Banner3.png",
+    alt: "Reliable batteries for your operations",
+    url: '/battery'
+  },
+  {
+    image: "/Banner4.png",
+    alt: "Keep your machines running and operate with skill",
+    splitUrls: {
+      left: '/spare-parts',
+      right: '/training'
+    }
+  },
+];
+
 export default function BannerCarousel({ className }: BannerCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
   const { selectedIndex, scrollSnaps, onDotClick } = useDotButton(api);
-
-  const [banners, setBanners] = useState<{ image: string; alt: string }[]>([
-    { image: "/Banner1.png", alt: "Default 1" },
-    { image: "/Banner2.png", alt: "Default 2" },
-    { image: "/Banner3.png", alt: "Default 3" },
-    { image: "/Banner4.png", alt: "Default 4" },
-
-
-  ]);
+  const [banners, setBanners] = useState<any[]>(BANNER_DATA);
   const [isDefault, setIsDefault] = useState(true);
-  const [loaded, setLoaded] = useState<boolean[]>([false, false]);
+  const [loaded, setLoaded] = useState<boolean[]>(Array(BANNER_DATA.length).fill(false));
+  const router = useRouter();
 
-  type BannerItem = { image?: string; alt?: string };
+  type BannerItem = { image?: string; alt?: string; url?: string; splitUrls?: { left: string, right: string } };
 
+  // Fetch banners from API, with a fallback to local data
   useEffect(() => {
     const fetchBanners = async () => {
       try {
@@ -45,8 +65,10 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
         if (Array.isArray(data) && data.length > 0) {
           setBanners(
             data.map((item: BannerItem, index: number) => ({
-              image: item.image || "/Banner3.png",
+              image: item.image || BANNER_DATA[index % BANNER_DATA.length].image,
               alt: item.alt || `Banner ${index + 1}`,
+              url: item.url || BANNER_DATA[index % BANNER_DATA.length].url,
+              splitUrls: item.splitUrls || BANNER_DATA[index % BANNER_DATA.length].splitUrls,
             }))
           );
           setIsDefault(false);
@@ -60,6 +82,7 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
     fetchBanners();
   }, [banners.length]);
 
+  // Autoplay functionality
   useEffect(() => {
     if (!api) return;
     const interval = setInterval(() => api.scrollNext(), 5000);
@@ -74,6 +97,10 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
     });
   };
 
+  const handleLinkClick = (url: string) => {
+    router.push(url);
+  };
+  
   return (
     <div className={cn("w-full relative bg-white overflow-hidden flex flex-col", className)}>
       <Carousel
@@ -87,7 +114,7 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
         <CarouselContent className="-ml-0">
           {banners.map((banner, idx) => (
             <CarouselItem key={idx} className="pl-0 w-full">
-              <div className="relative w-full h-[200px] sm:h-[280px] md:h-[350px] lg:h-[400px] xl:h-[450px] overflow-hidden bg-gradient-to-r from-gray-100 to-gray-200">
+              <div className="relative w-full h-[200px] sm:h-[280px] md:h-[350px] lg:h-[400px] xl:h-[450px] overflow-hidden cursor-pointer">
                 <Image
                   src={banner.image}
                   alt={banner.alt}
@@ -101,12 +128,32 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
                   onLoad={() => {
                     if (isDefault) handleImageLoad(idx);
                   }}
-                  unoptimized={banner.image.startsWith("/")}
                 />
                 {!loaded[idx] && !isDefault && (
                   <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
                     <div className="w-16 h-16 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin opacity-50"></div>
                   </div>
+                )}
+                {/* Check if the banner has split URLs */}
+                {banner.splitUrls ? (
+                  <>
+                    {/* Left half clickable area */}
+                    <div
+                      className="absolute inset-y-0 left-0 w-1/2"
+                      onClick={() => handleLinkClick(banner.splitUrls.left)}
+                    />
+                    {/* Right half clickable area */}
+                    <div
+                      className="absolute inset-y-0 right-0 w-1/2"
+                      onClick={() => handleLinkClick(banner.splitUrls.right)}
+                    />
+                  </>
+                ) : (
+                  // Full banner clickable area
+                  <div
+                    className="absolute inset-0"
+                    onClick={() => handleLinkClick(banner.url)}
+                  />
                 )}
               </div>
             </CarouselItem>
@@ -114,7 +161,7 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
         </CarouselContent>
       </Carousel>
 
-      <div className="flex justify-center space-x-2 mt-6 ">
+      <div className="flex justify-center space-x-2 mt-4 ">
         {scrollSnaps.map((_, idx) => (
           <span
             key={idx}
@@ -134,3 +181,4 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
     </div>
   );
 }
+
