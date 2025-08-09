@@ -81,7 +81,7 @@ export default function Footer() {
   return (
     <footer className="bg-white border-t">
       {/* Top blue subscribe section */}
-      <div className="bg-gradient-to-r from-blue-700 to-blue-500 text-white px-4 py-8 md:py-10">
+      <div className="bg-gradient-to-r from-blue-700 to-blue-500 text-white px-4 py-8 md:py-12">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-6">
           <div className="flex-1 text-center md:text-left">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
@@ -158,18 +158,26 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/used-mhe" className="text-gray-600 hover:text-blue-700 transition">
-                    Used MHE
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/rental" className="text-gray-600 hover:text-blue-700 transition">
-                    MHE Rental
+                  {/* Updated link from /used-mhe to /used to match Nav.tsx */}
+                  <Link href="/used" className="text-gray-600 hover:text-blue-700 transition">
+                    Rental/Used MHE
                   </Link>
                 </li>
                 <li>
                   <Link href="/services" className="text-gray-600 hover:text-blue-700 transition">
-                    CMC & AMC Services
+                    Services
+                  </Link>
+                </li>
+                <li>
+                  {/* New link from Nav.tsx */}
+                  <Link href="/attachments" className="text-gray-600 hover:text-blue-700 transition">
+                    Attachments
+                  </Link>
+                </li>
+                <li>
+                  {/* New link from Nav.tsx */}
+                  <Link href="/spare-parts" className="text-gray-600 hover:text-blue-700 transition">
+                    Spare Parts
                   </Link>
                 </li>
                 <li>
@@ -178,8 +186,9 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/testimonials" className="text-gray-600 hover:text-blue-700 transition">
-                    Testimonials
+                  {/* New link from Nav.tsx */}
+                  <Link href="/blog" className="text-gray-600 hover:text-blue-700 transition">
+                    Blogs
                   </Link>
                 </li>
                 <li>
@@ -188,13 +197,15 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/vendors" className="text-gray-600 hover:text-blue-700 transition">
-                    Vendors
+                  {/* Updated link from /vendors to /vendor-listing to match Nav.tsx */}
+                  <Link href="/vendor-listing" className="text-gray-600 hover:text-blue-700 transition">
+                    Vendor Listing
                   </Link>
                 </li>
                 <li>
-                  <Link href="/blog" className="text-gray-600 hover:text-blue-700 transition">
-                    Blog
+                  {/* New link from Nav.tsx */}
+                  <Link href="/services/subscription-plan" className="text-gray-600 hover:text-blue-700 transition">
+                    Price Plan
                   </Link>
                 </li>
               </ul>
@@ -247,7 +258,7 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/order-status" className="text-gray-600 hover:text-blue-700 transition">
+                  <Link href="/account/orders" className="text-gray-600 hover:text-blue-700 transition">
                     Check order status
                   </Link>
                 </li>

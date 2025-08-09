@@ -43,7 +43,7 @@ export interface Category {
 }
 
 const navigationLinks = [
-  { name: "About", href: "/about" },
+  // { name: "About", href: "/about" },
   { name: "Rental/Used MHE", href: "/used" },
   { name: "Attachments", href: "/attachments" },
   { name: "Spare Parts", href: "/spare-parts" },
