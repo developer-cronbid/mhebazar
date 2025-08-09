@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import axios from "axios";
 
 // ====================
 // Types (Unchanged)
@@ -32,7 +31,7 @@ interface Category {
 }
 
 // ====================
-// Data Transformation (Slightly Modified)
+// Data Transformation
 // ====================
 const createSlug = (text: string | undefined) => text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#";
 
@@ -66,9 +65,8 @@ const transformApiData = (apiProducts: ApiProduct[]): Category[] => {
   return [transformedCategory];
 };
 
-
 // ====================
-// Main Component (Rendering Logic Changed)
+// Main Component
 // ====================
 export default function MostPopular() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -85,10 +83,9 @@ export default function MostPopular() {
       return;
     }
     try {
-      const res = await axios.get<ApiProduct[]>(
-        `${baseUrl}/products/most_popular/`
-      );
-      const apiProducts = res.data;
+      const response = await fetch(`${baseUrl}/products/most_popular/`);
+      const apiProducts = await response.json();
+      
       if (Array.isArray(apiProducts) && apiProducts.length > 0) {
         const formattedData = transformApiData(apiProducts);
         setCategories(formattedData);
@@ -109,25 +106,19 @@ export default function MostPopular() {
   const handleScroll = () => {
     if (scrollContainerRef.current) {
       const scrollLeft = scrollContainerRef.current.scrollLeft;
-      const firstChild = scrollContainerRef.current.children[0] as HTMLElement;
-      if (firstChild) {
-        const itemWidth = firstChild.clientWidth + 16;
-        const newIndex = Math.round(scrollLeft / itemWidth);
-        setScrollIndex(newIndex);
-      }
+      const itemWidth = 180; // Approximate width of each item
+      const newIndex = Math.round(scrollLeft / itemWidth);
+      setScrollIndex(newIndex);
     }
   };
 
   const handleDotClick = (index: number) => {
     if (scrollContainerRef.current) {
-      const firstChild = scrollContainerRef.current.children[0] as HTMLElement;
-      if (firstChild) {
-        const itemWidth = firstChild.clientWidth + 16;
-        scrollContainerRef.current.scrollTo({
-          left: index * itemWidth,
-          behavior: 'smooth',
-        });
-      }
+      const itemWidth = 180;
+      scrollContainerRef.current.scrollTo({
+        left: index * itemWidth,
+        behavior: 'smooth',
+      });
     }
   };
 
@@ -137,9 +128,9 @@ export default function MostPopular() {
 
   if (!popularData || mainImageError) {
     return (
-      <section className="w-full sm:px-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
+      <section className="w-full">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
             Top Selling Products
           </h2>
         </div>
@@ -157,92 +148,99 @@ export default function MostPopular() {
     }
 
     return (
-      <div key={idx} className="basis-1/3 sm:basis-1/4 md:basis-1/5 flex-shrink-0">
-        <Link href={`/product/${product.slug}/?id=${product.id}`} className="p-1">
-          <div className="p-3 flex flex-col items-center text-center shadow-sm hover:shadow-lg transition-shadow duration-200 h-full rounded-lg bg-gray-100 border border-gray-200">
-            <div className="relative w-24 h-24 sm:w-28 sm:h-28 mb-3">
+      <div key={idx} className="w-44 flex-shrink-0 mr-4">
+        <Link href={`/product/${product.slug}/?id=${product.id}`} className="block">
+          <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 p-4 h-44 flex flex-col items-center justify-center">
+            <div className="relative w-32 h-32 mb-2">
               <Image
                 src={product.image}
                 alt={product.label}
                 fill
-                sizes="(max-width: 640px) 96px, 112px"
-                className="object-contain p-1"
+                className="object-contain"
                 onError={() => setItemImageError(true)}
               />
             </div>
-            {/* Removed the product name as per user request */}
           </div>
         </Link>
       </div>
     );
   };
 
+  const visibleProducts = popularData.products.slice(0, 9); // Show max 9 products for 3 dots
 
   return (
     <section className="w-full">
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">
           Top Selling Products
         </h2>
-        <Link href="/products" className="text-green-600 text-sm font-medium hover:underline">
+        <Link href="/new" className="text-green-600 text-sm font-medium hover:underline">
           View more
         </Link>
       </div>
 
       {/* Main Container */}
-      <div className="p-4 sm:p-6 border border-gray-200 rounded-xl bg-white shadow-sm">
-        {/* --- Top Fixed Product (Two-column layout) --- */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 mb-8 p-4 rounded-lg">
-          {/* Main Image */}
-          <div className="relative w-48 h-48 sm:w-56 sm:h-56 flex-shrink-0">
+      <div className="bg-white border  rounded-lg p-6">
+
+        <div className="flex flex-col">
+  <h2 className="text-3xl font-semibold text-black leading-tight">
+    Most Popular
+  </h2>
+  <p className="text-sm font-normal text-gray-500">
+{popularData.subtitle}
+  </p>
+</div>
+
+       
+        {/* Top Section with Main Product */}
+        <div className="flex items-center justify-center gap-8 mb-10">
+          {/* Main Image - Large Size */}
+          <div className="relative w-80 h-80 flex-shrink-0">
             <Image
               src={popularData.mainImage}
               alt={popularData.mainLabel}
               fill
-              sizes="(max-width: 768px) 192px, 224px"
               className="object-contain"
               onError={() => setMainImageError(true)}
             />
           </div>
-          {/* Main Details */}
-          <div className="text-center md:text-left flex-1">
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">
-              {popularData.mainLabel}
-            </h3>
-            <p className="text-md sm:text-lg text-gray-500 font-medium">{popularData.subtitle}</p>
-            <p className="text-xs text-gray-500 mt-4">{popularData.note}</p>
-          </div>
+          
+          
         </div>
 
-        {/* --- Carousel for Other Popular Products --- */}
+        {/* Bottom Products Grid - 3 per row */}
         <div className="relative">
           <div
             ref={scrollContainerRef}
-            className="flex gap-4 overflow-x-auto pb-2"
+            className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide"
             onScroll={handleScroll}
             style={{
-              msOverflowStyle: 'none',
               scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
             }}
           >
-            {popularData.products.map((product, idx) => (
+            {visibleProducts.map((product, idx) => (
               <CarouselProductItem key={idx} product={product} idx={idx} />
             ))}
           </div>
-          <div className="flex justify-center space-x-2 mt-4">
-            {popularData.products.map((_, idx) => (
-              <span
-                key={idx}
-                onClick={() => handleDotClick(idx)}
-                className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
-                  idx === scrollIndex
-                    ? "bg-[#42a856] scale-110"
-                    : "bg-[#b5e0c0] hover:bg-[#a5d8b2]"
-                }`}
-              ></span>
-            ))}
-          </div>
+
+          {/* Dots Navigation */}
+          {visibleProducts.length > 3 && (
+            <div className="flex justify-center space-x-2 mt-4">
+              {[0, 1, 2].map((dotIndex) => (
+                <button
+                  key={dotIndex}
+                  onClick={() => handleDotClick(dotIndex * 3)}
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                    Math.floor(scrollIndex / 3) === dotIndex
+                      ? "bg-green-600"
+                      : "bg-gray-300 hover:bg-gray-400"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {error && (
@@ -255,28 +253,30 @@ export default function MostPopular() {
   );
 }
 
-
 // ====================
-// Skeleton Loader (Unchanged)
+// Skeleton Loader
 // ====================
 function LoadingSkeleton() {
   return (
-    <div className="w-full sm:px-6">
-      <div className="flex justify-between items-center mb-4">
+    <div className="w-full">
+      <div className="flex justify-between items-center mb-6">
         <div className="h-8 bg-gray-200 rounded w-48 animate-pulse" />
         <div className="h-5 bg-gray-200 rounded w-20 animate-pulse" />
       </div>
       <div className="w-full p-6 border border-gray-200 rounded-lg bg-white animate-pulse">
-        <div className="flex flex-col md:flex-row items-center gap-12 mb-8">
-          <div className="w-56 h-56 bg-gray-200 rounded-lg" />
+        <div className="flex items-center gap-8 mb-8">
+          <div className="w-80 h-80 bg-gray-200 rounded-lg" />
           <div className="flex-1">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
-            <div className="h-8 bg-gray-200 rounded w-3/4 mb-3" />
+            <div className="h-5 bg-gray-200 rounded w-1/4 mb-4" />
+            <div className="h-10 bg-gray-200 rounded w-3/4 mb-3" />
             <div className="h-4 bg-gray-200 rounded w-1/2" />
           </div>
         </div>
-        <div className="h-5 bg-gray-200 rounded w-32 mb-4" />
-        <div className="h-48 bg-gray-200 rounded" />
+        <div className="flex gap-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="w-44 h-44 bg-gray-200 rounded-lg" />
+          ))}
+        </div>
       </div>
     </div>
   );

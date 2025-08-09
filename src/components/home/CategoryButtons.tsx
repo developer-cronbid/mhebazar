@@ -35,12 +35,18 @@ function getImageUrl(imagePath: string | null): string | null {
     return null;
   }
 
-  let cleanedPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
-  cleanedPath = cleanedPath.startsWith('api/') ? cleanedPath.substring(4) : cleanedPath;
+  let cleanedPath = imagePath.startsWith("/")
+    ? imagePath.substring(1)
+    : imagePath;
+  cleanedPath = cleanedPath.startsWith("api/")
+    ? cleanedPath.substring(4)
+    : cleanedPath;
 
   if (BACKEND_BASE_URL) {
-    const baseUrl = BACKEND_BASE_URL.endsWith('/') ? BACKEND_BASE_URL.slice(0, -1) : BACKEND_BASE_URL;
-    const path = cleanedPath.startsWith('/') ? cleanedPath : `/${cleanedPath}`;
+    const baseUrl = BACKEND_BASE_URL.endsWith("/")
+      ? BACKEND_BASE_URL.slice(0, -1)
+      : BACKEND_BASE_URL;
+    const path = cleanedPath.startsWith("/") ? cleanedPath : `/${cleanedPath}`;
     return `${baseUrl}${path}`;
   }
 
@@ -55,9 +61,9 @@ const itemVariants = {
     transition: {
       type: "spring",
       stiffness: 100,
-      damping: 20
-    }
-  }
+      damping: 20,
+    },
+  },
 };
 
 /**
@@ -81,35 +87,36 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
   };
 
   return (
-    <Link href={`/${slug}`} className="flex flex-col items-center group cursor-pointer">
+    <Link href={`/${slug}`} className="flex flex-col items-center justify-center gap-4 relative">
       <motion.div
         variants={itemVariants}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        // Added shadow-md to match the subtle shadow in the image
-        className="w-[144px] h-[144px] rounded-full bg-gradient-to-b from-blue-100 to-white flex items-center justify-center mb-2 overflow-hidden "
+        className="flex flex-col w-[130px] h-[130px] items-center justify-center px-0 py-6 relative rounded-[1000px] aspect-[1] bg-[linear-gradient(143deg,rgba(212,234,250,1)_0%,rgba(255,255,255,1)_100%)]"
       >
         {fullImageUrl && !showInitials ? (
-          <div className="relative w-[80%] h-[80%]">
+          <div className="relative w-[100px] h-[100px]">
             <Image
               src={fullImageUrl}
               alt={label}
               fill
-              className="object-contain p-2"
+              className="object-contain"
               onError={handleImageError}
-              sizes="(max-width: 768px) 120px, 144px"
+              sizes="100px"
             />
           </div>
         ) : (
-          <span className="text-blue-500 text-3xl font-bold">{initials}</span>
+          <span className="text-blue-500 text-base font-normal">{initials}</span>
         )}
       </motion.div>
-      <p className="text-center text-sm font-normal text-gray-800">
+
+      <div className="relative w-fit [font-family:'Inter-Regular',Helvetica] font-normal text-black text-base tracking-[0] leading-[normal] whitespace-nowrap">
         {label}
-      </p>
+      </div>
     </Link>
   );
 };
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -149,17 +156,17 @@ export default function CategoriesSection(): JSX.Element {
   const displayedCategories = showAll ? categories : categories.slice(0, 7);
 
   return (
-    <section className="py-12 w-full mx-auto px-4 md:px-8 bg-white">
-      <h2 className="text-2xl font-bold mb-8 text-left text-gray-900">
+    <section className="py-10 mb-4 w-full mx-auto px-4 md:px-8 bg-black-50">
+      <h2 className="text-3xl font-bold mb-8 text-left text-black-900">
         MHE Categories
       </h2>
-      
-     
 
       {loading ? (
-        <p className="text-center text-gray-600 animate-pulse">Loading categories...</p>
+        <p className="text-center text-black-600 animate-pulse">
+          Loading categories...
+        </p>
       ) : categories.length === 0 ? (
-        <p className="text-center text-gray-500">No categories found.</p>
+        <p className="text-center text-black-500">No categories found.</p>
       ) : (
         <motion.div
           variants={containerVariants}
@@ -172,7 +179,7 @@ export default function CategoriesSection(): JSX.Element {
               key={cat.id}
               imageSrc={cat.image_url}
               label={cat.name}
-              slug={cat.name.toLowerCase().replace(/\s+/g, '-')}
+              slug={cat.name.toLowerCase().replace(/\s+/g, "-")}
             />
           ))}
           {categories.length > 7 && (

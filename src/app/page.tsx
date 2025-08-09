@@ -46,7 +46,7 @@ export default function HomePage() {
         <HomeBanner />
       </div>
 
-      <SectionWrapper className="max-w-[95vw] mx-auto py-6 md:py-8">
+      <SectionWrapper className="max-w-[95vw] mx-auto ">
         <CategoryButtons />
       </SectionWrapper>
 
