@@ -5,7 +5,6 @@
 import { useState, useEffect, JSX, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import api from "@/lib/api";
 
 // --- Type Definitions (Refined) ---
 interface ProductApiResponse {
@@ -28,6 +27,7 @@ const FALLBACK_NEW_ARRIVALS: DisplayItem[] = [
   { id: 'fallback-na-1', image: "/home/new-1.png", label: "New MHE 1", alt: "New MHE 1", slug: "#" },
   { id: 'fallback-na-2', image: "/home/new-2.png", label: "New MHE 2", alt: "New MHE 2", slug: "#" },
   { id: 'fallback-na-3', image: "/home/new-3.png", label: "New MHE 3", alt: "New MHE 3", slug: "#" },
+  { id: 'fallback-na-4', image: "/home/new-1.png", label: "New MHE 4", alt: "New MHE 4", slug: "#" },
 ];
 
 const FALLBACK_TOP_RATED: DisplayItem[] = [
@@ -49,22 +49,22 @@ function TopRatedItem({ item }: { item: DisplayItem }): JSX.Element | null {
 
   return (
     <Link href={`/product/${slug}/?id=${item.id}`} className="block">
-      <div className="flex items-center gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer">
-        <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 flex-shrink-0 flex items-center justify-center">
+      <div className="flex items-center gap-6 p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer min-h-[120px]">
+        <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 flex-shrink-0 flex items-center justify-center">
           {image && !showInitials ? (
             <Image
               src={image}
               alt={alt || label}
               fill
               className="object-contain p-2 transform hover:scale-105 transition-transform duration-200"
-              sizes="64px"
+              sizes="80px"
               onError={() => setShowInitials(true)}
             />
           ) : (
             <span className="text-green-500 text-lg font-bold">{initials}</span>
           )}
         </div>
-        <p className="font-medium text-gray-900 flex-1 text-base hover:text-green-700 transition-colors">{label}</p>
+        <p className="font-semibold text-gray-900 flex-1 text-lg hover:text-green-700 transition-colors">{label}</p>
       </div>
     </Link>
   );
@@ -79,18 +79,20 @@ function NewArrivalItem({ item }: { item: DisplayItem }): JSX.Element | null {
   }
 
   return (
-    <Link href={`/product/${item.slug}/?id=${item.id}`} key={item.id} className="block">
-      <div className="relative w-28 h-28 flex-shrink-0 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 hover:shadow-md transition-all duration-200 p-3">
-        <Image
-          src={item.image}
-          alt={item.alt}
-          fill
-          className="object-contain hover:scale-105 transition-transform duration-200"
-          sizes="112px"
-          onError={() => setImageError(true)}
-        />
-      </div>
-    </Link>
+    <div className="w-44 flex-shrink-0 mr-4">
+      <Link href={`/product/${item.slug}/?id=${item.id}`} className="block">
+        <div className="relative w-44 h-44 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 hover:shadow-md transition-all duration-200 p-4">
+          <Image
+            src={item.image}
+            alt={item.alt}
+            fill
+            className="object-contain hover:scale-105 transition-transform duration-200"
+            sizes="176px"
+            onError={() => setImageError(true)}
+          />
+        </div>
+      </Link>
+    </div>
   );
 }
 
@@ -109,68 +111,87 @@ export default function NewArrivalsAndTopSearches() {
   const createSlug = (text: string | undefined) => text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#";
 
   useEffect(() => {
-    setIsLoadingNewArrivals(true);
-    api.get<{ count?: number; products?: ProductApiResponse[] }>(`/products/new-arrival/`)
-      .then(res => {
-        const products = res.data?.products || [];
-        const transformed = products.map(p => ({
+    const fetchData = async () => {
+      if (!API_BASE_URL) {
+        setIsLoadingNewArrivals(false);
+        setIsLoadingTopRated(false);
+        return;
+      }
+
+      // Fetch New Arrivals
+      try {
+        setIsLoadingNewArrivals(true);
+        const response = await fetch(`${API_BASE_URL}/products/new-arrival/`);
+        const res = await response.json();
+        
+        const products = res?.products || [];
+        const transformed = products.map((p: ProductApiResponse) => ({
           id: p.id,
           image: p.images?.[0]?.image || null,
           label: p.title || p.name || "New Product",
           alt: p.title || p.name || "New Product",
           slug: createSlug(p.title || p.name),
-        })).filter(item => item.image !== null);
+        })).filter((item: DisplayItem) => item.image !== null);
 
         setNewArrivals(transformed.slice(0, 10));
-        setNewArrivalsCount(res.data?.count || transformed.length);
-      }).catch(console.error).finally(() => setIsLoadingNewArrivals(false));
+        setNewArrivalsCount(res?.count || transformed.length);
+      } catch (error) {
+        console.error('Error fetching new arrivals:', error);
+      } finally {
+        setIsLoadingNewArrivals(false);
+      }
 
-    setIsLoadingTopRated(true);
-    api.get<{ count?: number; products?: ProductApiResponse[] }>(`/products/top-rated/`)
-      .then(res => {
-        const products = res.data?.products || [];
-        const transformed = products.map(p => ({
+      // Fetch Top Rated
+      try {
+        setIsLoadingTopRated(true);
+        const response = await fetch(`${API_BASE_URL}/products/top-rated/`);
+        const res = await response.json();
+        
+        const products = res?.products || [];
+        const transformed = products.map((p: ProductApiResponse) => ({
           id: p.id,
           image: p.images?.[0]?.image || null,
           label: p.title || p.name || "Top Rated Product",
           alt: p.title || p.name || "Top Rated Product",
           slug: createSlug(p.title || p.name),
-        })).filter(item => item.image !== null);
+        })).filter((item: DisplayItem) => item.image !== null);
 
         setTopRated(transformed.slice(0, 10));
-      }).catch(console.error).finally(() => setIsLoadingTopRated(false));
+      } catch (error) {
+        console.error('Error fetching top rated:', error);
+      } finally {
+        setIsLoadingTopRated(false);
+      }
+    };
+
+    fetchData();
   }, [API_BASE_URL]);
 
-  const LoadingBoxSkeleton = () => <div className="w-28 h-28 bg-gray-200 rounded-lg animate-pulse flex-shrink-0"></div>;
+  const LoadingBoxSkeleton = () => <div className="w-44 h-44 bg-gray-200 rounded-lg animate-pulse flex-shrink-0 mr-4"></div>;
+  
   const LoadingListItemSkeleton = () => (
-    <div className="flex items-center gap-4 p-4 bg-white rounded-lg border border-gray-200 animate-pulse">
-      <div className="w-16 h-16 rounded-lg bg-gray-200 flex-shrink-0"></div>
-      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+    <div className="flex items-center gap-6 p-4 bg-white rounded-lg border border-gray-200 animate-pulse min-h-[120px]">
+      <div className="w-20 h-20 rounded-lg bg-gray-200 flex-shrink-0"></div>
+      <div className="h-5 bg-gray-200 rounded w-3/4"></div>
     </div>
   );
 
   const handleScroll = () => {
     if (scrollContainerRef.current) {
       const scrollLeft = scrollContainerRef.current.scrollLeft;
-      const firstChild = scrollContainerRef.current.children[0] as HTMLElement;
-      if (firstChild) {
-        const itemWidth = firstChild.clientWidth + 16;
-        const newIndex = Math.round(scrollLeft / itemWidth);
-        setScrollIndex(newIndex);
-      }
+      const itemWidth = 192; // 176px width + 16px margin
+      const newIndex = Math.round(scrollLeft / itemWidth);
+      setScrollIndex(newIndex);
     }
   };
 
   const handleDotClick = (index: number) => {
     if (scrollContainerRef.current) {
-      const firstChild = scrollContainerRef.current.children[0] as HTMLElement;
-      if (firstChild) {
-        const itemWidth = firstChild.clientWidth + 16;
-        scrollContainerRef.current.scrollTo({
-          left: index * itemWidth,
-          behavior: 'smooth',
-        });
-      }
+      const itemWidth = 192;
+      scrollContainerRef.current.scrollTo({
+        left: index * itemWidth,
+        behavior: 'smooth',
+      });
     }
   };
 
@@ -179,19 +200,19 @@ export default function NewArrivalsAndTopSearches() {
       {/* New Arrivals Section */}
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">New Arrivals</h2>
+          <h2 className="text-2xl font-bold text-gray-900">New Arrivals</h2>
           <Link href="/products/battery" className="text-green-600 text-sm font-medium hover:underline">View more</Link>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="mb-6">
-            <p className="text-lg font-semibold text-gray-900">
+            <p className="text-xl font-semibold text-gray-900">
               {newArrivalsCount > 0 ? `${newArrivalsCount}+ products added today` : "50+ products added today"}
             </p>
           </div>
           <div className="relative">
             <div
               ref={scrollContainerRef}
-              className="flex gap-4 overflow-x-auto pb-2"
+              className="flex overflow-x-auto pb-4"
               onScroll={handleScroll}
               style={{
                 msOverflowStyle: 'none',
@@ -207,18 +228,18 @@ export default function NewArrivalsAndTopSearches() {
               )}
             </div>
             {/* Dots Navigation */}
-            {newArrivals.length > 1 && (
+            {newArrivals.length > 3 && (
               <div className="flex justify-center space-x-2 mt-4">
-                {Array.from({ length: Math.min(newArrivals.length, 4) }).map((_, idx) => (
-                  <span
-                    key={idx}
-                    onClick={() => handleDotClick(idx)}
-                    className={`cursor-pointer w-2 h-2 rounded-full transition-colors duration-300 ${
-                      idx === scrollIndex
+                {[0, 1, 2].map((dotIndex) => (
+                  <button
+                    key={dotIndex}
+                    onClick={() => handleDotClick(dotIndex * 3)}
+                    className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                      Math.floor(scrollIndex / 3) === dotIndex
                         ? "bg-green-600"
                         : "bg-gray-300 hover:bg-gray-400"
                     }`}
-                  ></span>
+                  />
                 ))}
               </div>
             )}
@@ -229,16 +250,16 @@ export default function NewArrivalsAndTopSearches() {
       {/* Top Searched Products Section */}
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Top Searched Products</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Top Searched Products</h2>
           <Link href="/products/battery" className="text-green-600 text-sm font-medium hover:underline">View more</Link>
         </div>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {isLoadingTopRated ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {[...Array(3)].map((_, i) => <LoadingListItemSkeleton key={i} />)}
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {topRated.map((item) => <TopRatedItem key={item.id} item={item} />)}
             </div>
           )}

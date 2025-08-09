@@ -184,7 +184,7 @@ export default function Navbar(): JSX.Element {
             </button>
 
             {/* Logo */}
-            <div className="flex items-center">
+            <div className="flex items-center ml-5">
               <Link href="/" className="flex items-center">
                 <Image
                   src="/mhe-logo.png"

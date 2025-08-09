@@ -19,22 +19,22 @@ const data = [
 
 export default function GlobalMapStats() {
   const [activeTab, setActiveTab] = useState<'impressions' | 'clicks'>('impressions');
+
+  // Toggle this to false to disable tab switching functionality
   const isTabSwitchingEnabled = false;
 
   return (
-    <section className="w-full bg-white py-12 px-4">
+    <section className="w-full bg-white py-8 px-4">
       <div className="mx-auto max-w-6xl">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-left">
-          Global Map
-        </h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-6">Global Map</h2>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-3 mb-8">
+        <div className="flex gap-2 mb-6">
           <button
             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'impressions'
                 ? 'bg-green-600 text-white'
-                : 'bg-green-50 text-gray-700 border border-green-200'
+                : 'bg-green-100 text-gray-800'
             }`}
             onClick={() => {
               if (isTabSwitchingEnabled) setActiveTab('impressions');
@@ -43,11 +43,7 @@ export default function GlobalMapStats() {
             Worldwide Impressions
           </button>
           <button
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              activeTab === 'clicks'
-                ? 'bg-green-600 text-white'
-                : 'bg-green-50 text-gray-700 border border-green-200'
-            }`}
+            className="px-4 py-2 rounded-md text-sm font-medium bg-green-100 text-gray-800"
             onClick={() => {
               if (isTabSwitchingEnabled) setActiveTab('clicks');
             }}
@@ -57,48 +53,37 @@ export default function GlobalMapStats() {
         </div>
 
         {/* Content */}
-        <div className="flex flex-col lg:flex-row gap-8 items-start">
+        <div className="flex gap-8 items-start">
           {/* Map Image */}
           <div className="flex-1">
             <div className="w-full">
               <Image
                 src="/about/map.png"
                 alt="Global Impressions Map"
-                width={600}
-                height={350}
-                className="w-full h-auto object-contain rounded-lg shadow-sm"
+                width={500}
+                height={300}
+                className="w-full h-auto object-contain rounded-lg"
                 priority
               />
             </div>
           </div>
 
           {/* Table */}
-          <div className="w-full lg:w-80">
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-              <table className="min-w-full">
+          <div className="w-80">
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-green-50 border-b border-gray-200">
-                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">
-                      Country
-                    </th>
-                    <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700 capitalize">
-                      {activeTab}
-                    </th>
+                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Country</th>
+                    <th className="py-3 px-4 text-left font-semibold text-gray-700">Impressions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.map(({ country, impressions }, index) => (
-                    <tr 
-                      key={country} 
-                      className={`border-b border-gray-100 ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                      }`}
-                    >
-                      <td className="py-3 px-4 text-sm text-gray-700">
-                        {country}
-                      </td>
-                      <td className="py-3 px-4 text-sm font-medium text-gray-900">
-                        {activeTab === 'impressions' ? impressions.toLocaleString() : Math.floor(impressions / 5).toLocaleString()}
+                    <tr key={country} className={`border-b ${index % 2 === 0 ? 'bg-white' : 'bg-white'}`}>
+                      <td className="py-2 px-4 text-gray-700">{country}</td>
+                      <td className="py-2 px-4 text-gray-700">
+                        {activeTab === 'impressions' ? impressions : Math.floor(impressions / 5)}
                       </td>
                     </tr>
                   ))}

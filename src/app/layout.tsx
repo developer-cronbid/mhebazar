@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import SiteLayout from "@/components/layout/SiteLayout";
 import { Suspense } from "react";
@@ -8,27 +8,33 @@ import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
 import WhatsAppChat from "@/components/elements/WhatsAppChat";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Import Inter font
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// A simple version number to force browser to re-fetch the favicon
-const FAVICON_VERSION = 'v1.2'; // Changed version to force cache refresh
+// Favicon version for cache busting
+const FAVICON_VERSION = "v1.2";
 
 export const metadata: Metadata = {
   title: "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
-  description: "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
+  description:
+    "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
   icons: {
     icon: [
       { url: `/favicon.ico?v=${FAVICON_VERSION}` },
-      { url: `/favicon-16x16.png?v=${FAVICON_VERSION}`, sizes: "16x16", type: "image/png" },
-      { url: `/favicon-32x32.png?v=${FAVICON_VERSION}`, sizes: "32x32", type: "image/png" },
+      {
+        url: `/favicon-16x16.png?v=${FAVICON_VERSION}`,
+        sizes: "16x16",
+        type: "image/png",
+      },
+      {
+        url: `/favicon-32x32.png?v=${FAVICON_VERSION}`,
+        sizes: "32x32",
+        type: "image/png",
+      },
     ],
     apple: [
       { url: `/apple-touch-icon.png?v=${FAVICON_VERSION}`, sizes: "180x180" },
@@ -42,16 +48,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <head>
-        {/* Yahaan par hum manual favicon link add kar rahe hain */}
-        <link rel="icon" href={`/favicon.ico?v=${FAVICON_VERSION}`} sizes="any" />
-        {/* Cache-control meta tag to prevent caching */}
-        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        {/* Manual favicon link */}
+        <link
+          rel="icon"
+          href={`/favicon.ico?v=${FAVICON_VERSION}`}
+          sizes="any"
+        />
+        {/* Cache-control to prevent caching */}
+        <meta
+          httpEquiv="Cache-Control"
+          content="no-cache, no-store, must-revalidate"
+        />
         <meta httpEquiv="Pragma" content="no-cache" />
         <meta httpEquiv="Expires" content="0" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased font-inter`}>
+      <body className="antialiased font-sans">
         <Toaster
           position="top-right"
           richColors
@@ -59,7 +72,7 @@ export default function RootLayout({
           toastOptions={{
             className: "bg-white text-gray-800 shadow-lg",
             style: {
-              fontFamily: "var(--font-geist-sans)",
+              fontFamily: "var(--font-inter)",
               fontSize: "14px",
             },
           }}
@@ -67,9 +80,7 @@ export default function RootLayout({
 
         <UserProvider>
           <SiteLayout>
-            <Suspense fallback={<Loading />}>
-              {children}
-            </Suspense>
+            <Suspense fallback={<Loading />}>{children}</Suspense>
           </SiteLayout>
           <WhatsAppChat />
         </UserProvider>

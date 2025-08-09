@@ -114,7 +114,7 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
         </CarouselContent>
       </Carousel>
 
-      <div className="flex justify-center space-x-2 mt-4 ">
+      <div className="flex justify-center space-x-2 mt-6 ">
         {scrollSnaps.map((_, idx) => (
           <span
             key={idx}

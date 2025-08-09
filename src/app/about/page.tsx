@@ -19,8 +19,8 @@ const AboutPage = () => {
       />
       
       {/* Top About div */}
-      <section className="bg-white py-12">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-white py-6">
+  <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8">
     <div className="mb-4">
       <h1 className="text-3xl md:text-2xl font-bold mb-4 text-gray-900">
         About MHE Bazar
@@ -46,13 +46,18 @@ const AboutPage = () => {
       {/* Solution div */}
       <section>
         <div className="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
+ 
+         <h2 className="text-2xl font-semibold m-5  text-gray-900">
+  The portal is having the complete <br /> solution for MHE like:
+</h2>
           <div className="text-center">
+            
             <Image
               src="/about/image.png"
               alt="MHE Bazar One Stop"
               width={1640}
               height={1640}
-              className="w-full h-auto rounded-xl shadow-lg"
+              className="w-full h-auto "
               priority
             />
           </div>
@@ -72,6 +77,8 @@ const AboutPage = () => {
                 longer lifespan, fast charging, more productivity, and requiring less
                 maintenance.
               </p>
+
+              <br />
               <p>
                 In addition to the conversion kit, we also offer a wide range of
                 high-quality lithium-ion batteries that are optimized for use in a
@@ -81,6 +88,8 @@ const AboutPage = () => {
                 installed a Li-ion conversion kit for all almost brands covering all
                 types of MHEs.
               </p>
+              <br />
+
               <p>
                 We are committed to helping our customers save money and improve their
                 operations through the use of advanced technology, and our lithium-ion

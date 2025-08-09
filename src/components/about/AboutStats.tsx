@@ -178,11 +178,11 @@ const AnimatedCircle = ({
 
 const AboutStats = () => (
   <section className="w-full py-12 bg-white">
-    <div className="max-w-6xl mx-auto px-4">
+    <div className="max-w-8xl mx-auto px-4">
       <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center text-gray-900">
         Brand Presence Globally
       </h2>
-      <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+      <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
         {stats.map((stat, i) => (
           <AnimatedCircle key={i} {...stat} duration={1.2 + i * 0.2} />
         ))}
