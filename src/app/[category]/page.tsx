@@ -30,6 +30,7 @@ interface ApiProduct {
   stock_quantity: number;
   manufacturer: string;
   average_rating: number | null;
+  category: number | null;
 }
 
 interface ApiCategory {
@@ -212,6 +213,7 @@ export default function CategoryOrTypePage({
           manufacturer: p.manufacturer,
           average_rating: p.average_rating,
           type: p.type,
+          category_id: p.category,
         }));
 
         setProducts(transformedProducts);
@@ -401,6 +403,7 @@ export default function CategoryOrTypePage({
         selectedRating={selectedRating}
         sortBy={sortBy}
         onSortChange={handleSortChange}
+        // category_id={product.category}
       />
     </>
   );

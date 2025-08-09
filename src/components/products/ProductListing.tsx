@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Grid, List, MenuIcon, X } from "lucide-react";
+import { ChevronDown, List, Menu, X } from "lucide-react";
 import { ProductCardContainer } from "@/components/elements/Product";
 import SideFilter from "@/components/products/SideFilter";
 import Image from "next/image";
@@ -10,6 +10,8 @@ import { Toaster } from "sonner"; // Import Toaster for sonner
 import QuoteForm from "../forms/enquiryForm/quotesForm";
 import { Product } from "@/types";
 import DOMPurify from 'dompurify';
+import { IoGrid } from "react-icons/io5";
+// import category from '@/data/categories.json'
 
 import {
   Dialog,
@@ -44,6 +46,7 @@ export interface Product {
   stock_quantity: number;
   manufacturer: string;
   average_rating: number | null;
+  category_id: number | null;
 }
 
 interface ProductGridProps {
@@ -168,6 +171,7 @@ function ProductGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6"> {/* Changed grid to lg:grid-cols-4 */}
       {products.map((product: Product) => (
+        // console.log(`Rendering product: ${JSON.stringify(product)}`),
         <ProductCardContainer
           key={product.id}
           id={parseInt(product.id, 10)}
@@ -181,6 +185,7 @@ function ProductGrid({
           hide_price={product.hide_price}
           type={product.type}
           stock_quantity={product.stock_quantity}
+          category_id={product.category_id}
         />
       ))}
     </div>
@@ -252,7 +257,7 @@ export default function ProductListing({
         {/* {!window.location.pathname.startsWith("/vendor-listing/") && ( */}
         <>
           {/* Desktop Sidebar */}
-          <div className="hidden lg:block flex-shrink-0 w-72 xl:w-80">
+          <div className="hidden lg:block flex-shrink-0 w-fit">
             <div className="sticky top-4 h-[calc(100vh-2rem)] overflow-y-auto">
               <SideFilter
                 selectedFilters={selectedFilters}
@@ -316,74 +321,72 @@ export default function ProductListing({
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           {/* Top Controls */}
-          <div className="bg-white/80 backdrop-blur-md border-b border-gray-200/60 px-4 sm:px-6 lg:px-8 py-4 sm:py-5 shadow-sm sticky top-0 z-40">
-            <div className="flex flex-col gap-4 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-gradient-to-r from-orange-100 to-amber-100 text-orange-800 px-4 py-2 rounded-full text-sm sm:text-base font-semibold shadow-sm">
-                    {title || 'Products'}
-                  </div>
-                  <div className="hidden sm:block w-px h-6 bg-gray-300"></div>
-                  <p className="text-sm sm:text-base text-gray-600 font-medium">
-                    <span className="text-green-600 font-bold">{products.length}</span> of <span className="font-bold">{totalCount}</span> results
-                  </p>
+          <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 sticky top-0 z-40">
+            <div className="flex items-center justify-between py-2">
+              {/* Left Section - Title and Results */}
+              <div className="flex flex-col">
+                <div className="flex items-center">
+                  <span className="text-base font-bold text-black font-sans mr-2">
+                    {title || 'New Arrivals'}
+                  </span>
                 </div>
+                <p className="text-xs text-gray-500 font-normal font-sans mt-0.5">
+                  Showing 1–{products.length} results
+                </p>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3 sm:gap-4">
-                {/* Sort By */}
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <label htmlFor="sort-by" className="text-sm sm:text-base font-semibold text-gray-700 whitespace-nowrap">
-                    Sort By
-                  </label>
+              {/* Right Section - Sort, View Toggle, Mobile Filter */}
+              <div className="flex items-center gap-2">
+                {/* Sort Dropdown */}
+                <div className="relative">
                   <select
-                    id="sort-by"
-                    className="px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base bg-white shadow-sm hover:border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                    className="appearance-none bg-white border border-gray-300 rounded text-xs text-gray-500 px-3 py-1.5 pr-8 font-sans focus:outline-none focus:border-gray-400"
                     value={sortBy}
                     onChange={(e) => onSortChange(e.target.value)}
                   >
-                    <option value="relevance">Relevance</option>
+                    <option value="relevance">Sort by</option>
                     <option value="price_asc">Price: Low to High</option>
                     <option value="price_desc">Price: High to Low</option>
                     <option value="newest">Newest First</option>
                   </select>
+                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
                 </div>
 
-                {/* View Toggle & Mobile Filter Button */}
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">
-                    <button
-                      onClick={() => handleViewChange("grid")}
-                      className={`p-2 sm:p-2.5 transition-all duration-200 ${currentView === "grid"
-                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
-                        : "text-gray-500 hover:text-green-600 hover:bg-green-50"}`}
-                      aria-label="Grid View"
-                    >
-                      <Grid className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                    <button
-                      onClick={() => handleViewChange("list")}
-                      className={`p-2 sm:p-2.5 transition-all duration-200 ${currentView === "list"
-                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
-                        : "text-gray-500 hover:text-green-600 hover:bg-green-50"}`}
-                      aria-label="List View"
-                    >
-                      <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                  </div>
-
-                  {/* Mobile Filter Button: Only show if NOT a vendor page */}
-                  {!window.location.pathname.startsWith("/vendor-listing/") && (
-                    <button
-                      className="lg:hidden flex items-center gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-2.5 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5"
-                      onClick={() => setMobileFilterOpen(true)}
-                      aria-label="Open filters"
-                    >
-                      <MenuIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="text-sm sm:text-base">Filters</span>
-                    </button>
-                  )}
+                {/* View Toggle Buttons */}
+                <div className="flex items-center ml-2">
+                  <button
+                    onClick={() => handleViewChange("grid")}
+                    className={`p-1 transition-colors duration-200 ${currentView === "grid"
+                        ? "text-green-500"
+                        : "text-gray-500 hover:text-green-500"
+                      }`}
+                    aria-label="Grid View"
+                  >
+                    <IoGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => handleViewChange("list")}
+                    className={`p-1 ml-1 transition-colors duration-200 ${currentView === "list"
+                        ? "text-green-500"
+                        : "text-gray-500 hover:text-green-500"
+                      }`}
+                    aria-label="List View"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
                 </div>
+
+                {/* Mobile Filter Button - Only show if NOT a vendor page */}
+                {!window.location.pathname.startsWith("/vendor-listing/") && (
+                  <button
+                    className="lg:hidden flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium shadow transition-all duration-200 ml-2"
+                    onClick={() => setMobileFilterOpen(true)}
+                    aria-label="Open filters"
+                  >
+                    <Menu className="w-3 h-3" />
+                    <span>Filters</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>

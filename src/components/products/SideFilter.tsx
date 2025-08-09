@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback, JSX } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Funnel, Search } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
 
@@ -147,22 +147,22 @@ const SideFilter = ({
   };
 
   return (
-    <aside className="sticky top-0 w-full max-w-xs min-h-screen bg-white flex flex-col overflow-y-auto z-20 border-r border-gray-100 shadow-sm">
-      <div className="p-3 sm:p-4 pb-2">
-        <h1 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+    <aside className="sticky top-0 w-full max-w-[250px] min-h-screen bg-white flex flex-col overflow-y-auto z-20 border-r border-gray-100 shadow-sm">
+      <div className="p-4 pb-2">
+        <h1 className="text-base font-bold text-black font-sans mb-3">
           Filter
         </h1>
-        <div className="flex items-center gap-2 mb-4 relative">
-          <Search className="w-4 h-4 text-gray-400" />
+        <div className="flex items-center gap-2 mb-5 relative">
+          {/* <Search className="w-4 h-4 text-gray-500" /> */}
           <input
             type="text"
-            placeholder="Filter by name..."
-            className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-green-500"
+            placeholder="Filter by"
+            className="w-full h-9 border border-green-500 rounded px-3 py-0 text-sm text-gray-500 bg-white focus:outline-none focus:ring-1 focus:ring-green-500"
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             aria-label="Filter categories and types by name"
           />
-          {search && (
+          {search ? (
             <button
               className="absolute right-2 text-gray-400 hover:text-red-500 text-xs"
               onClick={() => setSearch("")}
@@ -171,14 +171,20 @@ const SideFilter = ({
             >
               ×
             </button>
-          )}
+          ) : (<button
+            className="absolute right-2 text-gray-400 text-xs"
+            aria-label="search"
+            tabIndex={0}
+          >
+            <Funnel className="w-4 h-4"/>
+          </button>)}
         </div>
 
         {/* Categories Section */}
-        <h2 className="text-base font-semibold mb-2 text-gray-800">Categories</h2>
-        <div className="space-y-1 mb-4">
+        <h2 className="text-base font-bold text-black font-sans mb-2.5">Categories</h2>
+        <div className="space-y-0 mb-4">
           {filteredCategories.map((category: Category) => (
-            <div key={category.id} className="border-b border-gray-100 last:border-b-0">
+            <div key={category.id} className="border-b border-gray-200 last:border-b-0">
               <button
                 onClick={() => {
                   if (category.subcategories.length > 0) {
@@ -188,18 +194,18 @@ const SideFilter = ({
                   }
                   onFilterChange(category.name, "category", category.name);
                 }}
-                className={`w-full flex items-center justify-between px-2 py-2 rounded-md transition-colors duration-200 ${isFilterActive(category.name)
+                className={`w-full flex items-center justify-between py-2 px-0 transition-colors duration-200 ${isFilterActive(category.name)
                   ? "bg-green-50 text-green-700 font-medium"
-                  : "hover:bg-gray-50 text-gray-700"
+                  : "hover:bg-gray-50 text-black"
                   }`}
                 aria-expanded={expandedCategory === category.id}
               >
-                <span className="text-sm">{category.name}</span>
+                <span className="text-sm font-sans text-black">{category.name}</span>
                 {category.subcategories.length > 0 && (
                   expandedCategory === category.id ? (
-                    <ChevronDown className="w-4 h-4 text-green-600" />
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-gray-500" />
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
                   )
                 )}
               </button>
