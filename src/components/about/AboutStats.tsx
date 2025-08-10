@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
 import { motion, useAnimation } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import Image from "next/image";
 
 const stats = [
   {
-    value: 240,
+    value: 150,
     label: "Countries Reached",
     color: "#3B82F6",
     suffix: "+",
@@ -22,7 +22,7 @@ const stats = [
     value: 25000,
     label: "Customers Served",
     color: "#22C55E",
-    suffix: "",
+    suffix: "+",
   },
   {
     value: 99.9,
@@ -57,10 +57,31 @@ const AnimatedCircle = ({
   const radius = 60;
   const stroke = 6;
   const circumference = 2 * Math.PI * radius;
-  const valueRef = useRef<HTMLSpanElement>(null);
+  const [currentValue, setCurrentValue] = useState(0); // Using state for the animated value
   const [ref, inView] = useInView({ triggerOnce: false, threshold: 0.3 });
 
-  const percent = value > 100 ? 1 : value / 100;
+  // Custom logic for the percentage fill based on user request
+  const getPercent = () => {
+    if (label === "Countries Reached") {
+      // 150 out of approximately 190 countries
+      return 150 / 190;
+    }
+    if (label === "No. of Categories") {
+      // Visually increase the fill for a better look
+      return 0.70;
+    }
+    if (label === "Customers Served") {
+      // Show a full circle for this stat
+      return 1;
+    }
+    // A slightly smaller circle for 99.9% as per request
+    if (label === "Solutions Delivered") {
+      return 0.98;
+    }
+    return value > 100 ? 1 : value / 100;
+  };
+  
+  const percent = getPercent();
   const isSpecial = value === 1 && suffix === "st";
 
   useEffect(() => {
@@ -77,23 +98,41 @@ const AnimatedCircle = ({
         (timestamp - startTimestamp) / (duration * 1000),
         1
       );
-      const current = value > 100 ? value : Math.floor(progress * value);
-
-      if (valueRef.current) {
-        valueRef.current.textContent =
-          value > 100 ? `${value}${suffix}` : `${current}${suffix}`;
+      
+      let current;
+      if (label === "Solutions Delivered") {
+        current = (progress * value).toFixed(1);
+      } else {
+        current = Math.floor(progress * value);
       }
 
-      if (progress < 1 && value <= 100) {
+      setCurrentValue(current);
+      
+      if (progress < 1) {
         raf = requestAnimationFrame(animateValue);
-      } else if (valueRef.current) {
-        valueRef.current.textContent = `${value}${suffix}`;
       }
     };
 
-    raf = requestAnimationFrame(animateValue);
+    // Reset value to 0 when not in view, and start animation when in view
+    if (inView) {
+      setCurrentValue(0);
+      raf = requestAnimationFrame(animateValue);
+    }
+
     return () => cancelAnimationFrame(raf);
-  }, [controls, circumference, percent, value, suffix, duration, inView, isSpecial]);
+  }, [controls, circumference, percent, value, suffix, duration, inView, isSpecial, label]);
+
+  // Handle the display text based on the label and current animated value
+  const getDisplayText = () => {
+    if (isSpecial) {
+      return null;
+    }
+    if (label === "Customers Served") {
+      // Animate up to 25 and then show "25K+"
+      return currentValue >= 25 ? `25K${suffix}` : `${Math.floor(currentValue)}${suffix}`;
+    }
+    return `${currentValue}${suffix}`;
+  }
 
   return (
     <div
@@ -157,11 +196,10 @@ const AnimatedCircle = ({
           </div>
         ) : (
           <span
-            ref={valueRef}
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl md:text-3xl font-bold"
             style={{ color }}
           >
-            0{suffix}
+            {getDisplayText()}
           </span>
         )}
       </div>

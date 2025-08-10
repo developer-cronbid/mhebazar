@@ -492,12 +492,22 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
     maximumFractionDigits: 2,
   });
 
+  // Calculate the fake price (10% higher)
+  const originalPrice = parseFloat(data.price);
+  const fakePrice = (originalPrice * 1.10).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
   const formButtonText = data.type === 'rental' || data.type === 'used' ? "Rent Now" : "Get a Quote";
   const validSpecs = getValidSpecs(data.product_details);
 
   return (
     <div className="px-4 mx-auto p-2 sm:p-4 bg-white max-w-7xl">
+      
+      
       <div className="flex flex-col md:flex-row gap-8">
+        
         {/* Left Side - Product Images */}
         <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-fit">
           {/* Main Product Image */}
@@ -514,6 +524,8 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             onMouseEnter={() => setIsZoomed(true)}
             onMouseLeave={() => setIsZoomed(false)}
           >
+
+            
             <FallbackImage
               src={data.images[selectedImage]?.image || "/no-product.png"}
               alt={data.name}
@@ -577,9 +589,11 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
+            
               <h1 className="text-2xl font-bold text-gray-900 mb-2">{data.name}</h1>
-              <div className="text-base text-gray-600 mb-2">
-                {data.category_name} {data.subcategory_name ? `> ${data.subcategory_name}` : ''}
+              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                <span className="text-base text-gray-600">by</span>
+                <span className="text-base text-blue-600 hover:underline">{data.user_name || "MHE Bazar"}</span>
               </div>
               {/* Rating and Reviews */}
               <div className="flex items-center gap-4 mb-4 flex-wrap">
@@ -611,35 +625,57 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     />
                   </DialogContent>
                 </Dialog>
-                {data.manufacturer && (
-                  <span className="text-sm text-gray-600">by {data.manufacturer}</span>
-                )}
               </div>
               {/* Price */}
               <div className="mb-2">
                 {(data.hide_price || Number(data.price) <= 0) ? (
                   <span className="text-2xl font-bold text-gray-400">₹ *******</span>
                 ) : (
-                  <span className="text-2xl font-bold text-green-700">₹{displayPrice}</span>
+                  <>
+                    <p className="text-3xl font-bold text-gray-900">₹{displayPrice} excl. GST</p>
+                    <p className="text-sm text-gray-500 line-through">₹{fakePrice}</p>
+                    <p className="text-sm text-gray-600 mt-1">₹{displayPrice} incl. of all taxes</p>
+                  </>
                 )}
               </div>
-              <div className="text-xs text-gray-500 mb-2">Incl. of all taxes</div>
+              {/* Offers Section */}
+              <div className="mt-4 p-4 border border-gray-200 rounded-lg">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">Offers</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-3 border border-gray-100">
+                    <h4 className="font-medium text-gray-800">Cashback</h4>
+                    <p className="text-sm text-gray-600">Get ₹200.00 cashback when you pay with selected cards or wallets</p>
+                    <p className="text-sm text-blue-600 mt-2 hover:underline cursor-pointer">+ 3 offers</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-gray-100">
+                    <h4 className="font-medium text-gray-800">Vendor Offer</h4>
+                    <p className="text-sm text-gray-600">Get old for an offer and save up to 28% on business supplies and</p>
+                    <p className="text-sm text-blue-600 mt-2 hover:underline cursor-pointer">+ 1 offers</p>
+                  </div>
+                </div>
+              </div>
             </div>
             {/* Delivery & Actions */}
             <div className="w-full lg:w-1/3 flex flex-col gap-4">
               {/* Delivery Info */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                 <div className="space-y-2">
+                  <p className="text-sm font-semibold text-gray-900">
+                    <span className="font-bold">FREE Delivery</span> Thursday, Aug 12
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Order within 18 hrs 46 mins
+                  </p>
                   {data.stock_quantity > 0 && data.direct_sale ? (
-                    <p className="text-sm font-semibold text-green-800">
-                      <span className="font-bold">In Stock: {data.stock_quantity} units</span>
+                    <p className="text-base font-bold text-green-600">
+                      Only {data.stock_quantity} left in stock
                     </p>
                   ) : data.stock_quantity === 0 && data.direct_sale ? (
-                    <p className="text-sm font-semibold text-red-600">
+                    <p className="text-base font-semibold text-red-600">
                       Out of Stock
                     </p>
                   ) : (
-                    <p className="text-sm font-semibold text-blue-600">
+                    <p className="text-base font-semibold text-blue-600">
                       Available for {data.type === 'rental' ? 'Rental' : 'Quote'}
                     </p>
                   )}
@@ -648,54 +684,16 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                       Product is currently inactive.
                     </p>
                   )}
-                  <p className="font-semibold text-green-800">
-                    <span className="font-bold">FREE delivery</span> (Delivery details coming soon.){" "}
-                    <span className="text-blue-600 hover:underline cursor-pointer">Details</span>
-                  </p>
                 </div>
-              </div>
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-2">
                 {data.direct_sale && isPurchasable ? (
-                  <>
-                    {isInCart ? (
-                      <div className="flex items-center justify-between bg-green-50 text-green-700 font-medium py-2 px-3 rounded-md text-base">
-                        <button
-                          onClick={() => cartItemId && handleDecreaseQuantity(cartItemId)}
-                          disabled={currentCartQuantity <= 1}
-                          className="p-1 rounded hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                          aria-label="Decrease quantity"
-                        >
-                          <Minus className="w-5 h-5" />
-                        </button>
-                        <span className="text-green-800 font-semibold text-center w-8">
-                          {currentCartQuantity}
-                        </span>
-                        <button
-                          onClick={() => cartItemId && handleIncreaseQuantity(cartItemId)}
-                          className="p-1 rounded hover:bg-green-100"
-                          aria-label="Increase quantity"
-                        >
-                          <Plus className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={() => cartItemId && handleRemoveFromCart(cartItemId)}
-                          className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors ml-2"
-                          aria-label="Remove from cart"
-                          title="Remove from Cart"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => handleAddToCart(data.id)}
-                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
-                        aria-label="Add to cart"
-                      >
-                        <ShoppingCart className="inline-block mr-2 w-5 h-5" /> Add to Cart
-                      </button>
-                    )}
+                  <div className="mt-4 flex flex-col gap-2">
+                    <button
+                      onClick={() => handleAddToCart(data.id)}
+                      className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                      aria-label="Add to cart"
+                    >
+                      <ShoppingCart className="inline-block mr-2 w-5 h-5" /> Add to Cart
+                    </button>
                     <button
                       onClick={handleBuyNow}
                       className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-md text-base transition"
@@ -703,42 +701,44 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     >
                       Buy Now
                     </button>
-                  </>
+                    <button
+                      onClick={handleCompare}
+                      className="w-full border border-gray-300 text-gray-700 font-semibold py-3 rounded-md text-base hover:bg-gray-50 transition"
+                    >
+                      Compare
+                    </button>
+                  </div>
                 ) : (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <button
-                        className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
-                        aria-label={formButtonText}
-                        disabled={!data.is_active}
-                      >
-                        {formButtonText}
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="w-full max-w-2xl">
-                      {data.type === 'rental' || data.type === 'used' ? (
-                        <RentalForm
-                          productId={data.id}
-                          productDetails={{
-                            image: data.images[0]?.image || data.category_details?.cat_image || "/no-product.png",
-                            title: data.name,
-                            description: data.description,
-                            price: data.price,
-                            stock_quantity: data.stock_quantity,
-                          }}
-                        />
-                      ) : (
-                        <QuoteForm product={data} />
-                      )}
-                    </DialogContent>
-                  </Dialog>
+                  <div className="mt-4 flex flex-col gap-2">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button
+                          className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                          aria-label={formButtonText}
+                          disabled={!data.is_active}
+                        >
+                          {formButtonText}
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="w-full max-w-2xl">
+                        {data.type === 'rental' || data.type === 'used' ? (
+                          <RentalForm
+                            productId={data.id}
+                            productDetails={{
+                              image: data.images[0]?.image || data.category_details?.cat_image || "/no-product.png",
+                              title: data.name,
+                              description: data.description,
+                              price: data.price,
+                              stock_quantity: data.stock_quantity,
+                            }}
+                          />
+                        ) : (
+                          <QuoteForm product={data} />
+                        )}
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 )}
-                <button
-                  onClick={handleCompare}
-                  className="w-full border border-gray-300 text-gray-700 font-semibold py-3 rounded-md text-base hover:bg-gray-50 transition"
-                >
-                  Compare
-                </button>
               </div>
             </div>
           </div>
@@ -797,7 +797,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition"
             onClick={() => setOpenAccordion(openAccordion === "spec" ? null : "spec")}
           >
-            <span className="font-semibold">Product Specifications</span>
+            <span className="font-semibold">Specification</span>
             <ChevronDown
               className={`w-5 h-5 transition-transform duration-200 text-gray-600 ${openAccordion === "spec" ? "rotate-180" : ""
                 }`}

@@ -3,6 +3,8 @@ import CategoryProducts from "@/components/elements/CategoryProducts";
 import VendorProducts from "@/components/elements/VendorFeaturedProducts";
 import SparePartsFeatured from "@/components/home/SparepartsFeatured";
 import ProductSection from "@/components/products/IndividualProduct";
+import Breadcrumb from "@/components/elements/Breadcrumb";
+
 // import ReviewSection from "@/components/products/Reviews"; // This import is now handled within IndividualProduct.tsx
 
 // Define the generateMetadata function for dynamic metadata
@@ -38,6 +40,13 @@ export default async function IndividualProductPage({
 
   return (
     <>
+      <Breadcrumb
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Products", href: "/products" },
+          { label: productSlug.replace(/-/g, ' '), href: `/product/${productSlug}` },
+        ]}
+      />
       {/* ProductSection will fetch its own data based on productSlug and productId */}
       {/* ReviewSection is now placed within IndividualProduct.tsx */}
       <ProductSection productSlug={productSlug} productId={productId} />

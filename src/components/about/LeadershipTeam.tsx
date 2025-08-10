@@ -78,28 +78,29 @@ export default function LeadershipTeam() {
             return (
               <div
                 key={index}
-                className="flex flex-col justify-between items-center text-center bg-white rounded-xl shadow-md p-6 transition-shadow hover:shadow-lg"
+                className="flex flex-col justify-start items-center text-center bg-white rounded-xl shadow-md p-6 transition-shadow hover:shadow-lg"
               >
                 {/* Profile Image */}
-                <div className="relative w-32 h-32 rounded-full overflow-hidden mb-4 shadow-[8px_8px_20px_rgba(0,0,0,0.15)]">
+                <div className="relative w-36 h-36 rounded-full overflow-hidden mb-6 shadow-[10px_10px_2px_rgba(0,0,0,0.25)]">
                   <Image
                     src={member.image}
                     alt={member.name}
                     fill
-                    sizes="128px"
+                    sizes="144px"
                     style={{
                       objectFit: 'cover',
-                      objectPosition: 'center',
+                      // Custom objectPosition for Ms. Radhika Kundra's image
+                      objectPosition: member.name === 'Ms. Radhika Kundra' ? '150% 55%' : 'top center',
                     }}
                   />
                 </div>
 
                 {/* Details */}
-                <div className="flex flex-col items-center flex-grow">
-                  <h3 className="text-xl font-semibold text-gray-900">{member.name}</h3>
-                  <p className="text-sm text-gray-500 mb-4">{member.role}</p>
+                <div className="flex flex-col items-center flex-grow text-left w-full">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2 w-full">{member.name}</h3>
+                  <p className="text-sm text-gray-500 mb-4 w-full">{member.role}</p>
 
-                  <div className="text-sm text-gray-700 text-left mb-4">
+                  <div className="text-sm text-gray-700 w-full mb-4">
                     {descriptionToShow}
                   </div>
 
@@ -113,8 +114,8 @@ export default function LeadershipTeam() {
                   )}
                 </div>
 
-                {/* LinkedIn Button - fixed alignment */}
-                <div className="mt-4 flex justify-center">
+                {/* LinkedIn Button - fixed alignment at the bottom */}
+                <div className="mt-4 pt-4 flex justify-center w-full border-t border-gray-100">
                   <Link
                     href={member.linkedin}
                     aria-label={`LinkedIn profile of ${member.name}`}

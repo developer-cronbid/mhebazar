@@ -1,70 +1,64 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { Vendor } from "@/types";
 
+type Vendor = {
+  id: number;
+  user_id: number;
+  username: string;
+  email: string;
+  full_name: string;
+  company_name: string;
+  company_email: string;
+  brand: string;
+  is_approved: boolean;
+  application_date: string;
+  product_count?: number;
+  user_info?: {
+    id: number;
+    profile_photo: string;
+  };
+};
 
 type Props = {
   vendor: Vendor;
 };
 
-// Utility to create SEO-friendly slug
-const toSlug = (text: string) =>
-  text.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-
 export default function VendorCard({ vendor }: Props) {
-  const [isAdminPath, setIsAdminPath] = useState(false);
-  // console.log(vendor);
-
-  useEffect(() => {
-    setIsAdminPath(window.location.pathname.startsWith("/admin/"));
-  }, []);
-
-  const vendorDisplayName =
-    vendor.brand || vendor.company_name || vendor.full_name;
-
-  // const vendorSlug = toSlug(vendorDisplayName);
-
-  const href = isAdminPath
-    ? `/admin/accounts/registered-vendors/${vendor.brand}/?user=${vendor.user_info.id}`
-    : `/vendor-listing/${vendor.brand}`;
+  const href = `/vendor-listing/${vendor.brand}`;
 
   return (
-    <div className="relative border border-gray-200 rounded-2xl p-5 flex flex-col items-center shadow-sm hover:shadow-md hover:scale-[1.02] transition-all duration-200 bg-white w-full max-w-xs min-w-[240px] h-full">
-      
-    
-      {/* Logo / Placeholder */}
-      <div className="relative w-24 h-20 mb-4 rounded-xl border border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden">
+    <div className="relative border border-gray-200 rounded-2xl p-4 flex flex-col items-center shadow-sm hover:shadow-lg transition-all duration-200 bg-white w-full h-full font-inter">
+      {vendor.product_count !== undefined && (
+        <span className="absolute top-4 right-4 bg-green-500/20 text-green-800 text-xs font-semibold px-2.5 py-1 rounded-full">
+          {vendor.product_count} items
+        </span>
+      )}
+
+      <div className="relative w-28 h-28 my-4 rounded-xl flex items-center justify-center overflow-hidden">
         <Image
-          src={vendor.user_info.profile_photo}
-          alt={vendor.brand}
-          fill
+          src={vendor.user_info?.profile_photo || "/placeholder-logo.png"}
+          alt={`${vendor.brand} Logo`}
+          width={112}
+          height={112}
           className="object-contain"
-          sizes="96px"
         />
       </div>
 
-      {/* Name */}
-      <h3 className="text-base font-semibold text-center text-gray-900 mb-6">
+      <h3 className="text-lg font-semibold text-center text-gray-900 mb-1">
         {vendor.brand}
       </h3>
 
-      {/* Company Name (if different) */}
-      {vendor.company_name !== vendorDisplayName && (
-        <p className="text-sm text-gray-500 text-center mb-4 line-clamp-1">
-          {vendor.company_name}
-        </p>
-      )}
+      <p className="text-sm text-gray-500 text-center mb-4 line-clamp-1">
+        {vendor.company_name}
+      </p>
 
-      {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-2 w-full mt-auto">
         <Link href={href} className="flex-1">
           <Button className="w-full text-sm font-medium py-2 rounded-lg bg-[#5CA131] hover:bg-[#4a8f28] text-white transition-colors duration-150">
-            View Products
+            View Product
           </Button>
         </Link>
         <Button

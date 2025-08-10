@@ -1,3 +1,4 @@
+//src/app/vendor-listing/[vendor]/page.tsx
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";

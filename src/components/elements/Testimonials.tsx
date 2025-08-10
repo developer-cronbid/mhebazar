@@ -637,31 +637,33 @@ export default function ReviewCarousel() {
     const isPrev = (current - 1 + reviews.length) % reviews.length === index;
     const isNext = (current + 1) % reviews.length === index;
 
+    let transformValue = 'scale(0.8)';
+    let opacityValue = 0.4;
+    let zIndexValue = 1;
+    let backgroundColorValue = '#f1f3f4';
+    let boxShadowValue = 'none';
+
     if (isActive) {
-      return {
-        transform: 'scale(1.05)',
-        opacity: 1,
-        zIndex: 10,
-        backgroundColor: 'white',
-        boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
-      };
+      transformValue = 'scale(1.05)';
+      opacityValue = 1;
+      zIndexValue = 10;
+      backgroundColorValue = 'white';
+      boxShadowValue = '0 8px 25px rgba(0,0,0,0.15)';
     } else if (isPrev || isNext) {
-      return {
-        transform: 'scale(0.9)',
-        opacity: 0.7,
-        zIndex: 5,
-        backgroundColor: '#f8f9fa',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-      };
-    } else {
-      return {
-        transform: 'scale(0.8)',
-        opacity: 0.4,
-        zIndex: 1,
-        backgroundColor: '#f1f3f4',
-        boxShadow: 'none',
-      };
+      transformValue = 'scale(0.9)';
+      opacityValue = 0.7;
+      zIndexValue = 5;
+      backgroundColorValue = '#f8f9fa';
+      boxShadowValue = '0 4px 12px rgba(0,0,0,0.08)';
     }
+
+    return {
+      transform: transformValue,
+      opacity: opacityValue,
+      zIndex: zIndexValue,
+      backgroundColor: backgroundColorValue,
+      boxShadow: boxShadowValue,
+    };
   };
 
   return (
@@ -692,12 +694,12 @@ export default function ReviewCarousel() {
                 return (
                   <CarouselItem
                     key={index}
-                    className="basis-full md:basis-1/3 flex justify-center py-12">
+                    className="basis-full md:basis-1/2 lg:basis-1/3 flex justify-center py-12">
                     <div
-                      className="w-full mx-2 h-[280px] rounded-2xl p-6 transition-all duration-500 ease-out border"
+                      className="w-full mx-2 h-[200px] rounded-2xl p-6 transition-all duration-500 ease-out border"
                       style={cardStyles}>
-                      {/* Quote icon */}
-                      <div className="mb-4">
+                      {/* Quote icon at top-left */}
+                      <div className="absolute top-6 left-6">
                         <Image
                           src="/home/Vector.png"
                           alt="Quote icon"
@@ -706,8 +708,8 @@ export default function ReviewCarousel() {
                         />
                       </div>
 
-                      {/* Content */}
-                      <div className="mb-6 text-gray-700 text-sm leading-relaxed line-clamp-4">
+                      {/* Content with line-clamp */}
+                      <div className="mt-8 mb-6 text-gray-700 text-sm leading-relaxed line-clamp-3 overflow-hidden">
                         {typeof review.content === 'string' ? (
                           <p>{review.content}</p>
                         ) : (
@@ -715,6 +717,17 @@ export default function ReviewCarousel() {
                             {review.content}
                           </div>
                         )}
+                      </div>
+                      
+                      {/* Quote icon at bottom-right, inverted */}
+                      <div className="absolute bottom-6 right-6">
+                        <Image
+                          src="/home/Vector.png"
+                          alt="Quote icon"
+                          width={32}
+                          height={24}
+                          className="transform rotate-180"
+                        />
                       </div>
 
                       {/* User info */}
@@ -801,9 +814,6 @@ export default function ReviewCarousel() {
               />
             ))}
           </div>
-
-          {/* Navigation Arrows */}
-        
         </div>
       </div>
     </section>

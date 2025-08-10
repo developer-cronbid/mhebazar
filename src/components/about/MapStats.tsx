@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 
 const data = [
   { country: 'United States', impressions: 6000 },
@@ -20,7 +21,6 @@ const data = [
 export default function GlobalMapStats() {
   const [activeTab, setActiveTab] = useState<'impressions' | 'clicks'>('impressions');
 
-  // Toggle this to false to disable tab switching functionality
   const isTabSwitchingEnabled = false;
 
   return (
@@ -29,7 +29,7 @@ export default function GlobalMapStats() {
         <h2 className="text-3xl font-bold text-gray-900 mb-6">Global Map</h2>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           <button
             className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
               activeTab === 'impressions'
@@ -53,24 +53,34 @@ export default function GlobalMapStats() {
         </div>
 
         {/* Content */}
-        <div className="flex gap-8 items-start">
+        <div className="flex flex-col lg:flex-row gap-8 items-start">
           {/* Map Image */}
-          <div className="flex-1">
-            <div className="w-full">
+          <div className="flex-1 lg:flex-none lg:w-[60%]">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="max-w-[520px] mx-auto"
+            >
               <Image
                 src="/about/map.png"
                 alt="Global Impressions Map"
-                width={500}
+                width={520}
                 height={300}
-                className="w-full h-auto object-contain rounded-lg"
+                className="w-full h-auto object-contain "
                 priority
               />
-            </div>
+            </motion.div>
           </div>
 
           {/* Table */}
-          <div className="w-80">
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+            className="w-full lg:w-80"
+          >
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-green-50 border-b border-gray-200">
@@ -80,7 +90,7 @@ export default function GlobalMapStats() {
                 </thead>
                 <tbody>
                   {data.map(({ country, impressions }, index) => (
-                    <tr key={country} className={`border-b ${index % 2 === 0 ? 'bg-white' : 'bg-white'}`}>
+                    <tr key={country} className="border-b bg-white hover:bg-green-50 transition-colors">
                       <td className="py-2 px-4 text-gray-700">{country}</td>
                       <td className="py-2 px-4 text-gray-700">
                         {activeTab === 'impressions' ? impressions : Math.floor(impressions / 5)}
@@ -90,7 +100,7 @@ export default function GlobalMapStats() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

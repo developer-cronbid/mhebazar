@@ -248,30 +248,11 @@ export default function Footer() {
               <h3 className="font-bold text-gray-800 mb-4 text-lg">Get Support</h3>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <Link href="/help" className="text-gray-600 hover:text-blue-700 transition">
+                  <Link href="/contact" className="text-gray-600 hover:text-blue-700 transition">
                     Help Center
                   </Link>
                 </li>
-                <li>
-                  <Link href="/live-chat" className="text-gray-600 hover:text-blue-700 transition">
-                    Live chat
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/account/orders" className="text-gray-600 hover:text-blue-700 transition">
-                    Check order status
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/refunds" className="text-gray-600 hover:text-blue-700 transition">
-                    Refunds
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/report-abuse" className="text-gray-600 hover:text-blue-700 transition">
-                    Report abuse
-                  </Link>
-                </li>
+                
               </ul>
             </div>
 

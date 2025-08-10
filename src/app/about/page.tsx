@@ -45,9 +45,9 @@ const AboutPage = () => {
       <HomeBanner />
       {/* Solution div */}
       <section>
-        <div className="max-w-12xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-12xl mx-auto px-4 mt-12 sm:px-6 lg:px-8">
  
-         <h2 className="text-2xl font-semibold m-5  text-gray-900">
+         <h2 className="text-2xl font-semibold m-12  text-gray-900">
   The portal is having the complete <br /> solution for MHE like:
 </h2>
           <div className="text-center">
@@ -55,9 +55,9 @@ const AboutPage = () => {
             <Image
               src="/about/image.png"
               alt="MHE Bazar One Stop"
-              width={1640}
-              height={1640}
-              className="w-full h-auto "
+              width={1140}
+              height={1140}
+              className="w-full h-auto mx-auto "
               priority
             />
           </div>
