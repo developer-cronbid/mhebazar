@@ -16,7 +16,7 @@ const getCategoryImageUrl = (categoryId: number | string | null): string => {
   }
 
   const category = categoriesData.find(cat => cat.id === Number(categoryId));
-  if (category && category.image_url) {
+  if (category?.image_url) {
     return `${NEXT_PUBLIC_BACKEND_BASE_URL}${category.image_url}`;
   }
 
@@ -46,7 +46,6 @@ const sectionVariants = {
     transition: {
       duration: 0.6,
       ease: "easeOut",
-      staggerChildren: 0.2
     }
   }
 };
@@ -59,8 +58,10 @@ const itemVariants = {
 export default function ExportProductsFeatured() {
   const [exportProducts, setExportProducts] = useState<ExportProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [scrollIndex, setScrollIndex] = useState(0);
 
   const sectionRef = useRef(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inView = useInView(sectionRef, { once: true, amount: 0.3 });
 
   useEffect(() => {
@@ -87,9 +88,9 @@ export default function ExportProductsFeatured() {
           category: item.category,
         }));
 
-        setExportProducts(formattedProducts.slice(0, 4));
+        setExportProducts(formattedProducts);
       } catch (error) {
-        console.error("Failed to fetch new arrival products:", error);
+        console.error("Failed to fetch export products:", error);
         setExportProducts([]);
       } finally {
         setLoading(false);
@@ -99,58 +100,121 @@ export default function ExportProductsFeatured() {
     fetchPopularProducts();
   }, []);
 
+  const handleDotClick = (index: number) => {
+    if (scrollContainerRef.current && exportProducts.length > 0) {
+      const container = scrollContainerRef.current;
+      const itemsPerView = Math.floor(container.clientWidth / 280); // Approximate card width
+      const targetIndex = index * itemsPerView;
+      const itemWidth = container.children[0]?.clientWidth + 16 || 280;
+      container.scrollTo({
+        left: targetIndex * itemWidth,
+        behavior: 'smooth',
+      });
+      setScrollIndex(index);
+    }
+  };
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current && exportProducts.length > 0) {
+      const container = scrollContainerRef.current;
+      const itemsPerView = Math.floor(container.clientWidth / 280);
+      const itemWidth = container.children[0]?.clientWidth + 16 || 280;
+      const newIndex = Math.floor(container.scrollLeft / (itemWidth * itemsPerView));
+      setScrollIndex(newIndex);
+    }
+  };
+
+  const totalDots = exportProducts.length > 0 ? Math.ceil(exportProducts.length / Math.floor((scrollContainerRef.current?.clientWidth || 1200) / 280)) : 0;
+
   return (
     <motion.section
       ref={sectionRef}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
       variants={sectionVariants}
-      className="w-full mx-auto px-4 py-10"
+      className="w-full mx-auto px-4 py-8"
     >
-      <motion.h2 variants={itemVariants} className="text-3xl font-bold mb-8 text-[#000000]">
-        Export Products
-      </motion.h2>
+      <motion.div variants={itemVariants} className="flex justify-between items-center mb-8">
+        <h2 className="text-2xl font-bold text-gray-900">Export Products</h2>
+        <button className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
+          View More
+        </button>
+      </motion.div>
+      
       {loading ? (
         <div className="w-full flex justify-center items-center py-16 text-gray-500 text-lg">
           Loading...
         </div>
-      ) : (
-        <motion.div variants={sectionVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {exportProducts.length > 0 ? (
-            exportProducts.map((export_product) => (
-              <motion.div variants={itemVariants} key={export_product.id}>
-                <ProductCardContainer
-                  id={Number(export_product.id)}
-                  image={export_product.image}
-                  title={export_product.title}
-                  subtitle={export_product.subtitle}
-                  price={export_product.price}
-                  currency={export_product.currency}
-                  directSale={export_product.direct_sale}
-                  is_active={export_product.is_active}
-                  hide_price={export_product.hide_price}
-                  stock_quantity={export_product.stock_quantity}
-                  type={export_product.type}
-                />
+      ) : exportProducts.length > 0 ? (
+        <div className="relative">
+          <div
+            ref={scrollContainerRef}
+            className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory"
+            style={{ 
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
+            onScroll={handleScroll}
+          >
+            {exportProducts.map((export_product) => (
+              <motion.div 
+                variants={itemVariants} 
+                key={export_product.id}
+                className="flex-shrink-0 snap-start w-64"
+              >
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full">
+                  <ProductCardContainer
+                    id={Number(export_product.id)}
+                    image={export_product.image}
+                    title={export_product.title}
+                    subtitle={export_product.subtitle}
+                    price={export_product.price}
+                    currency={export_product.currency}
+                    directSale={export_product.direct_sale}
+                    is_active={export_product.is_active}
+                    hide_price={export_product.hide_price}
+                    stock_quantity={export_product.stock_quantity}
+                    type={export_product.type}
+                  />
+                </div>
               </motion.div>
-            ))
-          ) : (
-            <motion.div variants={itemVariants} className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-lg">
-              <Image
-                src="/no-product.png"
-                alt="No product"
-                width={112}
-                height={112}
-                className="mb-4 opacity-70"
-              />
-              <div className="text-lg font-semibold text-gray-700 mb-1">
-                No export products available
-              </div>
-              <div className="text-gray-500">
-                There are no export products available at the moment.
-              </div>
-            </motion.div>
+            ))}
+          </div>
+          
+          {totalDots > 1 && (
+            <div className="flex justify-center space-x-2 mt-6">
+              {Array.from({ length: totalDots }, (_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleDotClick(idx)}
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                    idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
+                  }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
           )}
+        </div>
+      ) : (
+        <motion.div 
+          variants={itemVariants} 
+          className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm border border-gray-100"
+        >
+          <Image
+            src="/no-product.png"
+            alt="No product"
+            width={112}
+            height={112}
+            className="mb-4 opacity-70"
+          />
+          <div className="text-lg font-semibold text-gray-700 mb-1">
+            No export products available
+          </div>
+          <div className="text-gray-500 text-center">
+            There are no export products available at the moment.
+          </div>
         </motion.div>
       )}
     </motion.section>

@@ -1,15 +1,9 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import {
-  Carousel,
-
-} from "../ui/carousel";
 import api from "@/lib/api";
 import { ProductCardContainer } from "../elements/Product";
-import Autoplay from "embla-carousel-autoplay";
 
-// Define the structure of a product based on your API response
 interface Product {
   id: number;
   name: string;
@@ -23,7 +17,6 @@ interface Product {
   stock_quantity: number;
   type: string;
   category: number | null;
-  // category_image: string | null;
 }
 
 const VendorProductsFeatured: React.FC = () => {
@@ -37,7 +30,7 @@ const VendorProductsFeatured: React.FC = () => {
     const fetchProducts = async () => {
       try {
         const response = await api.get("/products/");
-        if (response.data && response.data.results) {
+        if (response.data?.results) {
           setProducts(response.data.results || []);
         } else {
           throw new Error("Invalid API response structure");
@@ -53,27 +46,41 @@ const VendorProductsFeatured: React.FC = () => {
   }, []);
 
   const handleDotClick = (index: number) => {
-    if (scrollContainerRef.current) {
-      const carouselContent = scrollContainerRef.current;
-      const itemWidth = carouselContent.children[0].clientWidth + 16; // 16 for gap
-      carouselContent.scrollTo({
-        left: index * itemWidth,
+    if (scrollContainerRef.current && products.length > 0) {
+      const container = scrollContainerRef.current;
+      const itemsPerView = Math.floor(container.clientWidth / 280); // Approximate card width
+      const targetIndex = index * itemsPerView;
+      const itemWidth = container.children[0]?.clientWidth + 16 || 280;
+      container.scrollTo({
+        left: targetIndex * itemWidth,
         behavior: 'smooth',
       });
+      setScrollIndex(index);
     }
   };
 
+  const handleScroll = () => {
+    if (scrollContainerRef.current && products.length > 0) {
+      const container = scrollContainerRef.current;
+      const itemsPerView = Math.floor(container.clientWidth / 280);
+      const itemWidth = container.children[0]?.clientWidth + 16 || 280;
+      const newIndex = Math.floor(container.scrollLeft / (itemWidth * itemsPerView));
+      setScrollIndex(newIndex);
+    }
+  };
+
+  const totalDots = products.length > 0 ? Math.ceil(products.length / Math.floor((scrollContainerRef.current?.clientWidth || 1200) / 280)) : 0;
+
   if (loading) {
     return (
-      <div className="w-full mx-auto px-4 py-10">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
-          Vendor Products
-        </h2>
+      <div className="w-full mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
+          <button className="text-[#42a856] font-medium">View More</button>
+        </div>
         <div className="flex space-x-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="flex-1 p-1">
-              <div className="bg-slate-200 rounded-lg h-[400px] animate-pulse"></div>
-            </div>
+            <div key={i} className="flex-1 bg-gray-200 rounded-lg h-80 animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -82,79 +89,77 @@ const VendorProductsFeatured: React.FC = () => {
 
   if (error) {
     return (
-      <section className="w-full mx-auto px-4 py-10">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
-          Vendor Products
-        </h2>
-        <p className="text-center text-red-500">{error}</p>
+      <section className="w-full mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
+          <button className="text-[#42a856] font-medium">View More</button>
+        </div>
+        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm border border-gray-100">
+          <p className="text-red-500 text-center">{error}</p>
+        </div>
       </section>
     );
   }
 
   return (
-    <section className="w-full mx-auto px-4 py-10">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
-        Vendor Products
-      </h2>
+    <section className="w-full mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
+        <button className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
+          View More
+        </button>
+      </div>
+      
       <div className="relative">
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
+        <div
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory"
+          style={{ 
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
           }}
-          plugins={[
-            Autoplay({
-              delay: 4000,
-            }),
-          ]}
+          onScroll={handleScroll}
         >
-          <div
-            ref={scrollContainerRef}
-            className="flex overflow-x-auto snap-x snap-mandatory -ml-4"
-            style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
-            onScroll={(e) => {
-              const carouselContent = e.currentTarget;
-              const itemWidth = carouselContent.children[0].clientWidth + 16;
-              const newIndex = Math.round(carouselContent.scrollLeft / itemWidth);
-              setScrollIndex(newIndex);
-            }}
-          >
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
-              >
-                <div className="p-1">
-                  <ProductCardContainer
-                    id={product.id}
-                    image={product.images[0]?.image || "/placeholder-image.png"}
-                    title={product.name}
-                    subtitle={product.description}
-                    price={product.price}
-                    currency="₹"
-                    directSale={product.direct_sale}
-                    is_active={product.is_active}
-                    hide_price={product.hide_price}
-                    stock_quantity={product.stock_quantity}
-                    type={product.type}
-                    category_id={product.category}
-                  />
-                </div>
+          {products.map((product) => (
+            <div
+              key={product.id}
+              className="flex-shrink-0 snap-start w-64"
+            >
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full">
+                <ProductCardContainer
+                  id={product.id}
+                  image={product.images[0]?.image || "/placeholder-image.png"}
+                  title={product.name}
+                  subtitle={product.description}
+                  price={product.price}
+                  currency="₹"
+                  directSale={product.direct_sale}
+                  is_active={product.is_active}
+                  hide_price={product.hide_price}
+                  stock_quantity={product.stock_quantity}
+                  type={product.type}
+                  category_id={product.category}
+                />
               </div>
-            ))}
-          </div>
-        </Carousel>
-        <div className="flex justify-center space-x-2 mt-4">
-          {products.map((_, idx) => (
-            <span
-              key={idx}
-              onClick={() => handleDotClick(idx)}
-              className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
-                idx === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"
-              }`}
-            ></span>
+            </div>
           ))}
         </div>
+        
+        {totalDots > 1 && (
+          <div className="flex justify-center space-x-2 mt-6">
+            {Array.from({ length: totalDots }, (_, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleDotClick(idx)}
+                className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                  idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
