@@ -46,12 +46,12 @@ export default function HomePage() {
         <HomeBanner />
       </div>
 
-      <SectionWrapper className="max-w-[95vw] mx-auto ">
+      <SectionWrapper className="max-w-[97vw] mx-auto ">
         <CategoryButtons />
       </SectionWrapper>
 
       <div className="w-full bg-[#F5F7F8] py-10 md:py-12">
-        <div className="max-w-[95vw] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 justify-center items-start px-4 md:px-0">
+        <div className="max-w-[93vw] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 justify-center items-start px-4 md:px-0">
           <SectionWrapper>
             <MostPopular />
           </SectionWrapper>
@@ -61,35 +61,35 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="max-w-[95vw] mx-auto">
+      <div className="max-w-[93vw] mx-auto">
         <SectionWrapper className="my-10 md:my-12">
           <SpareParts />
         </SectionWrapper>
       </div>
 
       <div className="w-full bg-[#F5F7F8] py-10 md:py-12">
-        <div className="max-w-[95vw] mx-auto">
+        <div className="max-w-[93vw] mx-auto">
           <SectionWrapper>
             <VendorProductsFeatured />
           </SectionWrapper>
         </div>
       </div>
 
-      <div className="max-w-[95vw] mx-auto">
+      <div className="max-w-[93vw] mx-auto">
         <SectionWrapper className="my-10 md:my-12">
           <ExportProductsFeatured />
         </SectionWrapper>
       </div>
 
       <div className="w-full bg-[#F5F7F8] py-10 md:py-12">
-        <div className="max-w-[95vw] mx-auto">
+        <div className="max-w-[93vw] mx-auto">
           <SectionWrapper>
             <BlogCarousel />
           </SectionWrapper>
         </div>
       </div>
 
-      <div className="max-w-[95vw] mx-auto">
+      <div className="max-w-[93vw] mx-auto">
         <SectionWrapper className="my-8 md:my-10">
           <div className="flex justify-between items-center mb-8 px-4">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Our Brands</h2>
