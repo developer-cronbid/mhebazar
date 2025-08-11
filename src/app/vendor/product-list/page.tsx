@@ -68,6 +68,7 @@ export default function ProductList() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState(sortOptions[0].value);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
 
     // Create a lookup map for category images for fast access
     const categoryImageMap = useMemo(() => {
@@ -213,6 +214,7 @@ export default function ProductList() {
     try {
       const response = await api.get(`/products/${productId}/`);
       setSelectedProduct(response.data);
+      setIsSheetOpen(true)
     } catch (error) {
       console.error('Error fetching product details:', error);
     }
@@ -238,7 +240,7 @@ export default function ProductList() {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
             Product List
           </h1>
-          <Sheet>
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="default"

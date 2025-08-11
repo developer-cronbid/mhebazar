@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock, ChevronRight } from "lucide-react";
+import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock, ChevronRight, Pencil } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -139,6 +139,9 @@ export default function DashboardStats() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -236,6 +239,18 @@ export default function DashboardStats() {
 
   const approved_products = products.filter(p => p.is_active).length;
   const pending_products = products.filter(p => !p.is_active).length;
+
+  // Handle edit click
+  const handleEditClick = async (productId: number) => {
+    try {
+      const response = await api.get(`/products/${productId}/`);
+      // console.log(response.data);
+      setSelectedProduct(response.data);
+      setIsSheetOpen(true)
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+    }
+  };
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -400,7 +415,7 @@ export default function DashboardStats() {
                   )}
                 </h2>
                 {application?.is_approved && (
-                  <Sheet>
+                  <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                     <SheetTrigger asChild>
                       <Button
                         variant="default"
@@ -410,7 +425,7 @@ export default function DashboardStats() {
                       </Button>
                     </SheetTrigger>
                     <SheetContent>
-                      <ProductForm />
+                       <ProductForm product={selectedProduct} />
                     </SheetContent>
                   </Sheet>
                 )}
@@ -480,8 +495,8 @@ export default function DashboardStats() {
                           </div>
                           <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
                           <div className="flex items-center gap-2">
-                            <Button variant="link" className="text-blue-600 px-0 py-0 h-auto text-sm">
-                              Edit
+                                <Button variant="link" className="text-blue-600 px-0 py-0 h-auto text-sm" onClick={() => handleEditClick(product.id)}>
+                                  Edit
                             </Button>
                             <span className="text-xs text-gray-400">
                               Updated {new Date(product.updated_at).toLocaleDateString()}
