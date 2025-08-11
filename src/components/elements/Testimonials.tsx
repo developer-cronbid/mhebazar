@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCallback, useEffect, useState } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Image from "next/image";
+import { ImQuotesLeft } from "react-icons/im";
 
 export default function ReviewCarousel() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -668,14 +669,13 @@ export default function ReviewCarousel() {
 
   return (
     <section className="w-full overflow-hidden bg-white py-14 font-sans">
-      <div className=" mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Title */}
         <div className="mb-8 text-center sm:mb-12 flex items-center justify-between">
-          <h2 className="text-3xl font-bold text-black">
-            Testimonials
-          </h2>
-          <a href="/testimonials" className="text-green-600 text-sm hover:underline">
+          <h2 className="text-3xl font-bold text-black">Testimonials</h2>
+          {/* <a href="/testimonials" className="text-green-600 text-sm hover:underline">
             View more
-          </a>
+          </a> */}
         </div>
 
         <div className="relative">
@@ -685,7 +685,8 @@ export default function ReviewCarousel() {
             opts={{
               align: "center",
               loop: true,
-            }}>
+            }}
+          >
             <CarouselContent className="flex items-center">
               {reviews.map((review, index) => {
                 const cardStyles = getCardStyles(index);
@@ -694,44 +695,30 @@ export default function ReviewCarousel() {
                 return (
                   <CarouselItem
                     key={index}
-                    className="basis-full md:basis-1/2 lg:basis-1/3 flex justify-center py-12">
+                    className="basis-full md:basis-2/3 lg:basis-1/2 flex justify-center py-8"
+                  >
                     <div
-                      className="w-full mx-2 h-[200px] rounded-2xl p-6 transition-all duration-500 ease-out border"
-                      style={cardStyles}>
-                      {/* Quote icon at top-left */}
-                      <div className="absolute top-6 left-6">
-                        <Image
-                          src="/home/Vector.png"
-                          alt="Quote icon"
-                          width={32}
-                          height={24}
-                        />
-                      </div>
+                      className="relative w-full mx-2 rounded-2xl bg-white p-8 shadow-sm border border-gray-100 flex flex-col"
+                      style={cardStyles}
+                    >
+                      <div className="flex gap-6">
+                        {/* Quote icon */}
+                        <div className="text-[#0A2840] text-3xl mb-4">
+                          <ImQuotesLeft />
+                        </div>
 
-                      {/* Content with line-clamp */}
-                      <div className="mt-8 mb-6 text-gray-700 text-sm leading-relaxed line-clamp-3 overflow-hidden">
-                        {typeof review.content === 'string' ? (
-                          <p>{review.content}</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {review.content}
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Quote icon at bottom-right, inverted */}
-                      <div className="absolute bottom-6 right-6">
-                        <Image
-                          src="/home/Vector.png"
-                          alt="Quote icon"
-                          width={32}
-                          height={24}
-                          className="transform rotate-180"
-                        />
+                        {/* Testimonial text */}
+                        <div className="text-gray-700 text-sm leading-relaxed mb-8">
+                          {typeof review.content === "string" ? (
+                            <p>{review.content}</p>
+                          ) : (
+                            <div className="space-y-2 line-clamp-5">{review.content}</div>
+                          )}
+                        </div>
                       </div>
 
                       {/* User info */}
-                      <div className="flex items-center mt-auto">
+                      <div className="flex items-center">
                         <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
                           <AvatarImage src={review.avatar} alt={review.name} />
                           <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
@@ -743,57 +730,49 @@ export default function ReviewCarousel() {
                             {review.name}
                           </h3>
                           {review.role && (
-                            <p className="text-xs text-gray-500">
-                              {review.role}
-                            </p>
+                            <p className="text-xs text-gray-500">{review.role}</p>
                           )}
                         </div>
                       </div>
 
-                      {/* Read More Dialog (unchanged, but can be improved for better UX if needed) */}
-                      {(
-                        <div className="mt-4">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <button className="text-green-600 text-sm hover:underline">
-                                Read More
-                              </button>
-                            </DialogTrigger>
-                            <DialogContent className="bg-white w-full max-w-2xl ">
-                              <div className="mb-4 ">
-                                <Image
-                                  src="/home/Vector.png"
-                                  alt="Quote icon"
-                                  width={32}
-                                  height={24}
-                                  className="mb-4"
-                                />
-                                <div className="mb-6 text-gray-700 text-sm leading-relaxed">
-                                  {review.content}
-                                </div>
-                                <div className="flex items-center">
-                                  <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
-                                    <AvatarImage src={review.avatar} alt={review.name} />
-                                    <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
-                                      {review.fallback}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="ml-3">
-                                    <h3 className="text-sm font-semibold text-black">
-                                      {review.name}
-                                    </h3>
-                                    {review.role && (
-                                      <p className="text-xs text-gray-500">
-                                        {review.role}
-                                      </p>
-                                    )}
-                                  </div>
+                      {/* Read More Dialog — unchanged */}
+                      <div className="mt-4">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button className="text-green-600 text-sm hover:underline">
+                              Read More
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="bg-white w-full max-w-2xl">
+                            <div className="mb-4">
+                              <div className="text-[#0A2840] text-3xl mb-4">
+                                <ImQuotesLeft />
+                              </div>
+                              <div className="mb-6 text-gray-700 text-sm leading-relaxed">
+                                {review.content}
+                              </div>
+                              <div className="flex items-center">
+                                <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
+                                  <AvatarImage src={review.avatar} alt={review.name} />
+                                  <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
+                                    {review.fallback}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="ml-3">
+                                  <h3 className="text-sm font-semibold text-black">
+                                    {review.name}
+                                  </h3>
+                                  {review.role && (
+                                    <p className="text-xs text-gray-500">
+                                      {review.role}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      )}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
                   </CarouselItem>
                 );
@@ -807,9 +786,8 @@ export default function ReviewCarousel() {
               <button
                 key={index}
                 onClick={() => api?.scrollTo(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                  current === index ? 'bg-[#5CA131]' : 'bg-gray-300'
-                }`}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${current === index ? "bg-[#5CA131]" : "bg-gray-300"
+                  }`}
                 aria-label={`Go to slide ${index + 1}`}
               />
             ))}
