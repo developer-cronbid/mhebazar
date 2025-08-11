@@ -193,8 +193,8 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {/* Left: Summary */}
         <div>
-          <div className="bg-white rounded-lg border p-5 shadow-sm mb-6">
-            <h3 className="font-semibold text-lg mb-2">Customer Reviews</h3>
+          <div className="bg-white p-5 mb-6">
+            <h3 className="font-bold text-xl mb-2">Customer Reviews</h3>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl font-bold text-yellow-500">
                 {data.summary.avg.toFixed(1)}
@@ -231,10 +231,10 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                 </div>
               ))}
             </div>
-            <div className="max-w-md mx-auto p-2 rounded-lg">
+            <div className="max-w-md mx-auto p-2 rounded-lg border shadow-md">
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-1">
+                  <h2 className="text-lg font-bold text-gray-900 mb-1">
                     Review this product
                   </h2>
                   <p className="text-sm text-gray-600">
@@ -246,9 +246,9 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full bg-gray-50 border-gray-200 hover:bg-gray-100 py-6 px-4 rounded-lg"
+                      className="w-full border-[#5CA131] cursor-pointer py-6 px-4 rounded-lg"
                     >
-                      <span className="text-green-600 font-medium">
+                      <span className="text-[#5CA131] ">
                         Write your product review
                       </span>
                     </Button>

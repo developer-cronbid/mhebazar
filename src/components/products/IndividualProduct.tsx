@@ -503,13 +503,12 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   const validSpecs = getValidSpecs(data.product_details);
 
   return (
-    <div className="px-4 mx-auto p-2 sm:p-4 bg-white max-w-7xl">
-      
-      
+    <div className="px-4 mx-auto p-2 sm:p-4 bg-white w-full md:w-[90vw]">
+
       <div className="flex flex-col md:flex-row gap-8">
-        
+
         {/* Left Side - Product Images */}
-        <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-fit">
+        <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-[40%]">
           {/* Main Product Image */}
           <div
             className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full mx-auto group"
@@ -525,7 +524,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             onMouseLeave={() => setIsZoomed(false)}
           >
 
-            
+
             <FallbackImage
               src={data.images[selectedImage]?.image || "/no-product.png"}
               alt={data.name}
@@ -585,18 +584,14 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         </div>
 
         {/* Right Side - Product Details */}
-        <div className="space-y-6 w-full">
+        <div className="space-y-6 w-full md:w-[60%]">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
-            
+
               <h1 className="text-2xl font-bold text-gray-900 mb-2">{data.name}</h1>
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                <span className="text-base text-gray-600">by</span>
-                <span className="text-base text-blue-600 hover:underline">{data.user_name || "MHE Bazar"}</span>
-              </div>
               {/* Rating and Reviews */}
-              <div className="flex items-center gap-4 mb-4 flex-wrap">
+              <div className="flex items-center gap-1 mb-4 flex-wrap">
                 {data.average_rating !== null && data.average_rating > 0 ? (
                   <div className="flex items-center gap-1">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -611,12 +606,15 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 ) : (
                   <span className="text-sm text-gray-600">No ratings yet</span>
                 )}
+
+                <p className="text-sm text-gray-600">|</p>
+
                 <Dialog>
                   <DialogTrigger asChild>
                     <span
-                      className="text-sm text-blue-600 hover:underline cursor-pointer"
+                      className="text-sm hover:underline cursor-pointer"
                     >
-                      Write a Review
+                      Reviews
                     </span>
                   </DialogTrigger>
                   <DialogContent className="w-full max-w-2xl">
@@ -625,16 +623,22 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     />
                   </DialogContent>
                 </Dialog>
+
+                <p className="text-sm text-gray-600">|</p>
+
+                <span className="text-base text-gray-600">by</span>
+                <span className="text-base hover:underline">{data.user_name || "MHE Bazar"}</span>
+
               </div>
               {/* Price */}
               <div className="mb-2">
                 {(data.hide_price || Number(data.price) <= 0) ? (
-                  <span className="text-2xl font-bold text-gray-400">₹ *******</span>
+                  <span className="text-2xl font-semibold text-[#5CA131]">₹ *******</span>
                 ) : (
                   <>
-                    <p className="text-3xl font-bold text-gray-900">₹{displayPrice} excl. GST</p>
-                    <p className="text-sm text-gray-500 line-through">₹{fakePrice}</p>
-                    <p className="text-sm text-gray-600 mt-1">₹{displayPrice} incl. of all taxes</p>
+                    <p className="text-2xl font-semibold text-[#5CA131]">₹{displayPrice} excl. GST</p>
+                      <p className="text-sm text-[#5CA131]">₹{fakePrice} incl. GST</p>
+                      <p className="text-sm mt-1">You Save: ₹{displayPrice} incl. of all taxes</p>
                   </>
                 )}
               </div>
@@ -773,6 +777,38 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               <p className="text-xs text-gray-600">Read our return policy</p>
             </div>
           </div>
+
+          <div className="pt-6 border-t border-gray-200">
+            <p className="text-2xl font-bold">Product Details</p>
+            <p className="line-clamp-4" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.description) }}></p>
+            <Dialog>
+              <DialogTrigger asChild>
+                <p
+                  className=" underline cursor-pointer font-semibold"
+                  aria-label={formButtonText}
+                  disabled={!data.is_active}
+                >
+                  {formButtonText}
+                </p>
+              </DialogTrigger>
+              <DialogContent className="w-full max-w-2xl">
+                {data.type === 'rental' || data.type === 'used' ? (
+                  <RentalForm
+                    productId={data.id}
+                    productDetails={{
+                      image: data.images[0]?.image || data.category_details?.cat_image || "/no-product.png",
+                      title: data.name,
+                      description: data.description,
+                      price: data.price,
+                      stock_quantity: data.stock_quantity,
+                    }}
+                  />
+                ) : (
+                  <QuoteForm product={data} />
+                )}
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 
@@ -781,10 +817,10 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         {/* Description */}
         <div className="border rounded-lg mb-4 overflow-hidden">
           <button
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition"
             onClick={() => setOpenAccordion(openAccordion === "desc" ? null : "desc")}
           >
-            <span className="font-semibold">Description</span>
+            <span className="font-bold text-xl">Description</span>
             <ChevronDown className={`w-5 h-5 transition-transform ${openAccordion === "desc" ? "rotate-180" : ""}`} />
           </button>
           {openAccordion === "desc" && (
@@ -794,10 +830,10 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         {/* Specification */}
         <div className="border rounded-lg mb-4 overflow-hidden">
           <button
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition"
             onClick={() => setOpenAccordion(openAccordion === "spec" ? null : "spec")}
           >
-            <span className="font-semibold">Specification</span>
+            <span className="font-bold text-xl">Specification</span>
             <ChevronDown
               className={`w-5 h-5 transition-transform duration-200 text-gray-600 ${openAccordion === "spec" ? "rotate-180" : ""
                 }`}
@@ -856,10 +892,10 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         {/* Vendor */}
         <div className="border rounded-lg mb-4 overflow-hidden">
           <button
-            className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition"
             onClick={() => setOpenAccordion(openAccordion === "vendor" ? null : "vendor")}
           >
-            <span className="font-semibold">Vendor</span>
+            <span className="font-bold text-xl">Vendor</span>
             <ChevronDown className={`w-5 h-5 transition-transform ${openAccordion === "vendor" ? "rotate-180" : ""}`} />
           </button>
           {openAccordion === "vendor" && (
@@ -869,7 +905,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
       </div>
       {data.id && <ReviewSection productId={data.id} registerRefresher={registerReviewsRefresher} />}
 
-      
     </div>
   );
 }
