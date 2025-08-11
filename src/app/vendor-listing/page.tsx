@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import VendorCard from "@/components/vendor-listing/VendorCard";
 import api from "@/lib/api";
@@ -15,10 +15,11 @@ import {
 import Link from "next/link";
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import VendorRegistrationDrawer from '@/components/forms/publicforms/VendorRegistrationForm';
+
 
 type Vendor = {
   id: number;
-  user_id: number;
   username: string;
   email: string;
   full_name: string;
@@ -52,6 +53,7 @@ function ClientSideVendorsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [sortOption, setSortOption] = useState(searchParams.get('sort') || "-application_date");
   const [isLoading, setIsLoading] = useState(true);
+  const [vendorDrawerOpen, setVendorDrawerOpen] = useState(false);
   const perPage = 12;
 
   const createQueryString = useCallback(
@@ -72,13 +74,13 @@ function ClientSideVendorsPage() {
       const counts = await Promise.all(
         vendorIds.map(async (userId) => {
           try {
-            const response = await api.get(`/products/?user=${userId}`);
+            const url = `/products/?user=${userId}`;
+            const response = await api.get(url);
             return {
               userId,
               count: response.data.count || 0
             };
           } catch (error) {
-            console.error(`Error fetching products for user ${userId}:`, error);
             return {
               userId,
               count: 0
@@ -88,11 +90,10 @@ function ClientSideVendorsPage() {
       );
       return counts;
     } catch (error) {
-      console.error("Error fetching product counts:", error);
       return [];
     }
   };
-
+    
   const fetchVendors = async (page = 1, searchQuery = "", sort = "-application_date") => {
     setIsLoading(true);
     try {
@@ -101,31 +102,27 @@ function ClientSideVendorsPage() {
       query.append("page_size", perPage.toString());
 
       if (searchQuery) {
-        query.append("brand__icontains", searchQuery);
-        query.append("username__icontains", searchQuery);
+        query.append("search", searchQuery);
       }
       
-      // First fetch the vendors
       const response = await api.get<VendorResponse>(`/vendor/approved/?${query.toString()}`);
       let vendorData = response.data.results || [];
       const totalCount = response.data.count || 0;
 
-      // Extract user IDs for product count fetching
-      const userIds = vendorData.map(vendor => vendor.user_id);
+      const validVendors = vendorData.filter(vendor => vendor.user_info?.id !== undefined && vendor.user_info?.id !== null);
+      const userIds = validVendors.map(vendor => vendor.user_info.id);
       
-      // Fetch all product counts in parallel
       const productCounts = await fetchProductCounts(userIds);
       
-      // Map product counts back to vendors
       const vendorsWithCounts = vendorData.map(vendor => {
-        const countObj = productCounts.find(pc => pc.userId === vendor.user_id);
+        const countObj = productCounts.find(pc => pc.userId === vendor.user_info?.id);
+        const finalCount = countObj ? countObj.count : 0;
         return {
           ...vendor,
-          product_count: countObj ? countObj.count : 0
+          product_count: finalCount
         };
       });
 
-      // Apply sorting
       let sortedVendors = [...vendorsWithCounts];
       if (sort === '-application_date') {
         sortedVendors.sort((a, b) => new Date(b.application_date).getTime() - new Date(a.application_date).getTime());
@@ -136,15 +133,14 @@ function ClientSideVendorsPage() {
       } else if (sort === 'product_count') {
         sortedVendors.sort((a, b) => (a.product_count ?? 0) - (b.product_count ?? 0));
       } else if (sort === 'brand') {
-        sortedVendors.sort((a, b) => a.brand.localeCompare(b.brand));
+        sortedVendors.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
       } else if (sort === '-brand') {
-        sortedVendors.sort((a, b) => b.brand.localeCompare(a.brand));
+        sortedVendors.sort((a, b) => (b.brand || '').localeCompare(a.brand || ''));
       }
 
       setVendors(sortedVendors);
       setTotalPages(Math.ceil(totalCount / perPage));
     } catch (error) {
-      console.error("Error fetching vendors:", error);
     } finally {
       setIsLoading(false);
     }
@@ -176,97 +172,106 @@ function ClientSideVendorsPage() {
     setCurrentPage(page);
     router.push(pathname + '?' + createQueryString('page', page.toString()));
   };
-
+  
   return (
-    <main className="font-inter">
-      <Breadcrumb items={[
-        { label: 'Home', href: '/' },
-        { label: 'Brand Store', href: '/vendor-listing' }
-      ]} />
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div className="flex flex-col">
-            <h1 className="text-2xl font-bold text-gray-800 mt-2">Vendors at MHEBazar</h1>
-          </div>
-          <Link href="/vendor-registration" passHref>
-            <Button className="bg-[#5CA131] hover:bg-[#4a8f28] text-white font-medium px-6 py-2 rounded-lg transition-colors duration-150">
+    <>
+      <main className="font-inter">
+        <Breadcrumb items={[
+          { label: 'Home', href: '/' },
+          { label: 'Brand Store', href: '/vendor-listing' }
+        ]} />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div className="flex flex-col">
+              <h1 className="text-2xl font-bold text-gray-800 mt-2">Vendors at MHEBazar</h1>
+            </div>
+            
+            <Button 
+              onClick={() => setVendorDrawerOpen(true)} 
+              className="bg-[#5CA131] hover:bg-[#4a8f28] text-white font-medium px-6 py-2 rounded-lg transition-colors duration-150"
+            >
               Become a Vendor
             </Button>
-          </Link>
-        </div>
+            
+          </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-          <div className="flex gap-2 w-full md:w-1/2">
-            <Input
-              placeholder="Search by name, brand, or company..."
-              value={search}
-              onChange={handleSearchChange}
-              className="w-full"
-            />
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <div className="flex gap-2 w-full md:w-1/2">
+              <Input
+                placeholder="Search by name, brand, or company..."
+                value={search}
+                onChange={handleSearchChange}
+                className="w-full"
+              />
+            </div>
+            <div className="flex gap-2 items-center w-full md:w-auto">
+              <span className="text-gray-600 font-medium whitespace-nowrap">Sort by:</span>
+              <Select onValueChange={handleSortChange} value={sortOption}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="-application_date">Newest First</SelectItem>
+                  <SelectItem value="application_date">Oldest First</SelectItem>
+                  <SelectItem value="-product_count">Product Count (High to Low)</SelectItem>
+                  <SelectItem value="product_count">Product Count (Low to High)</SelectItem>
+                  <SelectItem value="brand">Brand (A-Z)</SelectItem>
+                  <SelectItem value="-brand">Brand (Z-A)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="flex gap-2 items-center w-full md:w-auto">
-            <span className="text-gray-600 font-medium whitespace-nowrap">Sort by:</span>
-            <Select onValueChange={handleSortChange} value={sortOption}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select an option" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="-application_date">Newest First</SelectItem>
-                <SelectItem value="application_date">Oldest First</SelectItem>
-                <SelectItem value="-product_count">Product Count (High to Low)</SelectItem>
-                <SelectItem value="product_count">Product Count (Low to High)</SelectItem>
-                <SelectItem value="brand">Brand (A-Z)</SelectItem>
-                <SelectItem value="-brand">Brand (Z-A)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
 
-        {isLoading ? (
-          <div className="text-center py-20">
-            <p className="text-gray-500 text-lg">Loading vendors...</p>
-          </div>
-        ) : vendors.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-gray-500 text-lg">No approved vendors found.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {vendors.map((vendor) => (
-              <VendorCard vendor={vendor} key={vendor.id} />
-            ))}
-          </div>
-        )}
+          {isLoading ? (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg">Loading vendors...</p>
+            </div>
+          ) : vendors.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="text-gray-500 text-lg">No approved vendors found.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {vendors.map((vendor) => (
+                <VendorCard vendor={vendor} key={vendor.id} />
+              ))}
+            </div>
+          )}
 
-        {totalPages > 1 && (
-          <div className="flex justify-center items-center mt-10 gap-2 flex-wrap">
-            <Button
-              variant="outline"
-              disabled={currentPage === 1}
-              onClick={() => handlePageChange(currentPage - 1)}
-            >
-              Previous
-            </Button>
-            {[...Array(totalPages)].map((_, i) => (
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center mt-10 gap-2 flex-wrap">
               <Button
-                key={i}
-                variant={currentPage === i + 1 ? "default" : "outline"}
-                onClick={() => handlePageChange(i + 1)}
+                variant="outline"
+                disabled={currentPage === 1}
+                onClick={() => handlePageChange(currentPage - 1)}
               >
-                {i + 1}
+                Previous
               </Button>
-            ))}
-            <Button
-              variant="outline"
-              disabled={currentPage === totalPages}
-              onClick={() => handlePageChange(currentPage + 1)}
-            >
-              Next
-            </Button>
-          </div>
-        )}
-      </div>
-    </main>
+              {[...Array(totalPages)].map((_, i) => (
+                <Button
+                  key={i}
+                  variant={currentPage === i + 1 ? "default" : "outline"}
+                  onClick={() => handlePageChange(i + 1)}
+                >
+                  {i + 1}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                disabled={currentPage === totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </div>
+      </main>
+      <VendorRegistrationDrawer
+        open={vendorDrawerOpen}
+        onClose={() => setVendorDrawerOpen(false)}
+      />
+    </>
   );
 }
 

@@ -7,6 +7,8 @@ import Link from "next/link";
 import { useState, useMemo, useCallback, useEffect, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Category, Subcategory } from "./Nav";
+import api from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CategoryMenuProps {
   isOpen: boolean;
@@ -26,26 +28,57 @@ export default function CategoryMenu({
 
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null);
+  const [productCounts, setProductCounts] = useState<{ [subcategoryId: number]: number }>({});
+  const [loadingCounts, setLoadingCounts] = useState<boolean>(false);
+
+  const displayedCategory: Category | null = selectedCategory || hoveredCategory;
+  const subcategoriesToDisplay: Subcategory[] = displayedCategory?.subcategories || [];
+
+  const getProductCounts = useCallback(async (categoryId: number, subcategories: Subcategory[]) => {
+    if (subcategories.length === 0) {
+      setProductCounts({});
+      setLoadingCounts(false);
+      return;
+    }
+
+    setLoadingCounts(true);
+    try {
+      const promises = subcategories.map(async (sub) => {
+        const response = await api.get(`/products/?category=${categoryId}&subcategory=${sub.id}`);
+        return { subcategoryId: sub.id, count: response.data?.count || 0 };
+      });
+      const results = await Promise.all(promises);
+      const newCounts = results.reduce((acc, curr) => {
+        acc[curr.subcategoryId] = curr.count;
+        return acc;
+      }, {} as { [key: number]: number });
+      setProductCounts(newCounts);
+    } catch (error) {
+      console.error("Failed to fetch product counts:", error);
+      setProductCounts({});
+    } finally {
+      setLoadingCounts(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       if (categories.length > 0) {
         setHoveredCategory(categories[0]);
+        getProductCounts(categories[0].id, categories[0].subcategories);
       }
     } else {
       setSelectedCategory(null);
       setHoveredCategory(null);
+      setProductCounts({});
     }
-  }, [isOpen, categories]);
+  }, [isOpen, categories, getProductCounts]);
 
-  const getInitials = useCallback((name: string): string => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  }, []);
+  useEffect(() => {
+    if (hoveredCategory) {
+      getProductCounts(hoveredCategory.id, hoveredCategory.subcategories);
+    }
+  }, [hoveredCategory, getProductCounts]);
 
   const handleCategoryNameClick = useCallback(
     (category: Category) => {
@@ -60,16 +93,19 @@ export default function CategoryMenu({
     [selectedCategory, onClose, router]
   );
 
-  const displayedCategory: Category | null = selectedCategory || hoveredCategory;
-  const subcategoriesToDisplay: Subcategory[] = displayedCategory?.subcategories || [];
-
-  const categoriesCol1: Category[] = useMemo(
-    () => categories.slice(0, Math.ceil(categories.length / 2)),
+  const categoriesWithSubs = useMemo(() => 
+    categories.filter(c => c.subcategories.length > 0), 
     [categories]
   );
+
+  const categoriesCol1: Category[] = useMemo(
+    () => categoriesWithSubs.slice(0, Math.ceil(categoriesWithSubs.length / 2)),
+    [categoriesWithSubs]
+  );
+  
   const categoriesCol2: Category[] = useMemo(
-    () => categories.slice(Math.ceil(categories.length / 2)),
-    [categories]
+    () => categoriesWithSubs.slice(Math.ceil(categoriesWithSubs.length / 2)),
+    [categoriesWithSubs]
   );
 
   return (
@@ -80,193 +116,192 @@ export default function CategoryMenu({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden md:min-w-[800px]"
+          className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden"
+          style={{ width: '1000px', height: '450px' }}
         >
-          <div className="flex flex-col md:flex-row">
-            {/* Left Categories Column 1 (Scrollable on small screens) */}
-            <div className="w-full md:w-64 bg-gray-50 md:border-r border-gray-200 flex-shrink-0">
-              <div className="p-2 h-[200px] md:h-[400px] overflow-y-auto custom-scrollbar">
-                {categoriesCol1.map((category) => (
-                  <div
-                    key={category.id}
-                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${
-                      selectedCategory?.id === category.id
-                        ? "bg-white text-green-600 font-medium shadow-sm"
-                        : hoveredCategory?.id === category.id
-                        ? "bg-gray-100 text-green-600"
-                        : "text-gray-700 hover:bg-white hover:text-green-600"
-                    }`}
-                    onMouseEnter={() => {
-                      if (!selectedCategory) {
-                        setHoveredCategory(category);
-                      }
-                    }}
-                    onMouseLeave={() => {
-                      if (!selectedCategory) {
-                        setHoveredCategory(null);
-                      }
-                    }}
-                  >
-                    <span
-                      onClick={() => handleCategoryNameClick(category)}
-                      className="flex-1 cursor-pointer"
+          <div className="flex h-full">
+            {/* Left Categories Column 1 */}
+            <div className="w-64 bg-gray-50/70 border-r border-gray-200">
+              <div className="p-2 h-full">
+                <div className="space-y-1">
+                  {categoriesCol1.map((category) => (
+                    <div
+                      key={category.id}
+                      className={`group flex items-center justify-between px-3 py-2.5 text-sm cursor-pointer rounded-md transition-all duration-200 ${
+                        selectedCategory?.id === category.id || hoveredCategory?.id === category.id
+                          ? "bg-green-100 text-green-700 font-medium shadow-sm"
+                          : "text-gray-700 hover:bg-white hover:text-green-600 hover:shadow-sm"
+                      }`}
+                      onMouseEnter={() => setHoveredCategory(category)}
                     >
-                      {category.name}
-                    </span>
-                    <Link
-                      href={`/${createSlug(category.name)}`}
-                      passHref
-                      onClick={onClose}
-                      className="p-1 -mr-1 rounded hover:bg-gray-200"
-                      aria-label={`Go to ${category.name} category page`}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Middle Categories Column 2 (Hidden on small screens) */}
-            <div className="hidden md:block md:w-64 bg-gray-50 border-r border-gray-200 flex-shrink-0">
-              <div className="p-2 h-[400px] overflow-y-auto custom-scrollbar">
-                {categoriesCol2.map((category) => (
-                  <div
-                    key={category.id}
-                    className={`flex items-center justify-between px-3 py-2 text-sm cursor-pointer rounded transition-colors ${
-                      selectedCategory?.id === category.id
-                        ? "bg-white text-green-600 font-medium shadow-sm"
-                        : hoveredCategory?.id === category.id
-                        ? "bg-gray-100 text-green-600"
-                        : "text-gray-700 hover:bg-white hover:text-green-600"
-                    }`}
-                    onMouseEnter={() => {
-                      if (!selectedCategory) {
-                        setHoveredCategory(category);
-                      }
-                    }}
-                    onMouseLeave={() => {
-                      if (!selectedCategory) {
-                        setHoveredCategory(null);
-                      }
-                    }}
-                  >
-                    <span
-                      onClick={() => handleCategoryNameClick(category)}
-                      className="flex-1 cursor-pointer"
-                    >
-                      {category.name}
-                    </span>
-                    <Link
-                      href={`/${createSlug(category.name)}`}
-                      passHref
-                      onClick={onClose}
-                      className="p-1 -mr-1 rounded hover:bg-gray-200"
-                      aria-label={`Go to ${category.name} category page`}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right Content Column */}
-            <div className="w-full md:w-80 bg-white p-4 flex-shrink-0">
-              <div className="h-[200px] md:h-[400px] overflow-y-auto space-y-4 custom-scrollbar">
-                {!displayedCategory && (
-                  <p className="text-gray-500 text-sm p-3 text-center">
-                    Hover over a category to see more.
-                  </p>
-                )}
-
-                {subcategoriesToDisplay.length > 0 ? (
-                  subcategoriesToDisplay.map((subCategory) => (
-                    <Link
-                      key={subCategory.id}
-                      href={`/${createSlug(displayedCategory!.name)}/${createSlug(subCategory.name)}`}
-                      passHref
-                      className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100 group"
-                      onClick={onClose}
-                    >
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {displayedCategory?.image_url ? (
-                          <Image
-                            src={displayedCategory.image_url}
-                            alt={displayedCategory.name}
-                            width={64}
-                            height={64}
-                            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                            unoptimized
-                            onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.style.display = "none";
-                                const parent = target.parentElement;
-                                if (parent) {
-                                  const fallback = document.createElement("span");
-                                  fallback.className = "text-gray-500 text-xs font-semibold";
-                                  fallback.textContent = getInitials(subCategory.name);
-                                  parent.appendChild(fallback);
-                                }
-                            }}
-                          />
-                        ) : (
-                          <span className="text-gray-500 text-xs font-semibold">
-                            {getInitials(subCategory.name)}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 text-sm mb-1 group-hover:text-green-600 transition-colors">
-                          {subCategory.name}
-                        </h4>
-                        <div className="inline-flex items-center justify-center bg-gray-100 text-gray-700 rounded-full px-2 py-1 text-xs font-medium min-w-[24px]">
-                          <span className="text-xs">View All</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))
-                ) : displayedCategory ? (
-                  <motion.div
-                    key="no-subcategories-card"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.2 }}
-                    className="flex flex-col items-center justify-center p-6 border border-green-200 bg-green-50 rounded-lg shadow-md h-full text-center"
-                  >
-                    <div className="mb-4 text-green-600">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="w-12 h-12 mx-auto"
+                      <span
+                        onClick={() => handleCategoryNameClick(category)}
+                        className="flex-1 cursor-pointer text-left"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M9.75 3.104v5.303m0 0a3.001 3.001 0 1 0 6.002 0V3.104m-6.002 0h-3M9.75 3.104h3c0 1.258-.29 2.474-.836 3.565M9.75 3.104V2.001l-1.426-.399m-5.462 8.528l1.426.399M9.75 3.104h-3c-1.34 0-2.61.425-3.663 1.226C2.213 5.4 1.75 6.703 1.75 8.163V21c0 .828.672 1.5 1.5 1.5h17.5c.828 0 1.5-.672 1.5-1.5V8.163c0-1.46-.463-2.763-1.353-3.791a5.956 5.956 0 0 0-3.663-1.226M15.75 12h.008v.008h-.008V12zm2.25 0h.008v.008h-.008V12zm-4.5 0h.008v.008h-.008V12zm2.25 0h.008v.008h-.008V12z"
-                        />
-                      </svg>
+                        {category.name}
+                      </span>
+                      <Link
+                        href={`/${createSlug(category.name)}`}
+                        onClick={onClose}
+                        className="p-1.5 -mr-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition-all duration-200"
+                        aria-label={`Go to ${category.name} category page`}
+                      >
+                        <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+                      </Link>
                     </div>
-                    <p className="text-gray-800 text-lg font-semibold mb-2">
-                      Browse {displayedCategory.name} Products
-                    </p>
-                    <p className="text-gray-700 text-sm mb-4">
-                      Explore all available items under this category.
-                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Middle Categories Column 2 */}
+            <div className="w-64 bg-gray-50/70 border-r border-gray-200">
+              <div className="p-2 h-full">
+                <div className="space-y-1">
+                  {categoriesCol2.map((category) => (
+                    <div
+                      key={category.id}
+                      className={`group flex items-center justify-between px-3 py-2.5 text-sm cursor-pointer rounded-md transition-all duration-200 ${
+                        selectedCategory?.id === category.id || hoveredCategory?.id === category.id
+                          ? "bg-green-100 text-green-700 font-medium shadow-sm"
+                          : "text-gray-700 hover:bg-white hover:text-green-600 hover:shadow-sm"
+                      }`}
+                      onMouseEnter={() => setHoveredCategory(category)}
+                    >
+                      <span
+                        onClick={() => handleCategoryNameClick(category)}
+                        className="flex-1 cursor-pointer text-left"
+                      >
+                        {category.name}
+                      </span>
+                      <Link
+                        href={`/${createSlug(category.name)}`}
+                        onClick={onClose}
+                        className="p-1.5 -mr-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition-all duration-200"
+                        aria-label={`Go to ${category.name} category page`}
+                      >
+                        <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Right Content Column - Subcategories with Scroll */}
+            <div className="flex-1 bg-white">
+              <div className="h-full p-6 flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6 flex-shrink-0">
+                  <h3 className="font-semibold text-gray-900 text-lg">
+                    {displayedCategory?.name || "Select a category"}
+                  </h3>
+                  {displayedCategory && (
                     <Link
                       href={`/${createSlug(displayedCategory.name)}`}
-                      passHref
-                      className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
                       onClick={onClose}
+                      className="text-sm font-medium text-green-600 hover:text-green-700 transition-colors px-2 py-1 rounded hover:bg-green-50"
                     >
-                      View All
+                      View All →
                     </Link>
-                  </motion.div>
-                ) : null}
+                  )}
+                </div>
+                
+                {/* Scrollable Content */}
+                <div className="flex-1 min-h-0">
+                  {loadingCounts ? (
+                    <div className="grid grid-cols-2 gap-4 auto-rows-max">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="bg-gray-50 rounded-lg p-4 flex flex-col items-center justify-center min-h-[140px]">
+                          <Skeleton className="w-16 h-16 rounded-lg mb-3" />
+                          <Skeleton className="h-4 w-20 mb-2" />
+                          <Skeleton className="h-6 w-8" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : subcategoriesToDisplay.length > 0 ? (
+                    <div 
+                      className="grid grid-cols-2 gap-4 auto-rows-max overflow-y-auto pr-2"
+                      style={{ 
+                        maxHeight: '340px',
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: '#e2e8f0 transparent'
+                      }}
+                    >
+                      {subcategoriesToDisplay.map((subCategory) => (
+                        <Link
+                          key={subCategory.id}
+                          href={`/${createSlug(displayedCategory!.name)}/${createSlug(subCategory.name)}`}
+                          className="group bg-gray-50/50 hover:bg-gray-50 rounded-lg p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-200 hover:shadow-sm min-h-[140px] flex flex-col items-center justify-center"
+                          onClick={onClose}
+                        >
+                          <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden mb-3 shadow-sm group-hover:shadow-md transition-shadow">
+                            {displayedCategory?.image_url ? (
+                              <Image
+                                src={displayedCategory.image_url.startsWith("/media") ? `https://mheback.onrender.com${displayedCategory.image_url}` : displayedCategory.image_url}
+                                alt={subCategory.name}
+                                width={64}
+                                height={64}
+                                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                                unoptimized
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = "none";
+                                  const parent = target.parentElement;
+                                  if (parent) {
+                                    const fallback = document.createElement("div");
+                                    fallback.className = "text-gray-500 text-xs font-semibold flex items-center justify-center w-full h-full";
+                                    fallback.textContent = subCategory.name.substring(0, 2).toUpperCase();
+                                    parent.appendChild(fallback);
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <span className="text-gray-500 text-xs font-semibold">
+                                {subCategory.name.substring(0, 2).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-medium text-gray-900 text-sm text-center mb-2 group-hover:text-green-600 transition-colors leading-tight px-1">
+                            {subCategory.name}
+                          </h4>
+                          <div className="text-xl font-bold text-gray-800 min-w-[32px] text-center">
+                            {productCounts[subCategory.id] !== undefined ? (
+                              String(productCounts[subCategory.id]).padStart(2, '0')
+                            ) : (
+                              <span className="text-gray-400">--</span>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : displayedCategory ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                        <span className="text-gray-400 text-2xl">📦</span>
+                      </div>
+                      <p className="text-gray-500 text-sm mb-4">
+                        No subcategories available
+                      </p>
+                      <Link
+                        href={`/${createSlug(displayedCategory.name)}`}
+                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 transition-colors shadow-sm"
+                        onClick={onClose}
+                      >
+                        Browse {displayedCategory.name}
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                        <span className="text-gray-400 text-2xl">👈</span>
+                      </div>
+                      <p className="text-gray-500 text-sm">
+                        Hover over a category to see subcategories
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

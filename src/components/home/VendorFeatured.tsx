@@ -73,8 +73,8 @@ const VendorProductsFeatured: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="w-full mx-auto px-4 py-4">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
           <button className="text-[#42a856] font-medium">View More</button>
         </div>
@@ -89,8 +89,8 @@ const VendorProductsFeatured: React.FC = () => {
 
   if (error) {
     return (
-      <section className="w-full mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <section className="w-full mx-auto px-4 py-4">
+        <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
           <button className="text-[#42a856] font-medium">View More</button>
         </div>
@@ -102,8 +102,8 @@ const VendorProductsFeatured: React.FC = () => {
   }
 
   return (
-    <section className="w-full mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+    <section className="w-full mx-auto px-4 py-4">
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
         <button className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
           View More
@@ -113,7 +113,7 @@ const VendorProductsFeatured: React.FC = () => {
       <div className="relative">
         <div
           ref={scrollContainerRef}
-          className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory"
+          className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide snap-x snap-mandatory"
           style={{ 
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -147,7 +147,7 @@ const VendorProductsFeatured: React.FC = () => {
         </div>
         
         {totalDots > 1 && (
-          <div className="flex justify-center space-x-2 mt-6">
+          <div className="flex justify-center space-x-2 mt-4">
             {Array.from({ length: totalDots }, (_, idx) => (
               <button
                 key={idx}

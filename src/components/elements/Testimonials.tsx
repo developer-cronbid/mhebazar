@@ -668,7 +668,7 @@ export default function ReviewCarousel() {
   };
 
   return (
-    <section className="w-full overflow-hidden bg-white py-14 font-sans">
+    <section className="w-full overflow-hidden py-14 font-sans">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         {/* Title */}
         <div className="mb-8 text-center sm:mb-12 flex items-center justify-between">
@@ -719,7 +719,7 @@ export default function ReviewCarousel() {
 
                       {/* User info */}
                       <div className="flex items-center">
-                        <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
+                        <Avatar className="h-12 w-12 ml-10 rounded-full border-2 border-gray-200">
                           <AvatarImage src={review.avatar} alt={review.name} />
                           <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
                             {review.fallback}
@@ -753,7 +753,7 @@ export default function ReviewCarousel() {
                               </div>
                               <div className="flex items-center">
                                 <Avatar className="h-12 w-12 rounded-full border-2 border-gray-200">
-                                  <AvatarImage src={review.avatar} alt={review.name} />
+                                <AvatarImage src={review.avatar} alt={review.name} />
                                   <AvatarFallback className="bg-gray-200 text-gray-600 text-sm font-medium">
                                     {review.fallback}
                                   </AvatarFallback>

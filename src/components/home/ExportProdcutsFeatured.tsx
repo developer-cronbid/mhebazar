@@ -132,9 +132,9 @@ export default function ExportProductsFeatured() {
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
       variants={sectionVariants}
-      className="w-full mx-auto px-4 py-8"
+      className="w-full mx-auto px-4 py-4"
     >
-      <motion.div variants={itemVariants} className="flex justify-between items-center mb-8">
+      <motion.div variants={itemVariants} className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Export Products</h2>
         <button className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
           View More
@@ -149,7 +149,7 @@ export default function ExportProductsFeatured() {
         <div className="relative">
           <div
             ref={scrollContainerRef}
-            className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide snap-x snap-mandatory"
+            className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide snap-x snap-mandatory"
             style={{ 
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
@@ -183,7 +183,7 @@ export default function ExportProductsFeatured() {
           </div>
           
           {totalDots > 1 && (
-            <div className="flex justify-center space-x-2 mt-6">
+            <div className="flex justify-center space-x-2 mt-4">
               {Array.from({ length: totalDots }, (_, idx) => (
                 <button
                   key={idx}

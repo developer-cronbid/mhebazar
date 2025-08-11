@@ -78,8 +78,8 @@ export function BlogCarousel() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-6xl mx-auto px-4 py-8">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
+      <div className="w-full max-w-6xl mx-auto px-4 py-4">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-900">
           Our Blogs
         </h2>
         <div className="flex space-x-4">
@@ -95,8 +95,8 @@ export function BlogCarousel() {
 
   if (error) {
     return (
-      <div className="w-full px-4 py-8">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
+      <div className="w-full px-4 py-4">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-900">
           Our Blogs
         </h2>
         <p className="text-center text-red-500">{error}</p>
@@ -105,8 +105,8 @@ export function BlogCarousel() {
   }
 
   return (
-    <div className="w-full px-4 py-8">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-900">
+    <div className="w-full px-4 py-4">
+      <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-900">
         Our Blogs
       </h2>
       <Carousel
@@ -170,7 +170,7 @@ export function BlogCarousel() {
           ))}
         </div>
       </Carousel>
-      <div className="flex justify-center space-x-2 mt-4">
+      <div className="flex justify-center space-x-2 mt-2">
         {blogs.map((_, idx) => (
           <span
             key={idx}
