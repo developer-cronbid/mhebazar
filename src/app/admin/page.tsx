@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Check, X, Building, LucideIcon, PackageCheck, PackageX, UserCheck, UserX, Package } from 'lucide-react';
+import { Check, X, Building, LucideIcon, PackageCheck, PackageX, UserCheck, UserX, Package, ChevronRightIcon } from 'lucide-react';
 import AnalyticsDashboard from '@/components/admin/Graph';
 import api from '@/lib/api'; // Use the configured axios instance
 import Cookies from 'js-cookie';
@@ -26,7 +26,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 
 // --- Type Definitions ---
 export interface StatsCardProps {
-  icon: LucideIcon;
+  icon: string;
   number: string;
   label: string;
   color?: string;
@@ -58,19 +58,28 @@ type GroupedProducts = {
 }
 
 // --- Helper Components ---
-const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label, color = "green" }) => (
-  <div className={`bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-shadow duration-300 cursor-pointer`}>
-    <div className="flex justify-between items-start">
-      <div className={`w-12 h-12 bg-${color}-100 rounded-lg flex items-center justify-center`}>
-        <Icon className={`w-6 h-6 text-${color}-600`} />
+const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label }) => (
+  <div className="bg-white p-3 w-72 h-48 rounded-lg flex items-center justify-between cursor-pointer transition-shadow duration-300 hover:shadow-md">
+    {/* Left section with icon + text */}
+    <div className=" space-x-4">
+      {/* Background circle with tag outline icon */}
+      <img src={Icon} className="w-16 h-16" />
+
+      {/* Number + Label stacked vertically */}
+      <div>
+        <h2 className="text-2xl font-bold" style={{ color: "#4CAF50" }}>
+          {number}
+        </h2>
+        <p className="text-base" style={{ color: "#757575" }}>
+          {label}
+        </p>
       </div>
     </div>
-    <div className="mt-4">
-      <h2 className={`text-3xl font-bold text-gray-800`}>{number}</h2>
-      <p className="text-gray-500 text-sm">{label}</p>
-    </div>
+
+    <ChevronRightIcon className="w-6 h-6 text-gray-400" />
   </div>
 );
+
 
 // --- Main Dashboard Component ---
 const CompleteDashboard = () => {
@@ -235,11 +244,12 @@ const CompleteDashboard = () => {
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Left Section */}
           <div className="flex-1 space-y-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatsCard icon={Building} number={String(stats.total_applications)} label="Total Vendors" color="blue" />
-              <StatsCard icon={UserCheck} number={String(stats.approved_vendors)} label="Approved Vendors" color="green" />
-              <StatsCard icon={UserX} number={String(stats.pending_applications)} label="Pending Applications" color="yellow" />
-              <StatsCard icon={Package} number={String(totalPendingProducts)} label="Pending Products" color="orange" />
+            <div className="flex flex-wrap gap-6">
+              <StatsCard icon='prodQuote.png' number={String(stats.total_applications)} label="Product Quote" color="blue" />
+              <StatsCard icon='rentBuy.png' number={String(stats.approved_vendors)} label="Rent & Buy" color="green" />
+              <StatsCard icon='Rental.png' number={String(stats.pending_applications)} label="Rental" color="yellow" />
+              <StatsCard icon='getCAt.png' number={String(totalPendingProducts)} label="Specification" color="orange" />
+              <StatsCard icon='specs.png' number={String(totalPendingProducts)} label="Get Catalogue" color="orange" />
             </div>
 
             <AnalyticsDashboard />

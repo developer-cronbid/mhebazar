@@ -75,7 +75,7 @@ const AnalyticsDashboard = () => {
           <ChartHeader title="Product Quote" />
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={productQuoteData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <BarChart data={productQuoteData} margin={{ top: 20, right: 0, left: 0, bottom: 5 }}>
                 <XAxis
                   dataKey="date"
                   axisLine={false}
