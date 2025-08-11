@@ -419,7 +419,7 @@ export default function DashboardStats() {
                       key={product.id}
                       className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow transition"
                     >
-                      <div className="flex items-center gap-4 w-full sm:w-auto">
+                      <div className="flex items-center gap-4 w-full">
                         <div className="h-20 w-20 relative flex-shrink-0">
                           <Image
                             src={getImageSrc(product.images)}
@@ -433,20 +433,20 @@ export default function DashboardStats() {
                             }}
                           />
                         </div>
-                        <div className="space-y-1 min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className={`text-xs px-2 py-1 rounded font-medium flex items-center gap-1 ${getStatusColor(product.is_active)}`}>
-                              {getStatusIcon(product.is_active)}
-                              {getStatusText(product.is_active)}
-                            </span>
-                            <span className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded font-medium">
-                              {product.category_name}
-                            </span>
-                            {product.type === 'new' && (
-                              <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-medium">
-                                New
+                        <div className="space-y-1 w-full">
+                          <div className="flex flex-wrap justify-between items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`text-xs px-2 py-1 rounded font-medium flex items-center gap-1 ${getStatusColor(product.is_active)}`}>
+                                {getStatusIcon(product.is_active)}
+                                {getStatusText(product.is_active)}
                               </span>
-                            )}
+                              <span className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded font-medium">
+                                {product.category_name}
+                              </span>
+                            </div>
+                            <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-medium">
+                              {product.type}
+                            </div>
                           </div>
                           <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
                           <div className="flex items-center gap-2">
@@ -576,7 +576,7 @@ export default function DashboardStats() {
             </div>
           </div>
         </div>
-       
+
       </div>
     </>
   );
