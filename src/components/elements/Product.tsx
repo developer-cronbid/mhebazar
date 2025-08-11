@@ -20,7 +20,7 @@ import {
 import DOMPurify from 'dompurify';
 import categories from '@/data/categories.json';
 
-const imgUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
+const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {

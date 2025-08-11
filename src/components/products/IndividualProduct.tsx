@@ -14,7 +14,7 @@ import {
   Minus,
   Plus,
   ShoppingCart,
-  Trash2,
+  Trash2, ChevronUp
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -35,6 +35,7 @@ import ReviewSection from "./Reviews";
 
 import DOMPurify from 'dompurify';
 import SparePartsFeatured from "../home/SparepartsFeatured";
+import Link from "next/link";
 
 type ProductImage = {
   id: number;
@@ -160,6 +161,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   const [isInCart, setIsInCart] = useState(false);
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
   const [cartItemId, setCartItemId] = useState<number | null>(null);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   const formatKey = (key: string) => {
     return key
@@ -511,7 +513,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-[40%]">
           {/* Main Product Image */}
           <div
-            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full mx-auto group"
+            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-[464px] h-[464px] mx-auto group"
             onMouseMove={e => {
               if (isZoomed) {
                 const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -563,23 +565,51 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             </div>
           </div>
           {/* Thumbnail Images */}
-          <div className="flex flex-col gap-2">
-            {data.images.map((img, index) => (
-              <button
-                key={img.id}
-                onClick={() => setSelectedImage(index)}
-                className={`rounded border-2 overflow-hidden ${selectedImage === index ? "border-orange-500" : "border-gray-200"
-                  } hover:border-orange-300 transition-colors`}
-              >
-                <Image
-                  src={img.image}
-                  alt={`${data.name} thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  width={104}
-                  height={104}
-                />
-              </button>
-            ))}
+          <div className="flex flex-col gap-2 h-[464px] overflow-hidden relative">
+            <div
+              className="flex flex-col gap-2 transition-transform duration-300 ease-in-out"
+              style={{ transform: `translateY(-${scrollOffset * 112}px)` }}
+            >
+              {data.images.map((img, index) => (
+                <button
+                  key={img.id}
+                  onClick={() => setSelectedImage(index)}
+                  className={`rounded border-2 overflow-hidden flex-shrink-0 ${selectedImage === index ? "border-orange-500" : "border-gray-200"
+                    } hover:border-orange-300 transition-colors`}
+                >
+                  <Image
+                    src={img.image}
+                    alt={`${data.name} thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    width={104}
+                    height={104}
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* Navigation arrows */}
+            {data.images.length > 3 && (
+              <>
+                {scrollOffset > 0 && (
+                  <button
+                    onClick={() => setScrollOffset(Math.max(0, scrollOffset - 1))}
+                    className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 z-10"
+                  >
+                    <ChevronUp className="w-4 h-4 text-gray-600" />
+                  </button>
+                )}
+
+                {scrollOffset < data.images.length - 3 && (
+                  <button
+                    onClick={() => setScrollOffset(Math.min(data.images.length - 3, scrollOffset + 1))}
+                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 z-10"
+                  >
+                    <ChevronDown className="w-4 h-4 text-gray-600" />
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -604,7 +634,16 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     <span className="text-sm text-gray-600 ml-1">({data.average_rating.toFixed(1)})</span>
                   </div>
                 ) : (
-                  <span className="text-sm text-gray-600">No ratings yet</span>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-4 h-4 text-gray-300
+                            }`}
+                        />
+                      ))}
+                      {/* <span className="text-sm text-gray-600 ml-1">({data.average_rating.toFixed(1)})</span> */}
+                    </div>
                 )}
 
                 <p className="text-sm text-gray-600">|</p>
@@ -627,7 +666,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 <p className="text-sm text-gray-600">|</p>
 
                 <span className="text-base text-gray-600">by</span>
-                <span className="text-base hover:underline">{data.user_name || "MHE Bazar"}</span>
+                <Link href={`/vendor-listing/${data.user_name}`} className="text-base hover:underline">{data.user_name || "MHE Bazar"}</Link>
 
               </div>
               {/* Price */}
