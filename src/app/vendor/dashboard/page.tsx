@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -289,255 +289,294 @@ export default function DashboardStats() {
         )}
 
         {/* Stats */}
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card className="p-6 bg-gradient-to-r from-green-50 to-green-100 border-0 shadow-none">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">{products.length}</h2>
-                <p className="text-gray-500 mt-1">Total Products</p>
-                <div className="flex gap-2 mt-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {approved_products} Approved
-                  </Badge>
-                  <Badge variant="secondary" className="text-xs">
-                    {pending_products} Pending
-                  </Badge>
-                </div>
-              </div>
-              <div className="bg-green-100 p-4 rounded-full">
-                <ShoppingCart className="h-8 w-8 text-green-600" />
-              </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Products Card */}
+          <div className="p-5 bg-gradient-to-r from-white to-[#DDF2D0] rounded-xl shadow-sm border-0 flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-extrabold text-gray-900">{products.length}</h2>
+              <p className="text-2xl w-52 text-gray-500">No. of Products Added</p>
             </div>
-          </Card>
+            <div className="p-3 rounded-full border-4 border-[#5CA131]/30 w-28 h-28 flex items-center justify-center">
+              <ShoppingCart className="h-12 w-12 text-[#5CA131]" />
+            </div>
+          </div>
 
-          <Card className="p-6 bg-gradient-to-r from-blue-50 to-blue-100 border-0 shadow-none">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">{stats?.orders?.total_orders || 0}</h2>
-                <p className="text-gray-500 mt-1">Total Orders</p>
-                {stats?.orders && (
-                  <div className="flex gap-2 mt-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {stats.orders.pending_orders} Pending
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                      {stats.orders.completed_orders} Completed
-                    </Badge>
-                  </div>
-                )}
-              </div>
-              <div className="bg-blue-100 p-4 rounded-full">
-                <Download className="h-8 w-8 text-blue-600" />
-              </div>
+          {/* Offers Card */}
+          <div className="p-5 bg-gradient-to-r from-white to-[#D8EBF8] rounded-xl shadow-sm border-0 flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-extrabold text-gray-900">{stats?.orders?.total_orders || 0}</h2>
+              <p className="text-2xl w-52 text-gray-500">Offer downloaded</p>
             </div>
-          </Card>
+            <div className="p-3 rounded-full border-4 border-[#018CFC]/30 w-28 h-28 flex items-center justify-center">
+              <Download className="h-12 w-12 text-[#018CFC]" />
+            </div>
+          </div>
 
-          <Card className="p-6 bg-gradient-to-r from-yellow-50 to-yellow-100 border-0 shadow-none">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">{stats?.orders?.recent_orders || 0}</h2>
-                <p className="text-gray-500 mt-1">Recent Inquiries</p>
-                {stats?.account_info && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Member for {stats.account_info.days_since_joined} days
-                  </p>
-                )}
-              </div>
-              <div className="bg-yellow-100 p-4 rounded-full">
-                <FileText className="h-8 w-8 text-yellow-600" />
-              </div>
+          {/* Queries Card */}
+          <div className="p-5 bg-gradient-to-r from-white to-[#FAE5A4] rounded-xl shadow-sm border-0 flex items-center justify-between">
+            <div>
+              <h2 className="text-3xl font-extrabold text-gray-900">{stats?.orders?.recent_orders || 0}</h2>
+              <p className="text-2xl text-gray-500">Number of queries</p>
             </div>
-          </Card>
+            <div className="p-3 rounded-full border-4 border-[#F1BF25]/30 w-28 h-28 flex items-center justify-center">
+              <FileText className="h-12 w-12 text-[#F1BF25]" />
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Action Cards */}
+        <div className="grid gap-4 md:grid-cols-3 mt-5">
+          {/* Sell New Products */}
+          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#FF3434] p-4 rounded-lg cursor-pointer hover:shadow-md transition">
+            <img src="/images/forklift-new.png" alt="Sell New Products" className="h-14 w-14 object-contain" />
+            <div>
+              <h3 className="text-white font-semibold">Sell New Products</h3>
+              <p className="text-white text-sm">List your products and start selling in minutes.</p>
+            </div>
+            <ChevronRight className="text-white" />
+          </div>
+
+          {/* Sell Old Products */}
+          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#E55117] p-4 rounded-lg cursor-pointer hover:shadow-md transition">
+            <img src="/images/forklift-old.png" alt="Sell Old Products" className="h-14 w-14 object-contain" />
+            <div>
+              <h3 className="text-white font-semibold">Sell Old Products</h3>
+              <p className="text-white text-sm">List your products and start selling in minutes.</p>
+            </div>
+            <ChevronRight className="text-white" />
+          </div>
+
+          {/* Rent Products */}
+          <div className="flex items-center gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-4 rounded-lg cursor-pointer hover:shadow-md transition">
+            <img src="/images/forklift-rent.png" alt="Rent Products" className="h-14 w-14 object-contain" />
+            <div>
+              <h3 className="text-white font-semibold">Rent Products</h3>
+              <p className="text-white text-sm">List your products and start selling in minutes.</p>
+            </div>
+            <ChevronRight className="text-white" />
+          </div>
         </div>
 
         {/* Product List */}
-        <div className="grid grid-cols-1" id="products-section">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                Your Products ({products.length})
-                {products.length > productsPerPage && (
-                  <span className="text-sm font-normal text-gray-500 ml-2">
-                    Showing {Math.min((currentPage - 1) * productsPerPage + 1, products.length)}-{Math.min(currentPage * productsPerPage, products.length)} of {products.length}
-                  </span>
+        <div className="flex flex-col sm:flex-row gap-6 mb-4">
+          <div className="grid grid-cols-1 w-1/2" id="products-section">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl sm:text-2xl font-bold text-gray-900">
+                  Your Products ({products.length})
+                  {products.length > productsPerPage && (
+                    <span className="text-sm font-normal text-gray-500 ml-2">
+                      Showing {Math.min((currentPage - 1) * productsPerPage + 1, products.length)}-{Math.min(currentPage * productsPerPage, products.length)} of {products.length}
+                    </span>
+                  )}
+                </h2>
+                {application?.is_approved && (
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button
+                        variant="default"
+                        className="bg-[#5CA131] hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
+                      >
+                        + Add Product
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <ProductForm />
+                    </SheetContent>
+                  </Sheet>
                 )}
-              </h2>
-              {application?.is_approved && (
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button
-                      variant="default"
-                      className="bg-[#5CA131] hover:bg-green-700 text-white font-semibold px-4 py-2 rounded flex items-center gap-2"
-                    >
-                      + Add Product
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <ProductForm />
-                  </SheetContent>
-                </Sheet>
-              )}
-            </div>
+              </div>
 
-            {!application?.is_approved ? (
-              <Card className="p-6 text-center">
-                <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-                <h3 className="font-semibold text-gray-900 mb-2">Vendor Approval Required</h3>
-                <p className="text-gray-600">
-                  Your vendor application is {stats?.vendor_info?.status?.toLowerCase()}.
-                  You can add products once your application is approved.
-                </p>
-              </Card>
-            ) : products.length === 0 ? (
-              <Card className="p-6 text-center">
-                <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="font-semibold text-gray-900 mb-2">No Products Yet</h3>
-                <p className="text-gray-600 mb-4">Start by adding your first product to begin selling.</p>
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button className="bg-[#5CA131] hover:bg-green-700">
-                      Add Your First Product
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent>
-                    <ProductForm />
-                  </SheetContent>
-                </Sheet>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {paginatedProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow transition"
-                  >
-                    <div className="flex items-center gap-4 w-full sm:w-auto">
-                      <div className="h-20 w-20 relative flex-shrink-0">
-                        <Image
-                          src={getImageSrc(product.images)}
-                          alt={product.name}
-                          fill
-                          className="object-contain rounded"
-                          sizes="80px"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = "/no-product.png";
-                          }}
-                        />
-                      </div>
-                      <div className="space-y-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`text-xs px-2 py-1 rounded font-medium flex items-center gap-1 ${getStatusColor(product.is_active)}`}>
-                            {getStatusIcon(product.is_active)}
-                            {getStatusText(product.is_active)}
-                          </span>
-                          <span className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded font-medium">
-                            {product.category_name}
-                          </span>
-                          {product.type === 'new' && (
-                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-medium">
-                              New
-                            </span>
-                          )}
+              {!application?.is_approved ? (
+                <Card className="p-6 text-center">
+                  <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+                  <h3 className="font-semibold text-gray-900 mb-2">Vendor Approval Required</h3>
+                  <p className="text-gray-600">
+                    Your vendor application is {stats?.vendor_info?.status?.toLowerCase()}.
+                    You can add products once your application is approved.
+                  </p>
+                </Card>
+              ) : products.length === 0 ? (
+                <Card className="p-6 text-center">
+                  <ShoppingCart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="font-semibold text-gray-900 mb-2">No Products Yet</h3>
+                  <p className="text-gray-600 mb-4">Start by adding your first product to begin selling.</p>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button className="bg-[#5CA131] hover:bg-green-700">
+                        Add Your First Product
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <ProductForm />
+                    </SheetContent>
+                  </Sheet>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {paginatedProducts.map((product) => (
+                    <div
+                      key={product.id}
+                      className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow transition"
+                    >
+                      <div className="flex items-center gap-4 w-full sm:w-auto">
+                        <div className="h-20 w-20 relative flex-shrink-0">
+                          <Image
+                            src={getImageSrc(product.images)}
+                            alt={product.name}
+                            fill
+                            className="object-contain rounded"
+                            sizes="80px"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/no-product.png";
+                            }}
+                          />
                         </div>
-                        <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
-                        <div className="flex items-center gap-2">
-                          <Button variant="link" className="text-blue-600 px-0 py-0 h-auto text-sm">
-                            Edit
-                          </Button>
-                          <span className="text-xs text-gray-400">
-                            Updated {new Date(product.updated_at).toLocaleDateString()}
-                          </span>
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`text-xs px-2 py-1 rounded font-medium flex items-center gap-1 ${getStatusColor(product.is_active)}`}>
+                              {getStatusIcon(product.is_active)}
+                              {getStatusText(product.is_active)}
+                            </span>
+                            <span className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded font-medium">
+                              {product.category_name}
+                            </span>
+                            {product.type === 'new' && (
+                              <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded font-medium">
+                                New
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <Button variant="link" className="text-blue-600 px-0 py-0 h-auto text-sm">
+                              Edit
+                            </Button>
+                            <span className="text-xs text-gray-400">
+                              Updated {new Date(product.updated_at).toLocaleDateString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center mt-8">
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (currentPage > 1) {
-                                handlePageChange(currentPage - 1);
-                              }
-                            }}
-                            className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                          />
-                        </PaginationItem>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex justify-center mt-8">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (currentPage > 1) {
+                                  handlePageChange(currentPage - 1);
+                                }
+                              }}
+                              className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                            />
+                          </PaginationItem>
 
-                        {/* Page Numbers */}
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                          // Show first page, last page, current page, and pages around current page
-                          if (
-                            page === 1 ||
-                            page === totalPages ||
-                            (page >= currentPage - 1 && page <= currentPage + 1)
-                          ) {
-                            return (
-                              <PaginationItem key={page}>
-                                <PaginationLink
-                                  href="#"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    handlePageChange(page);
-                                  }}
-                                  isActive={currentPage === page}
-                                  className="cursor-pointer"
-                                >
-                                  {page}
-                                </PaginationLink>
-                              </PaginationItem>
-                            );
-                          }
+                          {/* Page Numbers */}
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                            // Show first page, last page, current page, and pages around current page
+                            if (
+                              page === 1 ||
+                              page === totalPages ||
+                              (page >= currentPage - 1 && page <= currentPage + 1)
+                            ) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationLink
+                                    href="#"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handlePageChange(page);
+                                    }}
+                                    isActive={currentPage === page}
+                                    className="cursor-pointer"
+                                  >
+                                    {page}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
 
-                          // Show ellipsis
-                          if (
-                            (page === currentPage - 2 && currentPage > 3) ||
-                            (page === currentPage + 2 && currentPage < totalPages - 2)
-                          ) {
-                            return (
-                              <PaginationItem key={page}>
-                                <PaginationEllipsis />
-                              </PaginationItem>
-                            );
-                          }
+                            // Show ellipsis
+                            if (
+                              (page === currentPage - 2 && currentPage > 3) ||
+                              (page === currentPage + 2 && currentPage < totalPages - 2)
+                            ) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              );
+                            }
 
-                          return null;
-                        })}
+                            return null;
+                          })}
 
-                        <PaginationItem>
-                          <PaginationNext
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              if (currentPage < totalPages) {
-                                handlePageChange(currentPage + 1);
-                              }
-                            }}
-                            className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
+                          <PaginationItem>
+                            <PaginationNext
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                if (currentPage < totalPages) {
+                                  handlePageChange(currentPage + 1);
+                                }
+                              }}
+                              className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
 
-                <Link href="/vendor/product-list">
-                  <Button variant="outline" className="w-full font-semibold text-base text-green-600 border-green-600 hover:bg-green-50 hover:text-green-600 py-6">
-                    View All Products
-                  </Button>
-                </Link>
+                  <Link href="/vendor/product-list">
+                    <Button variant="outline" className="w-full font-semibold text-base text-green-600 border-green-600 hover:bg-green-50 hover:text-green-600 py-6">
+                      View All Products
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className=" w-1/2">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Top Searched Products</h2>
+              <a href="#" className="text-green-600 text-sm">View more</a>
+            </div>
+            <div className="space-y-4 rounded-lg shadow-sm p-6">
+              <div className="flex items-center space-x-3">
+                <img src="forklift.png" alt="Forklift Attachments" className="w-12 h-12 object-contain" />
+                <span>Forklift Attachments</span>
               </div>
-            )}
+              <div className="flex items-center space-x-3">
+                <img src="hand-pallet.png" alt="Hand Pallet Truck" className="w-12 h-12 object-contain" />
+                <span>Hand Pallet Truck</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <img src="electric-pallet.png" alt="Electric Pallet Truck (BOPT)" className="w-12 h-12 object-contain bg-gray-100 p-1 rounded" />
+                <span>Electric Pallet Truck (BOPT)</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <img src="platform-truck.png" alt="Platform Truck" className="w-12 h-12 object-contain" />
+                <span>Platform Truck</span>
+              </div>
+              <div className="flex items-center space-x-3">
+                <img src="scissors-lift.png" alt="Scissors Lift" className="w-12 h-12 object-contain" />
+                <span>Scissors Lift</span>
+              </div>
+            </div>
           </div>
         </div>
+       
       </div>
     </>
   );
