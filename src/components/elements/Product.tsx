@@ -20,7 +20,7 @@ import {
 import DOMPurify from 'dompurify';
 import categories from '@/data/categories.json';
 
-const imgUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
@@ -187,8 +187,8 @@ const ProductCard = ({
   // CHANGE 2: Look up the image URL from the map using the category_id.
   const categoryFallbackImage = category_id ? categoryImageMap[category_id] : null;
 
-  console.log(`catId: "${category_id}"`);
-  console.log(`categoryFallbackImage: "${categoryFallbackImage}"`);
+  // console.log(`catId: "${category_id}"`);
+  // console.log(`categoryFallbackImage: "${categoryFallbackImage}"`);
 
   return (
     <div

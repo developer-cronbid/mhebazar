@@ -25,6 +25,9 @@ import {
 } from "@/components/ui/sheet"
 import ProductForm from "@/components/forms/uploadForm/ProductForm";
 import Link from "next/link";
+import categories from '@/data/categories.json';
+
+const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // --- TYPE DEFINITIONS (Corrected based on API responses) ---
 interface VendorDashboardData {
@@ -82,6 +85,7 @@ interface VendorStats {
 
 // Corrected Product interface to match /products API response
 interface Product {
+  category: number | undefined;
   id: number;
   name: string;
   is_active: boolean; // This determines the status
@@ -112,14 +116,6 @@ const vendorApi = {
 };
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000';
-
-function getImageSrc(images?: { image: string }[] | string) {
-  if (typeof images === 'string' && images) return `${API_BASE_URL}${images}`;
-  if (Array.isArray(images) && images.length > 0 && images[0].image) {
-    return `${API_BASE_URL}${images[0].image}`;
-  }
-  return "/no-product.png";
-}
 
 // Updated functions to work with `is_active` boolean
 function getStatusText(isActive: boolean): 'Approved' | 'Pending' {
@@ -158,6 +154,39 @@ export default function DashboardStats() {
     return { paginatedProducts, totalPages };
   }, [products, currentPage, productsPerPage]);
 
+  // Create a lookup map for category images for fast access
+  const categoryImageMap = useMemo(() => {
+    const map: { [key: number]: string } = {};
+
+    const processCategory = (category: any) => {
+      if (category.id && category.image_url) {
+        map[category.id] = category.image_url;
+      }
+      if (category.subcategories && category.subcategories.length > 0) {
+        category.subcategories.forEach(processCategory);
+      }
+    };
+
+    categories.forEach(processCategory);
+    return map;
+  }, [categories]);
+
+
+  // CHANGE 2: Look up the image URL from the map using the category_id.
+  // const categoryFallbackImage = category_id ? categoryImageMap[category_id] : null;
+
+  function getImageSrc(images?: { image: string }[] | string,): string {
+    if (typeof images === 'string' && images) return `${API_BASE_URL}${images}`;
+    if (Array.isArray(images) && images.length > 0 && images[0].image) {
+      return `${API_BASE_URL}${images[0].image}`;
+    }
+    // if (category_id) {
+    //   console.log(category_id)
+    //   return categoryImageMap[category_id] || "/no-product.png";
+    // }
+    return "/no-product.png";
+  }
+
   // Reset to first page when products change
   useEffect(() => {
     setCurrentPage(1);
@@ -177,7 +206,7 @@ export default function DashboardStats() {
 
         if (dashboardData.vendor_details?.is_approved) {
           const productsData = await vendorApi.getDashboardData();
-          console.log(productsData)
+          // console.log(productsData)
           setProducts(productsData?.products);
 
           // ** Generate notifications for pending products **
@@ -414,22 +443,23 @@ export default function DashboardStats() {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                  {paginatedProducts.map((product) => (
+                      {paginatedProducts.map((product) => (
+                    // console.log(product),
                     <div
                       key={product.id}
                       className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow transition"
                     >
                       <div className="flex items-center gap-4 w-full">
                         <div className="h-20 w-20 relative flex-shrink-0">
-                          <Image
+                          <img
                             src={getImageSrc(product.images)}
                             alt={product.name}
-                            fill
+                            // fill
                             className="object-contain rounded"
                             sizes="80px"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = "/no-product.png";
+                              target.src = `${imgUrl}${categoryImageMap[product.category]}`;
                             }}
                           />
                         </div>
