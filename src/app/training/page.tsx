@@ -6,6 +6,8 @@ import { CheckCircle, Shield, Wrench, Zap, Flame, HardHat, Building, User, Alert
 import { Toaster, toast } from 'sonner';
 import Image from 'next/image';
 import api from '@/lib/api';
+import Breadcrumb from "@/components/elements/Breadcrumb";
+
 
 // TrainingRegistrationForm Component
 interface TrainingRegistrationFormProps {
@@ -73,6 +75,7 @@ const TrainingRegistrationForm: React.FC<TrainingRegistrationFormProps> = ({ isO
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+     
       <div className="bg-white w-full max-w-md mx-auto p-6 md:p-8 relative rounded-lg">
         <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Register for {trainingName}</h3>
         <button
@@ -336,6 +339,10 @@ const TrainingPage = () => {
 
   return (
     <div className="min-h-screen bg-white">
+       <Breadcrumb items={[
+                { label: 'Home', href: '/' },
+                { label: 'Training', href: '/training' }
+              ]} />
       <Toaster position="top-right" richColors />
 
       <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
