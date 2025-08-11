@@ -63,7 +63,6 @@ export interface User {
   user_banner?: { url: string }[];
 }
 
-// Define the ting animation using keyframes (if needed, otherwise remove)
 const tingAnimation = `
   @keyframes ting {
     0%, 100% {
@@ -76,7 +75,6 @@ const tingAnimation = `
 `;
 
 export default function Navbar(): JSX.Element {
-  // Use the imported data directly instead of state
   const categories: Category[] = categoriesData;
 
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -94,9 +92,8 @@ export default function Navbar(): JSX.Element {
 
   const { user, isLoading, setUser } = useUser();
   const router = useRouter();
-  const pathname = usePathname(); // Get the current pathname
+  const pathname = usePathname();
 
-  // Close dropdown on outside click for profile menu
   useEffect(() => {
     const handleClick = (e: MouseEvent): void => {
       if (
@@ -112,7 +109,6 @@ export default function Navbar(): JSX.Element {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [profileMenuOpen]);
 
-  // Close dropdown on outside click for category menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       if (
@@ -133,10 +129,7 @@ export default function Navbar(): JSX.Element {
   return (
     <header className="bg-white shadow-sm z-50 sticky top-0">
       <style>{tingAnimation}</style>
-      {/* Top Green Banner */}
       <div className="bg-[#5CA131] text-white">
-        {" "}
-        {/* Original green, matches image */}
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-2">
             <div className="flex items-center gap-2 text-sm">
@@ -170,11 +163,9 @@ export default function Navbar(): JSX.Element {
         </div>
       </div>
 
-      {/* Main Header */}
       <div className="bg-white">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-3">
-            {/* Mobile Menu Button */}
             <button
               className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900"
               onClick={() => setMobileMenuOpen(true)}
@@ -183,7 +174,6 @@ export default function Navbar(): JSX.Element {
               <Menu className="w-6 h-6" />
             </button>
 
-            {/* Logo */}
             <div className="flex items-center ml-5">
               <Link href="/" className="flex items-center">
                 <Image
@@ -198,14 +188,12 @@ export default function Navbar(): JSX.Element {
               </Link>
             </div>
 
-            {/* Search Bar with Brand Store - Desktop */}
             <div className="hidden md:flex flex-1 max-w-5xl mx-8 items-center gap-4">
               <SearchBar
                 categories={categories}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
-              {/* Brand Store Image with animation and shadow */}
               <Link href="/vendor-listing" className="flex-shrink-0">
                 <motion.div
                   animate={{ rotate: [0, 3, 0, -3, 0] }}
@@ -215,8 +203,8 @@ export default function Navbar(): JSX.Element {
                     ease: "easeInOut",
                   }}
                   style={{ transformOrigin: "bottom center" }}
-                  className="rounded-md" // Removed shadow-md, will use custom shadow
-                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }} // Custom natural shadow
+                  className="rounded-md"
+                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                 >
                   <Image
                     src="/brand-image.png"
@@ -230,29 +218,25 @@ export default function Navbar(): JSX.Element {
               </Link>
             </div>
 
-            {/* Right Section */}
             <div className="flex items-center gap-4">
-              {/* Compare Icon using Repeat */}
               <Link
                 href="/compare"
-                className="flex items-center text-gray-600 hover:text-gray-900 transition" // Changed hover color
+                className="flex items-center text-gray-600 hover:text-gray-900 transition"
                 aria-label="Compare Products"
               >
                 <Repeat className="w-6 h-6" />
               </Link>
 
-              {/* Conditional rendering for Cart */}
               {!isLoading && user && (
                 <Link
                   href="/cart"
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition" // Changed hover color
+                  className="flex items-center text-gray-600 hover:text-gray-900 transition"
                   aria-label="Cart"
                 >
                   <ShoppingCart className="w-6 h-6" />
                 </Link>
               )}
 
-              {/* Profile Dropdown */}
               <div className="relative" ref={profileMenuRef}>
                 <button
                   onClick={() => setProfileMenuOpen((v) => !v)}
@@ -266,7 +250,6 @@ export default function Navbar(): JSX.Element {
                     </div>
                   ) : user ? (
                     <>
-                      {/* Check if user.username is an array and has an image */}
                       {Array.isArray(user.username) &&
                       user.username[0]?.image ? (
                         <Image
@@ -390,7 +373,6 @@ export default function Navbar(): JSX.Element {
                           </button>
                         </>
                       ) : (
-                        // Not logged in, show login/register options
                         <>
                           <Link
                             href="/login"
@@ -417,7 +399,6 @@ export default function Navbar(): JSX.Element {
             </div>
           </div>
 
-          {/* Mobile Search Bar with Brand Store */}
           <div className="md:hidden pb-3">
             <div className="flex items-center gap-2">
               <SearchBar
@@ -433,7 +414,7 @@ export default function Navbar(): JSX.Element {
                   height={40}
                   priority
                   className="object-contain"
-                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }} // Custom natural shadow
+                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                 />
               </Link>
             </div>
@@ -441,17 +422,14 @@ export default function Navbar(): JSX.Element {
         </div>
       </div>
 
-      {/* Desktop Navigation */}
       <nav className="hidden lg:block bg-white border-t border-gray-200">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            {/* Left Navigation */}
             <div className="flex items-center">
-              {/* Categories Dropdown */}
               <div className="relative" ref={categoryMenuRef}>
                 <button
                   className={`flex items-center gap-2 px-4 py-3 text-sm transition ${
-                    pathname.includes("categories")
+                    pathname.includes("categories") || categoriesOpen
                       ? "text-gray-900 font-bold"
                       : "text-gray-700 hover:text-gray-900 font-normal"
                   }`}
@@ -468,7 +446,6 @@ export default function Navbar(): JSX.Element {
                 />
               </div>
 
-              {/* Navigation Links */}
               <div className="flex items-center">
                 {navigationLinks.map((link, index) => (
                   <Link
@@ -486,7 +463,6 @@ export default function Navbar(): JSX.Element {
               </div>
             </div>
 
-            {/* Right Navigation */}
             <div className="flex items-center">
               <Link
                 href="/contact"
@@ -503,7 +479,6 @@ export default function Navbar(): JSX.Element {
                 <span className="text-sm font-normal">Help</span>{" "}
               </Link>
 
-              {/* Conditional rendering for Become a Vendor / My Vendor Dashboard */}
               {isLoading ? (
                 <span className="px-4 py-3 text-sm text-gray-600 font-normal">
                   {" "}
@@ -572,7 +547,6 @@ export default function Navbar(): JSX.Element {
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -592,7 +566,6 @@ export default function Navbar(): JSX.Element {
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed top-0 left-0 w-80 max-w-[85vw] h-full bg-white shadow-xl flex flex-col"
             >
-              {/* Mobile Menu Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <Link
                   href="/"
@@ -617,9 +590,7 @@ export default function Navbar(): JSX.Element {
                 </button>
               </div>
 
-              {/* Mobile Menu Content */}
               <div className="flex-1 flex flex-col overflow-y-auto">
-                {/* Categories Section */}
                 <div className="border-b border-gray-200">
                   <div className="px-4 py-3 bg-gray-50 text-sm font-semibold text-gray-600 uppercase tracking-wide">
                     Categories
@@ -646,7 +617,6 @@ export default function Navbar(): JSX.Element {
                         />
                       </button>
 
-                      {/* Animate the appearance of the sub-menu */}
                       <AnimatePresence>
                         {openCategory === category.id && (
                           <motion.div
@@ -656,7 +626,6 @@ export default function Navbar(): JSX.Element {
                             transition={{ duration: 0.2 }}
                             className="overflow-hidden bg-white"
                           >
-                            {/* Special link to all products in the category */}
                             <Link
                               href={`/${createSlug(category.name)}`}
                               className={`block pl-10 pr-6 py-3 font-medium transition ${
@@ -669,7 +638,6 @@ export default function Navbar(): JSX.Element {
                               All {category.name}
                             </Link>
 
-                            {/* Filter and list the subcategories for the open category */}
                             {category.subcategories.length > 0 ? (
                               category.subcategories.map((sub) => (
                                 <Link
@@ -702,7 +670,6 @@ export default function Navbar(): JSX.Element {
                   ))}
                 </div>
 
-                {/* Navigation Links */}
                 <div className="flex-1">
                   {navigationLinks.map((link, index) => (
                     <Link
@@ -734,7 +701,7 @@ export default function Navbar(): JSX.Element {
                       height={40}
                       priority
                       className="object-contain"
-                      style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }} // Custom natural shadow
+                      style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                     />
                   </Link>
                   <Link
@@ -794,7 +761,6 @@ export default function Navbar(): JSX.Element {
         )}
       </AnimatePresence>
 
-      {/* Drawer Component */}
       <VendorRegistrationDrawer
         open={vendorDrawerOpen}
         onClose={() => setVendorDrawerOpen(false)}

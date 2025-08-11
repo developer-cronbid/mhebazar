@@ -12,7 +12,7 @@ import { BlogCarousel } from "@/components/home/BlogCarousal";
 import Image from "next/image";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import Link from "next/link"; // Import Link for the View All Brands button
+import Link from "next/link";
 
 const SectionWrapper = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const ref = useRef(null);
@@ -22,7 +22,7 @@ const SectionWrapper = ({ children, className }: { children: React.ReactNode; cl
     <motion.div
       ref={ref}
       initial={{ opacity: 0, y: 50 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 1, y: 50 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={className}
     >
@@ -46,11 +46,11 @@ export default function HomePage() {
         <HomeBanner />
       </div>
 
-      <SectionWrapper className="max-w-[97vw] mx-auto ">
+      <SectionWrapper className="max-w-[97vw] mx-auto">
         <CategoryButtons />
       </SectionWrapper>
 
-      <div className="w-full bg-[#F5F7F8] py-10 md:py-12">
+      <div className="w-full bg-[#F5F7F8] py-6 md:py-8">
         <div className="max-w-[93vw] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 justify-center items-start px-4 md:px-0">
           <SectionWrapper>
             <MostPopular />
@@ -62,12 +62,12 @@ export default function HomePage() {
       </div>
 
       <div className="max-w-[93vw] mx-auto">
-        <SectionWrapper className="my-10 md:my-12">
+        <SectionWrapper className="my-6 md:my-8">
           <SpareParts />
         </SectionWrapper>
       </div>
 
-      <div className="w-full bg-[#F5F7F8] py-10 md:py-12">
+      <div className="w-full bg-[#F5F7F8] py-6 md:py-8">
         <div className="max-w-[93vw] mx-auto">
           <SectionWrapper>
             <VendorProductsFeatured />
@@ -76,12 +76,12 @@ export default function HomePage() {
       </div>
 
       <div className="max-w-[93vw] mx-auto">
-        <SectionWrapper className="my-10 md:my-12">
+        <SectionWrapper className="my-6 md:my-8">
           <ExportProductsFeatured />
         </SectionWrapper>
       </div>
 
-      <div className="w-full bg-[#F5F7F8] py-10 md:py-12">
+      <div className="w-full bg-[#F5F7F8] py-6 md:py-8">
         <div className="max-w-[93vw] mx-auto">
           <SectionWrapper>
             <BlogCarousel />
@@ -90,7 +90,7 @@ export default function HomePage() {
       </div>
 
       <div className="max-w-[93vw] mx-auto">
-        <SectionWrapper className="my-8 md:my-10">
+        <SectionWrapper className="my-4 md:my-6">
           <div className="flex justify-between items-center mb-8 px-4">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Our Brands</h2>
             <Link href="/vendor-listing" className="text-green-600 font-medium hover:underline">
@@ -123,7 +123,7 @@ export default function HomePage() {
         </SectionWrapper>
       </div>
 
-      <div className="w-full bg-[#F5F7F8] ">
+      <div className="w-full bg-[#F5F7F8] py-6">
         <div className="max-w-[100vw] mx-auto">
           <SectionWrapper>
             <TestimonialsCarousel />

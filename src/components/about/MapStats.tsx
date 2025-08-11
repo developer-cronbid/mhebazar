@@ -1,21 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 
+// Updated data with values from the provided image
 const data = [
-  { country: 'United States', impressions: 6000 },
-  { country: 'South Korea', impressions: 3257 },
-  { country: 'Russia', impressions: 2456 },
-  { country: 'United Kingdom', impressions: 1711 },
-  { country: 'Vietnam', impressions: 1274 },
-  { country: 'Brazil', impressions: 1019 },
-  { country: 'Germany', impressions: 836 },
-  { country: 'Indonesia', impressions: 754 },
-  { country: 'Malaysia', impressions: 698 },
-  { country: 'Canada', impressions: 646 },
-  { country: 'Philippines', impressions: 630 },
+  { country: 'India', impressions: 438634 },
+  { country: 'United States', impressions: 42076 },
+  { country: 'Brazil', impressions: 13830 },
+  { country: 'United Kingdom', impressions: 9466 },
+  { country: 'Australia', impressions: 5628 },
+  { country: 'Vietnam', impressions: 5059 },
+  { country: 'Russia', impressions: 4577 },
+  { country: 'Indonesia', impressions: 3574 },
+  { country: 'Canada', impressions: 3516 },
+  { country: 'Malaysia', impressions: 3225 },
+  { country: 'South Korea', impressions: 3431 },
+  { country: 'United Arab Emirates', impressions: 3150 },
+  { country: 'Philippines', impressions: 2820 },
+  { country: 'Saudi Arabia', impressions: 2503 },
+  { country: 'Germany', impressions: 2259 },
+  { country: 'Italy', impressions: 2241 },
+  { country: 'Singapore', impressions: 2213 },
 ];
 
 export default function GlobalMapStats() {
@@ -23,8 +30,25 @@ export default function GlobalMapStats() {
 
   const isTabSwitchingEnabled = false;
 
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { once: true, amount: 0.2 });
+
+  // Animation variants for the table rows
+  const rowVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: i * 0.1,
+        duration: 0.5,
+        ease: 'easeOut',
+      },
+    }),
+  };
+
   return (
-    <section className="w-full bg-white py-8 px-4">
+    <section ref={sectionRef} className="w-full bg-white py-8 px-4">
       <div className="mx-auto max-w-6xl">
         <h2 className="text-3xl font-bold text-gray-900 mb-6">Global Map</h2>
 
@@ -58,7 +82,7 @@ export default function GlobalMapStats() {
           <div className="flex-1 lg:flex-none lg:w-[60%]">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
               className="max-w-[520px] mx-auto"
             >
@@ -76,7 +100,7 @@ export default function GlobalMapStats() {
           {/* Table */}
           <motion.div
             initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
+            animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
             transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
             className="w-full lg:w-80"
           >
@@ -90,12 +114,19 @@ export default function GlobalMapStats() {
                 </thead>
                 <tbody>
                   {data.map(({ country, impressions }, index) => (
-                    <tr key={country} className="border-b bg-white hover:bg-green-50 transition-colors">
+                    <motion.tr
+                      key={country}
+                      initial="hidden"
+                      animate={inView ? "visible" : "hidden"}
+                      variants={rowVariants}
+                      custom={index}
+                      className="border-b bg-white hover:bg-green-50 transition-colors"
+                    >
                       <td className="py-2 px-4 text-gray-700">{country}</td>
                       <td className="py-2 px-4 text-gray-700">
                         {activeTab === 'impressions' ? impressions : Math.floor(impressions / 5)}
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                 </tbody>
               </table>
