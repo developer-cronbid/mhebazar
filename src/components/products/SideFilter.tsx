@@ -147,8 +147,8 @@ const SideFilter = ({
   };
 
   return (
-    <aside className="sticky top-0 w-full max-w-[250px] min-h-screen bg-white flex flex-col overflow-y-auto z-20 border-r border-gray-100 shadow-sm">
-      <div className="p-4 pb-2">
+    <aside className="sticky top-0 w-full  max-w-[250px] min-h-screen bg-white flex flex-col overflow-y-auto z-20 border-r border-gray-100 shadow-sm">
+      <div className="p-4 pb-2 ml-9">
         <h1 className="text-base font-bold text-black font-sans mb-3">
           Filter
         </h1>
