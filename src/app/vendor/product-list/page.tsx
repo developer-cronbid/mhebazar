@@ -12,7 +12,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, SlidersHorizontal, X } from "lucide-react";
 import api from "@/lib/api";
 import ProductForm from "@/components/forms/uploadForm/ProductForm";
@@ -31,6 +31,7 @@ import { MoreVertical } from "lucide-react";
 import { Pencil, ExternalLink } from "lucide-react";
 
 import { Product } from "@/types";
+import categories_id from '@/data/categories.json';
 
 const sortOptions = [
   { label: "Newest First", value: "newest" },
@@ -48,23 +49,11 @@ const TYPE_OPTIONS = [
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000';
 
+
+const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+
 // Update the getImageUrl function
-const getImageUrl = (imageUrl: string | undefined): string => {
-  if (!imageUrl) return '/no-product.png';
 
-  try {
-    // Check if the URL is already absolute
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
-    }
-
-    // For relative URLs, combine with API base URL
-    return `${API_BASE_URL}${imageUrl}`;
-  } catch (error) {
-    console.error('Error constructing image URL:', error);
-    return '/no-product.png';
-  }
-};
 
 export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -79,6 +68,36 @@ export default function ProductList() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState(sortOptions[0].value);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
+
+    // Create a lookup map for category images for fast access
+    const categoryImageMap = useMemo(() => {
+      const map: { [key: number]: string } = {};
+  
+      const processCategory = (category: any) => {
+        if (category.id && category.image_url) {
+          map[category.id] = category.image_url;
+        }
+        if (category.subcategories && category.subcategories.length > 0) {
+          category.subcategories.forEach(processCategory);
+        }
+      };
+  
+      categories_id.forEach(processCategory);
+      return map;
+    }, [categories_id]);
+  
+  
+  function getImageSrc(images?: { image: string }[] | string,): string {
+    if (typeof images === 'string' && images) return `${API_BASE_URL}${images}`;
+    if (Array.isArray(images) && images.length > 0 && images[0].image) {
+      return `${API_BASE_URL}${images[0].image}`;
+    }
+    // if (category_id) {
+    //   console.log(category_id)
+    //   return categoryImageMap[category_id] || "/no-product.png";
+    // }
+    return "/no-product.png";
+  }
 
   // Improved body scroll lock effect
   useEffect(() => {
@@ -310,21 +329,15 @@ export default function ProductList() {
                 <div className="flex flex-col sm:flex-row gap-4 items-start">
                   {/* Product Image */}
                   <div className="relative h-24 w-24 sm:h-32 sm:w-32 lg:h-36 lg:w-36 flex-shrink-0 mx-auto sm:mx-0">
-                    <Image
-                      src={product.images?.[0]?.image
-                        ? (product.images[0].image.startsWith('data:')
-                          ? product.images[0].image
-                          : getImageUrl(product.images[0].image))
-                        : "/no-product.png"
-                      }
-                      alt={product.name || 'Product image'}
-                      fill
-                      className="object-contain rounded-lg border border-gray-100 bg-white"
-                      sizes="(max-width: 640px) 96px, (max-width: 1024px) 128px, 144px"
-                      priority
+                    <img
+                      src={getImageSrc(product.images)}
+                      alt={product.name}
+                      // fill
+                      className="object-contain rounded"
+                      sizes="80px"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = "/no-product.png";
+                        target.src = `${imgUrl}${categoryImageMap[product.category]}`;
                       }}
                     />
                     <span
