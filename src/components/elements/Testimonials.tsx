@@ -712,7 +712,7 @@ export default function ReviewCarousel() {
                           {typeof review.content === "string" ? (
                             <p>{review.content}</p>
                           ) : (
-                            <div className="space-y-2 line-clamp-5">{review.content}</div>
+                            <div className="space-y-2 line-clamp-4">{review.content}</div>
                           )}
                         </div>
                       </div>
