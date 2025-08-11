@@ -24,16 +24,16 @@ const BANNER_DATA = [
     alt: "Forklift rentals and purchases",
     url: '/forklift'
   },
-  {
-    image: "/Banner2.png",
-    alt: "Industrial Forklifts & Spare Parts Hub",
-    url: '/spare-parts'
-  },
   // {
-  //   image: "/Banner3.png",
-  //   alt: "Reliable batteries for your operations",
-  //   url: '/battery'
+  //   image: "/Banner2.png",
+  //   alt: "Industrial Forklifts & Spare Parts Hub",
+  //   url: '/spare-parts'
   // },
+  {
+    image: "/Banner3.png",
+    alt: "Reliable batteries for your operations",
+    url: '/battery'
+  },
   {
     image: "/Banner4.png",
     alt: "Keep your machines running and operate with skill",
