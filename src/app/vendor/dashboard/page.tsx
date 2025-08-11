@@ -111,7 +111,7 @@ const vendorApi = {
   },
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000';
 
 function getImageSrc(images?: { image: string }[] | string) {
   if (typeof images === 'string' && images) return `${API_BASE_URL}${images}`;

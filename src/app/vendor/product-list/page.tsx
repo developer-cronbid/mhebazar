@@ -46,7 +46,7 @@ const TYPE_OPTIONS = [
   { value: 'attachments', label: 'Attachments' },
 ];
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000';
 
 // Update the getImageUrl function
 const getImageUrl = (imageUrl: string | undefined): string => {

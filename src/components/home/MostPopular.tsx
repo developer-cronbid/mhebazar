@@ -1,3 +1,4 @@
+// src/components/elements/MostPopular.tsx
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -181,22 +182,21 @@ export default function MostPopular() {
       </div>
 
       {/* Main Container */}
-      <div className="bg-white border  rounded-lg p-6">
-
-        <div className="flex flex-col">
-  <h2 className="text-3xl font-semibold text-black leading-tight">
-    Most Popular
-  </h2>
-  <p className="text-sm font-normal text-gray-500">
-{popularData.subtitle}
-  </p>
-</div>
-
-       
+      <div className="bg-white border rounded-lg p-6">
+        
         {/* Top Section with Main Product */}
-        <div className="flex items-center justify-center gap-8 mb-10">
+        <div className="flex flex-col items-center gap-8 mb-10">
+          <div className="w-full">
+            <h2 className="text-3xl font-semibold text-black leading-tight mb-1">
+              Most Popular
+            </h2>
+            <p className="text-sm font-normal text-gray-500">
+              {popularData.subtitle}
+            </p>
+          </div>
+          
           {/* Main Image - Large Size */}
-          <div className="relative w-80 h-80 flex-shrink-0">
+          <div className="relative w-64 h-64 sm:w-80 sm:h-80 flex-shrink-0">
             <Image
               src={popularData.mainImage}
               alt={popularData.mainLabel}
@@ -205,8 +205,6 @@ export default function MostPopular() {
               onError={() => setMainImageError(true)}
             />
           </div>
-          
-          
         </div>
 
         {/* Bottom Products Grid - 3 per row */}
@@ -228,7 +226,7 @@ export default function MostPopular() {
           {/* Dots Navigation */}
           {visibleProducts.length > 3 && (
             <div className="flex justify-center space-x-2 mt-4">
-              {[0, 1, 2].map((dotIndex) => (
+              {[...Array(Math.ceil(visibleProducts.length / 3))].map((_, dotIndex) => (
                 <button
                   key={dotIndex}
                   onClick={() => handleDotClick(dotIndex * 3)}
@@ -264,13 +262,12 @@ function LoadingSkeleton() {
         <div className="h-5 bg-gray-200 rounded w-20 animate-pulse" />
       </div>
       <div className="w-full p-6 border border-gray-200 rounded-lg bg-white animate-pulse">
-        <div className="flex items-center gap-8 mb-8">
-          <div className="w-80 h-80 bg-gray-200 rounded-lg" />
-          <div className="flex-1">
-            <div className="h-5 bg-gray-200 rounded w-1/4 mb-4" />
+        <div className="flex flex-col items-center gap-8 mb-8">
+          <div className="w-full">
             <div className="h-10 bg-gray-200 rounded w-3/4 mb-3" />
             <div className="h-4 bg-gray-200 rounded w-1/2" />
           </div>
+          <div className="w-64 h-64 sm:w-80 sm:h-80 bg-gray-200 rounded-lg" />
         </div>
         <div className="flex gap-4">
           {[1, 2, 3].map((i) => (

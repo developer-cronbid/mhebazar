@@ -7,7 +7,7 @@ import axios from "axios";
 import categoriesData from "@/data/categories.json";
 import { motion, useInView } from "framer-motion";
 
-const NEXT_PUBLIC_BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+const NEXT_PUBLIC_BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
 
 const getCategoryImageUrl = (categoryId: number | string | null): string => {
