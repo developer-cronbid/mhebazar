@@ -812,7 +812,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 )}
               </div>
               {/* Offers Section */}
-              <div className="mt-4 p-4 border border-gray-200 rounded-lg">
+              {/* <div className="mt-4 p-4 border border-gray-200 rounded-lg">
                 <h3 className="font-semibold text-lg text-gray-900 mb-2">
                   Offers
                 </h3>
@@ -838,7 +838,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     </p>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
             {/* Delivery & Actions */}
             <div className="w-full lg:w-1/3 flex flex-col gap-4">
