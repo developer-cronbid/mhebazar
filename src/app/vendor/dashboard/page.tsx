@@ -592,7 +592,7 @@ export default function DashboardStats() {
             </div>
           </div>
 
-          <div className=" w-1/2">
+          {/* <div className=" w-1/2">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Top Searched Products</h2>
               <a href="#" className="text-green-600 text-sm">View more</a>
@@ -619,7 +619,7 @@ export default function DashboardStats() {
                 <span>Scissors Lift</span>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
 
       </div>
