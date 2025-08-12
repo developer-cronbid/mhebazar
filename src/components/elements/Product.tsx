@@ -319,7 +319,8 @@ const ProductCard = ({
                   </button>
                 </DialogTrigger>
                 <DialogContent className="w-[95vw] max-w-2xl mx-auto">
-                  <QuoteForm product={productData} />
+                  <QuoteForm product={productData} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                  />
                 </DialogContent>
               </Dialog>
             )}
@@ -345,10 +346,12 @@ const ProductCard = ({
                     description: subtitle || '',
                     price: price,
                     stock_quantity: stock_quantity
-                  }}
+                    }}
+                    onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                 />
               ) : (
-                <QuoteForm product={productData} />
+                    <QuoteForm product={productData} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                    />
               )}
             </DialogContent>
           </Dialog>

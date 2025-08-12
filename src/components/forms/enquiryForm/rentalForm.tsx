@@ -1,4 +1,3 @@
-// components/RentalForm.tsx
 "use client"
 
 import { useState, FormEvent, JSX } from "react"
@@ -27,88 +26,74 @@ interface RentalFormProps {
 }
 
 export default function RentalForm({ productId, productDetails, onClose }: RentalFormProps): JSX.Element {
-  // --- Original state and functionality are preserved ---
   const { user } = useUser()
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [success, setSuccess] = useState(false) // State for inline success message
+
   const today = new Date().toISOString().split("T")[0]
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
 
     if (!user) {
       toast.error("You must be logged in to submit a rental request.")
-      setIsSubmitting(false)
       return
     }
 
     if (!startDate || !endDate) {
-      toast.error("Please select both start and end dates for your rental.")
-      setIsSubmitting(false)
+      toast.error("Please select both start and end dates.")
       return
     }
 
     if (new Date(startDate) >= new Date(endDate)) {
       toast.error("End date must be after start date.")
-      setIsSubmitting(false)
       return
     }
 
     try {
-      const response = await api.post("/rentals/", {
+      setIsSubmitting(true)
+
+      const rentalPayload: Record<string, any> = {
         product: productId,
         start_date: startDate,
-        end_date: endDate,
-        notes,
-      })
-
-      if (response.status === 201) {
-        toast.success("Rental request submitted successfully! We will get back to you soon.")
-        setSuccess(true) // Trigger inline success message
-        setStartDate("")
-        setEndDate("")
-        setNotes("")
-        // Reset success message and close modal after a delay
-        setTimeout(() => {
-          setSuccess(false)
-          onClose?.()
-        }, 3000)
+        end_date: endDate
       }
+
+      if (notes.trim()) {
+        rentalPayload.notes = notes.trim()
+      }
+
+      await api.post("/rentals/", rentalPayload)
+
+      toast.success("Rental request submitted successfully! We’ll get back to you soon.")
+
+      // Reset form fields
+      setStartDate("")
+      setEndDate("")
+      setNotes("")
+
+      // Close modal
+      onClose?.()
     } catch (error: unknown) {
       console.error("Error submitting rental form:", error)
       if (axios.isAxiosError(error) && error.response) {
         const errorMessages = Object.values(error.response.data).flat().join(". ")
-        toast.error(`Failed to submit rental request: ${errorMessages || error.response.statusText || 'Unknown error'}`)
+        toast.error(`Failed to submit rental request: ${errorMessages || error.response.statusText || "Unknown error"}`)
       } else {
         toast.error("An unexpected error occurred. Please try again.")
       }
     } finally {
-      // Delay setting isSubmitting to false to allow success message to show
-      if (!(success)) {
-        setIsSubmitting(false);
-      }
+      setIsSubmitting(false)
     }
   }
 
-  // --- New JSX using the design from QuoteForm ---
   return (
     <div className="max-h-[90vh] overflow-auto custom-scrollbar">
       <div className="w-full mx-auto">
         <Card className="border-none shadow-none">
           <CardContent className="p-4 sm:p-6 lg:p-8 bg-white">
-            {/* Success Message */}
-            {success && (
-              <div className="mb-6 p-4 bg-[#5ca131]/10 border-2 border-[#5ca131] rounded-lg">
-                <p className="text-[#5ca131] font-semibold">
-                  ✓ Request submitted successfully! We&apos;ll get back to you soon.
-                </p>
-              </div>
-            )}
-
             {/* Product Information */}
             <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
               <div className="w-full lg:w-1/2 xl:w-2/5">
@@ -129,11 +114,14 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
 
                 <div className="space-y-2 text-sm sm:text-base text-gray-600">
                   <p>
-                    <span className="font-medium">In Stock:</span> {productDetails.stock_quantity ?? 'N/A'}
+                    <span className="font-medium">In Stock:</span> {productDetails.stock_quantity ?? "N/A"}
                   </p>
                   {productDetails.price !== "0.00" && (
                     <p className="text-lg font-semibold text-green-600">
-                      ₹{typeof productDetails.price === "number" ? productDetails.price.toLocaleString("en-IN") : productDetails.price}
+                      ₹
+                      {typeof productDetails.price === "number"
+                        ? productDetails.price.toLocaleString("en-IN")
+                        : productDetails.price}
                       <span className="text-sm font-normal text-gray-500"> / day</span>
                     </p>
                   )}
@@ -143,23 +131,29 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
 
             {/* Product Description */}
             <div className="mb-8 prose prose-sm sm:prose-base max-w-none text-gray-600 leading-relaxed">
-              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(productDetails.description || "No description available.") }} />
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(
+                    productDetails.description || "No description available."
+                  )
+                }}
+              />
             </div>
 
-            {/* Quote Form - using original fields and functionality */}
+            {/* Rental Form */}
             <div className="space-y-6">
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">
                 Request This Item
               </h3>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Date Inputs */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="start-date" className="block text-xs font-medium text-gray-600 mb-1">Start Date *</label>
+                    <label htmlFor="start-date" className="block text-xs font-medium text-gray-600 mb-1">
+                      Start Date *
+                    </label>
                     <Input
                       id="start-date"
-                      name="startDate"
                       type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
@@ -169,10 +163,11 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                     />
                   </div>
                   <div>
-                    <label htmlFor="end-date" className="block text-xs font-medium text-gray-600 mb-1">End Date *</label>
+                    <label htmlFor="end-date" className="block text-xs font-medium text-gray-600 mb-1">
+                      End Date *
+                    </label>
                     <Input
                       id="end-date"
-                      name="endDate"
                       type="date"
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
@@ -184,12 +179,12 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                   </div>
                 </div>
 
-                {/* Message */}
                 <div>
-                  <label htmlFor="notes" className="block text-xs font-medium text-gray-600 mb-1">Notes</label>
+                  <label htmlFor="notes" className="block text-xs font-medium text-gray-600 mb-1">
+                    Notes
+                  </label>
                   <Textarea
                     id="notes"
-                    name="notes"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     className="min-h-[80px] text-sm resize-none"
@@ -197,7 +192,6 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                   />
                 </div>
 
-                {/* Submit Button */}
                 <Button
                   type="submit"
                   disabled={isSubmitting}
@@ -209,7 +203,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                       Submitting...
                     </div>
                   ) : (
-                    'Submit Rental Request'
+                    "Submit Rental Request"
                   )}
                 </Button>
               </form>
@@ -218,5 +212,5 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
         </Card>
       </div>
     </div>
-  );
-};
+  )
+}

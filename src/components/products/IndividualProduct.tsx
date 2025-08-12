@@ -931,10 +931,12 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                               description: data.description,
                               price: data.price,
                               stock_quantity: data.stock_quantity,
-                            }}
+                              }}
+                              onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                           />
                         ) : (
-                          <QuoteForm product={data} />
+                              <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                              />
                         )}
                       </DialogContent>
                     </Dialog>
@@ -1012,9 +1014,11 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                       price: data.price,
                       stock_quantity: data.stock_quantity,
                     }}
+                    onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                   />
                 ) : (
-                  <QuoteForm product={data} />
+                    <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                    />
                 )}
               </DialogContent>
             </Dialog>
