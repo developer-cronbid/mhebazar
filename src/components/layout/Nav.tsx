@@ -14,6 +14,7 @@ import {
   LogOut,
   UserIcon,
   Repeat,
+  Bell,
 } from "lucide-react";
 import { useRef, useState, useEffect, JSX } from "react";
 import Image from "next/image";
@@ -339,6 +340,14 @@ export default function Navbar(): JSX.Element {
                               >
                                 <User className="w-5 h-5 text-blue-600" />
                                 Vendor Profile
+                              </Link>
+                              <Link
+                                href="/vendor/notifications"
+                                className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
+                                onClick={() => setProfileMenuOpen(false)}
+                              >
+                                <Bell className="w-5 h-5 text-blue-600" />
+                                Vendor Notifications
                               </Link>
                             </>
                           )}
