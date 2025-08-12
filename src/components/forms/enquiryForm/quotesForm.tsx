@@ -10,10 +10,10 @@ import { Product } from "@/types";
 import DOMPurify from 'dompurify';
 
 
-const QuoteForm = ({ product }: { product: Product }) => {
+const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
+  // const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     companyName: '',
@@ -21,8 +21,6 @@ const QuoteForm = ({ product }: { product: Product }) => {
     phone: '',
     message: ''
   });
-
-  console.log(product);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,18 +37,11 @@ const QuoteForm = ({ product }: { product: Product }) => {
         return false;
       }
     }
-
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      return false;
-    }
-
-    return true;
+    return emailRegex.test(formData.email);
   };
 
   const handleSubmit = async () => {
-
     if (!validateForm()) {
       toast.error('Please fill in all required fields with valid information.');
       return;
@@ -60,16 +51,23 @@ const QuoteForm = ({ product }: { product: Product }) => {
       setSubmitting(true);
       setError(null);
 
-      const quotePayload = {
-        ...formData,
-        productId: product?.id,
-        productTitle: product?.title
+      const quotePayload: Record<string, any> = {
+        full_name: formData.fullName.trim(),
+        company_name: formData.companyName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        product: product?.id,
       };
 
-      // Submit quote request
-      await api.post('/api/quotes/', quotePayload);
+      if (formData.message.trim()) {
+        quotePayload.message = formData.message.trim();
+      }
 
-      setSuccess(true);
+      await api.post('/quotes/', quotePayload);
+
+      toast.success('Quote request submitted successfully!');
+
+      // Reset form
       setFormData({
         fullName: '',
         companyName: '',
@@ -78,14 +76,16 @@ const QuoteForm = ({ product }: { product: Product }) => {
         message: ''
       });
 
-      // Reset success message after 5 seconds
-      setTimeout(() => setSuccess(false), 5000);
-
+      // Close form after success
+      if (onClose) {
+        onClose();
+      }
     } catch (err) {
       toast.error('Failed to submit quote request. Please try again.');
       console.error('Error submitting quote:', err);
     } finally {
       setSubmitting(false);
+      // setSuccess(true);
     }
   };
 
@@ -112,13 +112,13 @@ const QuoteForm = ({ product }: { product: Product }) => {
         <Card className="border-none">
           <CardContent className="p-4 sm:p-6 lg:p-8 bg-white">
             {/* Success Message */}
-            {success && (
+            {/* {success && (
               <div className="mb-6 p-4 bg-[#5ca131]/10 border-2 border-[#5ca131] rounded-lg">
                 <p className="text-[#5ca131] font-semibold">
                   ✓ Quote request submitted successfully! We&apos;ll get back to you soon.
                 </p>
               </div>
-            )}
+            )} */}
 
             {/* Error Message */}
             {error && (

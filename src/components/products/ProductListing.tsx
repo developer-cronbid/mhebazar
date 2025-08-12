@@ -155,7 +155,8 @@ function ProductGrid({
                         </button>
                       </DialogTrigger>
                       <DialogContent className="w-full sm:max-w-2xl">
-                        <QuoteForm product={product} />
+                          <QuoteForm product={product} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                          />
                       </DialogContent>
                     </Dialog>
                   )}
