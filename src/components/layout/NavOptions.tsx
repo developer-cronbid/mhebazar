@@ -30,6 +30,7 @@ export default function CategoryMenu({
   const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null);
   const [productCounts, setProductCounts] = useState<{ [subcategoryId: number]: number }>({});
   const [loadingCounts, setLoadingCounts] = useState<boolean>(false);
+  const [isHoveringFirstColumn, setIsHoveringFirstColumn] = useState<boolean>(false);
 
   const displayedCategory: Category | null = selectedCategory || hoveredCategory;
   const subcategoriesToDisplay: Subcategory[] = displayedCategory?.subcategories || [];
@@ -71,6 +72,7 @@ export default function CategoryMenu({
       setSelectedCategory(null);
       setHoveredCategory(null);
       setProductCounts({});
+      setIsHoveringFirstColumn(false);
     }
   }, [isOpen, categories, getProductCounts]);
 
@@ -115,22 +117,26 @@ export default function CategoryMenu({
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden"
-          style={{ width: '1000px', height: '450px' }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
+          style={{ width: '1200px', height: '480px' }}
         >
-          <div className="flex h-full">
-            {/* Left Categories Column 1 */}
-            <div className="w-64 bg-gray-50/70 border-r border-gray-200">
-              <div className="p-2 h-full">
+          <div className="flex h-full relative">
+            {/* Left Categories Column 1 - Fixed Position */}
+            <motion.div 
+              className="w-80 bg-gray-50 border-r border-gray-200 flex-shrink-0"
+              onMouseEnter={() => setIsHoveringFirstColumn(true)}
+              onMouseLeave={() => setIsHoveringFirstColumn(false)}
+            >
+              <div className="p-4 h-full">
                 <div className="space-y-1">
                   {categoriesCol1.map((category) => (
                     <div
                       key={category.id}
-                      className={`group flex items-center justify-between px-3 py-2.5 text-sm cursor-pointer rounded-md transition-all duration-200 ${
+                      className={`group flex items-center justify-between px-4 py-3 text-sm cursor-pointer rounded-lg transition-all duration-200 ${
                         selectedCategory?.id === category.id || hoveredCategory?.id === category.id
-                          ? "bg-green-100 text-green-700 font-medium shadow-sm"
-                          : "text-gray-700 hover:bg-white hover:text-green-600 hover:shadow-sm"
+                          ? "bg-blue-50 text-blue-700 font-medium border border-blue-200"
+                          : "text-gray-700 hover:bg-white hover:text-blue-600 hover:border hover:border-gray-200"
                       }`}
                       onMouseEnter={() => setHoveredCategory(category)}
                     >
@@ -143,28 +149,38 @@ export default function CategoryMenu({
                       <Link
                         href={`/${createSlug(category.name)}`}
                         onClick={onClose}
-                        className="p-1.5 -mr-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition-all duration-200"
+                        className="p-1.5 -mr-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition-all duration-200"
                         aria-label={`Go to ${category.name} category page`}
                       >
-                        <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+                        <ChevronRight className="w-4 h-4 text-gray-500" />
                       </Link>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Middle Categories Column 2 */}
-            <div className="w-64 bg-gray-50/70 border-r border-gray-200">
-              <div className="p-2 h-full">
+            {/* Middle Categories Column 2 - Animates Right When First Column Hovered */}
+            <motion.div 
+              className="w-80 bg-gray-50 border-r border-gray-200 flex-shrink-0"
+              animate={{
+                x: isHoveringFirstColumn ? 420 : 0,
+                zIndex: isHoveringFirstColumn ? 10 : 1,
+              }}
+              transition={{ 
+                duration: 0.4, 
+                ease: [0.25, 0.46, 0.45, 0.94]
+              }}
+            >
+              <div className="p-4 h-full">
                 <div className="space-y-1">
                   {categoriesCol2.map((category) => (
                     <div
                       key={category.id}
-                      className={`group flex items-center justify-between px-3 py-2.5 text-sm cursor-pointer rounded-md transition-all duration-200 ${
+                      className={`group flex items-center justify-between px-4 py-3 text-sm cursor-pointer rounded-lg transition-all duration-200 ${
                         selectedCategory?.id === category.id || hoveredCategory?.id === category.id
-                          ? "bg-green-100 text-green-700 font-medium shadow-sm"
-                          : "text-gray-700 hover:bg-white hover:text-green-600 hover:shadow-sm"
+                          ? "bg-blue-50 text-blue-700 font-medium border border-blue-200"
+                          : "text-gray-700 hover:bg-white hover:text-blue-600 hover:border hover:border-gray-200"
                       }`}
                       onMouseEnter={() => setHoveredCategory(category)}
                     >
@@ -177,19 +193,28 @@ export default function CategoryMenu({
                       <Link
                         href={`/${createSlug(category.name)}`}
                         onClick={onClose}
-                        className="p-1.5 -mr-1 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition-all duration-200"
+                        className="p-1.5 -mr-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition-all duration-200"
                         aria-label={`Go to ${category.name} category page`}
                       >
-                        <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
+                        <ChevronRight className="w-4 h-4 text-gray-500" />
                       </Link>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
             
-            {/* Right Content Column - Subcategories with Scroll */}
-            <div className="flex-1 bg-white">
+            {/* Right Content Column - Subcategories - Moves to Center When First Column Hovered */}
+            <motion.div 
+              className="flex-1 bg-white"
+              animate={{
+                x: isHoveringFirstColumn ? -380 : 0,
+              }}
+              transition={{ 
+                duration: 0.4, 
+                ease: [0.25, 0.46, 0.45, 0.94]
+              }}
+            >
               <div className="h-full p-6 flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6 flex-shrink-0">
@@ -200,9 +225,10 @@ export default function CategoryMenu({
                     <Link
                       href={`/${createSlug(displayedCategory.name)}`}
                       onClick={onClose}
-                      className="text-sm font-medium text-green-600 hover:text-green-700 transition-colors px-2 py-1 rounded hover:bg-green-50"
+                      className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors px-3 py-2 rounded-lg hover:bg-blue-50 flex items-center gap-1"
                     >
-                      View All →
+                      View All 
+                      <ChevronRight className="w-4 h-4" />
                     </Link>
                   )}
                 </div>
@@ -210,9 +236,9 @@ export default function CategoryMenu({
                 {/* Scrollable Content */}
                 <div className="flex-1 min-h-0">
                   {loadingCounts ? (
-                    <div className="grid grid-cols-2 gap-4 auto-rows-max">
-                      {[...Array(4)].map((_, i) => (
-                        <div key={i} className="bg-gray-50 rounded-lg p-4 flex flex-col items-center justify-center min-h-[140px]">
+                    <div className="grid grid-cols-3 gap-4 auto-rows-max">
+                      {[...Array(6)].map((_, i) => (
+                        <div key={i} className="bg-gray-50 rounded-lg p-4 flex flex-col items-center justify-center min-h-[140px] border">
                           <Skeleton className="w-16 h-16 rounded-lg mb-3" />
                           <Skeleton className="h-4 w-20 mb-2" />
                           <Skeleton className="h-6 w-8" />
@@ -221,21 +247,38 @@ export default function CategoryMenu({
                     </div>
                   ) : subcategoriesToDisplay.length > 0 ? (
                     <div 
-                      className="grid grid-cols-2 gap-4 auto-rows-max overflow-y-auto pr-2"
+                      className="grid grid-cols-3 gap-4 auto-rows-max overflow-y-auto pr-2"
                       style={{ 
-                        maxHeight: '340px',
+                        maxHeight: '380px',
                         scrollbarWidth: 'thin',
-                        scrollbarColor: '#e2e8f0 transparent'
+                        scrollbarColor: '#cbd5e1 transparent'
                       }}
                     >
+                      <style jsx>{`
+                        div::-webkit-scrollbar {
+                          width: 6px;
+                        }
+                        div::-webkit-scrollbar-track {
+                          background: #f8fafc;
+                          border-radius: 6px;
+                        }
+                        div::-webkit-scrollbar-thumb {
+                          background: #cbd5e1;
+                          border-radius: 6px;
+                        }
+                        div::-webkit-scrollbar-thumb:hover {
+                          background: #94a3b8;
+                        }
+                      `}</style>
+                      
                       {subcategoriesToDisplay.map((subCategory) => (
                         <Link
                           key={subCategory.id}
                           href={`/${createSlug(displayedCategory!.name)}/${createSlug(subCategory.name)}`}
-                          className="group bg-gray-50/50 hover:bg-gray-50 rounded-lg p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-200 hover:shadow-sm min-h-[140px] flex flex-col items-center justify-center"
+                          className="group bg-white hover:bg-gray-50 rounded-lg p-4 cursor-pointer transition-all duration-200 border border-gray-200 hover:border-blue-200 hover:shadow-md min-h-[140px] flex flex-col items-center justify-center"
                           onClick={onClose}
                         >
-                          <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center overflow-hidden mb-3 shadow-sm group-hover:shadow-md transition-shadow">
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-3 group-hover:bg-blue-50 transition-colors">
                             {displayedCategory?.image_url ? (
                               <Image
                                 src={displayedCategory.image_url.startsWith("/media") ? `https://mheback.onrender.com${displayedCategory.image_url}` : displayedCategory.image_url}
@@ -250,22 +293,22 @@ export default function CategoryMenu({
                                   const parent = target.parentElement;
                                   if (parent) {
                                     const fallback = document.createElement("div");
-                                    fallback.className = "text-gray-500 text-xs font-semibold flex items-center justify-center w-full h-full";
+                                    fallback.className = "text-gray-600 text-xs font-semibold flex items-center justify-center w-full h-full";
                                     fallback.textContent = subCategory.name.substring(0, 2).toUpperCase();
                                     parent.appendChild(fallback);
                                   }
                                 }}
                               />
                             ) : (
-                              <span className="text-gray-500 text-xs font-semibold">
+                              <span className="text-gray-600 text-xs font-semibold">
                                 {subCategory.name.substring(0, 2).toUpperCase()}
                               </span>
                             )}
                           </div>
-                          <h4 className="font-medium text-gray-900 text-sm text-center mb-2 group-hover:text-green-600 transition-colors leading-tight px-1">
+                          <h4 className="font-medium text-gray-900 text-sm text-center mb-2 group-hover:text-blue-600 transition-colors leading-tight px-1">
                             {subCategory.name}
                           </h4>
-                          <div className="text-xl font-bold text-gray-800 min-w-[32px] text-center">
+                          <div className="text-lg font-semibold text-gray-800 min-w-[32px] text-center">
                             {productCounts[subCategory.id] !== undefined ? (
                               String(productCounts[subCategory.id]).padStart(2, '0')
                             ) : (
@@ -277,7 +320,7 @@ export default function CategoryMenu({
                     </div>
                   ) : displayedCategory ? (
                     <div className="flex flex-col items-center justify-center h-full text-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                      <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
                         <span className="text-gray-400 text-2xl">📦</span>
                       </div>
                       <p className="text-gray-500 text-sm mb-4">
@@ -285,7 +328,7 @@ export default function CategoryMenu({
                       </p>
                       <Link
                         href={`/${createSlug(displayedCategory.name)}`}
-                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 transition-colors shadow-sm"
+                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
                         onClick={onClose}
                       >
                         Browse {displayedCategory.name}
@@ -293,7 +336,7 @@ export default function CategoryMenu({
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center h-full text-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                      <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
                         <span className="text-gray-400 text-2xl">👈</span>
                       </div>
                       <p className="text-gray-500 text-sm">
@@ -303,7 +346,7 @@ export default function CategoryMenu({
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
       )}
