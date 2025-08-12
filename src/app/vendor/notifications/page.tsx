@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, ReactNode } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, FileText, Calendar, AlertTriangle, CheckCircle2, XCircle, Package, LucideIcon, Filter, X, MessageSquare, Eye } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Bell, FileText, Calendar, AlertTriangle, CheckCircle2, XCircle, Package, LucideIcon, X, Eye } from 'lucide-react';
+// import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 
 // --- TypeScript Type Definitions ---
@@ -106,7 +106,7 @@ const MessageModal = ({ isOpen, onClose, title, children }: { isOpen: boolean; o
 
 // --- Main Page Component ---
 export default function VendorNotificationsPage() {
-  const router = useRouter();
+  // const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

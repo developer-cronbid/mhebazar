@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock, ChevronRight, Pencil } from "lucide-react";
+import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock, ChevronRight, Pencil, Cross, Shapes } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,6 +26,7 @@ import {
 import ProductForm from "@/components/forms/uploadForm/ProductForm";
 import Link from "next/link";
 import categories from '@/data/categories.json';
+import { IoDocuments } from "react-icons/io5";
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -141,7 +142,7 @@ export default function DashboardStats() {
   const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
   const [isSheetOpen, setIsSheetOpen] = useState(false)
-  
+
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -297,7 +298,7 @@ export default function DashboardStats() {
         )}
 
         {/* Notifications */}
-        {notifications.length > 0 && (
+        {/* {notifications.length > 0 && (
           <Card className="p-4 border-blue-200 bg-blue-50">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -330,7 +331,7 @@ export default function DashboardStats() {
               ))}
             </div>
           </Card>
-        )}
+        )} */}
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
@@ -348,18 +349,18 @@ export default function DashboardStats() {
           {/* Offers Card */}
           <div className="p-5 bg-gradient-to-r from-white to-[#D8EBF8] rounded-xl shadow-sm border-0 flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-extrabold text-gray-900">{stats?.orders?.total_orders || 0}</h2>
-              <p className="text-2xl w-52 text-gray-500">Offer downloaded</p>
+              <h2 className="text-3xl font-extrabold text-gray-900">{stats?.enquiry_stats?.total_quotes || 0}</h2>
+              <p className="text-2xl w-52 text-gray-500">Total Quotes</p>
             </div>
             <div className="p-3 rounded-full border-4 border-[#018CFC]/30 w-28 h-28 flex items-center justify-center">
-              <Download className="h-12 w-12 text-[#018CFC]" />
+              <IoDocuments className="h-12 w-12 text-[#018CFC]" />
             </div>
           </div>
 
           {/* Queries Card */}
           <div className="p-5 bg-gradient-to-r from-white to-[#FAE5A4] rounded-xl shadow-sm border-0 flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-extrabold text-gray-900">{stats?.orders?.recent_orders || 0}</h2>
+              <h2 className="text-3xl font-extrabold text-gray-900">{stats?.enquiry_stats?.total_enquiries || 0}</h2>
               <p className="text-2xl text-gray-500">Number of queries</p>
             </div>
             <div className="p-3 rounded-full border-4 border-[#F1BF25]/30 w-28 h-28 flex items-center justify-center">
@@ -371,8 +372,9 @@ export default function DashboardStats() {
         {/* Bottom Action Cards */}
         <div className="grid gap-4 md:grid-cols-3 mt-5">
           {/* Sell New Products */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#FF3434] p-4 rounded-lg cursor-pointer hover:shadow-md transition">
-            <img src="/images/forklift-new.png" alt="Sell New Products" className="h-14 w-14 object-contain" />
+          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#FF3434] p-4 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+            {/* <img src="/no-product.png" alt="Sell New Products" className="h-14 w-14 object-contain" /> */}
+            <Cross className="h-14 w-14 text-white" />
             <div>
               <h3 className="text-white font-semibold">Sell New Products</h3>
               <p className="text-white text-sm">List your products and start selling in minutes.</p>
@@ -381,8 +383,9 @@ export default function DashboardStats() {
           </div>
 
           {/* Sell Old Products */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#E55117] p-4 rounded-lg cursor-pointer hover:shadow-md transition">
-            <img src="/images/forklift-old.png" alt="Sell Old Products" className="h-14 w-14 object-contain" />
+          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#E55117] p-4 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+            {/* <img src="/images/forklift-old.png" alt="Sell Old Products" className="h-14 w-14 object-contain" /> */}
+            <Cross className="h-14 w-14 text-white" />
             <div>
               <h3 className="text-white font-semibold">Sell Old Products</h3>
               <p className="text-white text-sm">List your products and start selling in minutes.</p>
@@ -391,8 +394,9 @@ export default function DashboardStats() {
           </div>
 
           {/* Rent Products */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-4 rounded-lg cursor-pointer hover:shadow-md transition">
-            <img src="/images/forklift-rent.png" alt="Rent Products" className="h-14 w-14 object-contain" />
+          <div className="flex items-center gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-4 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+            {/* <img src="/images/forklift-rent.png" alt="Rent Products" className="h-14 w-14 object-contain" /> */}
+            <Shapes className="h-14 w-14 text-white" />
             <div>
               <h3 className="text-white font-semibold">Rent Products</h3>
               <p className="text-white text-sm">List your products and start selling in minutes.</p>
@@ -403,7 +407,7 @@ export default function DashboardStats() {
 
         {/* Product List */}
         <div className="flex flex-col sm:flex-row gap-6 mb-4">
-          <div className="grid grid-cols-1 w-1/2" id="products-section">
+          <div className="grid grid-cols-1 w-full" id="products-section"> {/* add w-1/2 when adding the searched section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl sm:text-2xl font-bold text-gray-900">
@@ -425,7 +429,7 @@ export default function DashboardStats() {
                       </Button>
                     </SheetTrigger>
                     <SheetContent>
-                       <ProductForm product={selectedProduct} />
+                      <ProductForm product={selectedProduct} />
                     </SheetContent>
                   </Sheet>
                 )}
@@ -458,7 +462,7 @@ export default function DashboardStats() {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                      {paginatedProducts.map((product) => (
+                  {paginatedProducts.map((product) => (
                     // console.log(product),
                     <div
                       key={product.id}
@@ -495,8 +499,8 @@ export default function DashboardStats() {
                           </div>
                           <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
                           <div className="flex items-center gap-2">
-                                <Button variant="link" className="text-blue-600 px-0 py-0 h-auto text-sm" onClick={() => handleEditClick(product.id)}>
-                                  Edit
+                            <Button variant="link" className="text-blue-600 px-0 py-0 h-auto text-sm" onClick={() => handleEditClick(product.id)}>
+                              Edit
                             </Button>
                             <span className="text-xs text-gray-400">
                               Updated {new Date(product.updated_at).toLocaleDateString()}
