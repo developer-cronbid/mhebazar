@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, FormEvent, JSX } from "react"
+import { useState, FormEvent, JSX, useEffect } from "react"
 import axios from "axios"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -31,8 +31,34 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
   const [endDate, setEndDate] = useState("")
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [contactInfo, setContactInfo] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    address: '',
+  });
 
   const today = new Date().toISOString().split("T")[0]
+
+  // Prefill contact info with user data if available
+  useEffect(() => {
+    if (user) {
+      setContactInfo({
+        fullName: user.full_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address?.address || '',
+      });
+    }
+  }, [user]);
+  
+  const handleContactChange = (e) => {
+    const { name, value } = e.target;
+    setContactInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -51,18 +77,34 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
       toast.error("End date must be after start date.")
       return
     }
+    
+    // Validate contact info
+    if (!contactInfo.fullName || !contactInfo.email || !contactInfo.phone) {
+      toast.error("Please fill in your name, email, and phone number.");
+      return;
+    }
+
 
     try {
       setIsSubmitting(true)
 
+      // Concatenate all form data and user info into a single notes string
+      const fullNotes = `
+        **Rental Request Details**
+        - Full Name: ${contactInfo.fullName}
+        - Email: ${contactInfo.email}
+        - Phone: ${contactInfo.phone}
+        - Address: ${contactInfo.address || 'N/A'}
+        - Start Date: ${startDate}
+        - End Date: ${endDate}
+        ${notes.trim() ? `\n---\nMessage:\n${notes.trim()}` : ''}
+      `;
+
       const rentalPayload: Record<string, any> = {
         product: productId,
         start_date: startDate,
-        end_date: endDate
-      }
-
-      if (notes.trim()) {
-        rentalPayload.notes = notes.trim()
+        end_date: endDate,
+        notes: fullNotes
       }
 
       await api.post("/rentals/", rentalPayload)
@@ -106,12 +148,10 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                   />
                 </div>
               </div>
-
               <div className="flex-1 space-y-3">
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
                   {productDetails.title}
                 </h2>
-
                 <div className="space-y-2 text-sm sm:text-base text-gray-600">
                   <p>
                     <span className="font-medium">In Stock:</span> {productDetails.stock_quantity ?? "N/A"}
@@ -145,8 +185,55 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">
                 Request This Item
               </h3>
-
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Contact Information Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Input
+                      name="fullName"
+                      value={contactInfo.fullName}
+                      onChange={handleContactChange}
+                      required
+                      className="h-12 text-sm"
+                      placeholder="Full name *"
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      name="email"
+                      type="email"
+                      value={contactInfo.email}
+                      onChange={handleContactChange}
+                      required
+                      className="h-12 text-sm"
+                      placeholder="Email *"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Input
+                      name="phone"
+                      type="tel"
+                      value={contactInfo.phone}
+                      onChange={handleContactChange}
+                      required
+                      className="h-12 text-sm"
+                      placeholder="Phone *"
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      name="address"
+                      type="text"
+                      value={contactInfo.address}
+                      onChange={handleContactChange}
+                      className="h-12 text-sm"
+                      placeholder="Address (optional)"
+                    />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="start-date" className="block text-xs font-medium text-gray-600 mb-1">

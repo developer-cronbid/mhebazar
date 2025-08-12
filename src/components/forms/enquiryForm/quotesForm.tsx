@@ -2,18 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Product } from "@/types";
 import DOMPurify from 'dompurify';
-
+import { useUser } from "@/context/UserContext";
 
 const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void }) => {
+  const { user } = useUser();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  // const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     companyName: '',
@@ -21,6 +21,20 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
     phone: '',
     message: ''
   });
+
+  // Prefill form fields with user data if available
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: user.full_name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        // The company name is not available in the user object, so we leave it empty.
+        // The address is also not a direct field, so we'll just log it.
+      }));
+    }
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -51,17 +65,21 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
       setSubmitting(true);
       setError(null);
 
+      // Concatenate all form data into a single message string
+      const fullMessage = `
+        **Quote Request Details**
+        - Full Name: ${formData.fullName.trim()}
+        - Company Name: ${formData.companyName.trim()}
+        - Email: ${formData.email.trim()}
+        - Phone: ${formData.phone.trim()}
+        ${user?.address?.address ? `- Address: ${user.address.address}` : ''}
+        ${formData.message.trim() ? `\n---\nMessage:\n${formData.message.trim()}` : ''}
+      `;
+
       const quotePayload: Record<string, any> = {
-        full_name: formData.fullName.trim(),
-        company_name: formData.companyName.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
+        message: fullMessage,
         product: product?.id,
       };
-
-      if (formData.message.trim()) {
-        quotePayload.message = formData.message.trim();
-      }
 
       await api.post('/quotes/', quotePayload);
 
@@ -85,7 +103,6 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
       console.error('Error submitting quote:', err);
     } finally {
       setSubmitting(false);
-      // setSuccess(true);
     }
   };
 
@@ -111,22 +128,6 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
       <div className="w-full mx-auto">
         <Card className="border-none">
           <CardContent className="p-4 sm:p-6 lg:p-8 bg-white">
-            {/* Success Message */}
-            {/* {success && (
-              <div className="mb-6 p-4 bg-[#5ca131]/10 border-2 border-[#5ca131] rounded-lg">
-                <p className="text-[#5ca131] font-semibold">
-                  ✓ Quote request submitted successfully! We&apos;ll get back to you soon.
-                </p>
-              </div>
-            )} */}
-
-            {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800">{error}</p>
-              </div>
-            )}
-
             {/* Product Information */}
             <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
               <div className="w-full lg:w-1/2 xl:w-2/5">
@@ -136,24 +137,14 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                   className="w-full h-48 sm:h-64 lg:h-72 object-contain rounded-lg shadow-sm"
                 />
               </div>
-
               <div className="flex-1 space-y-3">
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
                   {product?.title || product?.name || "Product"}
                 </h2>
-
                 <div className="space-y-2 text-sm sm:text-base text-gray-600">
                   <p>
-                    <span className="font-medium">Qty:</span> {product?.stock_quantity || data?.stock_quantity || 0}
+                    <span className="font-medium">Qty:</span> {product?.stock_quantity || 0}
                   </p>
-
-                  {/* <p>
-                    <span className="font-medium">Lock In period:</span> {product?.lockInPeriod}
-                  </p> */}
-
-                  {/* <p>
-                    <span className="font-medium">Location:</span> {product?.location}
-                  </p> */}
                 </div>
               </div>
             </div>
@@ -170,7 +161,6 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 text-center">
                 Get a Quote
               </h3>
-
               <div className="space-y-4">
                 {/* Name and Company Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
