@@ -68,10 +68,18 @@ const itemVariants = {
 
 /**
  * A single category item with an image and a label.
+ * This component has been updated to handle long names by truncating them.
  * @param {CategoryItemProps} props - The component props.
  * @returns {JSX.Element} The rendered component.
  */
 const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element => {
+  // Define a constant for the maximum length of the label to prevent clashing
+  const MAX_LABEL_LENGTH = 12;
+
+  // Truncate the label if it's too long and add an ellipsis
+  const displayedLabel =
+    label.length > MAX_LABEL_LENGTH ? `${label.substring(0, MAX_LABEL_LENGTH)}...` : label;
+
   const initials = label
     ?.split(" ")
     .map((w) => w[0])
@@ -110,13 +118,16 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
         )}
       </motion.div>
 
-      <div className="relative w-fit [font-family:'Inter-Regular',Helvetica] font-normal text-black text-base tracking-[0] leading-[normal] whitespace-nowrap">
-        {label}
+      {/* The full label is set as the title for a tooltip on hover */}
+      <div
+        className="relative w-fit [font-family:'Inter-Regular',Helvetica] font-normal text-black text-base tracking-[0] leading-[normal] whitespace-nowrap"
+        title={label}
+      >
+        {displayedLabel}
       </div>
     </Link>
   );
 };
-
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -127,12 +138,6 @@ const containerVariants = {
     },
   },
 };
-
-/**
- * A component for the pagination dots.
- * This was added to match the dots in the screenshot.
- * @returns {JSX.Element} The rendered component.
- */
 
 /**
  * The main component for the categories section.
