@@ -748,7 +748,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {data.name}
+                {`${data.name} ${data.model} ${data.manufacturer ? data.manufacturer : data.user_name.replace('_', ' ')}`}
               </h1>
               {/* Rating and Reviews */}
               <div className="flex items-center gap-1 mb-4 flex-wrap">

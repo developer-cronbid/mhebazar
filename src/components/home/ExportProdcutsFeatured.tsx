@@ -163,7 +163,7 @@ export default function ExportProductsFeatured() {
                 key={export_product.id}
                 className="flex-shrink-0 snap-start w-64"
               >
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full">
+                {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full"> */}
                   <ProductCardContainer
                     id={Number(export_product.id)}
                     image={export_product.image}
@@ -177,7 +177,7 @@ export default function ExportProductsFeatured() {
                     stock_quantity={export_product.stock_quantity}
                     type={export_product.type}
                   />
-                </div>
+                {/* </div> */}
               </motion.div>
             ))}
           </div>

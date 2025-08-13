@@ -126,7 +126,7 @@ const VendorProductsFeatured: React.FC = () => {
               key={product.id}
               className="flex-shrink-0 snap-start w-64"
             >
-              <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full">
+              {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full"> */}
                 <ProductCardContainer
                   id={product.id}
                   image={product.images[0]?.image || "/placeholder-image.png"}
@@ -141,7 +141,7 @@ const VendorProductsFeatured: React.FC = () => {
                   type={product.type}
                   category_id={product.category}
                 />
-              </div>
+              {/* </div> */}
             </div>
           ))}
         </div>

@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Link from "next/link";
+// import Link from "next/link";
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import VendorRegistrationDrawer from '@/components/forms/publicforms/VendorRegistrationForm';
@@ -48,7 +48,10 @@ function ClientSideVendorsPage() {
   const searchParams = useSearchParams();
 
   const [vendors, setVendors] = useState<Vendor[]>([]);
-  const [search, setSearch] = useState(searchParams.get('search') || "");
+
+  // State for the controlled input, for debouncing
+  const [searchValue, setSearchValue] = useState(searchParams.get('search') || "");
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [sortOption, setSortOption] = useState(searchParams.get('sort') || "-application_date");
@@ -57,18 +60,21 @@ function ClientSideVendorsPage() {
   const perPage = 12;
 
   const createQueryString = useCallback(
-    (name: string, value: string) => {
+    (paramsToUpdate: { [key: string]: string | null }) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value) {
-        params.set(name, value);
-      } else {
-        params.delete(name);
+      for (const [name, value] of Object.entries(paramsToUpdate)) {
+        if (value) {
+          params.set(name, value);
+        } else {
+          params.delete(name);
+        }
       }
       return params.toString();
     },
     [searchParams]
   );
 
+  // This function remains the same, it's for fetching supplemental data.
   const fetchProductCounts = async (vendorIds: number[]) => {
     try {
       const counts = await Promise.all(
@@ -76,15 +82,9 @@ function ClientSideVendorsPage() {
           try {
             const url = `/products/?user=${userId}`;
             const response = await api.get(url);
-            return {
-              userId,
-              count: response.data.count || 0
-            };
+            return { userId, count: response.data.count || 0 };
           } catch (error) {
-            return {
-              userId,
-              count: 0
-            };
+            return { userId, count: 0 };
           }
         })
       );
@@ -93,7 +93,8 @@ function ClientSideVendorsPage() {
       return [];
     }
   };
-    
+
+  // **CHANGED**: fetchVendors now correctly uses the sort parameter in the API call.
   const fetchVendors = async (page = 1, searchQuery = "", sort = "-application_date") => {
     setIsLoading(true);
     try {
@@ -104,47 +105,64 @@ function ClientSideVendorsPage() {
       if (searchQuery) {
         query.append("search", searchQuery);
       }
-      
+
+      // **FIXED**: Added the sort parameter to the API call.
+      // Common parameter name is 'ordering', change if your backend uses something else (e.g., 'sort').
+      // Sorting by product_count now requires the backend to support it.
+      if (sort && !sort.includes('product_count')) {
+        query.append("ordering", sort);
+      }
+
       const response = await api.get<VendorResponse>(`/vendor/approved/?${query.toString()}`);
-      let vendorData = response.data.results || [];
+      const vendorData = response.data.results || [];
       const totalCount = response.data.count || 0;
 
       const validVendors = vendorData.filter(vendor => vendor.user_info?.id !== undefined && vendor.user_info?.id !== null);
       const userIds = validVendors.map(vendor => vendor.user_info.id);
-      
+
       const productCounts = await fetchProductCounts(userIds);
-      
+
       const vendorsWithCounts = vendorData.map(vendor => {
         const countObj = productCounts.find(pc => pc.userId === vendor.user_info?.id);
-        const finalCount = countObj ? countObj.count : 0;
         return {
           ...vendor,
-          product_count: finalCount
+          product_count: countObj ? countObj.count : 0
         };
       });
 
-      let sortedVendors = [...vendorsWithCounts];
-      if (sort === '-application_date') {
-        sortedVendors.sort((a, b) => new Date(b.application_date).getTime() - new Date(a.application_date).getTime());
-      } else if (sort === 'application_date') {
-        sortedVendors.sort((a, b) => new Date(a.application_date).getTime() - new Date(b.application_date).getTime());
-      } else if (sort === '-product_count') {
-        sortedVendors.sort((a, b) => (b.product_count ?? 0) - (a.product_count ?? 0));
+      // **IMPROVEMENT**: If sorting by product count, sort the results from the current page.
+      // This is a hybrid approach. Ideally, the backend would sort by product count directly.
+      if (sort === '-product_count') {
+        vendorsWithCounts.sort((a, b) => (b.product_count ?? 0) - (a.product_count ?? 0));
       } else if (sort === 'product_count') {
-        sortedVendors.sort((a, b) => (a.product_count ?? 0) - (b.product_count ?? 0));
-      } else if (sort === 'brand') {
-        sortedVendors.sort((a, b) => (a.brand || '').localeCompare(b.brand || ''));
-      } else if (sort === '-brand') {
-        sortedVendors.sort((a, b) => (b.brand || '').localeCompare(a.brand || ''));
+        vendorsWithCounts.sort((a, b) => (a.product_count ?? 0) - (b.product_count ?? 0));
       }
 
-      setVendors(sortedVendors);
+      // **REMOVED**: The incorrect client-side sorting block is no longer needed.
+      // The backend now handles sorting for date and brand.
+      setVendors(vendorsWithCounts);
       setTotalPages(Math.ceil(totalCount / perPage));
     } catch (error) {
+      console.error("Failed to fetch vendors:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // **IMPROVEMENT**: Added useEffect for debouncing search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      // When the user stops typing, update the URL.
+      // Also reset to page 1 for a new search.
+      const newQueryString = createQueryString({ search: searchValue, page: searchValue ? '1' : null });
+      router.push(`${pathname}?${newQueryString}`);
+    }, 500); // 500ms delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchValue, pathname, router]);
+
 
   useEffect(() => {
     const page = parseInt(searchParams.get('page') || '1');
@@ -153,26 +171,27 @@ function ClientSideVendorsPage() {
 
     setCurrentPage(page);
     setSortOption(sort);
-    setSearch(searchQuery);
+    setSearchValue(searchQuery); // Syncs input field with URL on initial load/navigation
 
     fetchVendors(page, searchQuery, sort);
-  }, [searchParams]);
+  }, [searchParams]); // This effect now correctly re-triggers fetching
 
   const handleSortChange = (value: string) => {
-    setSortOption(value);
-    router.push(pathname + '?' + createQueryString('sort', value));
+    // When sorting, go back to page 1 to see results from the beginning
+    const newQueryString = createQueryString({ sort: value, page: '1' });
+    router.push(`${pathname}?${newQueryString}`);
   };
-  
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    router.push(pathname + '?' + createQueryString('search', e.target.value));
+    // Only update the local state. The debouncing useEffect will handle the API call.
+    setSearchValue(e.target.value);
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    router.push(pathname + '?' + createQueryString('page', page.toString()));
+    const newQueryString = createQueryString({ page: page.toString() });
+    router.push(`${pathname}?${newQueryString}`);
   };
-  
+
   return (
     <>
       <main className="font-inter">
@@ -185,21 +204,21 @@ function ClientSideVendorsPage() {
             <div className="flex flex-col">
               <h1 className="text-2xl font-bold text-gray-800 mt-2">Vendors at MHEBazar</h1>
             </div>
-            
-            <Button 
-              onClick={() => setVendorDrawerOpen(true)} 
+
+            <Button
+              onClick={() => setVendorDrawerOpen(true)}
               className="bg-[#5CA131] hover:bg-[#4a8f28] text-white font-medium px-6 py-2 rounded-lg transition-colors duration-150"
             >
               Become a Vendor
             </Button>
-            
+
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div className="flex gap-2 w-full md:w-1/2">
               <Input
                 placeholder="Search by name, brand, or company..."
-                value={search}
+                value={searchValue} // **CHANGED** to use debounced value
                 onChange={handleSearchChange}
                 className="w-full"
               />

@@ -192,11 +192,11 @@ const ProductCard = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-lg transition-all duration-300 overflow-hidden flex flex-col w-full h-full ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
+      className={`bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col w-full h-full ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
         }`}
     >
       {/* Image Container */}
-      <div className="relative w-full h-48 sm:h-56 flex-shrink-0 bg-gray-100 rounded-t-2xl overflow-hidden">
+      <div className="relative w-full h-48 sm:h-56 flex-shrink-0 bg-gray-100 overflow-hidden">
         <Link href={productDetailUrl} className="block w-full h-full">
           <FallbackImage
             src={image}

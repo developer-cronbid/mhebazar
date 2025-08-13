@@ -132,7 +132,7 @@ export default function SparePartsFeatured() {
                 key={spare.id}
                 className="flex-shrink-0 snap-start w-56"
               >
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full">
+                {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full"> */}
                   <ProductCard
                     id={Number(spare.id)}
                     image={spare.images[0]?.image || "/placeholder-image.png"}
@@ -147,7 +147,7 @@ export default function SparePartsFeatured() {
                     type={spare.type} 
                     category_id={spare.category}
                   />
-                </div>
+                {/* </div> */}
               </motion.div>
             ))}
           </div>
