@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 type Vendor = {
   id: number;
@@ -27,7 +28,15 @@ type Props = {
 };
 
 export default function VendorCard({ vendor }: Props) {
-  const href = `/vendor-listing/${vendor.brand}`;
+  const [isAdminPath, setIsAdminPath] = useState(false);
+
+  useEffect(() => {
+    setIsAdminPath(window.location.pathname.startsWith("/admin/"));
+  }, []);
+
+  const href = isAdminPath
+    ? `/admin/accounts/registered-vendors/${vendor.brand}/?user=${vendor?.user_info?.id}`
+    : `/vendor-listing/${vendor.brand}`;
 
   return (
     <div className="relative border border-gray-200 rounded-2xl p-4 flex flex-col items-center shadow-sm hover:shadow-lg transition-all duration-200 bg-white w-full h-full font-inter">

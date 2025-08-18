@@ -58,7 +58,7 @@ function ClientSideVendorsPage() {
   const [sortOption, setSortOption] = useState(searchParams.get('ordering') || "-user__date_joined");
   const [isLoading, setIsLoading] = useState(true);
   const [vendorDrawerOpen, setVendorDrawerOpen] = useState(false);
-  const perPage = 12;
+  const perPage = 20;
 
   // ... (createQueryString, fetchVendors, and other hooks remain the same) ...
   const createQueryString = useCallback(

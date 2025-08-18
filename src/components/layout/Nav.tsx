@@ -197,7 +197,7 @@ export default function Navbar(): JSX.Element {
                 setSearchQuery={setSearchQuery}
               />
               <Link href="/vendor-listing" className="flex-shrink-0">
-                <motion.div
+                {/* <motion.div
                   animate={{ rotate: [0, 3, 0, -3, 0] }}
                   transition={{
                     duration: 3,
@@ -207,16 +207,16 @@ export default function Navbar(): JSX.Element {
                   style={{ transformOrigin: "bottom center" }}
                   className="rounded-md"
                   style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
-                >
+                > */}
                   <Image
-                    src="/brand-image.png"
+                    src="/brandStore.svg"
                     alt="Brand Store"
                     width={120}
                     height={40}
                     priority
                     className="object-contain"
                   />
-                </motion.div>
+                {/* </motion.div> */}
               </Link>
             </div>
 
