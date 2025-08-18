@@ -48,8 +48,8 @@ export default function GlobalMapStats() {
   };
 
   return (
-    <section ref={sectionRef} className="w-full bg-white py-8 px-4">
-      <div className="mx-auto max-w-6xl">
+    <section ref={sectionRef} className="w-full bg-white py-4 px-4">
+      <div className="mx-auto max-w-7xl">
         <h2 className="text-3xl font-bold text-gray-900 mb-6">Global Map</h2>
 
         {/* Tabs */}
@@ -79,19 +79,19 @@ export default function GlobalMapStats() {
         {/* Content */}
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           {/* Map Image */}
-          <div className="flex-1 lg:flex-none lg:w-[60%]">
+          <div className="flex-1 lg:flex-none lg:w-[70%]">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={inView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="max-w-[520px] mx-auto"
+              className="w-full"
             >
               <Image
                 src="/about/map.png"
                 alt="Global Impressions Map"
-                width={520}
-                height={300}
-                className="w-full h-auto object-contain "
+                width={1000}
+                height={577}
+                className="w-full h-auto object-contain mx-auto"
                 priority
               />
             </motion.div>
@@ -102,7 +102,7 @@ export default function GlobalMapStats() {
             initial={{ opacity: 0, x: 50 }}
             animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
             transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
-            className="w-full lg:w-80"
+            className="w-full lg:w-[30%]"
           >
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
               <table className="w-full text-sm">
