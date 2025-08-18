@@ -336,7 +336,7 @@ export default function DashboardStats() {
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
           {/* Products Card */}
-          <div className="p-5 bg-gradient-to-r from-white to-[#DDF2D0] rounded-xl shadow-sm border-0 flex items-center justify-between">
+          <div className="p-8 bg-gradient-to-r from-white to-[#DDF2D0] rounded-xl shadow-sm border-0 flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-extrabold text-gray-900">{products.length}</h2>
               <p className="text-2xl w-52 text-gray-500">No. of Products Added</p>
@@ -347,7 +347,7 @@ export default function DashboardStats() {
           </div>
 
           {/* Offers Card */}
-          <div className="p-5 bg-gradient-to-r from-white to-[#D8EBF8] rounded-xl shadow-sm border-0 flex items-center justify-between">
+          <div className="p-8 bg-gradient-to-r from-white to-[#D8EBF8] rounded-xl shadow-sm border-0 flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-extrabold text-gray-900">{stats?.enquiry_stats?.total_quotes || 0}</h2>
               <p className="text-2xl w-52 text-gray-500">Total Quotes</p>
@@ -358,7 +358,7 @@ export default function DashboardStats() {
           </div>
 
           {/* Queries Card */}
-          <div className="p-5 bg-gradient-to-r from-white to-[#FAE5A4] rounded-xl shadow-sm border-0 flex items-center justify-between">
+          <div className="p-8 bg-gradient-to-r from-white to-[#FAE5A4] rounded-xl shadow-sm border-0 flex items-center justify-between">
             <div>
               <h2 className="text-3xl font-extrabold text-gray-900">{stats?.enquiry_stats?.total_enquiries || 0}</h2>
               <p className="text-2xl text-gray-500">Number of queries</p>
@@ -372,33 +372,33 @@ export default function DashboardStats() {
         {/* Bottom Action Cards */}
         <div className="grid gap-4 md:grid-cols-3 mt-5">
           {/* Sell New Products */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#FF3434] p-4 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#FF3434] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
             {/* <img src="/no-product.png" alt="Sell New Products" className="h-14 w-14 object-contain" /> */}
             <Cross className="h-14 w-14 text-white" />
             <div>
-              <h3 className="text-white font-semibold">Sell New Products</h3>
+              <h3 className="text-white text-2xl font-semibold">Sell New Products</h3>
               <p className="text-white text-sm">List your products and start selling in minutes.</p>
             </div>
             <ChevronRight className="text-white" />
           </div>
 
           {/* Sell Old Products */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#E55117] p-4 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#E55117] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
             {/* <img src="/images/forklift-old.png" alt="Sell Old Products" className="h-14 w-14 object-contain" /> */}
             <Cross className="h-14 w-14 text-white" />
             <div>
-              <h3 className="text-white font-semibold">Sell Old Products</h3>
+              <h3 className="text-white text-2xl font-semibold">Sell Old Products</h3>
               <p className="text-white text-sm">List your products and start selling in minutes.</p>
             </div>
             <ChevronRight className="text-white" />
           </div>
 
           {/* Rent Products */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-4 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+          <div className="flex items-center gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
             {/* <img src="/images/forklift-rent.png" alt="Rent Products" className="h-14 w-14 object-contain" /> */}
             <Shapes className="h-14 w-14 text-white" />
             <div>
-              <h3 className="text-white font-semibold">Rent Products</h3>
+              <h3 className="text-white text-2xl font-semibold">Rent Products</h3>
               <p className="text-white text-sm">List your products and start selling in minutes.</p>
             </div>
             <ChevronRight className="text-white" />
