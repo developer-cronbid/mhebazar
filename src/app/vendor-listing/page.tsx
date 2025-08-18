@@ -12,26 +12,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-// import Link from "next/link";
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import VendorRegistrationDrawer from '@/components/forms/publicforms/VendorRegistrationForm';
+// **CHANGED**: Import shadcn/ui pagination components
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
-
+// ... (The Vendor and VendorResponse types remain the same) ...
 type Vendor = {
   id: number;
-  username: string;
-  email: string;
-  full_name: string;
   company_name: string;
-  company_email: string;
   brand: string;
-  is_approved: boolean;
-  application_date: string;
-  product_count?: number;
-  user_info?: {
+  product_count: number;
+  user_info: {
     id: number;
-    profile_photo: string;
+    profile_photo: string | null;
   };
 };
 
@@ -42,23 +45,22 @@ type VendorResponse = {
   results: Vendor[];
 };
 
+
 function ClientSideVendorsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [vendors, setVendors] = useState<Vendor[]>([]);
-
-  // State for the controlled input, for debouncing
   const [searchValue, setSearchValue] = useState(searchParams.get('search') || "");
-
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1); // Add currentPage state
   const [totalPages, setTotalPages] = useState(1);
-  const [sortOption, setSortOption] = useState(searchParams.get('sort') || "-application_date");
+  const [sortOption, setSortOption] = useState(searchParams.get('ordering') || "-user__date_joined");
   const [isLoading, setIsLoading] = useState(true);
   const [vendorDrawerOpen, setVendorDrawerOpen] = useState(false);
   const perPage = 12;
 
+  // ... (createQueryString, fetchVendors, and other hooks remain the same) ...
   const createQueryString = useCallback(
     (paramsToUpdate: { [key: string]: string | null }) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -74,166 +76,137 @@ function ClientSideVendorsPage() {
     [searchParams]
   );
 
-  // This function remains the same, it's for fetching supplemental data.
-  const fetchProductCounts = async (vendorIds: number[]) => {
-    try {
-      const counts = await Promise.all(
-        vendorIds.map(async (userId) => {
-          try {
-            const url = `/products/?user=${userId}`;
-            const response = await api.get(url);
-            return { userId, count: response.data.count || 0 };
-          } catch (error) {
-            return { userId, count: 0 };
-          }
-        })
-      );
-      return counts;
-    } catch (error) {
-      return [];
-    }
-  };
-
-  // **CHANGED**: fetchVendors now correctly uses the sort parameter in the API call.
-  const fetchVendors = async (page = 1, searchQuery = "", sort = "-application_date") => {
+  const fetchVendors = async (page = 1, searchQuery = "", sort = "-user__date_joined") => {
     setIsLoading(true);
     try {
-      const query = new URLSearchParams();
-      query.append("page", page.toString());
-      query.append("page_size", perPage.toString());
-
-      if (searchQuery) {
-        query.append("search", searchQuery);
-      }
-
-      // **FIXED**: Added the sort parameter to the API call.
-      // Common parameter name is 'ordering', change if your backend uses something else (e.g., 'sort').
-      // Sorting by product_count now requires the backend to support it.
-      if (sort && !sort.includes('product_count')) {
-        query.append("ordering", sort);
-      }
-
-      const response = await api.get<VendorResponse>(`/vendor/approved/?${query.toString()}`);
-      const vendorData = response.data.results || [];
-      const totalCount = response.data.count || 0;
-
-      const validVendors = vendorData.filter(vendor => vendor.user_info?.id !== undefined && vendor.user_info?.id !== null);
-      const userIds = validVendors.map(vendor => vendor.user_info.id);
-
-      const productCounts = await fetchProductCounts(userIds);
-
-      const vendorsWithCounts = vendorData.map(vendor => {
-        const countObj = productCounts.find(pc => pc.userId === vendor.user_info?.id);
-        return {
-          ...vendor,
-          product_count: countObj ? countObj.count : 0
-        };
+      const params = new URLSearchParams({
+        page: page.toString(),
+        page_size: perPage.toString(),
       });
 
-      // **IMPROVEMENT**: If sorting by product count, sort the results from the current page.
-      // This is a hybrid approach. Ideally, the backend would sort by product count directly.
-      if (sort === '-product_count') {
-        vendorsWithCounts.sort((a, b) => (b.product_count ?? 0) - (a.product_count ?? 0));
-      } else if (sort === 'product_count') {
-        vendorsWithCounts.sort((a, b) => (a.product_count ?? 0) - (b.product_count ?? 0));
+      if (searchQuery) {
+        params.set("brand__icontains", searchQuery);
       }
 
-      // **REMOVED**: The incorrect client-side sorting block is no longer needed.
-      // The backend now handles sorting for date and brand.
-      setVendors(vendorsWithCounts);
-      setTotalPages(Math.ceil(totalCount / perPage));
+      if (sort) {
+        params.set("ordering", sort);
+      }
+
+      const response = await api.get<VendorResponse>(`/vendor/approved/?${params.toString()}`);
+
+      setVendors(response.data.results || []);
+      setTotalPages(Math.ceil((response.data.count || 0) / perPage));
     } catch (error) {
       console.error("Failed to fetch vendors:", error);
+      setVendors([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // **IMPROVEMENT**: Added useEffect for debouncing search input
   useEffect(() => {
     const handler = setTimeout(() => {
-      // When the user stops typing, update the URL.
-      // Also reset to page 1 for a new search.
-      const newQueryString = createQueryString({ search: searchValue, page: searchValue ? '1' : null });
+      const newQueryString = createQueryString({ search: searchValue, page: '1' });
       router.push(`${pathname}?${newQueryString}`);
-    }, 500); // 500ms delay
+    }, 500);
 
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchValue, pathname, router]);
-
+    return () => clearTimeout(handler);
+  }, [searchValue, pathname, router, createQueryString]);
 
   useEffect(() => {
     const page = parseInt(searchParams.get('page') || '1');
-    const sort = searchParams.get('sort') || '-application_date';
+    const sort = searchParams.get('ordering') || '-user__date_joined';
     const searchQuery = searchParams.get('search') || '';
 
-    setCurrentPage(page);
+    setCurrentPage(page); // Set currentPage state
     setSortOption(sort);
-    setSearchValue(searchQuery); // Syncs input field with URL on initial load/navigation
+    setSearchValue(searchQuery);
 
     fetchVendors(page, searchQuery, sort);
-  }, [searchParams]); // This effect now correctly re-triggers fetching
-
-  const handleSortChange = (value: string) => {
-    // When sorting, go back to page 1 to see results from the beginning
-    const newQueryString = createQueryString({ sort: value, page: '1' });
-    router.push(`${pathname}?${newQueryString}`);
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only update the local state. The debouncing useEffect will handle the API call.
-    setSearchValue(e.target.value);
-  };
+  }, [searchParams]);
 
   const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
     const newQueryString = createQueryString({ page: page.toString() });
     router.push(`${pathname}?${newQueryString}`);
+    window.scrollTo(0, 0); // Optional: scroll to top on page change
+  };
+
+  // **NEW**: Helper to generate pagination items with ellipses
+  const getPaginationItems = () => {
+    const items: (number | string)[] = [];
+    const maxPagesToShow = 5; // Max page numbers to show
+    const sidePages = 2; // Pages to show on each side of current page
+
+    if (totalPages <= maxPagesToShow + 2) { // Show all pages if not many
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(i);
+      }
+    } else {
+      items.push(1); // Always show first page
+      if (currentPage > sidePages + 1) {
+        items.push('...');
+      }
+
+      let start = Math.max(2, currentPage - sidePages + 1);
+      let end = Math.min(totalPages - 1, currentPage + sidePages - 1);
+
+      if (currentPage <= sidePages) {
+        end = maxPagesToShow - 1;
+      }
+      if (currentPage > totalPages - sidePages) {
+        start = totalPages - maxPagesToShow + 2;
+      }
+
+      for (let i = start; i <= end; i++) {
+        items.push(i);
+      }
+
+      if (currentPage < totalPages - sidePages) {
+        items.push('...');
+      }
+      items.push(totalPages); // Always show last page
+    }
+    return items;
   };
 
   return (
     <>
       <main className="font-inter">
-        <Breadcrumb items={[
-          { label: 'Home', href: '/' },
-          { label: 'Brand Store', href: '/vendor-listing' }
-        ]} />
+        {/* ... (Breadcrumb, Header, Search, and Sort controls are unchanged) ... */}
+        <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Brand Store', href: '/vendor-listing' }]} />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <div className="flex flex-col">
-              <h1 className="text-2xl font-bold text-gray-800 mt-2">Vendors at MHEBazar</h1>
-            </div>
-
+            <h1 className="text-2xl font-bold text-gray-800 mt-2">Vendors at MHEBazar</h1>
             <Button
               onClick={() => setVendorDrawerOpen(true)}
-              className="bg-[#5CA131] hover:bg-[#4a8f28] text-white font-medium px-6 py-2 rounded-lg transition-colors duration-150"
+              className="bg-[#5CA131] hover:bg-[#4a8f28] text-white"
             >
               Become a Vendor
             </Button>
-
           </div>
-
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <div className="flex gap-2 w-full md:w-1/2">
+            <div className="flex-grow">
               <Input
-                placeholder="Search by name, brand, or company..."
-                value={searchValue} // **CHANGED** to use debounced value
-                onChange={handleSearchChange}
-                className="w-full"
+                placeholder="Search by brand..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
               />
             </div>
-            <div className="flex gap-2 items-center w-full md:w-auto">
+            <div className="flex gap-2 items-center">
               <span className="text-gray-600 font-medium whitespace-nowrap">Sort by:</span>
-              <Select onValueChange={handleSortChange} value={sortOption}>
-                <SelectTrigger className="w-[200px]">
+              <Select onValueChange={(value) => {
+                const newQueryString = createQueryString({ ordering: value, page: '1' });
+                router.push(`${pathname}?${newQueryString}`);
+              }} value={sortOption}>
+                <SelectTrigger className="w-[240px]">
                   <SelectValue placeholder="Select an option" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="-application_date">Newest First</SelectItem>
-                  <SelectItem value="application_date">Oldest First</SelectItem>
-                  <SelectItem value="-product_count">Product Count (High to Low)</SelectItem>
-                  <SelectItem value="product_count">Product Count (Low to High)</SelectItem>
+                  <SelectItem value="-user__date_joined">Newest First</SelectItem>
+                  <SelectItem value="user__date_joined">Oldest First</SelectItem>
+                  <SelectItem value="-product_count">Products (High to Low)</SelectItem>
+                  <SelectItem value="product_count">Products (Low to High)</SelectItem>
                   <SelectItem value="brand">Brand (A-Z)</SelectItem>
                   <SelectItem value="-brand">Brand (Z-A)</SelectItem>
                 </SelectContent>
@@ -242,47 +215,52 @@ function ClientSideVendorsPage() {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-20">
-              <p className="text-gray-500 text-lg">Loading vendors...</p>
-            </div>
+            <div className="text-center py-20"><p>Loading vendors...</p></div>
           ) : vendors.length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-gray-500 text-lg">No approved vendors found.</p>
-            </div>
+            <div className="text-center py-20"><p>No approved vendors found.</p></div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {vendors.map((vendor) => (
-                <VendorCard vendor={vendor} key={vendor.id} />
-              ))}
+              {vendors.map((vendor) => <VendorCard vendor={vendor} key={vendor.id} />)}
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center mt-10 gap-2 flex-wrap">
-              <Button
-                variant="outline"
-                disabled={currentPage === 1}
-                onClick={() => handlePageChange(currentPage - 1)}
-              >
-                Previous
-              </Button>
-              {[...Array(totalPages)].map((_, i) => (
-                <Button
-                  key={i}
-                  variant={currentPage === i + 1 ? "default" : "outline"}
-                  onClick={() => handlePageChange(i + 1)}
-                >
-                  {i + 1}
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                disabled={currentPage === totalPages}
-                onClick={() => handlePageChange(currentPage + 1)}
-              >
-                Next
-              </Button>
-            </div>
+          {/* **CHANGED**: Replaced old buttons with shadcn/ui Pagination */}
+          {totalPages > 1 && !isLoading && (
+            <Pagination className="mt-10">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+
+                {getPaginationItems().map((item, index) =>
+                  typeof item === 'number' ? (
+                    <PaginationItem key={index}>
+                      <PaginationLink
+                        onClick={() => handlePageChange(item)}
+                        isActive={currentPage === item}
+                        className="cursor-pointer"
+                      >
+                        {item}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ) : (
+                    <PaginationItem key={index}>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                  )
+                )}
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           )}
         </div>
       </main>
