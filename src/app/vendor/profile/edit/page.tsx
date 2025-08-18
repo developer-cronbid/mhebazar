@@ -39,6 +39,8 @@ export default function Frame() {
   const { user } = useUser();
   const userId = user?.id;
 
+  // const imgurl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
+
   useEffect(() => {
     // fetch vendor data to pre-fill the form
     api.get(`/vendor/me/`)
@@ -131,10 +133,12 @@ export default function Frame() {
 
   const removeBannerImage = async (index: number) => {
     const bannerToRemove = bannerImages[index];
-    if (!bannerToRemove.id) {
+    // If it's a new image that hasn't been uploaded, just remove it from state.
+    if (!bannerToRemove.id || bannerToRemove.isNew) {
       setBannerImages(prev => prev.filter((_, i) => i !== index));
       return;
     }
+    // If it's an existing image, send a delete request.
     try {
       await api.delete(`/users/${userId}/delete_banner/${bannerToRemove.id}/`);
       setBannerImages(prev => prev.filter((_, i) => i !== index));
@@ -150,8 +154,11 @@ export default function Frame() {
     const formData = new FormData();
     formData.append('profile_photo', profilePhotoFile);
     try {
+      // FIX: Explicitly set the Content-Type header for file uploads.
       const response = await api.patch(`/users/${user?.id}/`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
       return response.data.profile_photo || response.data.user_info?.profile_photo;
     } catch (error) {
@@ -162,33 +169,37 @@ export default function Frame() {
 
   const uploadBannerImages = async (userId: number) => {
     const newBanners = bannerImages.filter(banner => banner.isNew && banner.file);
-    if (newBanners.length === 0) return bannerImages;
-    try {
-      const uploadPromises = newBanners.map(async (banner) => {
-        if (!banner.file) return null;
-        const formData = new FormData();
+    if (newBanners.length === 0) {
+      return bannerImages.filter(b => !b.isNew);
+    }
+
+    const formData = new FormData();
+    newBanners.forEach(banner => {
+      if (banner.file) {
         formData.append('user_banner', banner.file);
-        const response = await api.patch(`/users/${userId}/upload_banner/`, formData);
-        return {
-          index: bannerImages.findIndex(b => b === banner),
-          data: response.data
-        };
+      }
+    });
+
+    try {
+      // FIX: Explicitly set the Content-Type header for file uploads.
+      const response = await api.post(`/users/${userId}/upload_banner/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
-      const results = await Promise.all(uploadPromises);
-      const updated = [...bannerImages];
-      results.forEach(result => {
-        if (result && result.index !== -1) {
-          updated[result.index] = {
-            ...updated[result.index],
-            isNew: false,
-            url: result.data.url || result.data.image || updated[result.index].url,
-            file: undefined
-          };
-        }
-      });
-      return updated;
+
+      const createdBanners = response.data;
+      const existingBanners = bannerImages.filter(banner => !banner.isNew);
+      const newServerBanners = createdBanners.map((b: any) => ({
+        id: b.id,
+        url: b.url || b.image,
+        isNew: false,
+      }));
+
+      return [...existingBanners, ...newServerBanners];
     } catch (error) {
       console.error('Error uploading banners:', error);
+      toast.error("Failed to upload banner images.");
       throw error;
     }
   };
@@ -210,13 +221,15 @@ export default function Frame() {
       if (profilePhotoFile) {
         await uploadProfilePhoto();
       }
-      let finalBannerImages = bannerImages;
+
+      let finalBannerImages = bannerImages.filter(b => !b.isNew);
       if (userId) {
         finalBannerImages = await uploadBannerImages(userId);
       }
       setBannerImages(finalBannerImages);
       toast.success("Profile updated successfully!");
 
+      // Re-fetch data to ensure UI is in sync with the server state
       const response = await api.get(`/vendor/me/`);
       const updatedData = response.data;
       setData(updatedData);
@@ -233,7 +246,9 @@ export default function Frame() {
       });
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Update failed. Please try again.");
+      if (!toast) {
+        toast.error("Update failed. Please try again.");
+      }
     } finally {
       setIsUploading(false);
     }
@@ -328,7 +343,7 @@ export default function Frame() {
               {bannerImages.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-full mb-4">
                   {bannerImages.map((banner, index) => (
-                    <div key={index} className="relative group">
+                    <div key={banner.id || index} className="relative group">
                       <img
                         src={banner.url}
                         alt={`Banner ${index + 1}`}
