@@ -2,7 +2,9 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import api from "@/lib/api";
-import { ProductCardContainer } from "../elements/Product";
+import ProductCardContainer from "@/components/elements/Product";
+import Link from "next/link";
+import Image from "next/image";
 
 interface Product {
   id: number;
@@ -48,7 +50,7 @@ const VendorProductsFeatured: React.FC = () => {
   const handleDotClick = (index: number) => {
     if (scrollContainerRef.current && products.length > 0) {
       const container = scrollContainerRef.current;
-      const itemsPerView = Math.floor(container.clientWidth / 280); // Approximate card width
+      const itemsPerView = Math.floor(container.clientWidth / 280); 
       const targetIndex = index * itemsPerView;
       const itemWidth = container.children[0]?.clientWidth + 16 || 280;
       container.scrollTo({
@@ -76,7 +78,9 @@ const VendorProductsFeatured: React.FC = () => {
       <div className="w-full mx-auto px-4 py-4">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
-          <button className="text-[#42a856] font-medium">View More</button>
+          <Link href="/vendor-listing">
+            <span className="text-[#42a856] font-medium cursor-pointer">View More</span>
+          </Link>
         </div>
         <div className="flex space-x-4">
           {[...Array(4)].map((_, i) => (
@@ -92,7 +96,9 @@ const VendorProductsFeatured: React.FC = () => {
       <section className="w-full mx-auto px-4 py-4">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
-          <button className="text-[#42a856] font-medium">View More</button>
+          <Link href="/vendor-listing">
+            <span className="text-[#42a856] font-medium cursor-pointer">View More</span>
+          </Link>
         </div>
         <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm border border-gray-100">
           <p className="text-red-500 text-center">{error}</p>
@@ -105,9 +111,9 @@ const VendorProductsFeatured: React.FC = () => {
     <section className="w-full mx-auto px-4 py-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
-        <button className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
+        <Link href="/vendor-listing" className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200 cursor-pointer">
           View More
-        </button>
+        </Link>
       </div>
       
       <div className="relative">
@@ -126,22 +132,20 @@ const VendorProductsFeatured: React.FC = () => {
               key={product.id}
               className="flex-shrink-0 snap-start w-72"
             >
-              {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full"> */}
-                <ProductCardContainer
-                  id={product.id}
-                  image={product.images[0]?.image || "/placeholder-image.png"}
-                  title={product.name}
-                  subtitle={product.description}
-                  price={product.price}
-                  currency="₹"
-                  directSale={product.direct_sale}
-                  is_active={product.is_active}
-                  hide_price={product.hide_price}
-                  stock_quantity={product.stock_quantity}
-                  type={product.type}
-                  category_id={product.category}
-                />
-              {/* </div> */}
+              <ProductCardContainer
+                id={product.id}
+                image={product.images[0]?.image || "/placeholder-image.png"}
+                title={product.name}
+                subtitle={product.description}
+                price={product.price}
+                currency="₹"
+                directSale={product.direct_sale}
+                is_active={product.is_active}
+                hide_price={product.hide_price}
+                stock_quantity={product.stock_quantity}
+                type={product.type}
+                category_id={product.category}
+              />
             </div>
           ))}
         </div>

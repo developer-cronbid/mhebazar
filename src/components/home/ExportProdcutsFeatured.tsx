@@ -6,6 +6,7 @@ import Image from "next/image";
 import axios from "axios";
 import categoriesData from "@/data/categories.json";
 import { motion, useInView } from "framer-motion";
+import Link from "next/link";
 
 const NEXT_PUBLIC_BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -136,9 +137,9 @@ export default function ExportProductsFeatured() {
     >
       <motion.div variants={itemVariants} className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Export Products</h2>
-        <button className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
+        <Link href="/used" className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
           View More
-        </button>
+        </Link>
       </motion.div>
       
       {loading ? (
@@ -176,6 +177,7 @@ export default function ExportProductsFeatured() {
                     hide_price={export_product.hide_price}
                     stock_quantity={export_product.stock_quantity}
                     type={export_product.type}
+                    category={export_product.category}
                   />
                 {/* </div> */}
               </motion.div>
