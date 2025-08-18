@@ -7,9 +7,7 @@ import { JSX, useEffect, useState } from "react";
 import categoriesData from "@/data/categories.json";
 import { motion } from "framer-motion";
 
-const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL;
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
 interface Category {
   id: number;

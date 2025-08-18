@@ -676,7 +676,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
             </div>
           </div>
           {/* Thumbnail Images */}
-          <div className="flex flex-col gap-2 h-full min-h-[100px] overflow-hidden relative">
+          <div className="flex flex-col gap-2 h-[464px] min-h-[100px] overflow-hidden relative">
             <motion.div
               className="flex flex-col gap-2 transition-transform duration-300 ease-in-out"
               animate={{ y: `-${scrollOffset * 112}px` }}

@@ -192,18 +192,18 @@ const ProductCard = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl shadow-md border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col w-full h-full ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
+      className={`bg-white group rounded-2xl shadow-md border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col w-full h-full ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
         }`}
     >
       {/* Image Container */}
-      <div className="relative w-full h-48 sm:h-56 flex-shrink-0 bg-gray-100 overflow-hidden">
+      <div className="relative w-full h-48 sm:h-56 flex-shrink-0 bg-gray-100 overflow-hidden ">
         <Link href={productDetailUrl} className="block w-full h-full">
           <FallbackImage
             src={image}
             alt={title}
             width={320}
             height={224}
-            className="object-cover w-full h-full"
+            className="object-contain w-full h-full transition-transform duration-300 hover:scale-110"
             quality={85}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
             // Pass the looked-up URL string, not the raw ID.
@@ -214,7 +214,7 @@ const ProductCard = ({
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           <button
             onClick={() => onWishlistClick(id)}
-            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8"
+            className={`bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8 opacity-0 group-hover:opacity-100 duration-300 ${isWishlisted ? "opacity-100" : "opacity-0"}`}
             aria-label="Add to wishlist"
             disabled={!is_active}
           >
@@ -222,7 +222,7 @@ const ProductCard = ({
           </button>
           <button
             onClick={() => onCompareClick(productData)}
-            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8"
+            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8 opacity-0 group-hover:opacity-100 duration-300"
             aria-label="Compare"
             disabled={!is_active}
           >
@@ -230,7 +230,7 @@ const ProductCard = ({
           </button>
           <button
             onClick={() => onShareClick(window.location.origin + productDetailUrl, title)}
-            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8"
+            className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8 opacity-0 group-hover:opacity-100 duration-300"
             aria-label="Share"
           >
             <Share2 className="w-4 h-4 text-gray-600" />
@@ -346,12 +346,12 @@ const ProductCard = ({
                     description: subtitle || '',
                     price: price,
                     stock_quantity: stock_quantity
-                    }}
-                    onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                  }}
+                  onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                 />
               ) : (
-                    <QuoteForm product={productData} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
-                    />
+                <QuoteForm product={productData} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                />
               )}
             </DialogContent>
           </Dialog>
