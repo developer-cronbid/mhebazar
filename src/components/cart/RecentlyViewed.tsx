@@ -83,17 +83,19 @@ export default function RecentlyViewed() {
           recentProducts.map((item) => (
             // Directly render ProductCardContainer
             <ProductCardContainer
-                key={item.id}
-                id={item.id}
-                image={item.images?.[0]?.image || "/no-product.png"}
-                title={item.name}
-                subtitle={item.description}
-                price={item.price}
-                currency={"₹"} // Assuming currency is Indian Rupee
-                directSale={item.direct_sale}
-                is_active={item.is_active}
-                hide_price={item.hide_price}
-                stock_quantity={item.stock_quantity}
+              key={item.id}
+              id={item.id}
+              image={item.images?.[0]?.image}
+              title={item.name}
+              subtitle={item.description}
+              price={item.price}
+              currency={"₹"} // Assuming currency is Indian Rupee
+              directSale={item.direct_sale}
+              is_active={item.is_active}
+              hide_price={item.hide_price}
+              stock_quantity={item.stock_quantity}
+              type={item.type}
+              category_id={item.category_id}
             />
           ))
         ) : (
