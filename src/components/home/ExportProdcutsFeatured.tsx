@@ -161,7 +161,7 @@ export default function ExportProductsFeatured() {
               <motion.div 
                 variants={itemVariants} 
                 key={export_product.id}
-                className="flex-shrink-0 snap-start w-64"
+                className="flex-shrink-0 snap-start w-72"
               >
                 {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full"> */}
                   <ProductCardContainer

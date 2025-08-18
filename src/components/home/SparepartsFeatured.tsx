@@ -130,7 +130,7 @@ export default function SparePartsFeatured() {
               <motion.div 
                 variants={itemVariants}
                 key={spare.id}
-                className="flex-shrink-0 snap-start w-56"
+                className="flex-shrink-0 snap-start w-72"
               >
                 {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full"> */}
                   <ProductCard

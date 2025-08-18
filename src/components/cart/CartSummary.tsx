@@ -92,11 +92,11 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext, onUpdateTotal }) => {
         prevItems.map((item) =>
           item.id === itemId
             ? {
-                ...item,
-                quantity: newQuantity,
-                total_price:
-                  parseFloat(item.product_details.price) * newQuantity,
-              }
+              ...item,
+              quantity: newQuantity,
+              total_price:
+                parseFloat(item.product_details.price) * newQuantity,
+            }
             : item
         )
       );
@@ -214,7 +214,11 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext, onUpdateTotal }) => {
       {cartItems.map((item) => (
         <Card key={item.id}>
           <CardContent className="p-4">
-            <div className="flex items-center gap-4">
+            {/* Changes Made:
+        - flex-col sm:flex-row: Stacks vertically on mobile, row on screens sm and larger.
+        - The outer div now controls the responsive layout.
+      */}
+            <div className="flex flex-col sm:flex-row items-center gap-4">
               <Image
                 src={
                   item.product_details.images?.[0]?.image || "/no-product.png"
@@ -222,18 +226,22 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext, onUpdateTotal }) => {
                 alt={item.product_details.name || "Product Image"}
                 width={64}
                 height={64}
-                className="w-16 h-16 object-cover rounded"
+                className="w-16 h-16 object-cover rounded flex-shrink-0"
                 unoptimized={item.product_details.images?.[0]?.image?.startsWith(
                   "http"
                 )}
               />
 
-              <div className="flex-1">
+              {/* Changes Made:
+          - text-center sm:text-left: Centers text on mobile, aligns left on larger screens.
+        */}
+              <div className="flex-1 text-center sm:text-left">
                 <h3 className="font-semibold">{item.product_details.name}</h3>
                 <p className="text-gray-600 text-sm">
                   {formatPrice(parseFloat(item.product_details.price))} each
                 </p>
               </div>
+
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
@@ -253,7 +261,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext, onUpdateTotal }) => {
                 </Button>
                 <Button
                   size="sm"
-                  variant="destructive" // Use destructive variant for delete
+                  variant="destructive"
                   onClick={() => removeItem(item.id)}
                 >
                   <Trash2 className="h-4 w-4" />
