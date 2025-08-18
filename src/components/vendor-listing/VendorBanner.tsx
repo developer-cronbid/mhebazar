@@ -59,7 +59,7 @@ export default function VendorBanner({
                     src={src}
                     alt={`${company_name} Banner Image ${index + 1}`}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     priority={index === 0} // Prioritize loading the first image
                     sizes="100vw"
                   />
