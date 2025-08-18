@@ -68,15 +68,11 @@ const itemVariants = {
 
 /**
  * A single category item with an image and a label.
- * This component has been updated to handle long names by truncating them.
- * @param {CategoryItemProps} props - The component props.
- * @returns {JSX.Element} The rendered component.
+ * Added hover effect: image pops out with 3D-like scaling & shadow.
  */
 const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element => {
-  // Define a constant for the maximum length of the label to prevent clashing
   const MAX_LABEL_LENGTH = 12;
 
-  // Truncate the label if it's too long and add an ellipsis
   const displayedLabel =
     label.length > MAX_LABEL_LENGTH ? `${label.substring(0, MAX_LABEL_LENGTH)}...` : label;
 
@@ -100,10 +96,18 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
         variants={itemVariants}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="flex flex-col w-[130px] h-[130px] items-center justify-center px-0 py-6 relative rounded-[1000px] aspect-[1] bg-[linear-gradient(143deg,rgba(212,234,250,1)_0%,rgba(255,255,255,1)_100%)]"
+        className="flex flex-col w-[130px] h-[130px] items-center justify-center px-0 py-6 relative rounded-[1000px] aspect-[1] bg-[linear-gradient(143deg,rgba(212,234,250,1)_0%,rgba(255,255,255,1)_100%)] group"
       >
         {fullImageUrl && !showInitials ? (
-          <div className="relative w-[100px] h-[100px]">
+          <motion.div
+            className="relative w-[100px] h-[100px]"
+            whileHover={{
+              scale: 1.65,
+              z: 10,
+             
+            }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+          >
             <Image
               src={fullImageUrl}
               alt={label}
@@ -112,13 +116,12 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
               onError={handleImageError}
               sizes="100px"
             />
-          </div>
+          </motion.div>
         ) : (
           <span className="text-blue-500 text-base font-normal">{initials}</span>
         )}
       </motion.div>
 
-      {/* The full label is set as the title for a tooltip on hover */}
       <div
         className="relative w-fit [font-family:'Inter-Regular',Helvetica] font-normal text-black text-base tracking-[0] leading-[normal] whitespace-nowrap"
         title={label}
@@ -141,7 +144,6 @@ const containerVariants = {
 
 /**
  * The main component for the categories section.
- * @returns {JSX.Element} The rendered component.
  */
 export default function CategoriesSection(): JSX.Element {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -149,7 +151,6 @@ export default function CategoriesSection(): JSX.Element {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    // Simulate fetching data with a delay
     const timer = setTimeout(() => {
       setCategories(categoriesData);
       setLoading(false);
