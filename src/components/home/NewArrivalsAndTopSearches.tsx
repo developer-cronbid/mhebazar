@@ -201,7 +201,7 @@ export default function NewArrivalsAndTopSearches() {
       <div>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">New Arrivals</h2>
-          <Link href="/products/new" className="text-green-600 text-sm font-medium hover:underline">View more</Link>
+          <Link href="/new" className="text-green-600 text-sm font-medium hover:underline">View more</Link>
         </div>
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="mb-6">
@@ -250,8 +250,8 @@ export default function NewArrivalsAndTopSearches() {
       {/* Top Searched Products Section */}
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Top Searched Products</h2>
-          <Link href="/products/new" className="text-green-600 text-sm font-medium hover:underline">View more</Link>
+          <h2 className="text-2xl font-bold text-gray-900">Top Searched Categories</h2>
+          {/* <Link href="/new" className="text-green-600 text-sm font-medium hover:underline">View more</Link> */}
         </div>
         <div className="space-y-4">
           {isLoadingTopRated ? (

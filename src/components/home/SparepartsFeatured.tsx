@@ -5,6 +5,7 @@ import Image from "next/image";
 import api from "@/lib/api";
 import ProductCard from "@/components/elements/Product";
 import { motion, useInView } from "framer-motion";
+import Link from "next/link"; // Import Link for navigation
 
 interface SparePart {
   type: string;
@@ -15,7 +16,7 @@ interface SparePart {
   stock_quantity: number;
   name: string;
   id: string | number;
-  title: string;
+  title?: string; // Optional field for compatibility
   subtitle: string;
   price: number;
   currency: string;
@@ -105,9 +106,12 @@ export default function SparePartsFeatured() {
     >
       <motion.div variants={itemVariants} className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Spare Parts</h2>
-        <button className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
+        <Link 
+          href="/spare-parts" 
+          className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200"
+        >
           View More
-        </button>
+        </Link>
       </motion.div>
 
       {loading ? (
@@ -132,22 +136,21 @@ export default function SparePartsFeatured() {
                 key={spare.id}
                 className="flex-shrink-0 snap-start w-72"
               >
-                {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full"> */}
-                  <ProductCard
-                    id={Number(spare.id)}
-                    image={spare.images[0]?.image || "/placeholder-image.png"}
-                    title={spare.name}
-                    subtitle={spare.subtitle}
-                    price={spare.price}
-                    currency={spare.currency}
-                    directSale={spare.direct_sale}
-                    is_active={spare.is_active}
-                    hide_price={spare.hide_price}
-                    stock_quantity={spare.stock_quantity} 
-                    type={spare.type} 
-                    category_id={spare.category}
-                  />
-                {/* </div> */}
+                {/* The ProductCard component is used to render the item */}
+                <ProductCard
+                  id={Number(spare.id)}
+                  image={spare.images[0]?.image || "/placeholder-image.png"}
+                  title={spare.name}
+                  subtitle={spare.subtitle}
+                  price={spare.price}
+                  currency={spare.currency}
+                  directSale={spare.direct_sale}
+                  is_active={spare.is_active}
+                  hide_price={spare.hide_price}
+                  stock_quantity={spare.stock_quantity} 
+                  type={spare.type} 
+                  category_id={spare.category}
+                />
               </motion.div>
             ))}
           </div>

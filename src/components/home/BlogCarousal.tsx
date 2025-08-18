@@ -106,9 +106,14 @@ export function BlogCarousel() {
 
   return (
     <div className="w-full px-4 py-4">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-gray-900">
-        Our Blogs
-      </h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          Our Blogs
+        </h2>
+        <Link href="/blog" className="text-green-600 font-medium hover:text-green-700 transition-colors duration-200">
+          View More
+        </Link>
+      </div>
       <Carousel
         opts={{
           align: 'start',
