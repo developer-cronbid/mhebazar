@@ -176,9 +176,9 @@ export default function MostPopular() {
         <h2 className="text-2xl font-bold text-gray-900">
           Top Selling Products
         </h2>
-        <Link href="/new" className="text-green-600 text-sm font-medium hover:underline">
+        {/* <Link href="/new" className="text-green-600 text-sm font-medium hover:underline">
           View more
-        </Link>
+        </Link> */}
       </div>
 
       {/* Main Container */}
