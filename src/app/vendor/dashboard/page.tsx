@@ -136,17 +136,17 @@ export default function DashboardStats() {
   const [stats, setStats] = useState<VendorStats | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [application, setApplication] = useState<VendorApplication | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showAllNotifications, setShowAllNotifications] = useState(false);
+  // const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
   const [isSheetOpen, setIsSheetOpen] = useState(false)
 
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 10;
+  const productsPerPage = 4;
 
   // Calculate pagination
   const { paginatedProducts, totalPages } = useMemo(() => {
@@ -238,8 +238,8 @@ export default function DashboardStats() {
     fetchData();
   }, []);
 
-  const approved_products = products.filter(p => p.is_active).length;
-  const pending_products = products.filter(p => !p.is_active).length;
+  // const approved_products = products.filter(p => p.is_active).length;
+  // const pending_products = products.filter(p => !p.is_active).length;
 
   // Handle edit click
   const handleEditClick = async (productId: number) => {
