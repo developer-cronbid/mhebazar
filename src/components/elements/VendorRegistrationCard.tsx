@@ -26,7 +26,7 @@ export default function VendorRegistrationCard() {
             initial={{ x: -100, opacity: 0 }}
             animate={inView ? { x: 0, opacity: 1 } : { x: -100, opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative w-full sm:w-[600px] h-[200px] sm:h-[180px]"
+            className="relative w-full sm:w-[600px] h-[160px] sm:h-[180px]" // Reduced height on mobile
           >
             <Image
               src="/vendorcard.png"
@@ -35,7 +35,8 @@ export default function VendorRegistrationCard() {
               className="object-cover"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/70 to-white" />
+            {/* Responsive gradient: bottom-to-top on mobile, left-to-right on larger screens */}
+            <div className="absolute inset-0 bg-gradient-to-b sm:bg-gradient-to-r from-transparent via-white/70 to-white" />
           </motion.div>
 
           {/* Right content */}
@@ -43,14 +44,14 @@ export default function VendorRegistrationCard() {
             initial={{ x: 100, opacity: 0 }}
             animate={inView ? { x: 0, opacity: 1 } : { x: 100, opacity: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="flex flex-1 items-center justify-between px-8 py-6"
+            className="flex flex-1 flex-col sm:flex-row items-center justify-between gap-4 px-4 py-6 sm:px-8" // Added responsive flex and padding
           >
-            <h3 className="text-[26px] font-bold text-gray-800">
+            <h3 className="text-xl sm:text-[26px] font-bold text-gray-800">
               Vendor registration
             </h3>
             <button
               onClick={() => setVendorDrawerOpen(true)}
-              className="bg-[#5CA131] hover:bg-[#4b8527] text-white text-[18px] px-8 py-3 rounded-md transition duration-300 transform hover:scale-105"
+              className="bg-[#5CA131] hover:bg-[#4b8527] text-white text-sm sm:text-[18px] px-6 py-2 sm:px-8 sm:py-3 rounded-md transition duration-300 transform hover:scale-105"
             >
               Register Now
             </button>
