@@ -47,7 +47,7 @@ export function BlogCarousel() {
   React.useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await api.get<ApiResponse>('/blog/');
+        const response = await api.get<ApiResponse>('/blogs/');
 
         if (response.data && response.data.results) {
           setBlogs(response.data.results);
@@ -110,7 +110,7 @@ export function BlogCarousel() {
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
           Our Blogs
         </h2>
-        <Link href="/blogs" className="text-green-600 font-medium hover:text-green-700 transition-colors duration-200">
+        <Link href="/blog" className="text-green-600 font-medium hover:text-green-700 transition-colors duration-200">
           View More
         </Link>
       </div>
