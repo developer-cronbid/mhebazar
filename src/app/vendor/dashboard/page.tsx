@@ -28,7 +28,7 @@ import Link from "next/link";
 import categories from '@/data/categories.json';
 import { IoDocuments } from "react-icons/io5";
 
-const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
 // --- TYPE DEFINITIONS (Corrected based on API responses) ---
 interface VendorDashboardData {
