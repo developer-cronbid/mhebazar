@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -80,9 +79,10 @@ interface ProductFormProps {
 export default function ProductForm({ product }: ProductFormProps) {
   const router = useRouter()
 
-  // Add defaultCategory and defaultSubcategory states
   const [defaultCategory, setDefaultCategory] = useState<string>('')
   const [defaultSubcategory, setDefaultSubcategory] = useState<string>('')
+  const [imageFiles, setImageFiles] = useState<File[]>([]) // For new image uploads
+  const [keptImageIds, setKeptImageIds] = useState<number[]>([]) // For tracking existing images
 
   const {
     register,
@@ -107,7 +107,6 @@ export default function ProductForm({ product }: ProductFormProps) {
       hide_price: product.hide_price,
       online_payment: product.online_payment,
       stock_quantity: product.stock_quantity,
-      // Safely parse product_details
       product_details: typeof product.product_details === 'string'
         ? JSON.parse(product.product_details || '{}')
         : product.product_details || {}
@@ -119,40 +118,33 @@ export default function ProductForm({ product }: ProductFormProps) {
   const [dynamicFields, setDynamicFields] = useState<ProductDetailField[]>([])
   const [dynamicValues, setDynamicValues] = useState<Record<string, string>>({})
 
-  // Add validation for category and subcategory
   const selectedCategoryId = watch('category')
   const selectedSubcategoryId = watch('subcategory')
   const hasSelectedRequiredFields = selectedCategoryId &&
     (!subcategories.length || (subcategories.length > 0 && selectedSubcategoryId))
+
   const [warning, setWarning] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [message, setMessage] = useState('')
   const [brochureFile, setBrochureFile] = useState<File | null>(null)
-  const [imageFiles, setImageFiles] = useState<File[]>([])
   const [loading, setLoading] = useState(true)
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  // categories fetch
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoading(true)
         const response = await axios.get(`${API_BASE_URL}/categories/`)
 
-        if (Array.isArray(response.data)) {
-          setCategories(response.data)
-          // Set default category if editing
+        const categoriesData = response.data?.results || response.data || [];
+        if (Array.isArray(categoriesData)) {
+          setCategories(categoriesData)
           if (product?.category) {
-            setDefaultCategory(String(product.category))
-            setValue('category', String(product.category))
-          }
-        } else if (response.data && Array.isArray(response.data.results)) {
-          setCategories(response.data.results)
-          // Set default category if editing
-          if (product?.category) {
-            setDefaultCategory(String(product.category))
-            setValue('category', String(product.category))
+            const categoryId = String(product.category);
+            setDefaultCategory(categoryId)
+            setValue('category', categoryId)
           }
         } else {
           console.error('Unexpected API response format:', response.data)
@@ -168,8 +160,9 @@ export default function ProductForm({ product }: ProductFormProps) {
     }
 
     fetchCategories()
-  }, [product, setValue])
+  }, [product, setValue, API_BASE_URL])
 
+  // Handle category change
   useEffect(() => {
     if (!selectedCategoryId) return
 
@@ -179,7 +172,6 @@ export default function ProductForm({ product }: ProductFormProps) {
     const subs = selectedCat.subcategories || []
     setSubcategories(subs)
 
-    // Set subcategory values when editing
     if (product?.subcategory) {
       const subId = String(product.subcategory)
       setDefaultSubcategory(subId)
@@ -190,19 +182,15 @@ export default function ProductForm({ product }: ProductFormProps) {
 
     if (subs.length === 0) {
       const catDetails = selectedCat.product_details || []
-      if (catDetails.length > 0) {
-        setDynamicFields(catDetails)
-        setWarning('')
-      } else {
-        setDynamicFields([])
-        setWarning('No product details defined in this category.')
-      }
+      setDynamicFields(catDetails)
+      setWarning(catDetails.length > 0 ? '' : 'No product details defined in this category.')
     } else {
       setDynamicFields([])
       setWarning('Select a subcategory to load product details.')
     }
   }, [selectedCategoryId, categories, resetField, product, setValue])
 
+  // Handle subcategory change
   useEffect(() => {
     if (!selectedSubcategoryId) return
 
@@ -210,13 +198,8 @@ export default function ProductForm({ product }: ProductFormProps) {
     if (!sub) return
 
     const subDetails = sub.product_details || []
-    if (subDetails.length > 0) {
-      setDynamicFields(subDetails)
-      setWarning('')
-    } else {
-      setDynamicFields([])
-      setWarning('No product details defined in this subcategory.')
-    }
+    setDynamicFields(subDetails)
+    setWarning(subDetails.length > 0 ? '' : 'No product details defined in this subcategory.')
   }, [selectedSubcategoryId, subcategories])
 
   const handleDynamicValueChange = (fieldName: string, value: string) => {
@@ -226,17 +209,23 @@ export default function ProductForm({ product }: ProductFormProps) {
     }))
   }
 
+  // Initialize kept image IDs when editing a product
+  useEffect(() => {
+    if (product?.images) {
+      setKeptImageIds(product.images.map(img => Number(img.id)))
+    }
+  }, [product])
+
   const { user } = useUser();
 
   const onSubmit = async (data: ProductFormData) => {
+    setIsSubmitting(true);
     const formData = new FormData();
 
-    // Add all fields to formData
-    if (user?.id !== undefined) {
-      formData.append("user", String(user.id));
-    }
+    // Append all standard fields to formData
+    if (user?.id) formData.append("user", String(user.id));
     formData.append('category', data.category);
-    formData.append('subcategory', data.subcategory);
+    formData.append('subcategory', data.subcategory || '');
     formData.append('name', data.name);
     formData.append('description', data.description || '');
     formData.append('meta_title', data.meta_title || '');
@@ -252,25 +241,27 @@ export default function ProductForm({ product }: ProductFormProps) {
     formData.append('product_details', JSON.stringify(dynamicValues));
 
     try {
-      setIsSubmitting(true);
+      // Step 1: Create or update the product details
       const method = product ? 'put' : 'post';
       const url = product ? `/products/${product.id}/` : '/products/';
-      const productResponse = await api[method](url, formData);
+      const productResponse = await api[method](url, formData, {
+        headers: {
+          // Ensure correct content type for the main form data part
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+
+      const productId = product?.id || productResponse.data.id;
 
       // Step 2: Upload brochure if provided
       if (brochureFile) {
         const brochureFormData = new FormData()
         brochureFormData.append('brochure', brochureFile)
-
+        // Use a PUT request for both new and existing brochure uploads for simplicity
+        const brochureUrl = `/products/${productId}/upload_brochure/`
         try {
-          const brochureUrl = product
-            ? `/products/${product.id}/update-brochure/`
-            : `/products/${productResponse.data.id}/upload_brochure/`
-
           await api.put(brochureUrl, brochureFormData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
+            headers: { 'Content-Type': 'multipart/form-data' },
           })
           console.log("Brochure uploaded successfully")
         } catch (brochureError) {
@@ -279,65 +270,41 @@ export default function ProductForm({ product }: ProductFormProps) {
         }
       }
 
-      // Step 3: Upload images if provided
+      // Step 3: Upload NEW images if provided
       if (imageFiles.length > 0) {
         const imagesFormData = new FormData()
         imageFiles.forEach((img) => imagesFormData.append('images', img))
 
+        // **FIX:** Use the `upload_images` endpoint with POST for both new and existing products
+        // This treats adding images as an "append" operation, avoiding the `update-images` error.
+        const imagesUrl = `/products/${productId}/upload_images/`;
         try {
-          const imagesUrl = product
-            ? `/products/${product.id}/update-images/`
-            : `/products/${productResponse.data.id}/upload_images/`
-
-          // If updating existing product, include existing image IDs to keep
-          if (product) {
-            const existingImageIds = product.images
-              ?.map(img => img.id)
-              ?.filter(Boolean) || []
-            existingImageIds.forEach(id => {
-              imagesFormData.append('image_ids[]', String(id))
-            })
-          }
-
-          await api[product ? 'put' : 'post'](imagesUrl, imagesFormData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
+          await api.post(imagesUrl, imagesFormData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
           })
-          console.log("Images uploaded successfully")
+          console.log("New images uploaded successfully")
         } catch (imagesError) {
           console.error("Failed to upload images:", imagesError)
-          toast.error("Failed to upload images")
+          toast.error("Failed to upload new images")
         }
       }
 
-      // Show success toast and refresh
       toast.success(
         product ? "Product Updated" : "Product Created",
         {
-          description: "Successfully processed with all files uploaded!",
+          description: "Your product has been saved successfully!",
           duration: 3000,
         }
       )
-
-      // Wait for 5 seconds then refresh
-      setTimeout(() => {
-        if (product) {
-          // Refresh the current page
-          window.location.reload()
-        } else {
-          // Redirect to products page or refresh
-          router.refresh()
-          router.push('/products')
-        }
-      }, 3000)
+      // Optional: Redirect or refresh after success
+      // router.push('/products/'); // or window.location.reload();
 
     } catch (error) {
       console.error(error)
       toast.error(
         product ? "Failed to update product" : "Failed to create product",
         {
-          description: "Something went wrong. Please try again.",
+          description: "Something went wrong. Please check the form and try again.",
           duration: 3000,
         }
       )
@@ -346,13 +313,12 @@ export default function ProductForm({ product }: ProductFormProps) {
     }
   }
 
-  // Helper functions for file handling
   const handleBrochureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file && file.type === 'application/pdf') {
       setBrochureFile(file)
     } else {
-      alert('Please select a valid PDF file')
+      toast.warning('Please select a valid PDF file for the brochure.')
     }
   }
 
@@ -363,7 +329,7 @@ export default function ProductForm({ product }: ProductFormProps) {
         file.type.startsWith('image/')
       )
       if (validImages.length !== files.length) {
-        alert('Some files were skipped. Please select only image files.')
+        toast.warning('Some files were not images and were skipped.')
       }
       setImageFiles(prev => [...prev, ...validImages])
     }
@@ -371,7 +337,6 @@ export default function ProductForm({ product }: ProductFormProps) {
 
   const removeBrochure = () => {
     setBrochureFile(null)
-    // Clear the file input
     const input = document.getElementById('brochure-input') as HTMLInputElement
     if (input) input.value = ''
   }
@@ -381,15 +346,14 @@ export default function ProductForm({ product }: ProductFormProps) {
   }
 
   const removeExistingImage = async (imageId: number) => {
+    if (!product?.id) return;
     try {
-      await api.delete(`/products/${product?.id}/delete-images/`, {
-        data: {
-          image_ids: [imageId]
-        }
+      await api.delete(`/products/${product.id}/delete-images/`, {
+        data: { image_ids: [imageId] }
       })
+      setKeptImageIds(prev => prev.filter(id => id !== imageId))
       toast.success('Image removed successfully')
-      // Refresh the page to show updated images
-      window.location.reload()
+      window.location.reload() // Reload to reflect changes from server
     } catch (error) {
       console.error('Failed to remove image:', error)
       toast.error('Failed to remove image')
@@ -398,12 +362,10 @@ export default function ProductForm({ product }: ProductFormProps) {
 
   const removeExistingBrochure = async () => {
     if (!product?.id) return
-
     try {
       await api.delete(`/products/${product.id}/delete-brochure/`)
       toast.success('Brochure removed successfully')
-      // Refresh the page to show updated files
-      window.location.reload()
+      window.location.reload() // Reload to reflect changes
     } catch (error) {
       console.error('Failed to remove brochure:', error)
       toast.error('Failed to remove brochure')
