@@ -3,52 +3,33 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      // api.mhebazar.in (http + https, all paths)
       {
-        protocol: "http",
+        protocol: "http", // Allowing http protocol
         hostname: "api.mhebazar.in",
-        pathname: "/**",
+        pathname: "/media/**",
       },
       {
-        protocol: "https",
+        protocol: "https", // Allowing https protocol as well
         hostname: "api.mhebazar.in",
-        pathname: "/**",
-      },
-
-      // mhebazar.in (http + https, with + without www, all paths)
-      {
-        protocol: "http",
-        hostname: "mhebazar.in",
-        pathname: "/**",
+        pathname: "/media/**",
       },
       {
-        protocol: "https",
-        hostname: "mhebazar.in",
-        pathname: "/**",
+        protocol: 'https',
+        hostname: 'mheback.onrender.com',
+        port: '',
+        pathname: '/media/**', // Or be more specific if needed
       },
-      {
-        protocol: "http",
-        hostname: "www.mhebazar.in",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "www.mhebazar.in",
-        pathname: "/**",
-      },
-
-
-       // vercel domain bhi allow karo
-    {
-      protocol: "https",
-      hostname: "mhebazar.vercel.app",
-      pathname: "/**",
-    },
-
-      // Baaki jo pehle the unko rakh sakte ho
       {
         protocol: "https",
         hostname: "placehold.co",
+      },
+      {
+        protocol: "https",
+        hostname: "mhebazar.in",
+      },
+      {
+        protocol: "https",
+        hostname: "www.mhebazar.in",
       },
       {
         protocol: "https",
@@ -65,7 +46,6 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "localhost",
-        pathname: "/**",
       },
     ],
   },
