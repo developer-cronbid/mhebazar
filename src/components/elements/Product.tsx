@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { Heart, Repeat, Share2, ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import api from "@/lib/api";
-import axios from "axios";
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/context/UserContext"; // Make sure useUser is imported
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import QuoteForm from "../forms/enquiryForm/quotesForm";
@@ -261,7 +259,7 @@ const ProductCard = ({
             {isInCart ? (
               <div className="flex items-center justify-between bg-green-50 text-green-700 font-medium py-1 px-1 rounded-lg">
                 <button
-                  onClick={() => cartItemId && onDecreaseQuantity(cartItemId)}
+                  onClick={() => onDecreaseQuantity(id)}
                   disabled={currentCartQuantity <= 1 || !isPurchasable}
                   className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Decrease quantity"
@@ -272,7 +270,7 @@ const ProductCard = ({
                   {currentCartQuantity}
                 </span>
                 <button
-                  onClick={() => cartItemId && onIncreaseQuantity(cartItemId)}
+                  onClick={() => onIncreaseQuantity(id)}
                   disabled={!isPurchasable}
                   className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Increase quantity"
@@ -280,7 +278,7 @@ const ProductCard = ({
                   <Plus className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => cartItemId && onRemoveFromCart(cartItemId)}
+                  onClick={() => onRemoveFromCart(id)}
                   className="h-8 w-8 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors ml-1"
                   aria-label="Remove from cart"
                   title="Remove from Cart"
@@ -425,228 +423,110 @@ export const ProductCardContainer = ({
   type,
   category_id,
 }: ProductCardContainerProps) => {
-  const { user } = useUser();
   const router = useRouter();
+  const {
+    user,
+    // State derived from context
+    isProductWishlisted,
+    isProductInCart,
+    getCartItemQuantity,
+    getCartItemId,
+    // Actions from context
+    addToWishlist,
+    removeFromWishlist,
+    addToCart,
+    removeFromCart,
+    updateCartQuantity,
+  } = useUser();
 
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isInCart, setIsInCart] = useState(false);
-  const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
-  const [cartItemId, setCartItemId] = useState<number | null>(null);
+  const isWishlisted = isProductWishlisted(id);
+  const isInCart = isProductInCart(id);
+  const currentCartQuantity = getCartItemQuantity(id);
+  const cartItemId = getCartItemId(id); // Context provides this if needed
 
   const productFullData: ProductCardContainerProps = {
     id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_id
   };
 
-  const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
-  useEffect(() => {
-    latestCartState.current = { currentCartQuantity, cartItemId, isInCart };
-  }, [currentCartQuantity, cartItemId, isInCart]);
-
-  const fetchInitialStatus = useCallback(async () => {
-    // console.log(`[fetchInitialStatus] Fetching status for Product ID: ${id}`);
-    if (user) {
-      try {
-        // --- WISHLIST CHECK ---
-        const wishlistResponse = await api.get<{ results: WishlistItemApi[] }>(`/wishlist/?user=${user.id}`); // Fetch the whole wishlist
-
-        // FIX: Instead of checking length, check if THIS product's ID is in the results.
-        const wishlistItem = wishlistResponse.data.results.find(item => item.product === id);
-        const isNowWishlisted = !!wishlistItem; // Convert the found item (or undefined) to a boolean
-
-        setIsWishlisted(isNowWishlisted);
-        console.log(`[fetchInitialStatus] Wishlist status for Product ID ${id}: ${isNowWishlisted}`);
-
-        // --- CART CHECK ---
-        const cartResponse = await api.get<{ results: CartItemApi[] }>(`/cart/?user=${user.id}`); // Fetch the whole cart
-
-        // FIX: Find the specific cart item corresponding to THIS product's ID.
-        const itemInCart = cartResponse.data.results.find(item => item.product === id);
-
-        if (itemInCart) {
-          setIsInCart(true);
-          setCurrentCartQuantity(itemInCart.quantity);
-          setCartItemId(itemInCart.id);
-          console.log(`[fetchInitialStatus] Cart status for Product ID ${id}: In cart, Quantity: ${itemInCart.quantity}`);
-        } else {
-          setIsInCart(false);
-          setCurrentCartQuantity(0);
-          setCartItemId(null);
-          console.log(`[fetchInitialStatus] Cart status for Product ID ${id}: Not in cart`);
-        }
-      } catch (error) {
-        console.error(`[fetchInitialStatus ERROR] Failed to fetch initial wishlist/cart status for Product ID ${id}:`, error);
-      }
-    } else {
-      // This part remains the same
-      setIsWishlisted(false);
-      setIsInCart(false);
-      setCurrentCartQuantity(0);
-      setCartItemId(null);
-      // console.log(`[fetchInitialStatus] User not logged in, resetting state for Product ID ${id}`);
-    }
-  }, [user, id]);
-
-  useEffect(() => {
-    fetchInitialStatus();
-  }, [fetchInitialStatus]);
-
   const handleAddToCart = useCallback(async (productId: number) => {
-    console.log(`[handleAddToCart] Attempting to add Product ID: ${productId}`);
     if (!user) {
       toast.error("Please log in to add products to your cart.");
       router.push('/login');
       return;
     }
-    try {
-      if (latestCartState.current.isInCart) {
-        console.log(`[handleAddToCart] Product ID ${productId} is already in cart.`);
-        toast.info("This product is already in your cart.", {
-          action: {
-            label: 'View Cart',
-            onClick: () => router.push('/cart'),
-          },
-        });
-        return;
-      }
-      const response = await api.post(`/cart/`, { product: productId, quantity: 1 });
-      setIsInCart(true);
-      setCurrentCartQuantity(1);
-      setCartItemId(response.data.id);
-      console.log(`[handleAddToCart SUCCESS] Product ID ${productId} added to cart. New cartItemId: ${response.data.id}`);
+    if (isInCart) {
+      toast.info("This product is already in your cart.");
+      return;
+    }
+
+    const success = await addToCart(productId);
+    if (success) {
       toast.success("Product added to cart!", {
         action: {
           label: 'View Cart',
           onClick: () => router.push('/cart'),
         },
       });
-    } catch (error: unknown) {
-      console.error(`[handleAddToCart ERROR] Error adding Product ID ${productId} to cart:`, error);
-      if (axios.isAxiosError(error) && error.response) {
-        if (error.response.status === 400 && error.response.data?.non_field_errors?.[0] === "The fields user, product must make a unique set.") {
-          toast.info("Product is already in your cart.", {
-            action: {
-              label: 'View Cart',
-              onClick: () => router.push('/cart'),
-            },
-          });
-          fetchInitialStatus();
-        } else {
-          toast.error(error.response.data?.message || `Failed to add to cart: ${error.response.statusText}`);
-        }
+    } else {
+      toast.error("Failed to add product to cart.");
+    }
+  }, [user, router, isInCart, addToCart]);
+
+
+    const handleRemoveFromCart = useCallback(async (productId: number) => {
+      if (!user) return;
+      const success = await removeFromCart(productId);
+      if (success) {
+        toast.success("Product removed from cart.");
       } else {
-        toast.error("An unexpected error occurred while adding to cart. Please try again.");
+        toast.error("Failed to remove product from cart.");
       }
+    }, [user, removeFromCart]);
+  
+  
+  const handleIncreaseQuantity = useCallback(async (productId: number) => {
+    if (!user) return;
+    const newQuantity = currentCartQuantity + 1;
+    const success = await updateCartQuantity(productId, newQuantity);
+    // No toast needed here as the UI update is instant feedback.
+    if (!success) {
+      toast.error("Failed to update quantity.");
     }
-  }, [user, router, fetchInitialStatus]);
+  }, [user, currentCartQuantity, updateCartQuantity]);
 
-
-  const handleRemoveFromCart = useCallback(async (cartId: number) => {
-    console.log(`[handleRemoveFromCart] Attempting to remove cart item: ${cartId}`);
-    if (!user || !cartId) return;
-    try {
-      await api.delete(`/cart/${cartId}/`);
-      setIsInCart(false);
-      setCurrentCartQuantity(0);
-      setCartItemId(null);
-      console.log(`[handleRemoveFromCart SUCCESS] Cart item ${cartId} removed.`);
-      toast.success("Product removed from cart.");
-    } catch (error) {
-      console.error(`[handleRemoveFromCart ERROR] Error removing cart item ${cartId}:`, error);
-      toast.error("Failed to remove product from cart.");
-    }
-  }, [user]);
-
-  const handleIncreaseQuantity = useCallback(async (cartId: number) => {
-    console.log(`[handleIncreaseQuantity] Attempting to increase quantity for cart item: ${cartId}`);
-    if (!user || !cartId) return;
-    try {
-      const newQuantity = latestCartState.current.currentCartQuantity + 1;
-      await api.patch(`/cart/${cartId}/`, { quantity: newQuantity });
-      setCurrentCartQuantity(newQuantity);
-      console.log(`[handleIncreaseQuantity SUCCESS] Quantity for cart item ${cartId} increased to ${newQuantity}`);
-      toast.success("Quantity increased!");
-    } catch (error) {
-      console.error(`[handleIncreaseQuantity ERROR] Error increasing quantity for cart item ${cartId}:`, error);
-      if (axios.isAxiosError(error) && error.response && error.response.data?.quantity) {
-        toast.error(`Failed to increase quantity: ${error.response.data.quantity[0]}`);
-      } else {
-        toast.error("Failed to increase quantity.");
-      }
-    }
-  }, [user]);
-
-  const handleDecreaseQuantity = useCallback(async (cartId: number) => {
-    console.log(`[handleDecreaseQuantity] Attempting to decrease quantity for cart item: ${cartId}`);
-    if (!user || !cartId) return;
-    if (latestCartState.current.currentCartQuantity <= 1) {
-      console.log(`[handleDecreaseQuantity] Quantity is 1, cannot decrease further for cart item: ${cartId}`);
-      toast.info("Quantity cannot be less than 1. Use the remove button (trash icon) to take it out of cart.", {
-        action: {
-          label: 'Remove',
-          onClick: () => handleRemoveFromCart(cartId),
-        },
-      });
+  const handleDecreaseQuantity = useCallback(async (productId: number) => {
+    if (!user) return;
+    if (currentCartQuantity <= 1) {
+      toast.info("Use the remove button to take it out of cart.");
       return;
     }
-    try {
-      const newQuantity = latestCartState.current.currentCartQuantity - 1;
-      await api.patch(`/cart/${cartId}/`, { quantity: newQuantity });
-      setCurrentCartQuantity(newQuantity);
-      console.log(`[handleDecreaseQuantity SUCCESS] Quantity for cart item ${cartId} decreased to ${newQuantity}`);
-      toast.success("Quantity decreased!");
-    } catch (error) {
-      console.error(`[handleDecreaseQuantity ERROR] Error decreasing quantity for cart item ${cartId}:`, error);
-      if (axios.isAxiosError(error) && error.response && error.response.data?.quantity) {
-        toast.error(`Failed to decrease quantity: ${error.response.data.quantity[0]}`);
-      } else {
-        toast.error("Failed to decrease quantity.");
-      }
+    const newQuantity = currentCartQuantity - 1;
+    const success = await updateCartQuantity(productId, newQuantity);
+    if (!success) {
+      toast.error("Failed to update quantity.");
     }
-  }, [user, handleRemoveFromCart]);
+  }, [user, currentCartQuantity, updateCartQuantity]);
 
   const handleWishlist = useCallback(async (productId: number) => {
-    console.log(`[handleWishlist] Attempting to toggle wishlist for Product ID: ${productId}`);
     if (!user) {
       toast.error("Please log in to manage your wishlist.");
       router.push('/login');
       return;
     }
-    try {
-      if (isWishlisted) {
-        console.log(`[handleWishlist] Product ID ${productId} is wishlisted. Removing...`);
-        const wishlistResponse = await api.get<{ results: WishlistItemApi[] }>(`/wishlist/?product=${productId}&user=${user.id}`);
-        if (wishlistResponse.data.results.length > 0) {
-          const wishlistItemId = wishlistResponse.data.results[0].id;
-          await api.delete(`/wishlist/${wishlistItemId}/`);
-          setIsWishlisted(false);
-          console.log(`[handleWishlist SUCCESS] Product ID ${productId} removed from wishlist. Item ID: ${wishlistItemId}`);
-          toast.success("Product removed from wishlist!");
-        } else {
-          setIsWishlisted(false);
-          console.log(`[handleWishlist] Product ID ${productId} not found in wishlist. Syncing state.`);
-          toast.info("Product was not found in your wishlist. Syncing state.");
-        }
-      } else {
-        console.log(`[handleWishlist] Product ID ${productId} is not wishlisted. Adding...`);
-        const response = await api.post(`/wishlist/`, { product: productId });
-        setIsWishlisted(true);
-        console.log(`[handleWishlist SUCCESS] Product ID ${productId} added to wishlist.`);
-        toast.success("Product added to wishlist!");
-      }
-    } catch (error: unknown) {
-      console.error(`[handleWishlist ERROR] Error updating wishlist for Product ID ${productId}:`, error);
-      if (axios.isAxiosError(error) && error.response) {
-        if (error.response.status === 400 && error.response.data?.non_field_errors?.[0] === "The fields user, product must make a unique set.") {
-          toast.info("Product is already in your wishlist.");
-          setIsWishlisted(true);
-        } else {
-          toast.error(error.response.data?.message || `Failed to add to wishlist: ${error.response.statusText}`);
-        }
-      } else {
-        toast.error("An unexpected error occurred while updating wishlist. Please try again.");
-      }
+
+    let success;
+    if (isWishlisted) {
+      success = await removeFromWishlist(productId);
+      if (success) toast.success("Product removed from wishlist!");
+    } else {
+      success = await addToWishlist(productId);
+      if (success) toast.success("Product added to wishlist!");
     }
-  }, [user, isWishlisted, router]);
+
+    if (!success) {
+      toast.error("Could not update wishlist. Please try again.");
+    }
+  }, [user, isWishlisted, router, addToWishlist, removeFromWishlist]);
 
   const handleCompare = useCallback((data: Record<string, unknown>) => {
     console.log(`[handleCompare] Attempting to add Product ID: ${id} to comparison.`);
@@ -673,7 +553,6 @@ export const ProductCardContainer = ({
   }, [id, hide_price]);
 
   const handleBuyNow = useCallback(async (productId: number) => {
-    console.log(`[handleBuyNow] Attempting to buy Product ID: ${productId}`);
     if (!user) {
       toast.error("Please log in to proceed with purchase.");
       router.push('/login');
@@ -683,22 +562,12 @@ export const ProductCardContainer = ({
       toast.error("This product is not available for direct purchase.");
       return;
     }
-    try {
-      if (!latestCartState.current.isInCart) {
-        console.log(`[handleBuyNow] Product ID ${productId} not in cart, adding it now.`);
-        await api.post(`/cart/`, { product: productId, quantity: 1 });
-      }
-      console.log(`[handleBuyNow SUCCESS] Redirecting to cart.`);
-      router.push('/cart');
-    } catch (error: unknown) {
-      console.error(`[handleBuyNow ERROR] Error during buy now process for Product ID ${productId}:`, error);
-      if (axios.isAxiosError(error) && error.response) {
-        toast.error(error.response.data?.message || `Failed to add product to cart: ${error.response.statusText}`);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.");
-      }
+
+    if (!isInCart) {
+      await addToCart(productId);
     }
-  }, [user, router, directSale, stock_quantity, is_active]);
+    router.push('/cart');
+  }, [user, router, directSale, stock_quantity, is_active, isInCart, addToCart]);
 
   const handleShare = useCallback((url: string, title: string) => {
     console.log(`[handleShare] Sharing URL: ${url} with title: ${title}`);
@@ -745,15 +614,17 @@ export const ProductCardContainer = ({
       isWishlisted={isWishlisted}
       isInCart={isInCart}
       currentCartQuantity={currentCartQuantity}
-      cartItemId={cartItemId}
+      // Pass the product ID to these handlers
+      onIncreaseQuantity={() => handleIncreaseQuantity(id)}
+      onDecreaseQuantity={() => handleDecreaseQuantity(id)}
+      onRemoveFromCart={() => handleRemoveFromCart(id)}
+      // The rest of the props
+      cartItemId={cartItemId} // Still available if needed elsewhere
       onAddToCartClick={handleAddToCart}
       onWishlistClick={handleWishlist}
       onCompareClick={handleCompare}
       onBuyNowClick={handleBuyNow}
       onShareClick={handleShare}
-      onIncreaseQuantity={handleIncreaseQuantity}
-      onDecreaseQuantity={handleDecreaseQuantity}
-      onRemoveFromCart={handleRemoveFromCart}
       productData={{ ...productFullData }}
       productType={type}
     />
