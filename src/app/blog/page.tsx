@@ -205,7 +205,7 @@ const BlogListPage: React.FC = () => {
       </div>
 
       {/* Filter and Sort Section */}
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 bg-white border-b flex flex-wrap items-center justify-between gap-4">
+      <div className=" mx-auto px-4 py-4 sm:px-6 lg:px-8 bg-white border-b flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Filter className="h-5 w-5 text-gray-500" />
           <span className="text-sm font-medium text-gray-700">Filter by:</span>
@@ -249,7 +249,7 @@ const BlogListPage: React.FC = () => {
 
 
       {/* Blog Grid */}
-      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <div className=" mx-auto px-4 py-12 sm:px-6 lg:px-8">
         {loading ? (
           <div className="flex justify-center items-center min-h-[400px]">
             <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
