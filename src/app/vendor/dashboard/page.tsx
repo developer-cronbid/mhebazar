@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState, useEffect, useMemo } from "react";
-import { ShoppingCart, Download, FileText, Bell, AlertCircle, CheckCircle, Clock, ChevronRight, Pencil, Cross, Shapes } from "lucide-react";
-import Image from "next/image";
+import { ShoppingCart, FileText, AlertCircle, CheckCircle, Clock, ChevronRight, Cross, Shapes } from "lucide-react";
+// import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+// import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Pagination,
@@ -27,6 +27,7 @@ import ProductForm from "@/components/forms/uploadForm/ProductForm";
 import Link from "next/link";
 import categories from '@/data/categories.json';
 import { IoDocuments } from "react-icons/io5";
+import { RecentEnquiries } from "./topEnquiries";
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -286,7 +287,7 @@ export default function DashboardStats() {
 
   return (
     <>
-      <div className="space-y-8 px-2 sm:px-6 py-6 max-w-7xl mx-auto">
+      <div className="space-y-8 px-2 sm:px-10 py-6 mx-auto">
         {/* Vendor Status Alert */}
         {application && stats?.vendor_info.status !== 'Approved' && (
           <Alert className="border-l-4 border-yellow-400 bg-yellow-50">
@@ -296,42 +297,6 @@ export default function DashboardStats() {
             </AlertDescription>
           </Alert>
         )}
-
-        {/* Notifications */}
-        {/* {notifications.length > 0 && (
-          <Card className="p-4 border-blue-200 bg-blue-50">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-blue-900">
-                  Notifications ({notifications.length})
-                </h3>
-              </div>
-              <Button
-                variant="link"
-                onClick={() => setShowAllNotifications(!showAllNotifications)}
-                className="text-blue-600 px-0"
-              >
-                {showAllNotifications ? 'Show Less' : 'View All'}
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {(showAllNotifications ? notifications : notifications.slice(0, 3)).map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-3 rounded-lg border bg-white border-blue-200`}
-                >
-                  <p className="text-sm text-gray-800">{notification.message}</p>
-                  {notification.created_at && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {new Date(notification.created_at).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Card>
-        )} */}
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
@@ -372,7 +337,7 @@ export default function DashboardStats() {
         {/* Bottom Action Cards */}
         <div className="grid gap-4 md:grid-cols-3 mt-5">
           {/* Sell New Products */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#FF3434] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+          <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#FECEBC] to-[#FF3434] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
             {/* <img src="/no-product.png" alt="Sell New Products" className="h-14 w-14 object-contain" /> */}
             <Cross className="h-14 w-14 text-white" />
             <div>
@@ -383,7 +348,7 @@ export default function DashboardStats() {
           </div>
 
           {/* Sell Old Products */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-[#FECEBC] to-[#E55117] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+          <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#FECEBC] to-[#E55117] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
             {/* <img src="/images/forklift-old.png" alt="Sell Old Products" className="h-14 w-14 object-contain" /> */}
             <Cross className="h-14 w-14 text-white" />
             <div>
@@ -394,7 +359,7 @@ export default function DashboardStats() {
           </div>
 
           {/* Rent Products */}
-          <div className="flex items-center gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+          <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
             {/* <img src="/images/forklift-rent.png" alt="Rent Products" className="h-14 w-14 object-contain" /> */}
             <Shapes className="h-14 w-14 text-white" />
             <div>
@@ -407,7 +372,7 @@ export default function DashboardStats() {
 
         {/* Product List */}
         <div className="flex flex-col sm:flex-row gap-6 mb-4">
-          <div className="grid grid-cols-1 w-full" id="products-section"> {/* add w-1/2 when adding the searched section */}
+          <div className="grid grid-cols-1 w-full md:w-1/2" id="products-section"> {/* add w-1/2 when adding the searched section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl sm:text-2xl font-bold text-gray-900">
@@ -596,7 +561,9 @@ export default function DashboardStats() {
             </div>
           </div>
 
-          {/* <div className=" w-1/2">
+          <RecentEnquiries />
+
+          {/* <div className="w-full md:w-1/2">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Top Searched Products</h2>
               <a href="#" className="text-green-600 text-sm">View more</a>
