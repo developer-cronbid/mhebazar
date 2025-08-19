@@ -6,12 +6,13 @@ import { ChevronDown, List, Menu, X } from "lucide-react";
 import { ProductCardContainer } from "@/components/elements/Product";
 import SideFilter from "@/components/products/SideFilter";
 import Image from "next/image";
-import { Toaster } from "sonner"; // Import Toaster for sonner
+import { Toaster } from "sonner";
 import QuoteForm from "../forms/enquiryForm/quotesForm";
 import { Product } from "@/types";
 import DOMPurify from 'dompurify';
 import { IoGrid } from "react-icons/io5";
-// import category from '@/data/categories.json'
+import { useRouter } from "next/navigation";
+
 
 import {
   Dialog,
@@ -29,7 +30,6 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 
-// Types
 export interface Product {
   type: string;
   id: string;
@@ -114,7 +114,7 @@ function ProductGrid({
 
                   {/* Price */}
                   <div className="flex items-center gap-2">
-                    {(product.hide_price == true || Number(product.price) <= 0) ? ( // Changed "0" to 0 for number comparison
+                    {(product.hide_price == true || Number(product.price) <= 0) ? (
                       <span className="text-xl md:text-2xl font-bold text-gray-400 tracking-wider">
                         {product.currency} *******
                       </span>
@@ -170,9 +170,8 @@ function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6"> {/* Changed grid to lg:grid-cols-4 */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6">
       {products.map((product: Product) => (
-        // console.log(`Rendering product: ${JSON.stringify(product)}`),
         <ProductCardContainer
           key={product.id}
           id={parseInt(product.id, 10)}
@@ -242,9 +241,16 @@ export default function ProductListing({
 }: ProductListingProps) {
   const [currentView, setCurrentView] = useState<"grid" | "list">("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
+  const router = useRouter();
 
   const handleViewChange = (view: "grid" | "list") => {
     setCurrentView(view);
+  };
+
+  const isUsedOrRentalPage = selectedTypeName === "Used" || selectedTypeName === "Rental";
+
+  const handleToggle = (type: "used" | "rental") => {
+    router.push(`/${type}`);
   };
 
   return (
@@ -253,9 +259,6 @@ export default function ProductListing({
       <div className="flex flex-col lg:flex-row">
 
         {/* --- START: Conditional Rendering for Filters --- */}
-
-        {/* Render the filters ONLY if the path does NOT start with /vendor-listing/ */}
-        {/* {!window.location.pathname.startsWith("/vendor-listing/") && ( */}
         <>
           {/* Desktop Sidebar */}
           <div className="hidden lg:block flex-shrink-0 w-fit">
@@ -269,7 +272,7 @@ export default function ProductListing({
                 minPrice={minPrice}
                 maxPrice={maxPrice}
                 selectedManufacturer={selectedManufacturer}
-                showManufacturerFilter={showManufacturerFilter} // Pass the new prop down
+                showManufacturerFilter={showManufacturerFilter}
                 selectedRating={selectedRating}
               />
             </div>
@@ -308,15 +311,13 @@ export default function ProductListing({
                   minPrice={minPrice}
                   maxPrice={maxPrice}
                   selectedManufacturer={selectedManufacturer}
-                  showManufacturerFilter={showManufacturerFilter} // Pass the new prop down
+                  showManufacturerFilter={showManufacturerFilter}
                   selectedRating={selectedRating}
                 />
               </div>
             </aside>
           </div>
         </>
-        {/* )} */}
-
         {/* --- END: Conditional Rendering for Filters --- */}
 
         {/* Main Content */}
@@ -325,15 +326,31 @@ export default function ProductListing({
           <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 sticky top-0 z-40">
             <div className="flex items-center justify-between py-2">
               {/* Left Section - Title and Results */}
-              <div className="flex flex-col">
-                <div className="flex items-center">
+              <div className="flex items-center gap-4">
+                <div className="">
                   <span className="text-base font-bold text-black font-sans mr-2">
                     {title || 'New Arrivals'}
                   </span>
-                </div>
-                <p className="text-xs text-gray-500 font-normal font-sans mt-0.5">
+                   <p className="text-xs text-gray-500 font-normal font-sans mt-0.5">
                   Showing 1–{products.length} results
                 </p>
+                </div>
+                  {isUsedOrRentalPage && (
+                    <div className="flex ml-4">
+                      <button
+                        className={`py-1 px-4 text-sm font-semibold transition-colors duration-200 ${selectedTypeName === "Used" ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-green-600'}`}
+                        onClick={() => handleToggle("used")}
+                      >
+                        Used MHE
+                      </button>
+                      <button
+                        className={`py-1 px-4 text-sm font-semibold transition-colors duration-200 ${selectedTypeName === "Rental" ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-green-600'}`}
+                        onClick={() => handleToggle("rental")}
+                      >
+                        Rental
+                      </button>
+                    </div>
+                  )}
               </div>
 
               {/* Right Section - Sort, View Toggle, Mobile Filter */}
