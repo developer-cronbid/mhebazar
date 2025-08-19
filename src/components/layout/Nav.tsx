@@ -460,7 +460,7 @@ export default function Navbar(): JSX.Element {
                 <CategoryMenu
                   isOpen={categoriesOpen}
                   onClose={() => setCategoriesOpen(false)}
-                  categories={categories}
+                  // categories={categories}
                 />
               </div>
 

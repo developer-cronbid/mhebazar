@@ -1,11 +1,11 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useMemo, useCallback, useEffect, JSX, useRef } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { Category, Subcategory } from "./Nav";
 import api from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +13,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface CategoryMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  categories: Category[];
 }
 
 const createSlug = (name: string): string =>
@@ -22,67 +21,50 @@ const createSlug = (name: string): string =>
 export default function CategoryMenu({
   isOpen,
   onClose,
-  categories,
 }: CategoryMenuProps): JSX.Element {
-  const router = useRouter();
+  // const router = useRouter();
 
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null);
-  const [productCounts, setProductCounts] = useState<{ [subcategoryId: number]: number }>({});
-  const [loadingCounts, setLoadingCounts] = useState<boolean>(false);
-  
   const closeTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const displayedCategory: Category | null = hoveredCategory;
 
-  const subcategoriesToDisplay: Subcategory[] = useMemo(() => 
+  const subcategoriesToDisplay: Subcategory[] = useMemo(() =>
     displayedCategory?.subcategories || [],
     [displayedCategory]
   );
 
-  const getProductCounts = useCallback(async (categoryId: number, subcategories: Subcategory[]) => {
-    if (subcategories.length === 0) {
-      setProductCounts({});
-      setLoadingCounts(false);
-      return;
-    }
+  // Fetch categories data
+  const fetchCategories = useCallback(async () => {
+    if (!isOpen || categories.length > 0) return; // Don't fetch if already loaded or menu is closed
 
-    setLoadingCounts(true);
+    setLoading(true);
+    setError(null);
+
     try {
-      const promises = subcategories.map(async (sub) => {
-        const response = await api.get(`/products/?category=${categoryId}&subcategory=${sub.id}`);
-        return { subcategoryId: sub.id, count: response.data?.count || 0 };
-      });
-      const results = await Promise.all(promises);
-      const newCounts = results.reduce((acc, curr) => {
-        acc[curr.subcategoryId] = curr.count;
-        return acc;
-      }, {} as { [key: number]: number });
-      setProductCounts(newCounts);
+      const response = await api.get('/categories/');
+      setCategories(response.data || []);
     } catch (error) {
-      console.error("Failed to fetch product counts:", error);
-      setProductCounts({});
+      console.error('Failed to fetch categories:', error);
+      setError('Failed to load categories. Please try again.');
     } finally {
-      setLoadingCounts(false);
+      setLoading(false);
     }
-  }, []);
+  }, [isOpen, categories.length]);
+
+  // Fetch data when menu opens
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   useEffect(() => {
-    if (hoveredCategory) {
-      if (hoveredCategory.subcategories && hoveredCategory.subcategories.length > 0) {
-        getProductCounts(hoveredCategory.id, hoveredCategory.subcategories);
-      } else {
-        setProductCounts({});
-        setLoadingCounts(false);
-      }
-    }
-  }, [hoveredCategory, getProductCounts]);
-  
-  useEffect(() => {
-    if (isOpen && categories.length > 0) {
+    if (isOpen && categories.length > 0 && !loading) {
       setHoveredCategory(categories[0]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, categories]);
+  }, [isOpen, categories, loading]);
 
   const handleMouseEnterContainer = useCallback(() => {
     if (closeTimerRef.current) {
@@ -97,10 +79,6 @@ export default function CategoryMenu({
       onClose();
     }, 200);
   }, [onClose]);
-  
-  const maxContentHeight = '448px';
-  const menuWidth = '1300px';
-  const categoryColumnWidth = '320px';
 
   return (
     <AnimatePresence>
@@ -109,121 +87,156 @@ export default function CategoryMenu({
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden"
-          style={{ width: menuWidth, height: '480px' }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="absolute left-0 top-full z-50 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden"
+          style={{ width: '1200px', height: '480px' }}
           onMouseEnter={handleMouseEnterContainer}
           onMouseLeave={handleMouseLeaveContainer}
         >
-          <div className="flex h-full relative">
-            {/* Left Categories Column - SCROLLABLE */}
-            <div 
-              className="bg-gray-50 border-r border-gray-200 flex-shrink-0"
-              style={{ width: categoryColumnWidth }}
+          <div className="flex h-full">
+            {/* Categories Column */}
+            <div
+              className="w-80 bg-gray-50 border-r border-gray-300"
             >
-              <div 
-                className="p-4 h-full overflow-y-auto"
-                style={{ maxHeight: maxContentHeight }}
-              >
-                <div className="space-y-1">
-                  {categories.map((category) => (
-                    <div
-                      key={category.id}
-                      className={`group flex items-center justify-between px-4 py-3 text-sm cursor-pointer rounded-lg transition-all duration-200 ${
-                        hoveredCategory?.id === category.id
-                          ? "bg-blue-50 text-blue-700 font-medium border border-blue-200"
-                          : "text-gray-700 hover:bg-white hover:text-blue-600 hover:border hover:border-gray-200"
-                      }`}
-                      onMouseEnter={() => setHoveredCategory(category)}
+              <div className="p-4 border-b border-gray-300">
+                <h3 className="font-medium text-gray-900 text-base">Categories</h3>
+              </div>
+
+              <div className="p-2 h-full overflow-y-auto" style={{ maxHeight: '420px' }}>
+                {loading ? (
+                  <div className="space-y-2 p-2">
+                    {[...Array(6)].map((_, i) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2.5 bg-gray-100 rounded-md animate-pulse">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-6 rounded-full" />
+                      </div>
+                    ))}
+                  </div>
+                ) : error ? (
+                  <div className="p-4 text-center">
+                    <p className="text-red-500 text-sm mb-3">{error}</p>
+                    <button
+                      onClick={() => {
+                        setCategories([]);
+                        fetchCategories();
+                      }}
+                      className="text-blue-600 text-sm font-medium"
                     >
-                      <span
-                        className="flex-1 cursor-pointer text-left"
+                      Try Again
+                    </button>
+                  </div>
+                ) : categories.length === 0 ? (
+                  <div className="p-4 text-center">
+                    <p className="text-gray-500 text-sm">No categories available</p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {categories.map((category) => (
+                      <div
+                        key={category.id}
+                        className={`flex items-center justify-between px-3 py-2.5 text-sm cursor-pointer rounded-md transition-colors duration-150 ${hoveredCategory?.id === category.id
+                            ? "bg-gray-200"
+                            : "text-gray-700 hover:bg-gray-200"
+                          }`}
+                        onMouseEnter={() => setHoveredCategory(category)}
                       >
-                        {category.name}
-                      </span>
-                      <Link
-                        href={`/${createSlug(category.name)}`}
-                        onClick={onClose}
-                        className="p-1.5 -mr-1 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-200 transition-all duration-200"
-                        aria-label={`Go to ${category.name} category page`}
-                      >
-                        <ChevronRight className="w-4 h-4 text-gray-500" />
-                      </Link>
-                    </div>
-                  ))}
-                </div>
+                        <span className="flex-1">{category.name}</span>
+
+                        <div className="flex items-center gap-2">
+                          {category.subcategories?.length > 0 && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs ${hoveredCategory?.id === category.id
+                                ? "bg-gray-200"
+                                : "bg-gray-200 text-gray-600"
+                              }`}>
+                              {category.subcategories.length}
+                            </span>
+                          )}
+
+                          <Link
+                            href={`/${createSlug(category.name)}`}
+                            onClick={onClose}
+                            className={`p-1 rounded transition-colors ${hoveredCategory?.id === category.id
+                                ? "hover:bg-gray-200"
+                                : "hover:bg-gray-300 text-gray-500"
+                              }`}
+                            aria-label={`Go to ${category.name} category page`}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Right Subcategories Panel - SCROLLABLE & BIGGER */}
-            <div 
-              className="flex-1 bg-white flex-shrink-0 z-20"
-            >
-              <div className="h-full p-6 flex flex-col">
+            {/* Subcategories Panel */}
+            <div className="flex-1 bg-white">
+              <div className="h-full flex flex-col">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6 flex-shrink-0">
-                  <h3 className="font-semibold text-gray-900 text-lg">
+                <div className="p-4 border-b border-gray-300 flex items-center justify-between">
+                  <h3 className="font-medium text-gray-900 text-base">
                     {displayedCategory?.name || "Select a category"}
                   </h3>
                   {displayedCategory && (
                     <Link
                       href={`/${createSlug(displayedCategory.name)}`}
                       onClick={onClose}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors px-3 py-2 rounded-lg hover:bg-blue-50 flex items-center gap-1"
+                      className="text-sm text-blue-600 font-medium flex items-center gap-1"
                     >
-                      View All 
+                      View All
                       <ChevronRight className="w-4 h-4" />
                     </Link>
                   )}
                 </div>
-                
-                {/* Scrollable Content */}
-                <div 
-                  className="flex-1 min-h-0 grid grid-cols-3 gap-4 auto-rows-max overflow-y-auto pr-2"
-                  style={{ maxHeight: '380px' }}
-                >
-                  <style jsx>{`
-                    div::-webkit-scrollbar {
-                      width: 6px;
-                    }
-                    div::-webkit-scrollbar-track {
-                      background: #f8fafc;
-                      border-radius: 6px;
-                    }
-                    div::-webkit-scrollbar-thumb {
-                      background: #cbd5e1;
-                      border-radius: 6px;
-                    }
-                    div::-webkit-scrollbar-thumb:hover {
-                      background: #94a3b8;
-                    }
-                  `}</style>
-                  
-                  {loadingCounts ? (
-                    [...Array(6)].map((_, i) => (
-                      <div key={i} className="bg-gray-50 rounded-lg p-4 flex flex-col items-center justify-center min-h-[140px] border">
-                        <Skeleton className="w-16 h-16 rounded-lg mb-3" />
-                        <Skeleton className="h-4 w-20 mb-2" />
-                        <Skeleton className="h-6 w-8" />
+
+                {/* Content */}
+                <div className="flex-1 p-4 overflow-y-auto">
+                  {loading ? (
+                    <div className="grid grid-cols-4 gap-4">
+                      {[...Array(8)].map((_, i) => (
+                        <div key={i} className="bg-gray-50 rounded-lg p-4 text-center border border-gray-200">
+                          <Skeleton className="w-12 h-12 rounded-lg mx-auto mb-3" />
+                          <Skeleton className="h-4 w-20 mx-auto mb-2" />
+                          <Skeleton className="h-5 w-8 mx-auto" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : error ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <div className="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                        <span className="text-red-500 text-2xl">⚠️</span>
                       </div>
-                    ))
-                  ) : subcategoriesToDisplay.length > 0 ? (
-                    subcategoriesToDisplay.map((subCategory) => (
-                      <Link
-                        key={subCategory.id}
-                        href={`/${createSlug(displayedCategory?.name || '')}/${createSlug(subCategory.name)}`}
-                        className="group bg-white hover:bg-gray-50 rounded-lg p-4 cursor-pointer transition-all duration-200 border border-gray-200 hover:border-blue-200 hover:shadow-md min-h-[140px] flex flex-col items-center justify-center"
-                        onClick={onClose}
+                      <h4 className="font-medium text-gray-900 mb-2">Failed to load data</h4>
+                      <p className="text-gray-500 text-sm mb-4">{error}</p>
+                      <button
+                        onClick={() => {
+                          setCategories([]);
+                          fetchCategories();
+                        }}
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md transition-colors"
                       >
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-3 group-hover:bg-blue-50 transition-colors">
-                            {/* --- CORRECTED: Use parent category's image_url --- */}
-                            {displayedCategory?.image_url ? (
-                               <Image
-                                src={displayedCategory.image_url.startsWith("/media") ? `https://mheback.onrender.com${displayedCategory.image_url}` : displayedCategory.image_url}
+                        Retry
+                      </button>
+                    </div>
+                  ) : subcategoriesToDisplay.length > 0 ? (
+                    <div className="grid grid-cols-4 gap-4">
+                      {subcategoriesToDisplay.map((subCategory) => (
+                        <Link
+                          key={subCategory.id}
+                          href={`/${createSlug(displayedCategory?.name || '')}/${createSlug(subCategory.name)}`}
+                          className="bg-white hover:bg-gray-50 rounded-lg p-4 text-center cursor-pointer transition-colors duration-150 border border-gray-200 hover:border-gray-300"
+                          onClick={onClose}
+                        >
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3 overflow-hidden">
+                            {subCategory.sub_image ? (
+                              <Image
+                                src={subCategory.sub_image.startsWith("/media") ? `https://mheback.onrender.com${subCategory.sub_image}` : subCategory.sub_image}
                                 alt={subCategory.name}
-                                width={64}
-                                height={64}
-                                className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-105"
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-contain"
                                 unoptimized
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
@@ -231,53 +244,59 @@ export default function CategoryMenu({
                                   const parent = target.parentElement;
                                   if (parent) {
                                     const fallback = document.createElement("div");
-                                    fallback.className = "text-gray-600 text-xs font-semibold flex items-center justify-center w-full h-full";
+                                    fallback.className = "text-gray-500 text-xs font-medium flex items-center justify-center w-full h-full";
                                     fallback.textContent = subCategory.name.substring(0, 2).toUpperCase();
                                     parent.appendChild(fallback);
                                   }
                                 }}
                               />
                             ) : (
-                               <span className="text-gray-600 text-xs font-semibold">
+                              <span className="text-gray-500 text-xs font-medium">
                                 {subCategory.name.substring(0, 2).toUpperCase()}
                               </span>
                             )}
                           </div>
-                        <h4 className="font-medium text-gray-900 text-sm text-center mb-2 group-hover:text-blue-600 transition-colors leading-tight px-1">
-                          {subCategory.name}
-                        </h4>
-                        <div className="text-lg font-semibold text-gray-800 min-w-[32px] text-center">
-                          {productCounts[subCategory.id] !== undefined ? (
-                            String(productCounts[subCategory.id]).padStart(2, '0')
-                          ) : (
-                            <span className="text-gray-400">--</span>
-                          )}
-                        </div>
-                      </Link>
-                    ))
+
+                          <h4 className="font-medium text-gray-900 text-sm mb-2 leading-tight">
+                            {subCategory.name}
+                          </h4>
+
+                          <div className="text-blue-600 font-semibold text-sm">
+                            {subCategory.product_count !== undefined ? (
+                              `${subCategory.product_count} items`
+                            ) : (
+                              <span className="text-gray-400">--</span>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   ) : displayedCategory ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center col-span-3">
-                      <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                        <span className="text-gray-400 text-2xl">📦</span>
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                        <Package className="w-8 h-8 text-gray-400" />
                       </div>
-                      <p className="text-gray-500 text-sm mb-4">
-                        No subcategories available.
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        No subcategories found
+                      </h4>
+                      <p className="text-gray-500 text-sm mb-4 max-w-sm">
+                        Browse all products in this category instead.
                       </p>
                       <Link
                         href={`/${createSlug(displayedCategory.name)}`}
-                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md transition-colors"
                         onClick={onClose}
                       >
                         Browse {displayedCategory.name}
                       </Link>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-center col-span-3">
-                      <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
                         <span className="text-gray-400 text-2xl">👈</span>
                       </div>
                       <p className="text-gray-500 text-sm">
-                        Hover over a category to see subcategories
+                        Select a category to view subcategories
                       </p>
                     </div>
                   )}
@@ -287,6 +306,20 @@ export default function CategoryMenu({
           </div>
         </motion.div>
       )}
+
+      <style jsx global>{`
+        div::-webkit-scrollbar {
+          width: 6px;
+        }
+        div::-webkit-scrollbar-track {
+          background: #f1f5f9;
+        }
+        div::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+        
+      `}</style>
     </AnimatePresence>
   );
 }
