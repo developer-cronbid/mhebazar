@@ -15,6 +15,17 @@ interface CategoryMenuProps {
   onClose: () => void;
 }
 
+interface ImageWithFallbackProps {
+  subCategory: {
+    name: string;
+    sub_image?: string;
+  };
+  category: {
+    image?: string;
+  };
+}
+
+
 const createSlug = (name: string): string =>
   name.toLowerCase().replace(/\s+/g, "-");
 
@@ -79,6 +90,54 @@ export default function CategoryMenu({
       onClose();
     }, 200);
   }, [onClose]);
+
+  const ImageWithFallback = ({ subCategory, category }: ImageWithFallbackProps) => {
+    // Define the order of images to try
+    const imageSources = [subCategory.sub_image, category.cat_image].filter(Boolean) as string[];
+
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [error, setError] = useState(false);
+
+    // If the component props change, reset the image state
+    useEffect(() => {
+      setCurrentImageIndex(0);
+      setError(false);
+    }, [subCategory.sub_image, category.cat_image]);
+
+    const handleError = () => {
+      // If there's another image source to try, move to the next one
+      if (currentImageIndex < imageSources.length - 1) {
+        setCurrentImageIndex(currentImageIndex + 1);
+      } else {
+        // If we've run out of images to try, set the error state
+        setError(true);
+      }
+    };
+
+    const currentSrc = imageSources[currentImageIndex];
+
+    // If there are no images to begin with, or all have failed, show the text fallback.
+    if (error || !currentSrc) {
+      return (
+        <span className="text-gray-500 text-xs font-medium">
+          {subCategory.name.substring(0, 2).toUpperCase()}
+        </span>
+      );
+    }
+
+    // Otherwise, render the Next.js Image component
+    return (
+      <Image
+        src={currentSrc}
+        alt={subCategory.name}
+        width={48}
+        height={48}
+        className="w-full h-full object-contain"
+        unoptimized
+        onError={handleError}
+      />
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -230,31 +289,7 @@ export default function CategoryMenu({
                           onClick={onClose}
                         >
                           <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3 overflow-hidden">
-                            {subCategory.sub_image ? (
-                              <Image
-                                src={subCategory.sub_image.startsWith("/media") ? `https://mheback.onrender.com${subCategory.sub_image}` : subCategory.sub_image}
-                                alt={subCategory.name}
-                                width={48}
-                                height={48}
-                                className="w-full h-full object-contain"
-                                unoptimized
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.style.display = "none";
-                                  const parent = target.parentElement;
-                                  if (parent) {
-                                    const fallback = document.createElement("div");
-                                    fallback.className = "text-gray-500 text-xs font-medium flex items-center justify-center w-full h-full";
-                                    fallback.textContent = subCategory.name.substring(0, 2).toUpperCase();
-                                    parent.appendChild(fallback);
-                                  }
-                                }}
-                              />
-                            ) : (
-                              <span className="text-gray-500 text-xs font-medium">
-                                {subCategory.name.substring(0, 2).toUpperCase()}
-                              </span>
-                            )}
+                            <ImageWithFallback subCategory={subCategory} category={categories.find(cat => cat.id === subCategory.category)} />
                           </div>
 
                           <h4 className="font-medium text-gray-900 text-sm mb-2 leading-tight">
