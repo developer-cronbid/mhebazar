@@ -563,34 +563,6 @@ export default function DashboardStats() {
 
           <RecentEnquiries />
 
-          {/* <div className="w-full md:w-1/2">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Top Searched Products</h2>
-              <a href="#" className="text-green-600 text-sm">View more</a>
-            </div>
-            <div className="space-y-4 rounded-lg shadow-sm p-6">
-              <div className="flex items-center space-x-3">
-                <img src="forklift.png" alt="Forklift Attachments" className="w-12 h-12 object-contain" />
-                <span>Forklift Attachments</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <img src="hand-pallet.png" alt="Hand Pallet Truck" className="w-12 h-12 object-contain" />
-                <span>Hand Pallet Truck</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <img src="electric-pallet.png" alt="Electric Pallet Truck (BOPT)" className="w-12 h-12 object-contain bg-gray-100 p-1 rounded" />
-                <span>Electric Pallet Truck (BOPT)</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <img src="platform-truck.png" alt="Platform Truck" className="w-12 h-12 object-contain" />
-                <span>Platform Truck</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <img src="scissors-lift.png" alt="Scissors Lift" className="w-12 h-12 object-contain" />
-                <span>Scissors Lift</span>
-              </div>
-            </div>
-          </div> */}
         </div>
 
       </div>
