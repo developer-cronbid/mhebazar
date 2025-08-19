@@ -95,7 +95,7 @@ export default function RecentlyViewed() {
               hide_price={item.hide_price}
               stock_quantity={item.stock_quantity}
               type={item.type}
-              category_id={item.category_id}
+              category_id={item.category}
             />
           ))
         ) : (

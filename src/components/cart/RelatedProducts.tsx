@@ -99,8 +99,8 @@ export default function RelatedProducts() {
               is_active={item.is_active}
               hide_price={item.hide_price}
               stock_quantity={item.stock_quantity}
-               type={item.type}
-               category_image={null}            />
+              type={item.type}
+              category_id={item.category}            />
           ))
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-16">
