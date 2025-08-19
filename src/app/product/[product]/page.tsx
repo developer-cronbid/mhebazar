@@ -72,14 +72,16 @@ export default async function IndividualProductPage({
   }
 
   const { category_name, subcategory_name, name: productName } = productData;
+  const cat_slug = category_name.toLowerCase().replace(/\s+/g, '-');
+  const subcat_slug = subcategory_name.toLowerCase().replace(/\s+/g, '-');
 
   return (
     <>
       <Breadcrumb
         items={[
           { label: 'Home', href: '/' },
-          { label: category_name, href: `/${category_name}` },
-          ...(subcategory_name ? [{ label: subcategory_name, href: `/${category_name}/${subcategory_name}` }] : []),
+          { label: category_name, href: `/${cat_slug}` },
+          ...(subcategory_name ? [{ label: subcategory_name, href: `/${cat_slug}/${subcat_slug}` }] : []),
           // Use the actual product name for the label for better UX
           { label: productName, href: `/product/${productSlug}?id=${productId}` },
         ]}
