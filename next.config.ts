@@ -37,6 +37,14 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
 
+
+       // vercel domain bhi allow karo
+    {
+      protocol: "https",
+      hostname: "mhebazar.vercel.app",
+      pathname: "/**",
+    },
+
       // Baaki jo pehle the unko rakh sakte ho
       {
         protocol: "https",
