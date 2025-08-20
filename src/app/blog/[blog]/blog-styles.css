@@ -1,0 +1,274 @@
+/* --- GLOBAL & TYPOGRAPHY --- */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(180deg, #f9fafb 0%, #f1f5f9 100%);
+  color: #334155;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base container */
+.blog-content {
+  background: #ffffff;
+  /* CHANGE: Set a max-width for better readability on wide screens. */
+  max-width: 100%;
+  /* Ensures it shrinks on smaller viewports */
+  margin: 3rem auto;
+  padding: 4rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* --- HEADINGS --- */
+.blog-content h1,
+.blog-content h2,
+.blog-content h3,
+.blog-content h4 {
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+  margin-top: 2.75rem;
+  margin-bottom: 1.25rem;
+  scroll-margin-top: 5rem;
+  letter-spacing: -0.02em;
+}
+
+/* CHANGE: Implemented fluid font sizes using clamp() */
+.blog-content h1 {
+  /* Scales from 2.25rem to 2.75rem */
+  font-size: clamp(2.25rem, 1.75rem + 2.5vw, 2.75rem);
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 1rem;
+}
+
+.blog-content h2 {
+  /* Scales from 1.85rem to 2rem */
+  font-size: clamp(1.85rem, 1.5rem + 1.25vw, 2rem);
+  border-left: 4px solid #5ca030;
+  padding-left: 1rem;
+}
+
+.blog-content h3 {
+  /* Scales from 1.4rem to 1.6rem */
+  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.6rem);
+  color: #1e293b;
+}
+
+.blog-content h4 {
+  /* Scales from 1.15rem to 1.25rem */
+  font-size: clamp(1.15rem, 1rem + 0.75vw, 1.25rem);
+  color: #475569;
+  font-weight: 600;
+}
+
+/* --- PARAGRAPHS & LINKS --- */
+.blog-content p {
+  margin-bottom: 1.6rem;
+  font-size: 1.05rem;
+}
+
+.blog-content strong {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.blog-content a {
+  color: #2563eb;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.25s ease;
+}
+
+.blog-content a:hover {
+  color: #1d4ed8;
+  border-bottom-color: #1d4ed8;
+  background-color: #eff6ff;
+  border-radius: 0.2rem;
+  padding: 0 0.2rem;
+}
+
+/* --- LISTS --- */
+.blog-content ul,
+.blog-content ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.blog-content li {
+  margin-bottom: 0.75rem;
+  padding-left: 0.5rem;
+  line-height: 1.6;
+}
+
+.blog-content ul li::marker,
+.blog-content ol li::marker {
+  color: #5ca030;
+  font-weight: 700;
+}
+
+/* --- BLOCKQUOTES & CODE --- */
+.blog-content blockquote {
+  margin: 2rem 0;
+  padding: 1.25rem 1.75rem;
+  border-left: 4px solid #5ca030;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #475569;
+  font-style: italic;
+  border-radius: 0.5rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.blog-content code {
+  font-family: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace;
+  background: #f1f5f9;
+  color: #b91c1c;
+  border-radius: 0.4rem;
+  padding: 0.25em 0.45em;
+  font-size: 0.9em;
+  border: 1px solid #e2e8f0;
+}
+
+.blog-content pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.blog-content pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border: none;
+  font-size: inherit;
+}
+
+/* --- IMAGES & TABLES --- */
+.imgtxt {
+  display: flex;
+  justify-content: center;
+}
+
+.blog-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 1rem;
+  margin: 2.5rem 0;
+}
+
+.blog-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2.5rem 0;
+  font-size: 1rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.blog-content th {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+  text-align: left;
+}
+
+.blog-content td {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.blog-content tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 1024px) {
+  .blog-content {
+    /* Refined padding and margin for tablets */
+    padding: 3rem;
+    margin: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .blog-content {
+    padding: 2.5rem 2rem;
+    margin: 1.5rem;
+  }
+
+  /* IMPROVEMENT: Make wide tables scrollable instead of breaking the layout */
+  .blog-content table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    /* Prevents cell content from wrapping awkwardly */
+  }
+}
+
+@media (max-width: 480px) {
+  .blog-content {
+    padding: 2rem 1.25rem;
+    margin: 1rem;
+  }
+
+  .blog-content p {
+    font-size: 1rem;
+    /* Slightly smaller body text on small phones */
+  }
+
+  .blog-content table,
+  .blog-content pre {
+    font-size: 0.85rem;
+  }
+}
+
+/* --- ANIMATIONS --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- PRINT STYLES --- */
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .blog-content {
+    box-shadow: none;
+    border: none;
+    margin: 0;
+    max-width: 100%;
+  }
+
+  .blog-content a {
+    color: #1e293b !important;
+    border: none;
+    text-decoration: underline;
+  }
+
+  .blog-content blockquote,
+  .blog-content pre {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+}
