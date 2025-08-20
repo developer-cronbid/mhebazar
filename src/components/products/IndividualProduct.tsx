@@ -13,6 +13,9 @@ import {
   ChevronDown,
   ChevronUp,
   ShoppingCart,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -65,6 +68,7 @@ type ProductData = {
   category_details?: {
     cat_image: string | null;
   };
+  videos?: string[];
 };
 
 interface CartItemApi {
@@ -85,7 +89,6 @@ interface ProductSectionProps {
   productId: number | string | null;
 }
 
-// Custom Image component with an error handler to show a fallback
 const FallbackImage = ({
   src,
   alt,
@@ -141,7 +144,6 @@ const FallbackImage = ({
   );
 };
 
-// Framer motion variants
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
@@ -154,23 +156,19 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   const [data, setData] = useState<ProductData | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [openAccordion, setOpenAccordion] = useState<
     "desc" | "spec" | "vendor" | null
   >("desc");
   const [isInCart, setIsInCart] = useState(false);
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
   const [cartItemId, setCartItemId] = useState<number | null>(null);
-  const [scrollOffset, setScrollOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Use a ref to store a function that can refresh reviews
+  // State for the media gallery modal
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+
   const reviewsRefresher = useRef<(() => void) | null>(null);
-
-  console.log(data)
-
-  // Ref to hold the latest state values for async operations
   const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
   useEffect(() => {
     latestCartState.current = { currentCartQuantity, cartItemId, isInCart };
@@ -240,7 +238,6 @@ export default function ProductSection({ productId }: ProductSectionProps) {
         );
         const foundProduct = productRes.data;
 
-        // Fetch category details for the fallback image
         const categoryRes = await api.get(`/categories/${foundProduct.category}`);
         const categoryWithImage = {
           ...foundProduct,
@@ -557,6 +554,31 @@ export default function ProductSection({ productId }: ProductSectionProps) {
     reviewsRefresher.current = refresher;
   }, []);
 
+  const openGallery = (index: number) => {
+    setCurrentMediaIndex(index);
+    setIsGalleryOpen(true);
+  };
+
+  const closeGallery = () => {
+    setIsGalleryOpen(false);
+  };
+
+  const goToNextMedia = () => {
+    if (data?.images) {
+      setCurrentMediaIndex((prevIndex) =>
+        (prevIndex + 1) % data.images.length
+      );
+    }
+  };
+
+  const goToPrevMedia = () => {
+    if (data?.images) {
+      setCurrentMediaIndex((prevIndex) =>
+        (prevIndex - 1 + data.images.length) % data.images.length
+      );
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="animate-pulse p-4 max-w-7xl mx-auto">
@@ -584,14 +606,12 @@ export default function ProductSection({ productId }: ProductSectionProps) {
     maximumFractionDigits: 2,
   });
 
-  // Calculate the fake price (10% higher)
   const originalPrice = parseFloat(data.price);
   const fakePrice = (originalPrice * 1.1).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 
-  // Calculate the "You Save" amount
   const youSaveAmount = (originalPrice * 0.1).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -603,39 +623,67 @@ export default function ProductSection({ productId }: ProductSectionProps) {
 
   return (
     <motion.div
-      className="px-4 mx-auto p-2 sm:p-4 bg-white w-full md:w-[90vw]"
+      className="px-4 mx-auto p-2 sm:p-4 bg-white w-full max-w-7xl"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
+      {/* --- Breadcrumb Section (Corrected and Responsive) --- */}
+      <nav aria-label="Breadcrumb" className="mb-4 text-sm md:text-base">
+        <ol className="flex items-center space-x-2">
+          <li>
+            <Link href="/" className="text-gray-600 hover:underline">
+              Home
+            </Link>
+          </li>
+          {data.category_name && (
+            <>
+              <li className="text-gray-400">/</li>
+              <li className="truncate max-w-[100px] sm:max-w-none">
+                <Link
+                  href={`/products?category=${data.category_name.toLowerCase()}`}
+                  className="text-gray-600 hover:underline"
+                >
+                  {data.category_name}
+                </Link>
+              </li>
+            </>
+          )}
+          {data.subcategory_name && (
+            <>
+              <li className="text-gray-400">/</li>
+              <li className="truncate max-w-[100px] sm:max-w-none">
+                <Link
+                  href={`/products?category=${data.category_name.toLowerCase()}&subcategory=${data.subcategory_name.toLowerCase()}`}
+                  className="text-gray-600 hover:underline"
+                >
+                  {data.subcategory_name}
+                </Link>
+              </li>
+            </>
+          )}
+          <li className="text-gray-400">/</li>
+          <li className="truncate max-w-[200px] sm:max-w-full font-semibold text-gray-800">
+            {data.name}
+          </li>
+        </ol>
+      </nav>
+
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Side - Product Images */}
-        <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-[40%]">
-          {/* Main Product Image */}
-          <div
-            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-[464px] md:h-[464px] mx-auto group"
-            onMouseMove={(e) => {
-              if (isZoomed) {
-                const { left, top, width, height } =
-                  e.currentTarget.getBoundingClientRect();
-                const x = ((e.clientX - left) / width) * 100;
-                const y = ((e.clientY - top) / height) * 100;
-                setPosition({ x, y });
-              }
-            }}
-            onMouseEnter={() => setIsZoomed(true)}
-            onMouseLeave={() => setIsZoomed(false)}
+        <div className="flex flex-col md:flex-row-reverse gap-4 w-full md:w-[40%]">
+          {/* Main Product Image with Trigger */}
+          <button
+            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-[464px] md:h-[464px] mx-auto group cursor-zoom-in"
+            onClick={() => openGallery(selectedImage)}
+            aria-label="View product images in full-screen gallery"
           >
             <FallbackImage
               src={data.images[selectedImage]?.image || "/no-product.png"}
               alt={data.name}
-              className="h-full w-full object-contain transition-transform duration-200 ease-out"
+              className="h-full w-full object-contain"
               width={700}
               height={700}
-              style={{
-                transform: isZoomed ? "scale(2)" : "scale(1)",
-                transformOrigin: `${position.x}% ${position.y}%`,
-              }}
               fallbackSrc={data.category_details?.cat_image}
               priority
             />
@@ -645,7 +693,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-                onClick={handleWishlist}
+                onClick={(e) => { e.stopPropagation(); handleWishlist(); }}
                 disabled={!data.is_active}
                 aria-label="Add to wishlist"
               >
@@ -660,7 +708,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-                onClick={handleShare}
+                onClick={(e) => { e.stopPropagation(); handleShare(); }}
                 aria-label="Share product"
               >
                 <Share2 className="w-4 h-4 text-gray-600" />
@@ -669,78 +717,38 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-                onClick={handleCompare}
+                onClick={(e) => { e.stopPropagation(); handleCompare(); }}
                 disabled={!data.is_active}
                 aria-label="Compare product"
               >
                 <RotateCcw className="w-4 h-4 text-gray-600" />
               </motion.button>
             </div>
-          </div>
-          {/* Thumbnail Images */}
-          <div className="flex flex-col gap-2 h-[464px] min-h-[100px] overflow-hidden relative">
-            <motion.div
-              className="flex flex-col gap-2 transition-transform duration-300 ease-in-out"
-              animate={{ y: `-${scrollOffset * 112}px` }}
-              transition={{ duration: 0.3 }}
-            >
-              {data.images.map((img, index) => (
-                <motion.button
-                  key={img.id}
-                  onClick={() => setSelectedImage(index)}
-                  className={`rounded border-2 overflow-hidden flex-shrink-0 w-[104px] h-[104px] ${selectedImage === index
-                    ? "border-orange-500"
-                    : "border-gray-200"
-                    } hover:border-orange-300 transition-colors`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label={`Select image ${index + 1}`}
-                >
-                  <Image
-                    src={img.image}
-                    alt={`${data.name} thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    width={104}
-                    height={104}
-                  />
-                </motion.button>
-              ))}
-            </motion.div>
+          </button>
 
-            {/* Navigation arrows */}
-            {data.images.length > 4 && (
-              <>
-                {scrollOffset > 0 && (
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() =>
-                      setScrollOffset(Math.max(0, scrollOffset - 1))
-                    }
-                    className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 z-20"
-                    aria-label="Scroll thumbnails up"
-                  >
-                    <ChevronUp className="w-4 h-4 text-gray-600" />
-                  </motion.button>
-                )}
-
-                {scrollOffset < data.images.length - 4 && (
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() =>
-                      setScrollOffset(
-                        Math.min(data.images.length - 4, scrollOffset + 1)
-                      )
-                    }
-                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 z-20"
-                    aria-label="Scroll thumbnails down"
-                  >
-                    <ChevronDown className="w-4 h-4 text-gray-600" />
-                  </motion.button>
-                )}
-              </>
-            )}
+          {/* Responsive Thumbnail Bar */}
+          <div className="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-hidden p-2 md:p-0 md:h-auto">
+            {data.images.map((img, index) => (
+              <motion.button
+                key={img.id}
+                onClick={() => setSelectedImage(index)}
+                className={`rounded border-2 overflow-hidden flex-shrink-0 w-20 h-20 md:w-[104px] md:h-[104px] ${selectedImage === index
+                  ? "border-orange-500"
+                  : "border-gray-200"
+                  } hover:border-orange-300 transition-colors`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                aria-label={`Select image ${index + 1}`}
+              >
+                <Image
+                  src={img.image}
+                  alt={`${data.name} thumbnail ${index + 1}`}
+                  className="w-full h-full object-cover"
+                  width={104}
+                  height={104}
+                />
+              </motion.button>
+            ))}
           </div>
         </div>
 
@@ -813,47 +821,12 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   </>
                 )}
               </div>
-              {/* Offers Section */}
-              {/* <div className="mt-4 p-4 border border-gray-200 rounded-lg">
-                <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                  Offers
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-white rounded-lg p-3 border border-gray-100">
-                    <h4 className="font-medium text-gray-800">Cashback</h4>
-                    <p className="text-sm text-gray-600">
-                      Get ₹200.00 cashback when you pay with selected cards or
-                      wallets
-                    </p>
-                    <p className="text-sm text-blue-600 mt-2 hover:underline cursor-pointer">
-                      + 3 offers
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg p-3 border border-gray-100">
-                    <h4 className="font-medium text-gray-800">Vendor Offer</h4>
-                    <p className="text-sm text-gray-600">
-                      Get old for an offer and save up to 28% on business
-                      supplies and
-                    </p>
-                    <p className="text-sm text-blue-600 mt-2 hover:underline cursor-pointer">
-                      + 1 offers
-                    </p>
-                  </div>
-                </div>
-              </div> */}
             </div>
             {/* Delivery & Actions */}
             <div className="w-full lg:w-1/3 flex flex-col gap-4">
               {/* Delivery Info */}
               <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                 <div className="space-y-2">
-                  {/* <p className="text-sm font-semibold text-gray-900">
-                    <span className="font-bold">FREE Delivery</span> Thursday,
-                    Aug 12
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Order within 18 hrs 46 mins
-                  </p> */}
                   {data.stock_quantity > 0 && data.direct_sale ? (
                     <p className="text-base font-bold text-green-600">
                       Only {data.stock_quantity} left in stock
@@ -908,40 +881,73 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   </div>
                 ) : (
                   <div className="mt-4 flex flex-col gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
-                          aria-label={formButtonText}
-                          disabled={!data.is_active}
-                        >
-                          {formButtonText}
-                        </motion.button>
-                      </DialogTrigger>
-                      <DialogContent className="w-full max-w-2xl">
-                        {data.type === "rental" || data.type === "used" ? (
-                          <RentalForm
-                            productId={data.id}
-                            productDetails={{
-                              image:
-                                data.images[0]?.image ||
-                                data.category_details?.cat_image ||
-                                "/no-product.png",
-                              title: data.name,
-                              description: data.description,
-                              price: data.price,
-                              stock_quantity: data.stock_quantity,
-                            }}
-                            onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
-                          />
-                        ) : (
+                    {(data.type === "rental" || data.type === "used") ? (
+                      <>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                              aria-label="Rent Now"
+                              disabled={!data.is_active}
+                            >
+                              Rent Now
+                            </motion.button>
+                          </DialogTrigger>
+                          <DialogContent className="w-full max-w-2xl">
+                            <RentalForm
+                              productId={data.id}
+                              productDetails={{
+                                image:
+                                  data.images[0]?.image ||
+                                  data.category_details?.cat_image ||
+                                  "/no-product.png",
+                                title: data.name,
+                                description: data.description,
+                                price: data.price,
+                                stock_quantity: data.stock_quantity,
+                              }}
+                              onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-md text-base transition"
+                              aria-label="Get a Quote"
+                              disabled={!data.is_active}
+                            >
+                              Get a Quote
+                            </motion.button>
+                          </DialogTrigger>
+                          <DialogContent className="w-full max-w-2xl">
+                            <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()} />
+                          </DialogContent>
+                        </Dialog>
+                      </>
+                    ) : (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                            aria-label={formButtonText}
+                            disabled={!data.is_active}
+                          >
+                            {formButtonText}
+                          </motion.button>
+                        </DialogTrigger>
+                        <DialogContent className="w-full max-w-2xl">
                           <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                           />
-                        )}
-                      </DialogContent>
-                    </Dialog>
+                        </DialogContent>
+                      </Dialog>
+                    )}
                   </div>
                 )}
               </div>
@@ -1105,7 +1111,6 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-100">
                           {validSpecs.flatMap(([key, value], index) => {
-                            // Check if the value is a string that looks like a JSON array
                             if (
                               typeof value === "string" &&
                               value.startsWith("[") &&
@@ -1113,10 +1118,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                             ) {
                               try {
                                 const parsedArray = JSON.parse(value);
-                                // Ensure it's an array before mapping
                                 if (Array.isArray(parsedArray)) {
                                   return parsedArray.map((item, specIndex) => {
-                                    // Split each string by the first colon to separate key and value
                                     const parts = item.split(/:\s*(.*)/s);
                                     const specKey = parts[0] || "Detail";
                                     const specValue = parts[1] || item;
@@ -1142,12 +1145,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                                   });
                                 }
                               } catch (e) {
-                                // If JSON.parse fails, it's not valid JSON. Fallback to default.
                                 console.error("Failed to parse spec string:", value, e);
                               }
                             }
 
-                            // Default rendering for normal key-value pairs
                             return (
                               <tr
                                 key={key}
@@ -1234,6 +1235,93 @@ export default function ProductSection({ productId }: ProductSectionProps) {
           registerRefresher={registerReviewsRefresher}
         />
       )}
+
+      {/* --- New, Dedicated, Centered Media Gallery Modal --- */}
+      <AnimatePresence>
+        {isGalleryOpen && (
+          <motion.div
+            className="fixed inset-0 z-[9999] bg-black/90 p-4 md:p-8 flex items-center justify-center overflow-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="relative w-full h-full max-w-6xl flex flex-col items-center justify-center">
+              {/* Close button at the top right */}
+              <button
+                className="absolute top-4 right-4 text-white z-20 hover:scale-110 transition-transform"
+                onClick={closeGallery}
+                aria-label="Close media gallery"
+              >
+                <X className="w-8 h-8" />
+              </button>
+
+              {/* Main media view */}
+              <div className="relative w-full h-[70vh] md:h-[80vh] flex items-center justify-center">
+                <FallbackImage
+                  src={data.images[currentMediaIndex]?.image || "/no-product.png"}
+                  alt={`${data.name} media ${currentMediaIndex + 1}`}
+                  className="max-h-full max-w-full object-contain rounded-md"
+                  width={1000}
+                  height={1000}
+                  fallbackSrc={data.category_details?.cat_image}
+                  priority
+                />
+
+                {/* Navigation arrows */}
+                {data.images.length > 1 && (
+                  <>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-40 transition-colors z-10"
+                      onClick={goToPrevMedia}
+                      aria-label="Previous media item"
+                    >
+                      <ChevronLeft className="w-6 h-6 text-black" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-40 transition-colors z-10"
+                      onClick={goToNextMedia}
+                      aria-label="Next media item"
+                    >
+                      <ChevronRight className="w-6 h-6 text-black" />
+                    </motion.button>
+                  </>
+                )}
+              </div>
+
+              {/* Responsive Thumbnails at the bottom */}
+              <div className="mt-4 w-full flex justify-center overflow-x-auto gap-2">
+                {data.images.map((img, index) => (
+                  <motion.button
+                    key={img.id}
+                    onClick={() => setCurrentMediaIndex(index)}
+                    className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${currentMediaIndex === index
+                      ? "border-orange-500"
+                      : "border-transparent hover:border-gray-600"
+                      }`}
+                    aria-label={`Select media thumbnail ${index + 1}`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Image
+                      src={img.image}
+                      alt={`Thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      width={80}
+                      height={80}
+                    />
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </motion.div>
   );
 }
