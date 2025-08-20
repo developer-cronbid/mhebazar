@@ -776,10 +776,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
               <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
-                {`${data.name} ${data.model} ${data.manufacturer
-                    ? data.manufacturer
-                    : data.user_name.replace("_", " ")
-                  }`
+                {`${data.manufacturer
+                  ? data.manufacturer
+                  : data.user_name.replace("_", " ")
+                  } ${data.name} ${data.model} `
                   .replace(/[^a-zA-Z0-9 \-]/g, '') // 🧹 Collapse all whitespace into a single space
                   .replace(/\s+/g, ' ')
                   .trim() // ✨ Remove any space from the beginning or end
