@@ -64,8 +64,10 @@ type ProductData = {
   brochure: string | null;
   average_rating: number | null;
   review_count: number;
+  user_description: string | null;
+  user_image: string | null;
   category_details?: {
-    cat_image: string | null;
+  cat_image: string | null;
   };
 };
 
@@ -1275,9 +1277,37 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line"
+                className="p-4" // Use padding on the container
               >
-                {data.user_name || "N/A"}
+                <div className="flex flex-col sm:flex-row items-start gap-4">
+                  {/* Vendor Image */}
+                  {data.user_image && (
+                    <img
+                      src={data.user_image}
+                      alt={data.user_name || "Vendor Profile"}
+                      className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                    />
+                  )}
+
+                  <div className="flex-1">
+                    {/* Vendor Name */}
+                    <p className="font-semibold text-lg text-gray-800">
+                      {data.user_name || "N/A"}
+                    </p>
+
+                    {/* Vendor Description */}
+                    {data.user_description ? (
+                      <div
+                        className="mt-2 text-sm text-gray-700 prose max-w-none"
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.user_description) }}
+                      />
+                    ) : (
+                      <p className="mt-2 text-sm text-gray-500 italic">
+                        No description available.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

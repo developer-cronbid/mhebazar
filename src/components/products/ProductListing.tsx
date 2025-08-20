@@ -195,7 +195,6 @@ function ProductGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6">
       {products.map((product: Product) => (
-        console.log(product, "Product Data"),
         <ProductCardContainer
           key={product.id}
           id={parseInt(product.id, 10)}
