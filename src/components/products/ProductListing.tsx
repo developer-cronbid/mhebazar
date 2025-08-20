@@ -231,7 +231,7 @@ interface ProductListingProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  noProductsMessage?: string | null;
+  noProductsMessage: string | null;
   minPrice: number | '';
   maxPrice: number | '';
   selectedManufacturer: string | null;
@@ -361,7 +361,7 @@ export default function ProductListing({
                 </p>
                 </div>
                   {isUsedOrRentalPage && (
-                    <div className="flex flex-1 justify-center sm:ml-4">
+                    <div className="flex flex-1 sm:justify-center sm:ml-4">
                       <button
                         className={`py-1 px-4 text-sm font-semibold transition-colors duration-200 ${selectedTypeName === "Used" ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-green-600'}`}
                         onClick={() => handleToggle("used")}
