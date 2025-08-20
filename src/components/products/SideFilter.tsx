@@ -58,7 +58,7 @@ const SideFilter = ({
   const [search, setSearch] = useState<string>("");
   const [manufacturers, setManufacturers] = useState<string[]>([]);
   const [isLoadingManufacturers, setIsLoadingManufacturers] = useState<boolean>(true);
-  
+
   // Use the imported JSON data directly
   const categories: Category[] = categoriesData;
 
@@ -200,7 +200,7 @@ const SideFilter = ({
                   }`}
                 aria-expanded={expandedCategory === category.id}
               >
-                <span className="text-sm font-sans text-black">{category.name}</span>
+                <span className="text-sm font-sans text-black truncate line-clamp-1">{category.name}</span>
                 {category.subcategories.length > 0 && (
                   expandedCategory === category.id ? (
                     <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
@@ -231,7 +231,7 @@ const SideFilter = ({
                             }`}
                           onClick={() => onFilterChange(subcategory.name, "subcategory", subcategory.name)}
                         >
-                          {subcategory.name}
+                          <span className="truncate line-clamp-1">{subcategory.name}</span>
                         </motion.button>
                       ))}
                     </div>
