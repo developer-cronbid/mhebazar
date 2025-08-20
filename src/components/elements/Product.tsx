@@ -248,8 +248,8 @@ const ProductCard = ({
           <Link href={productDetailUrl}>
             <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors">
               {`${productData.manufacturer
-                ? `by ${productData.manufacturer}`
-                : `by ${productData.user_name}`
+                ? `${productData.manufacturer}`
+                : `${productData.user_name}`
                 } ${title} ${productData.model} `
                 .replace(/[^a-zA-Z0-9 \-]/g, "")
                 .replace(/\s+/g, " ")
