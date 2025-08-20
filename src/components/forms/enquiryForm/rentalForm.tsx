@@ -152,7 +152,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
                   {productDetails.title}
                 </h2>
-                <div className="space-y-2 text-sm sm:text-base text-gray-600">
+                {/* <div className="space-y-2 text-sm sm:text-base text-gray-600">
                   <p>
                     <span className="font-medium">In Stock:</span> {productDetails.stock_quantity ?? "N/A"}
                   </p>
@@ -165,7 +165,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                       <span className="text-sm font-normal text-gray-500"> / day</span>
                     </p>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
 
