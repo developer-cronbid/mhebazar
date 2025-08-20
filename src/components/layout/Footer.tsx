@@ -136,8 +136,10 @@ export default function Footer() {
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800 mb-1">E-mail:</h3>
-                  <span className="text-sm text-gray-600 pr-2 border-r-2">sales.1@mhebazar.com</span>
+                  <div className="flex flex-col md:flex-row">
+                    <span className="text-sm text-gray-600 pr-2 border-r-2">sales.1@mhebazar.com</span>
                   <span className="text-sm text-gray-600 pl-2">sales.2@mhebazar.com</span>
+                  </div>
                 </div>
               </div>
 
