@@ -48,7 +48,8 @@ export interface Product {
   manufacturer: string;
   average_rating: number | null;
   category_id: number | null;
-  model:string | null;
+  model: string | null;
+  user_name: string;
 }
 
 interface ProductGridProps {
@@ -351,43 +352,45 @@ export default function ProductListing({
 
         {/* Main Content */}
         <div className="flex-1 min-w-0">
-          {/* Top Controls */}
-          <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 sticky top-0 z-40">
-            <div className="flex items-center justify-between py-2 flex-wrap sm:flex-nowrap gap-2 sm:gap-4">
-              {/* Left Section - Title and Results */}
-              <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
-                <div className="">
-                  <span className="text-base font-bold text-black font-sans mr-2">
+          {/* Top Controls - Refactored to match the provided UI */}
+          <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-4 sticky top-0 z-40">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+              {/* Left Section - Title and Results & Tabs */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 w-full sm:w-auto">
+                {/* Title and Count */}
+                <div className="flex flex-col">
+                  <span className="text-xl sm:text-2xl font-bold text-gray-900 font-sans">
                     {title || 'New Arrivals'}
                   </span>
-                   <p className="text-xs text-gray-500 font-normal font-sans mt-0.5">
-                  Showing 1–{products.length} results
-                </p>
+                  <p className="text-sm sm:text-base text-gray-500 font-normal font-sans mt-1">
+                    Showing 1–{products.length} results
+                  </p>
                 </div>
-                  {isUsedOrRentalPage && (
-                    <div className="flex flex-1 sm:justify-center sm:ml-4">
-                      <button
-                        className={`py-1 px-4 text-sm font-semibold transition-colors duration-200 ${selectedTypeName === "Used" ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-green-600'}`}
-                        onClick={() => handleToggle("used")}
-                      >
-                        Used MHE
-                      </button>
-                      <button
-                        className={`py-1 px-4 text-sm font-semibold transition-colors duration-200 ${selectedTypeName === "Rental" ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-green-600'}`}
-                        onClick={() => handleToggle("rental")}
-                      >
-                        Rental
-                      </button>
-                    </div>
-                  )}
+                {/* Used/Rental Toggle Buttons */}
+                {isUsedOrRentalPage && (
+                  <div className="flex items-center sm:mt-0 mt-2">
+                    <button
+                      className={`py-1 px-3 text-sm font-semibold transition-colors duration-200 border-b-2 ${selectedTypeName === "Used" ? 'text-green-600 border-green-600' : 'text-gray-500 hover:text-green-600 border-transparent'}`}
+                      onClick={() => handleToggle("used")}
+                    >
+                      Used MHE
+                    </button>
+                    <button
+                      className={`py-1 px-3 text-sm font-semibold transition-colors duration-200 border-b-2 ${selectedTypeName === "Rental" ? 'text-green-600 border-green-600' : 'text-gray-500 hover:text-green-600 border-transparent'}`}
+                      onClick={() => handleToggle("rental")}
+                    >
+                      Rental
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Right Section - Sort, View Toggle, Mobile Filter */}
-              <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="flex items-center gap-4 flex-shrink-0 sm:mt-0 mt-4">
                 {/* Sort Dropdown */}
                 <div className="relative">
                   <select
-                    className="appearance-none bg-white border border-gray-300 rounded text-xs text-gray-500 px-3 py-1.5 pr-8 font-sans focus:outline-none focus:border-gray-400"
+                    className="appearance-none bg-white border border-gray-300 rounded text-sm text-gray-700 px-4 py-2 pr-10 font-sans focus:outline-none focus:border-green-400 focus:ring-1 focus:ring-green-400 transition-all duration-200"
                     value={sortBy}
                     onChange={(e) => onSortChange(e.target.value)}
                   >
@@ -396,16 +399,16 @@ export default function ProductListing({
                     <option value="price_desc">Price: High to Low</option>
                     <option value="newest">Newest First</option>
                   </select>
-                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-500 pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                 </div>
 
                 {/* View Toggle Buttons */}
-                <div className="flex items-center ml-2">
+                <div className="flex items-center rounded-md border border-gray-300 overflow-hidden">
                   <button
                     onClick={() => handleViewChange("grid")}
-                    className={`p-1 transition-colors duration-200 ${currentView === "grid"
-                        ? "text-green-500"
-                        : "text-gray-500 hover:text-green-500"
+                    className={`p-2 transition-colors duration-200 ${currentView === "grid"
+                        ? "bg-green-500 text-white hover:bg-green-600"
+                        : "text-gray-500 hover:bg-gray-100"
                       }`}
                     aria-label="Grid View"
                   >
@@ -413,9 +416,9 @@ export default function ProductListing({
                   </button>
                   <button
                     onClick={() => handleViewChange("list")}
-                    className={`p-1 ml-1 transition-colors duration-200 ${currentView === "list"
-                        ? "text-green-500"
-                        : "text-gray-500 hover:text-green-500"
+                    className={`p-2 transition-colors duration-200 border-l border-gray-300 ${currentView === "list"
+                        ? "bg-green-500 text-white hover:bg-green-600"
+                        : "text-gray-500 hover:bg-gray-100"
                       }`}
                     aria-label="List View"
                   >
@@ -426,11 +429,11 @@ export default function ProductListing({
                 {/* Mobile Filter Button - Only show if NOT a vendor page */}
                 {!window.location.pathname.startsWith("/vendor-listing/") && (
                   <button
-                    className="lg:hidden flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium shadow transition-all duration-200 ml-2"
+                    className="lg:hidden flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-xs font-medium shadow transition-all duration-200"
                     onClick={() => setMobileFilterOpen(true)}
                     aria-label="Open filters"
                   >
-                    <Menu className="w-3 h-3" />
+                    <Menu className="w-4 h-4" />
                     <span>Filters</span>
                   </button>
                 )}
