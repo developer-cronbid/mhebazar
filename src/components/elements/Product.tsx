@@ -29,7 +29,6 @@ const slugify = (text: string): string => {
     .replace(/\s+/g, '-')
     .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-')
-    .replace(/^-+/, '')
     .replace(/-+$/, '');
 };
 
@@ -61,6 +60,8 @@ interface ProductCardDisplayProps {
   onRemoveFromCart: (cartItemId: number) => void;
   productData: Record<string, unknown>;
   productType: string;
+  // New prop to handle dynamic button and form based on URL
+  pageUrlType: string;
 }
 
 // Custom Image component with an error handler to show a fallback
@@ -144,6 +145,7 @@ const ProductCard = ({
   onRemoveFromCart,
   productData,
   productType,
+  pageUrlType,
 }: ProductCardDisplayProps) => {
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
@@ -151,7 +153,10 @@ const ProductCard = ({
   const productSlug = slugify(title || '');
   const productDetailUrl = `/product/${productSlug}/?id=${id}`;
 
-  const formButtonText = productType === 'rental' || productType === 'used' ? "Rent Now" : "Get a Quote";
+  // Determine button text and form based on page URL type
+  const isRentalPage = pageUrlType === 'rental';
+  const isUsedPage = pageUrlType === 'used';
+  const formButtonText = isRentalPage ? "Rent Now" : "Get a Quote";
 
   // Format price with Rupee symbol and handle hidden/zero price
   const displayPrice = (hide_price || parseFloat(price.toString()) <= 0) ? (
@@ -298,7 +303,7 @@ const ProductCard = ({
                 </button>
                 <button
                   onClick={() => onBuyNowClick(id)}
-                  className="rounded-lg border border-green-600 text-green-600 hover:bg-green-50 py-3 font-medium text-base transition-colors flex-1"
+                  className="rounded-lg border border-green-600 text-green-600 hover:bg-green-600 hover:text-amber-100 py-3 font-medium text-base transition-colors flex-1"
                   aria-label="Buy now"
                   disabled={!isPurchasable}
                 >
@@ -335,7 +340,7 @@ const ProductCard = ({
               </button>
             </DialogTrigger>
             <DialogContent className="w-[95vw] max-w-2xl mx-auto">
-              {productType === 'rental' || productType === 'used' ? (
+              {isRentalPage ? (
                 <RentalForm
                   productId={id}
                   productDetails={{
@@ -374,6 +379,7 @@ interface ProductCardContainerProps {
   stock_quantity: number;
   type: string;
   category_id: number | null;
+  pageUrlType: string;
 }
 
 interface ApiProductData {
@@ -422,6 +428,7 @@ export const ProductCardContainer = ({
   stock_quantity,
   type,
   category_id,
+  pageUrlType,
 }: ProductCardContainerProps) => {
   const router = useRouter();
   const {
@@ -445,7 +452,7 @@ export const ProductCardContainer = ({
   const cartItemId = getCartItemId(id); // Context provides this if needed
 
   const productFullData: ProductCardContainerProps = {
-    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_id
+    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_id, pageUrlType
   };
 
   const handleAddToCart = useCallback(async (productId: number) => {
@@ -627,6 +634,7 @@ export const ProductCardContainer = ({
       onShareClick={handleShare}
       productData={{ ...productFullData }}
       productType={type}
+      pageUrlType={pageUrlType}
     />
   );
 };

@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { ChevronDown, List, Menu, X } from "lucide-react";
 import { ProductCardContainer } from "@/components/elements/Product";
-import SideFilter from "@/components/products/SideFilter";
+import SideFilter from "./SideFilter";
 import Image from "next/image";
 import { Toaster } from "sonner";
 import QuoteForm from "../forms/enquiryForm/quotesForm";
@@ -12,6 +12,7 @@ import { Product } from "@/types";
 import DOMPurify from 'dompurify';
 import { IoGrid } from "react-icons/io5";
 import { useRouter } from "next/navigation";
+import RentalForm from "../forms/enquiryForm/rentalForm";
 
 
 import {
@@ -53,12 +54,14 @@ interface ProductGridProps {
   products: Product[];
   viewMode?: "grid" | "list";
   noProductsMessage: string | null;
+  pageUrlType: string;
 }
 
 function ProductGrid({
   products,
   viewMode = "grid",
   noProductsMessage,
+  pageUrlType,
 }: ProductGridProps) {
   if (products.length === 0) {
     return (
@@ -75,6 +78,11 @@ function ProductGrid({
       </div>
     );
   }
+
+  // Determine button logic based on URL type
+  const isRentalPage = pageUrlType === 'rental';
+  const isUsedPage = pageUrlType === 'used';
+  const buttonText = isRentalPage ? "Rent Now" : "Get a Quote";
 
   if (viewMode === "list") {
     return (
@@ -148,15 +156,29 @@ function ProductGrid({
                       <DialogTrigger asChild>
                         <button
                           className="flex items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 py-2.5 sm:py-3 px-4 sm:px-6 text-white font-semibold transition-all duration-200 w-full sm:w-auto shadow-md hover:shadow-lg transform hover:-translate-y-0.5 min-w-[120px] sm:min-w-[140px]"
-                          aria-label="Get a quote"
+                          aria-label={buttonText}
                           disabled={!product.is_active}
                         >
-                          Get a Quote
+                          {buttonText}
                         </button>
                       </DialogTrigger>
                       <DialogContent className="w-full sm:max-w-2xl">
+                        {isRentalPage ? (
+                          <RentalForm
+                            productId={parseInt(product.id, 10)}
+                            productDetails={{
+                              image: product.image,
+                              title: product.title,
+                              description: product.subtitle,
+                              price: product.price,
+                              stock_quantity: product.stock_quantity
+                            }}
+                            onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                          />
+                        ) : (
                           <QuoteForm product={product} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                           />
+                        )}
                       </DialogContent>
                     </Dialog>
                   )}
@@ -186,6 +208,7 @@ function ProductGrid({
           type={product.type}
           stock_quantity={product.stock_quantity}
           category_id={product.category_id}
+          pageUrlType={pageUrlType}
         />
       ))}
     </div>
@@ -216,6 +239,7 @@ interface ProductListingProps {
   sortBy: string;
   onSortChange: (value: string) => void;
   showManufacturerFilter?: boolean;
+  pageUrlType: string;
 }
 
 export default function ProductListing({
@@ -238,6 +262,7 @@ export default function ProductListing({
   sortBy,
   onSortChange,
   showManufacturerFilter = true,
+  pageUrlType,
 }: ProductListingProps) {
   const [currentView, setCurrentView] = useState<"grid" | "list">("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
@@ -324,9 +349,9 @@ export default function ProductListing({
         <div className="flex-1 min-w-0">
           {/* Top Controls */}
           <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 sticky top-0 z-40">
-            <div className="flex items-center justify-between py-2">
+            <div className="flex items-center justify-between py-2 flex-wrap sm:flex-nowrap gap-2 sm:gap-4">
               {/* Left Section - Title and Results */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap sm:flex-nowrap">
                 <div className="">
                   <span className="text-base font-bold text-black font-sans mr-2">
                     {title || 'New Arrivals'}
@@ -336,7 +361,7 @@ export default function ProductListing({
                 </p>
                 </div>
                   {isUsedOrRentalPage && (
-                    <div className="flex ml-4">
+                    <div className="flex flex-1 justify-center sm:ml-4">
                       <button
                         className={`py-1 px-4 text-sm font-semibold transition-colors duration-200 ${selectedTypeName === "Used" ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-500 hover:text-green-600'}`}
                         onClick={() => handleToggle("used")}
@@ -354,7 +379,7 @@ export default function ProductListing({
               </div>
 
               {/* Right Section - Sort, View Toggle, Mobile Filter */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Sort Dropdown */}
                 <div className="relative">
                   <select
@@ -411,7 +436,7 @@ export default function ProductListing({
 
           {/* Products Grid and Pagination */}
           <div className="p-4 sm:p-6 lg:p-8">
-            <ProductGrid products={products} viewMode={currentView} noProductsMessage={noProductsMessage} />
+            <ProductGrid products={products} viewMode={currentView} noProductsMessage={noProductsMessage} pageUrlType={pageUrlType} />
 
             {totalPages > 1 && (
               <div className="mt-8 sm:mt-12 flex justify-center">

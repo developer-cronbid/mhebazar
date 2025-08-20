@@ -2,7 +2,7 @@
 // src/app/[category]/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
 import ProductListing, { Product } from "@/components/products/ProductListing";
 import Breadcrumb from "@/components/elements/Breadcrumb";
@@ -143,103 +143,102 @@ export default function CategoryOrTypePage({
     return { type: 'invalid', name: null, subName: null, id: null, subId: null };
   }, []);
 
-// Fetch products based on the determined context and filters
-const fetchProductsData = useCallback(async (
-  contextType: 'category' | 'subcategory' | 'type',
-  contextName: string,
-  contextSubName: string | null,
-  categoryId: number | null,
-  subcategoryId: number | null,
-  page: number,
-  minPriceFilter: number | '',
-  maxPriceFilter: number | '',
-  manufacturerFilter: string | null,
-  ratingFilter: number | null,
-  sortByFilter: string
-) => {
-  setIsLoading(true);
-  setNoProductsFoundMessage(null);
+  // Fetch products based on the determined context and filters
+  const fetchProductsData = useCallback(async (
+    contextType: 'category' | 'subcategory' | 'type',
+    contextName: string,
+    contextSubName: string | null,
+    categoryId: number | null,
+    subcategoryId: number | null,
+    page: number,
+    minPriceFilter: number | '',
+    maxPriceFilter: number | '',
+    manufacturerFilter: string | null,
+    ratingFilter: number | null,
+    sortByFilter: string
+  ) => {
+    setIsLoading(true);
+    setNoProductsFoundMessage(null);
 
-  try {
-    const queryParams = new URLSearchParams();
+    try {
+      const queryParams = new URLSearchParams();
 
-    if (contextType === 'subcategory' && subcategoryId) {
-      queryParams.append("subcategory", subcategoryId.toString());
-    } else if (contextType === 'category' && categoryId) {
-      queryParams.append("category", categoryId.toString());
-    } else if (contextType === 'type') {
-      // Correct logic for the rental page to also show 'used' products
-      if (contextName.toLowerCase() === 'rental') {
-        // Append multiple type parameters, which some APIs handle as an OR condition
-        queryParams.append("type", "rental");
-        queryParams.append("type", "used");
-      } else {
-        queryParams.append("type", contextName.toLowerCase());
-      }
-    }
+      if (contextType === 'subcategory' && subcategoryId) {
+        queryParams.append("subcategory", subcategoryId.toString());
+      } else if (contextType === 'category' && categoryId) {
+        queryParams.append("category", categoryId.toString());
+      } else if (contextType === 'type') {
+        if (contextName.toLowerCase() === 'rental') {
+          // New Logic: When on the rental page, fetch both 'rental' and 'used' products
+          queryParams.append("type", "rental");
+          queryParams.append("type", "used");
+        } else {
+          queryParams.append("type", contextName.toLowerCase());
+        }
+      }
 
-    queryParams.append("page", page.toString());
+      queryParams.append("page", page.toString());
 
-    if (minPriceFilter !== '') queryParams.append("min_price", minPriceFilter.toString());
-    if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
-    if (ratingFilter !== null) queryParams.append("average_rating", ratingFilter.toString());
+      if (minPriceFilter !== '') queryParams.append("min_price", minPriceFilter.toString());
+      if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
+      if (ratingFilter !== null) queryParams.append("average_rating", ratingFilter.toString());
 
-    if (manufacturerFilter) queryParams.append("search", manufacturerFilter);
+      if (manufacturerFilter) queryParams.append("search", manufacturerFilter);
 
-    if (sortByFilter && sortByFilter !== 'relevance') {
-      let sortParam = '';
-      if (sortByFilter === 'price_asc') sortParam = 'price';
-      else if (sortByFilter === 'price_desc') sortParam = '-price';
-      else if (sortByFilter === 'newest') sortParam = '-created_at';
-      if (sortParam) queryParams.append("ordering", sortParam);
-    }
+      if (sortByFilter && sortByFilter !== 'relevance') {
+        let sortParam = '';
+        if (sortByFilter === 'price_asc') sortParam = 'price';
+        else if (sortByFilter === 'price_desc') sortParam = '-price';
+        else if (sortByFilter === 'newest') sortParam = '-created_at';
+        if (sortParam) queryParams.append("ordering", sortParam);
+      }
 
-    const response = await api.get<ApiResponse<ApiProduct>>(
-      `/products/?${queryParams.toString()}`
-    );
+      const response = await api.get<ApiResponse<ApiProduct>>(
+        `/products/?${queryParams.toString()}`
+      );
 
-    if (response.data && response.data.results) {
-      if (response.data.results.length === 0) {
-        setNoProductsFoundMessage(`No products found for "${contextSubName || contextName}" with the selected filters.`);
-      }
+      if (response.data && response.data.results) {
+        if (response.data.results.length === 0) {
+          setNoProductsFoundMessage(`No products found for "${contextSubName || contextName}" with the selected filters.`);
+        }
 
-      const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
-        id: p.id.toString(),
-        image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
-        title: p.name,
-        subtitle: p.description,
-        price: parseFloat(p.price),
-        currency: "₹",
-        category_name: p.category_name,
-        subcategory_name: p.subcategory_name,
-        direct_sale: p.direct_sale,
-        is_active: p.is_active,
-        hide_price: p.hide_price,
-        stock_quantity: p.stock_quantity,
-        manufacturer: p.manufacturer,
-        average_rating: p.average_rating,
-        type: p.type,
-        category_id: p.category,
-      }));
+        const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
+          id: p.id.toString(),
+          image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
+          title: p.name,
+          subtitle: p.description,
+          price: parseFloat(p.price),
+          currency: "₹",
+          category_name: p.category_name,
+          subcategory_name: p.subcategory_name,
+          direct_sale: p.direct_sale,
+          is_active: p.is_active,
+          hide_price: p.hide_price,
+          stock_quantity: p.stock_quantity,
+          manufacturer: p.manufacturer,
+          average_rating: p.average_rating,
+          type: p.type,
+          category_id: p.category,
+        }));
 
-      setProducts(transformedProducts);
-      setTotalProducts(response.data.count);
-      setTotalPages(Math.ceil(response.data.count / 20)); // Assuming 20 items per page
-    } else {
-      setNoProductsFoundMessage(`Failed to load products. Unexpected API response structure.`);
-      setProducts([]);
-    }
-  } catch (err) {
-    if (err instanceof AxiosError) {
-      setErrorMessage(`Failed to load products. API error: ${err.message}`);
-    } else {
-      setErrorMessage(`Failed to load products. An unknown error occurred.`);
-    }
-    setProducts([]);
-  } finally {
-    setIsLoading(false);
-  }
-}, []);
+        setProducts(transformedProducts);
+        setTotalProducts(response.data.count);
+        setTotalPages(Math.ceil(response.data.count / 20)); // Assuming 20 items per page
+      } else {
+        setNoProductsFoundMessage(`Failed to load products. Unexpected API response structure.`);
+        setProducts([]);
+      }
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        setErrorMessage(`Failed to load products. API error: ${err.message}`);
+      } else {
+        setErrorMessage(`Failed to load products. An unknown error occurred.`);
+      }
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   // Effect to apply filters from URL search params on initial load
   useEffect(() => {
@@ -343,7 +342,7 @@ const fetchProductsData = useCallback(async (
       } else if (filterType === "rating") {
         newValue ? newSearchParams.set('average_rating', String(newValue)) : newSearchParams.delete('average_rating');
       } else if (filterType === "sort_by" && typeof filterValue === 'string') {
-        filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
+        filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', value);
       }
 
       newSearchParams.set('page', '1');
@@ -409,7 +408,8 @@ const fetchProductsData = useCallback(async (
         selectedRating={selectedRating}
         sortBy={sortBy}
         onSortChange={handleSortChange}
-        // category_id={product.category}
+        // Pass the URL param type to the listing component
+        pageUrlType={urlParamSlug}
       />
     </>
   );
