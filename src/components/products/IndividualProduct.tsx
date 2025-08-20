@@ -1,4 +1,3 @@
-// src/components/product/IndividualProduct.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -68,7 +67,6 @@ type ProductData = {
   category_details?: {
     cat_image: string | null;
   };
-  videos?: string[];
 };
 
 interface CartItemApi {
@@ -89,6 +87,7 @@ interface ProductSectionProps {
   productId: number | string | null;
 }
 
+// Custom Image component with an error handler to show a fallback
 const FallbackImage = ({
   src,
   alt,
@@ -144,6 +143,7 @@ const FallbackImage = ({
   );
 };
 
+// Framer motion variants
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
@@ -156,19 +156,25 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   const [data, setData] = useState<ProductData | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [openAccordion, setOpenAccordion] = useState<
     "desc" | "spec" | "vendor" | null
   >("desc");
   const [isInCart, setIsInCart] = useState(false);
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
   const [cartItemId, setCartItemId] = useState<number | null>(null);
+  const [scrollOffset, setScrollOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   // State for the media gallery modal
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
+  // Use a ref to store a function that can refresh reviews
   const reviewsRefresher = useRef<(() => void) | null>(null);
+
+  // Ref to hold the latest state values for async operations
   const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
   useEffect(() => {
     latestCartState.current = { currentCartQuantity, cartItemId, isInCart };
@@ -238,6 +244,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
         );
         const foundProduct = productRes.data;
 
+        // Fetch category details for the fallback image
         const categoryRes = await api.get(`/categories/${foundProduct.category}`);
         const categoryWithImage = {
           ...foundProduct,
@@ -623,55 +630,14 @@ export default function ProductSection({ productId }: ProductSectionProps) {
 
   return (
     <motion.div
-      className="px-4 mx-auto p-2 sm:p-4 bg-white w-full max-w-7xl"
+      className="px-4 mx-auto p-2 sm:p-4 bg-white w-full md:w-[90vw]"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      {/* --- Breadcrumb Section (Corrected and Responsive) --- */}
-      <nav aria-label="Breadcrumb" className="mb-4 text-sm md:text-base">
-        <ol className="flex items-center space-x-2">
-          <li>
-            <Link href="/" className="text-gray-600 hover:underline">
-              Home
-            </Link>
-          </li>
-          {data.category_name && (
-            <>
-              <li className="text-gray-400">/</li>
-              <li className="truncate max-w-[100px] sm:max-w-none">
-                <Link
-                  href={`/products?category=${data.category_name.toLowerCase()}`}
-                  className="text-gray-600 hover:underline"
-                >
-                  {data.category_name}
-                </Link>
-              </li>
-            </>
-          )}
-          {data.subcategory_name && (
-            <>
-              <li className="text-gray-400">/</li>
-              <li className="truncate max-w-[100px] sm:max-w-none">
-                <Link
-                  href={`/products?category=${data.category_name.toLowerCase()}&subcategory=${data.subcategory_name.toLowerCase()}`}
-                  className="text-gray-600 hover:underline"
-                >
-                  {data.subcategory_name}
-                </Link>
-              </li>
-            </>
-          )}
-          <li className="text-gray-400">/</li>
-          <li className="truncate max-w-[200px] sm:max-w-full font-semibold text-gray-800">
-            {data.name}
-          </li>
-        </ol>
-      </nav>
-
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Side - Product Images */}
-        <div className="flex flex-col md:flex-row-reverse gap-4 w-full md:w-[40%]">
+        <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-[40%]">
           {/* Main Product Image with Trigger */}
           <button
             className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-[464px] md:h-[464px] mx-auto group cursor-zoom-in"
@@ -693,22 +659,27 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-                onClick={(e) => { e.stopPropagation(); handleWishlist(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleWishlist();
+                }}
                 disabled={!data.is_active}
                 aria-label="Add to wishlist"
               >
                 <Heart
-                  className={`w-4 h-4 transition-colors ${isWishlisted
-                    ? "fill-red-500 text-red-500"
-                    : "text-gray-600"
-                    }`}
+                  className={`w-4 h-4 transition-colors ${
+                    isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
+                  }`}
                 />
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-                onClick={(e) => { e.stopPropagation(); handleShare(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleShare();
+                }}
                 aria-label="Share product"
               >
                 <Share2 className="w-4 h-4 text-gray-600" />
@@ -717,7 +688,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
-                onClick={(e) => { e.stopPropagation(); handleCompare(); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCompare();
+                }}
                 disabled={!data.is_active}
                 aria-label="Compare product"
               >
@@ -725,30 +699,71 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               </motion.button>
             </div>
           </button>
-
-          {/* Responsive Thumbnail Bar */}
-          <div className="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-y-hidden p-2 md:p-0 md:h-auto">
-            {data.images.map((img, index) => (
-              <motion.button
-                key={img.id}
-                onClick={() => setSelectedImage(index)}
-                className={`rounded border-2 overflow-hidden flex-shrink-0 w-20 h-20 md:w-[104px] md:h-[104px] ${selectedImage === index
-                  ? "border-orange-500"
-                  : "border-gray-200"
+          {/* Thumbnail Images */}
+          <div className="flex flex-col gap-2 h-[464px] min-h-[100px] overflow-hidden relative">
+            <motion.div
+              className="flex flex-col gap-2 transition-transform duration-300 ease-in-out"
+              animate={{ y: `-${scrollOffset * 112}px` }}
+              transition={{ duration: 0.3 }}
+            >
+              {data.images.map((img, index) => (
+                <motion.button
+                  key={img.id}
+                  onClick={() => setSelectedImage(index)}
+                  className={`rounded border-2 overflow-hidden flex-shrink-0 w-[104px] h-[104px] ${
+                    selectedImage === index
+                      ? "border-orange-500"
+                      : "border-gray-200"
                   } hover:border-orange-300 transition-colors`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                aria-label={`Select image ${index + 1}`}
-              >
-                <Image
-                  src={img.image}
-                  alt={`${data.name} thumbnail ${index + 1}`}
-                  className="w-full h-full object-cover"
-                  width={104}
-                  height={104}
-                />
-              </motion.button>
-            ))}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label={`Select image ${index + 1}`}
+                >
+                  <Image
+                    src={img.image}
+                    alt={`${data.name} thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    width={104}
+                    height={104}
+                  />
+                </motion.button>
+              ))}
+            </motion.div>
+
+            {/* Navigation arrows */}
+            {data.images.length > 4 && (
+              <>
+                {scrollOffset > 0 && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() =>
+                      setScrollOffset(Math.max(0, scrollOffset - 1))
+                    }
+                    className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 z-20"
+                    aria-label="Scroll thumbnails up"
+                  >
+                    <ChevronUp className="w-4 h-4 text-gray-600" />
+                  </motion.button>
+                )}
+
+                {scrollOffset < data.images.length - 4 && (
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() =>
+                      setScrollOffset(
+                        Math.min(data.images.length - 4, scrollOffset + 1)
+                      )
+                    }
+                    className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100 z-20"
+                    aria-label="Scroll thumbnails down"
+                  >
+                    <ChevronDown className="w-4 h-4 text-gray-600" />
+                  </motion.button>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -758,7 +773,11 @@ export default function ProductSection({ productId }: ProductSectionProps) {
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {`${data.name} ${data.model} ${data.manufacturer ? data.manufacturer : data.user_name.replace('_', ' ')}`}
+                {`${data.name} ${data.model} ${
+                  data.manufacturer
+                    ? data.manufacturer
+                    : data.user_name.replace("_", " ")
+                }`}
               </h1>
               {/* Rating and Reviews */}
               <div className="flex items-center gap-1 mb-4 flex-wrap">
@@ -766,10 +785,12 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`w-4 h-4 transition-colors ${data.average_rating !== null && star <= data.average_rating
-                        ? "fill-orange-400 text-orange-400"
-                        : "text-gray-300"
-                        }`}
+                      className={`w-4 h-4 transition-colors ${
+                        data.average_rating !== null &&
+                        star <= data.average_rating
+                          ? "fill-orange-400 text-orange-400"
+                          : "text-gray-300"
+                      }`}
                     />
                   ))}
                   <span className="text-sm text-gray-600 ml-1">
@@ -881,7 +902,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   </div>
                 ) : (
                   <div className="mt-4 flex flex-col gap-2">
-                    {(data.type === "rental" || data.type === "used") ? (
+                    {data.type === "rental" || data.type === "used" ? (
                       <>
                         <Dialog>
                           <DialogTrigger asChild>
@@ -908,7 +929,11 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                                 price: data.price,
                                 stock_quantity: data.stock_quantity,
                               }}
-                              onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                              onClose={() =>
+                                document
+                                  .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                                  ?.click()
+                              }
                             />
                           </DialogContent>
                         </Dialog>
@@ -925,7 +950,14 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                             </motion.button>
                           </DialogTrigger>
                           <DialogContent className="w-full max-w-2xl">
-                            <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()} />
+                            <QuoteForm
+                              product={data}
+                              onClose={() =>
+                                document
+                                  .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                                  ?.click()
+                              }
+                            />
                           </DialogContent>
                         </Dialog>
                       </>
@@ -943,7 +975,13 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                           </motion.button>
                         </DialogTrigger>
                         <DialogContent className="w-full max-w-2xl">
-                          <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                          <QuoteForm
+                            product={data}
+                            onClose={() =>
+                              document
+                                .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                                ?.click()
+                            }
                           />
                         </DialogContent>
                       </Dialog>
@@ -991,12 +1029,12 @@ export default function ProductSection({ productId }: ProductSectionProps) {
 
           <div className="pt-6 border-t border-gray-200">
             <p className="text-2xl font-bold">Product Details</p>
-            <p
+            <div
               className="line-clamp-4"
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(data.description),
               }}
-            ></p>
+            ></div>
             <Dialog>
               <DialogTrigger asChild>
                 <motion.p
@@ -1022,10 +1060,20 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                       price: data.price,
                       stock_quantity: data.stock_quantity,
                     }}
-                    onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                    onClose={() =>
+                      document
+                        .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                        ?.click()
+                    }
                   />
                 ) : (
-                  <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                  <QuoteForm
+                    product={data}
+                    onClose={() =>
+                      document
+                        .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                        ?.click()
+                    }
                   />
                 )}
               </DialogContent>
@@ -1095,105 +1143,111 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 transition={{ duration: 0.3 }}
                 className="p-0 overflow-hidden"
               >
-                {
-                  validSpecs.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr className="bg-gray-50 border-b border-gray-200">
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                              Specification
-                            </th>
-                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                              Details
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-100">
-                          {validSpecs.flatMap(([key, value], index) => {
-                            if (
-                              typeof value === "string" &&
-                              value.startsWith("[") &&
-                              value.endsWith("]")
-                            ) {
-                              try {
-                                const parsedArray = JSON.parse(value);
-                                if (Array.isArray(parsedArray)) {
-                                  return parsedArray.map((item, specIndex) => {
-                                    const parts = item.split(/:\s*(.*)/s);
-                                    const specKey = parts[0] || "Detail";
-                                    const specValue = parts[1] || item;
+                {validSpecs.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Specification
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Details
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-100">
+                        {validSpecs.flatMap(([key, value], index) => {
+                          if (
+                            typeof value === "string" &&
+                            value.startsWith("[") &&
+                            value.endsWith("]")
+                          ) {
+                            try {
+                              const parsedArray = JSON.parse(value);
+                              if (Array.isArray(parsedArray)) {
+                                return parsedArray.map((item, specIndex) => {
+                                  const parts = item.split(/:\s*(.*)/s);
+                                  const specKey = parts[0] || "Detail";
+                                  const specValue = parts[1] || item;
 
-                                    return (
-                                      <tr
-                                        key={`${key}-${specIndex}`}
-                                        className={`hover:bg-gray-50 transition-colors duration-150 ${specIndex % 2 === 0 ? "bg-white" : "bg-gray-25"
-                                          }`}
-                                      >
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                          <span className="text-sm font-medium text-gray-700">
-                                            {specKey}
-                                          </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                          <span className="text-sm text-gray-900 font-medium">
-                                            {specValue}
-                                          </span>
-                                        </td>
-                                      </tr>
-                                    );
-                                  });
-                                }
-                              } catch (e) {
-                                console.error("Failed to parse spec string:", value, e);
+                                  return (
+                                    <tr
+                                      key={`${key}-${specIndex}`}
+                                      className={`hover:bg-gray-50 transition-colors duration-150 ${
+                                        specIndex % 2 === 0
+                                          ? "bg-white"
+                                          : "bg-gray-25"
+                                      }`}
+                                    >
+                                      <td className="px-6 py-4 whitespace-nowrap">
+                                        <span className="text-sm font-medium text-gray-700">
+                                          {specKey}
+                                        </span>
+                                      </td>
+                                      <td className="px-6 py-4">
+                                        <span className="text-sm text-gray-900 font-medium">
+                                          {specValue}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  );
+                                });
                               }
+                            } catch (e) {
+                              console.error(
+                                "Failed to parse spec string:",
+                                value,
+                                e
+                              );
                             }
+                          }
 
-                            return (
-                              <tr
-                                key={key}
-                                className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"
-                                  }`}
-                              >
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className="text-sm font-medium text-gray-700">
-                                    {formatKey(key)}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <span className="text-sm text-gray-900 font-medium">
-                                    {String(value)}
-                                  </span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                          return (
+                            <tr
+                              key={key}
+                              className={`hover:bg-gray-50 transition-colors duration-150 ${
+                                index % 2 === 0 ? "bg-white" : "bg-gray-25"
+                              }`}
+                            >
+                              <td className="px-6 py-4 whitespace-nowrap">
+                                <span className="text-sm font-medium text-gray-700">
+                                  {formatKey(key)}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="text-sm text-gray-900 font-medium">
+                                  {String(value)}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-12 px-6">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-8 h-8 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
                     </div>
-                  ) : (
-                    <div className="text-center py-12 px-6">
-                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                        <svg
-                          className="w-8 h-8 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-gray-500 text-sm">
-                        No specifications available at this time.
-                      </p>
-                    </div>
-                  )
-                }
+                    <p className="text-gray-500 text-sm">
+                      No specifications available at this time.
+                    </p>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -1259,7 +1313,9 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               {/* Main media view */}
               <div className="relative w-full h-[70vh] md:h-[80vh] flex items-center justify-center">
                 <FallbackImage
-                  src={data.images[currentMediaIndex]?.image || "/no-product.png"}
+                  src={
+                    data.images[currentMediaIndex]?.image || "/no-product.png"
+                  }
                   alt={`${data.name} media ${currentMediaIndex + 1}`}
                   className="max-h-full max-w-full object-contain rounded-md"
                   width={1000}
@@ -1299,10 +1355,11 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   <motion.button
                     key={img.id}
                     onClick={() => setCurrentMediaIndex(index)}
-                    className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${currentMediaIndex === index
-                      ? "border-orange-500"
-                      : "border-transparent hover:border-gray-600"
-                      }`}
+                    className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                      currentMediaIndex === index
+                        ? "border-orange-500"
+                        : "border-transparent hover:border-gray-600"
+                    }`}
                     aria-label={`Select media thumbnail ${index + 1}`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -1321,7 +1378,6 @@ export default function ProductSection({ productId }: ProductSectionProps) {
           </motion.div>
         )}
       </AnimatePresence>
-
     </motion.div>
   );
 }
