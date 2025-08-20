@@ -779,7 +779,11 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 {`${data.name} ${data.model} ${data.manufacturer
                     ? data.manufacturer
                     : data.user_name.replace("_", " ")
-                  }`}
+                  }`
+                  .replace(/[^a-zA-Z0-9 \-]/g, '') // 🧹 Collapse all whitespace into a single space
+                  .replace(/\s+/g, ' ')
+                  .trim() // ✨ Remove any space from the beginning or end
+                }
               </h1>
               {/* Rating and Reviews */}
               <div className="flex items-center gap-1 mb-4 flex-wrap">
