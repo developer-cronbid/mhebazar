@@ -15,11 +15,13 @@ body {
 /* Base container */
 .blog-content {
   background: #ffffff;
-  /* CHANGE: Set a max-width for better readability on wide screens. */
-  max-width: 100%;
-  /* Ensures it shrinks on smaller viewports */
-  margin: 3rem auto;
-  padding: 4rem;
+  /* ENHANCED: Better responsive max-width with fluid scaling */
+  max-width: min(100%, 1200px);
+  width: 100%;
+  /* ENHANCED: Responsive margin using clamp() */
+  margin: clamp(1rem, 5vw, 3rem) auto;
+  /* ENHANCED: Fluid padding that scales with viewport */
+  padding: clamp(2rem, 5vw, 4rem);
   border-radius: 1rem;
   border: 1px solid #e2e8f0;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
@@ -33,44 +35,48 @@ body {
   font-weight: 700;
   color: #0f172a;
   line-height: 1.25;
-  margin-top: 2.75rem;
-  margin-bottom: 1.25rem;
+  /* ENHANCED: Responsive margin using clamp() */
+  margin-top: clamp(1.5rem, 4vw, 2.75rem);
+  margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
   scroll-margin-top: 5rem;
   letter-spacing: -0.02em;
 }
 
-/* CHANGE: Implemented fluid font sizes using clamp() */
+/* ENHANCED: Better fluid font sizes with wider range */
 .blog-content h1 {
-  /* Scales from 2.25rem to 2.75rem */
-  font-size: clamp(2.25rem, 1.75rem + 2.5vw, 2.75rem);
+  /* Scales from 1.75rem on mobile to 2.75rem on desktop */
+  font-size: clamp(1.75rem, 4vw + 1rem, 2.75rem);
   border-bottom: 2px solid #e2e8f0;
-  padding-bottom: 1rem;
+  /* ENHANCED: Responsive padding */
+  padding-bottom: clamp(0.5rem, 2vw, 1rem);
 }
 
 .blog-content h2 {
-  /* Scales from 1.85rem to 2rem */
-  font-size: clamp(1.85rem, 1.5rem + 1.25vw, 2rem);
+  /* Scales from 1.5rem on mobile to 2rem on desktop */
+  font-size: clamp(1.5rem, 3vw + 0.75rem, 2rem);
   border-left: 4px solid #5ca030;
-  padding-left: 1rem;
+  /* ENHANCED: Responsive padding */
+  padding-left: clamp(0.75rem, 2vw, 1rem);
 }
 
 .blog-content h3 {
-  /* Scales from 1.4rem to 1.6rem */
-  font-size: clamp(1.4rem, 1.2rem + 1vw, 1.6rem);
+  /* Scales from 1.25rem on mobile to 1.6rem on desktop */
+  font-size: clamp(1.25rem, 2.5vw + 0.5rem, 1.6rem);
   color: #1e293b;
 }
 
 .blog-content h4 {
-  /* Scales from 1.15rem to 1.25rem */
-  font-size: clamp(1.15rem, 1rem + 0.75vw, 1.25rem);
+  /* Scales from 1.1rem on mobile to 1.25rem on desktop */
+  font-size: clamp(1.1rem, 2vw + 0.5rem, 1.25rem);
   color: #475569;
   font-weight: 600;
 }
 
 /* --- PARAGRAPHS & LINKS --- */
 .blog-content p {
-  margin-bottom: 1.6rem;
-  font-size: 1.05rem;
+  /* ENHANCED: Responsive margin and font size */
+  margin-bottom: clamp(1rem, 3vw, 1.6rem);
+  font-size: clamp(0.95rem, 2vw + 0.5rem, 1.05rem);
 }
 
 .blog-content strong {
@@ -96,13 +102,15 @@ body {
 /* --- LISTS --- */
 .blog-content ul,
 .blog-content ol {
-  padding-left: 1.5rem;
-  margin-bottom: 1.5rem;
+  /* ENHANCED: Responsive padding and margin */
+  padding-left: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
 }
 
 .blog-content li {
-  margin-bottom: 0.75rem;
-  padding-left: 0.5rem;
+  /* ENHANCED: Responsive spacing */
+  margin-bottom: clamp(0.5rem, 1.5vw, 0.75rem);
+  padding-left: clamp(0.25rem, 1vw, 0.5rem);
   line-height: 1.6;
 }
 
@@ -114,8 +122,9 @@ body {
 
 /* --- BLOCKQUOTES & CODE --- */
 .blog-content blockquote {
-  margin: 2rem 0;
-  padding: 1.25rem 1.75rem;
+  /* ENHANCED: Responsive margin and padding */
+  margin: clamp(1.5rem, 4vw, 2rem) 0;
+  padding: clamp(1rem, 3vw, 1.25rem) clamp(1.25rem, 4vw, 1.75rem);
   border-left: 4px solid #5ca030;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   color: #475569;
@@ -130,19 +139,27 @@ body {
   color: #b91c1c;
   border-radius: 0.4rem;
   padding: 0.25em 0.45em;
-  font-size: 0.9em;
+  /* ENHANCED: Responsive font size */
+  font-size: clamp(0.8em, 1.5vw + 0.6em, 0.9em);
   border: 1px solid #e2e8f0;
+  /* ENHANCED: Prevent code from breaking layout on small screens */
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .blog-content pre {
   background: #0f172a;
   color: #e2e8f0;
   border-radius: 0.75rem;
-  padding: 1.5rem;
-  margin: 2rem 0;
+  /* ENHANCED: Responsive padding */
+  padding: clamp(1rem, 3vw, 1.5rem);
+  margin: clamp(1.5rem, 4vw, 2rem) 0;
   overflow-x: auto;
-  font-size: 0.9rem;
+  /* ENHANCED: Responsive font size */
+  font-size: clamp(0.8rem, 1.5vw + 0.6rem, 0.9rem);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  /* ENHANCED: Better mobile scrolling */
+  -webkit-overflow-scrolling: touch;
 }
 
 .blog-content pre code {
@@ -151,6 +168,8 @@ body {
   padding: 0;
   border: none;
   font-size: inherit;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 /* --- IMAGES & TABLES --- */
@@ -163,29 +182,61 @@ body {
   max-width: 100%;
   height: auto;
   border-radius: 1rem;
-  margin: 2.5rem 0;
+  /* ENHANCED: Responsive margin */
+  margin: clamp(1.5rem, 4vw, 2.5rem) 0;
+  /* ENHANCED: Prevent layout shift */
+  display: block;
 }
 
 .blog-content table {
   width: 100%;
   border-collapse: collapse;
-  margin: 2.5rem 0;
-  font-size: 1rem;
+  /* ENHANCED: Responsive margin */
+  margin: clamp(1.5rem, 4vw, 2.5rem) 0;
+  /* ENHANCED: Responsive font size */
+  font-size: clamp(0.85rem, 1.5vw + 0.7rem, 1rem);
   border-radius: 0.75rem;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  /* ENHANCED: Better mobile table handling */
+  overflow-x: auto;
+  display: block;
+  white-space: nowrap;
+}
+
+.blog-content thead,
+.blog-content tbody,
+.blog-content tr {
+  /* ENHANCED: Restore table display on larger screens */
+  display: table-header-group;
+}
+
+.blog-content tbody {
+  display: table-row-group;
+}
+
+.blog-content tr {
+  display: table-row;
+}
+
+.blog-content th,
+.blog-content td {
+  display: table-cell;
+  white-space: normal;
 }
 
 .blog-content th {
   background: #f1f5f9;
   color: #0f172a;
   font-weight: 600;
-  padding: 1rem 1.25rem;
+  /* ENHANCED: Responsive padding */
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2.5vw, 1.25rem);
   text-align: left;
 }
 
 .blog-content td {
-  padding: 1rem 1.25rem;
+  /* ENHANCED: Responsive padding */
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2.5vw, 1.25rem);
   border-top: 1px solid #e2e8f0;
 }
 
@@ -193,44 +244,99 @@ body {
   background: #fafbfc;
 }
 
-/* --- RESPONSIVE DESIGN --- */
-@media (max-width: 1024px) {
+/* --- ENHANCED RESPONSIVE DESIGN --- */
+/* Large screens (1200px+) */
+@media (min-width: 1200px) {
   .blog-content {
-    /* Refined padding and margin for tablets */
-    padding: 3rem;
-    margin: 2rem;
+    max-width: 1200px;
   }
 }
 
+/* Tablets and small laptops (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 768px) {
+  .blog-content {
+    margin: 2rem auto;
+  }
+}
+
+/* Mobile tablets (768px and below) */
 @media (max-width: 768px) {
   .blog-content {
-    padding: 2.5rem 2rem;
-    margin: 1.5rem;
-  }
-
-  /* IMPROVEMENT: Make wide tables scrollable instead of breaking the layout */
-  .blog-content table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    /* Prevents cell content from wrapping awkwardly */
-  }
-}
-
-@media (max-width: 480px) {
-  .blog-content {
-    padding: 2rem 1.25rem;
+    border-radius: 0.5rem;
     margin: 1rem;
   }
 
-  .blog-content p {
-    font-size: 1rem;
-    /* Slightly smaller body text on small phones */
+  /* ENHANCED: Better mobile table scrolling */
+  .blog-content table {
+    font-size: 0.9rem;
+    border-radius: 0.5rem;
+  }
+
+  /* ENHANCED: Stack list items more compactly on mobile */
+  .blog-content li {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Small mobile phones (480px and below) */
+@media (max-width: 480px) {
+  .blog-content {
+    border-radius: 0.25rem;
+    margin: 0.5rem;
+    /* ENHANCED: Minimum padding for very small screens */
+    padding: max(1rem, 4vw);
   }
 
   .blog-content table,
   .blog-content pre {
     font-size: 0.85rem;
+    border-radius: 0.5rem;
+  }
+
+  /* ENHANCED: More compact spacing on very small screens */
+  .blog-content h1,
+  .blog-content h2,
+  .blog-content h3,
+  .blog-content h4 {
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* ENHANCED: Tighter line height for mobile readability */
+  .blog-content p {
+    line-height: 1.6;
+  }
+}
+
+/* Extra small screens (360px and below) */
+@media (max-width: 360px) {
+  .blog-content {
+    margin: 0.25rem;
+    padding: 1rem;
+  }
+
+  .blog-content h2 {
+    padding-left: 0.5rem;
+  }
+
+  .blog-content blockquote {
+    padding: 1rem;
+  }
+}
+
+/* --- LANDSCAPE ORIENTATION ADJUSTMENTS --- */
+@media (max-height: 600px) and (orientation: landscape) {
+  .blog-content {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .blog-content h1,
+  .blog-content h2,
+  .blog-content h3,
+  .blog-content h4 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -258,6 +364,7 @@ body {
     border: none;
     margin: 0;
     max-width: 100%;
+    padding: 2rem;
   }
 
   .blog-content a {
@@ -270,5 +377,12 @@ body {
   .blog-content pre {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
+  }
+
+  /* ENHANCED: Better print table handling */
+  .blog-content table {
+    display: table;
+    white-space: normal;
+    font-size: 0.9rem;
   }
 }
