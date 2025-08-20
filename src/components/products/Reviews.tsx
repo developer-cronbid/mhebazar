@@ -189,11 +189,12 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
   const canScrollRight = imgScroll + 5 < data.reviewImages.length;
 
   return (
-    <div className="px-4 mx-auto p-2 sm:p-4">
+    <div className=" mx-auto sm:p-4 bg-gray-50">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* Left: Summary */}
+        {/* Left: Summary (stacks on top on mobile) */}
+        {/* The 'order-2 md:order-1' classes could be used here if you wanted the review list to appear first on mobile */}
         <div>
-          <div className="bg-white p-5 mb-6">
+          <div className="bg-white p-5 mb-6 rounded-lg border shadow-sm">
             <h3 className="font-bold text-xl mb-2">Customer Reviews</h3>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl font-bold text-yellow-500">
@@ -203,7 +204,9 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${i < data.summary.avg ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                    className={`w-5 h-5 ${i < data.summary.avg
+                      ? "fill-yellow-400 text-yellow-400"
+                      : "text-gray-300"
                       }`}
                   />
                 ))}
@@ -219,9 +222,9 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
               {data.summary.breakdown.map((item) => (
                 <div key={item.star} className="flex items-center gap-2">
                   <span className="w-8 text-xs">{item.star} star</span>
-                  <div className="flex-1 bg-gray-200 h-2 rounded">
+                  <div className="flex-1 bg-gray-200 h-2 rounded-full">
                     <div
-                      className="bg-yellow-400 h-2 rounded"
+                      className="bg-yellow-400 h-2 rounded-full"
                       style={{ width: `${item.percent}%` }}
                     ></div>
                   </div>
@@ -231,8 +234,8 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                 </div>
               ))}
             </div>
-            <div className="max-w-md mx-auto p-2 rounded-lg border shadow-md">
-              <div className="space-y-4">
+            <div className="max-w-md mx-auto p-4 rounded-lg border shadow-md mt-6">
+              <div className="space-y-4 text-center">
                 <div>
                   <h2 className="text-lg font-bold text-gray-900 mb-1">
                     Review this product
@@ -241,22 +244,17 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                     Share your thoughts with other customers
                   </p>
                 </div>
-
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full border-[#5CA131] cursor-pointer py-6 px-4 rounded-lg"
+                      className="w-full border-green-600 text-green-600 hover:bg-green-600 hover:text-white cursor-pointer py-6 px-4 rounded-lg"
                     >
-                      <span className="text-[#5CA131] ">
-                        Write your product review
-                      </span>
+                      Write your product review
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="w-full max-w-2xl">
-                    <MheWriteAReview
-                      productId={productId}
-                    />
+                    <MheWriteAReview productId={productId} />
                   </DialogContent>
                 </Dialog>
               </div>
@@ -264,12 +262,12 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
           </div>
         </div>
 
-        {/* Right: Reviews */}
+        {/* Right: Reviews (takes full width on mobile) */}
         <div className="md:col-span-2 space-y-8">
           {/* Customers Say */}
           <div className="bg-white rounded-lg border p-5 shadow-sm">
             <h3 className="font-semibold text-lg mb-2">Customers Say</h3>
-            <p className="text-gray-600 text-sm">{data.say}</p>
+            <p className="text-gray-600 text-sm italic">{data.say}</p>
           </div>
 
           {/* Reviews with Images */}
@@ -284,21 +282,22 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
               </Link>
             </div>
             <div className="relative">
-              <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+              <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2">
                 {canScrollLeft && (
                   <button
-                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full shadow p-1"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full shadow p-1 hover:bg-gray-100"
                     onClick={() => setImgScroll(imgScroll - 1)}
                     aria-label="Scroll left"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
                 )}
-                <div className="flex gap-4 pl-6 pr-6">
+                {/* IMPROVEMENT: Increased horizontal padding to prevent buttons from overlapping the first/last image on small screens. */}
+                <div className="flex gap-4 px-10">
                   {visibleImages.map((src, i) => (
                     <div
                       key={src + "-" + i}
-                      className="relative w-20 h-20 flex-shrink-0 rounded overflow-hidden bg-gray-100 shadow"
+                      className="relative w-20 h-20 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 shadow"
                     >
                       <Image
                         src={src}
@@ -311,7 +310,7 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                 </div>
                 {canScrollRight && (
                   <button
-                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full shadow p-1"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-full shadow p-1 hover:bg-gray-100"
                     onClick={() => setImgScroll(imgScroll + 1)}
                     aria-label="Scroll right"
                   >
@@ -331,74 +330,92 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                   key={review.id}
                   className="mb-8 border-b last:border-b-0 pb-6 last:pb-0"
                 >
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
-                      {review.review_images && review.review_images.length > 0 && review.review_images[0].image ? (
-                        <Image
-                          src={review.review_images[0].image}
-                          alt={review.user_name || "User"}
-                          width={36}
-                          height={36}
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span className="text-lg font-bold text-gray-500">
-                          {review.user_name ? review.user_name[0].toUpperCase() : "A"}
-                        </span>
-                      )}
+                  {/* IMPROVEMENT: Added 'flex-wrap' to allow items to stack on very narrow screens. */}
+                  <div className="flex items-center gap-3 mb-1 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
+                        {review.review_images && review.review_images.length > 0 && review.review_images[0].image ? (
+                          <Image
+                            src={review.review_images[0].image}
+                            alt={review.user_name || "User"}
+                            width={36}
+                            height={36}
+                            className="object-cover w-full h-full"
+                          />
+                        ) : (
+                          <span className="text-lg font-bold text-gray-500">
+                            {review.user_name ? review.user_name[0].toUpperCase() : "A"}
+                          </span>
+                        )}
+                      </div>
+                      <span className="font-medium">{review.user_name}</span>
                     </div>
-                    <span className="font-medium">{review.user_name}</span>
-                    <div className="flex items-center gap-1 ml-2">
+                    <div className="flex items-center gap-1 ml-auto">
                       {[1, 2, 3, 4, 5].map((j) => (
                         <Star
                           key={j}
                           className={`w-4 h-4 ${review.stars >= j
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-gray-300"
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
                             }`}
                         />
                       ))}
-                      <span className="text-xs text-gray-600 ml-1">
-                        {review.stars} out of 5
-                      </span>
                     </div>
                   </div>
-                  <div className="text-xs text-gray-500 mb-1">
-                    Reviewed on {new Date(review.created_at).toLocaleDateString()}
+                  <div className="text-xs text-gray-500 mb-2">
+                    Reviewed on{" "}
+                    {new Date(review.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
                   </div>
-                  <h5 className="font-semibold text-sm mb-1">{review.title}</h5>
-                  <div className="text-sm mb-2">{review.review}</div> {/* Used review field */}
+                  <h5 className="font-semibold text-md mb-1">{review.title}</h5>
+                  <div className="text-sm text-gray-700 mb-3">{review.review}</div>
                   <div className="flex gap-2 mt-2">
-                    {review.review_images && review.review_images.map((img) => (
-                      <div
-                        key={img.id}
-                        className="relative w-16 h-16 flex-shrink-0 rounded overflow-hidden bg-gray-100 shadow"
-                      >
-                        <Image
-                          src={img.image}
-                          alt="review image"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    ))}
+                    {review.review_images &&
+                      review.review_images.map((img) => (
+                        <div
+                          key={img.id}
+                          className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 shadow"
+                        >
+                          <Image
+                            src={img.image}
+                            alt="review image"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      ))}
                   </div>
-                  <div className="flex gap-6 text-sm text-green-600 mt-2">
-                    <button className="hover:underline">Helpful</button>
-                    <button className="hover:underline">Report</button>
+                  <div className="flex gap-4 text-xs text-gray-500 mt-3 items-center">
+                    <span className="font-medium">Was this review helpful?</span>
+                    <button className="text-green-600 font-semibold hover:underline">Yes</button>
+                    <span>·</span>
+                    <button className="text-green-600 font-semibold hover:underline">No</button>
+                    <span>·</span>
+                    <button className="text-red-500 font-semibold hover:underline">Report</button>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-gray-600 text-sm">No reviews yet. Be the first to review this product!</p>
+              <p className="text-gray-600 text-sm">
+                No reviews yet. Be the first to review this product!
+              </p>
             )}
           </div>
         </div>
       </div>
-      <style>{`
-        @media (max-width: 768px) {
-          .scrollbar-hide::-webkit-scrollbar { display: none; }
-          .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      <style jsx>{`
+        /* IMPROVEMENT: Removed the media query. 
+         This ensures the custom scrollbar is hidden on all screen sizes for a consistent look, not just on mobile.
+        */
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
         }
       `}</style>
     </div>

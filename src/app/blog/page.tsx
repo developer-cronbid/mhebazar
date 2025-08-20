@@ -47,7 +47,7 @@ const BlogListPage: React.FC = () => {
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [previousPage, setPreviousPage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // New state for filtering and sorting
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
@@ -79,7 +79,7 @@ const BlogListPage: React.FC = () => {
       }
 
       const response = await api.get<BlogResponse>(url);
-      
+
       const enrichedBlogs = response.data.results.map((blog: any) => ({
         ...blog,
         blog_category_id: blog.blog_category,
@@ -137,7 +137,7 @@ const BlogListPage: React.FC = () => {
     if (hasError || !imagePath) {
       return "/mhe-logo.png";
     }
-    
+
     const filename = imagePath.split('/').pop();
     return `/css/asset/blogimg/${filename}`;
   };
@@ -225,7 +225,7 @@ const BlogListPage: React.FC = () => {
             ))}
           </select>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {sortOrder === "-created_at" ? (
             <SortDesc className="h-5 w-5 text-gray-500" />
@@ -275,55 +275,57 @@ const BlogListPage: React.FC = () => {
 
                 return (
                   <Card key={blog.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden">
-                    <div className="relative overflow-hidden">
-                      <img
-                        src={imageUrl}
-                        alt={blog.blog_title}
-                        width={400}
-                        height={250}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={() => handleImageError(blog.id)}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    </div>
-                    
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {blog.blog_category_name}
-                        </Badge>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          {formatDate(blog.created_at)}
-                        </div>
+                    <Link href={`/blog/${blog.blog_url}`}>
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={imageUrl}
+                          alt={blog.blog_title}
+                          width={400}
+                          height={250}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={() => handleImageError(blog.id)}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </div>
-                      
-                      <h2 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                        {blog.blog_title}
-                      </h2>
-                    </CardHeader>
-                    
-                    <CardContent className="pt-0">
-                      <p className="text-gray-600 text-sm line-clamp-3 mb-4">
-                        {blog.description1 || stripHtml(blog.description).substring(0, 150) + "..."}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        {blog.author_name && (
+
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {blog.blog_category_name}
+                          </Badge>
                           <div className="flex items-center text-sm text-gray-500">
-                            <User className="h-4 w-4 mr-1" />
-                            {blog.author_name}
+                            <Calendar className="h-4 w-4 mr-1" />
+                            {formatDate(blog.created_at)}
                           </div>
-                        )}
-                        
-                        <Link href={`/blog/${blog.blog_url}`}>
-                          <Button variant="outline" size="sm" className="group/btn">
-                            Read More
-                            <ArrowRight className="h-4 w-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </CardContent>
+                        </div>
+
+                        <h2 className="text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2">
+                          {blog.blog_title}
+                        </h2>
+                      </CardHeader>
+
+                      <CardContent className="pt-0">
+                        <p className="text-gray-600 text-sm line-clamp-3 mb-4">
+                          {blog.description1 || stripHtml(blog.description).substring(0, 150) + "..."}
+                        </p>
+
+                        <div className="flex items-center justify-between">
+                          {blog.author_name && (
+                            <div className="flex items-center text-sm text-gray-500">
+                              <User className="h-4 w-4 mr-1" />
+                              {blog.author_name}
+                            </div>
+                          )}
+
+                          <Link href={`/blog/${blog.blog_url}`}>
+                            <Button variant="outline" size="sm" className="group/btn">
+                              Read More
+                              <ArrowRight className="h-4 w-4 ml-1 group-hover/btn:translate-x-1 transition-transform" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Link>
                   </Card>
                 );
               })}
@@ -339,11 +341,11 @@ const BlogListPage: React.FC = () => {
                 >
                   Previous
                 </Button>
-                
+
                 <span className="text-gray-600">
                   Page {currentPage}
                 </span>
-                
+
                 <Button
                   variant="outline"
                   onClick={handleNextPage}

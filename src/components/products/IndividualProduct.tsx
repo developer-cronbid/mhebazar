@@ -158,8 +158,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   const [data, setData] = useState<ProductData | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  // const [isZoomed, setIsZoomed] = useState(false);
+  // const [position, setPosition] = useState({ x: 0, y: 0 });
   const [openAccordion, setOpenAccordion] = useState<
     "desc" | "spec" | "vendor" | null
   >("desc");
@@ -632,17 +632,17 @@ export default function ProductSection({ productId }: ProductSectionProps) {
 
   return (
     <motion.div
-      className="px-4 mx-auto p-2 sm:p-4 bg-white w-full md:w-[90vw]"
+      className="px-4 mx-auto p-2 sm:p-10 bg-white w-full"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       <div className="flex flex-col md:flex-row gap-8">
-        {/* Left Side - Product Images */}
-        <div className="flex flex-row-reverse gap-2 lg:gap-4 w-full md:w-[40%]">
+        {/* Left Side - Product Images (Now fully responsive) */}
+        <div className="flex flex-col md:flex-row-reverse gap-4 w-full md:w-[40%]">
           {/* Main Product Image with Trigger */}
           <button
-            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-[464px] md:h-[464px] mx-auto group cursor-zoom-in"
+            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-full md:h-[464px] mx-auto group cursor-zoom-in"
             onClick={() => openGallery(selectedImage)}
             aria-label="View product images in full-screen gallery"
           >
@@ -669,9 +669,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 aria-label="Add to wishlist"
               >
                 <Heart
-                  className={`w-4 h-4 transition-colors ${
-                    isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
-                  }`}
+                  className={`w-4 h-4 transition-colors ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
+                    }`}
                 />
               </motion.button>
               <motion.button
@@ -701,18 +700,20 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               </motion.button>
             </div>
           </button>
-          {/* Thumbnail Images */}
-          <div className="flex flex-col gap-2 h-[464px] min-h-[100px] overflow-hidden relative">
+
+          {/* Thumbnail Images (Responsive horizontal scroll on mobile, vertical on desktop) */}
+          <div className="relative w-full md:w-[20%] h-28 md:h-[464px] overflow-x-auto md:overflow-hidden">
+            {/* This inner div handles the layout change from row (mobile) to column (desktop) */}
             <motion.div
-              className="flex flex-col gap-2 transition-transform duration-300 ease-in-out"
-              animate={{ y: `-${scrollOffset * 112}px` }}
+              className="flex flex-row md:flex-col gap-2 h-full"
+              animate={{ y: `-${scrollOffset * 112}px` }} // This animation is for the vertical desktop view
               transition={{ duration: 0.3 }}
             >
               {data.images.map((img, index) => (
                 <motion.button
                   key={img.id}
                   onClick={() => setSelectedImage(index)}
-                  className={`rounded border-2 overflow-hidden flex-shrink-0 w-[104px] h-[104px] ${
+                  className={`rounded border-2 overflow-hidden flex-shrink-0 w-fit ${
                     selectedImage === index
                       ? "border-orange-500"
                       : "border-gray-200"
@@ -724,7 +725,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   <Image
                     src={img.image}
                     alt={`${data.name} thumbnail ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     width={104}
                     height={104}
                   />
@@ -732,9 +733,9 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               ))}
             </motion.div>
 
-            {/* Navigation arrows */}
+            {/* Navigation arrows (Only visible on desktop) */}
             {data.images.length > 4 && (
-              <>
+              <div className="hidden md:block">
                 {scrollOffset > 0 && (
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -764,7 +765,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     <ChevronDown className="w-4 h-4 text-gray-600" />
                   </motion.button>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -774,12 +775,11 @@ export default function ProductSection({ productId }: ProductSectionProps) {
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {`${data.name} ${data.model} ${
-                  data.manufacturer
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
+                {`${data.name} ${data.model} ${data.manufacturer
                     ? data.manufacturer
                     : data.user_name.replace("_", " ")
-                }`}
+                  }`}
               </h1>
               {/* Rating and Reviews */}
               <div className="flex items-center gap-1 mb-4 flex-wrap">
@@ -787,23 +787,22 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`w-4 h-4 transition-colors ${
-                        data.average_rating !== null &&
-                        star <= data.average_rating
+                      className={`w-4 h-4 transition-colors ${data.average_rating !== null &&
+                          star <= data.average_rating
                           ? "fill-orange-400 text-orange-400"
                           : "text-gray-300"
-                      }`}
+                        }`}
                     />
                   ))}
-                  <span className="text-sm text-gray-600 ml-1">
+                  <span className="text-base text-gray-600 ml-1">
                     ({data.average_rating ? data.average_rating.toFixed(1) : "0.0"})
                   </span>
                 </div>
-                <p className="text-sm text-gray-600">|</p>
+                <p className="text-base text-gray-600">|</p>
 
                 <Dialog>
                   <DialogTrigger asChild>
-                    <span className="text-sm hover:underline cursor-pointer">
+                    <span className="text-base hover:underline cursor-pointer">
                       {data.review_count > 0
                         ? `${data.review_count} Reviews`
                         : "Write a Review"}
@@ -814,12 +813,12 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   </DialogContent>
                 </Dialog>
 
-                <p className="text-sm text-gray-600">|</p>
+                <p className="text-base text-gray-600">|</p>
 
-                <span className="text-base text-gray-600">by</span>
+                <span className="text-lg text-gray-600">by</span>
                 <Link
                   href={`/vendor-listing/${data.user_name}`}
-                  className="text-base hover:underline"
+                  className="text-lg hover:underline"
                 >
                   {data.user_name || "MHE Bazar"}
                 </Link>
@@ -827,15 +826,15 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               {/* Price */}
               <div className="mb-2">
                 {data.hide_price || Number(data.price) <= 0 ? (
-                  <span className="text-2xl font-semibold text-[#5CA131]">
+                  <span className="text-3xl font-semibold text-[#5CA131]">
                     ₹ *******
                   </span>
                 ) : (
                   <>
-                    <p className="text-2xl font-semibold text-[#5CA131]">
+                    <p className="text-3xl font-semibold text-[#5CA131]">
                       ₹{displayPrice} excl. GST
                     </p>
-                    <p className="text-sm text-gray-500 line-through">
+                    <p className="text-base text-gray-500 line-through">
                       ₹{fakePrice} incl. GST
                     </p>
                     <p className="text-sm mt-1">
@@ -859,7 +858,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                       Out of Stock
                     </p>
                   ) : (
-                    <p className="text-base font-semibold">
+                    <p className="text-sm md:text-base font-semibold">
                       Available for{" "}
                       {data.type === "rental" ? "Rental" : "Quote"}
                     </p>
@@ -1030,9 +1029,9 @@ export default function ProductSection({ productId }: ProductSectionProps) {
           </div>
 
           <div className="pt-6 border-t border-gray-200">
-            <p className="text-2xl font-bold">Product Details</p>
+            <p className="text-lg md:text-2xl font-bold">Product Details</p>
             <div
-              className="line-clamp-4"
+              className="line-clamp-4 text-sm md:text-base"
               dangerouslySetInnerHTML={{
                 __html: DOMPurify.sanitize(data.description),
               }}
@@ -1094,7 +1093,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               setOpenAccordion(openAccordion === "desc" ? null : "desc")
             }
           >
-            <span className="font-bold text-xl">Description</span>
+            <span className="font-bold text-base md:text-xl">Description</span>
             <motion.div
               animate={{ rotate: openAccordion === "desc" ? 180 : 0 }}
               transition={{ duration: 0.2 }}
@@ -1128,7 +1127,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               setOpenAccordion(openAccordion === "spec" ? null : "spec")
             }
           >
-            <span className="font-bold text-xl">Specification</span>
+            <span className="font-bold text-base md:text-xl">Specification</span>
             <motion.div
               animate={{ rotate: openAccordion === "spec" ? 180 : 0 }}
               transition={{ duration: 0.2 }}
@@ -1176,11 +1175,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                                   return (
                                     <tr
                                       key={`${key}-${specIndex}`}
-                                      className={`hover:bg-gray-50 transition-colors duration-150 ${
-                                        specIndex % 2 === 0
+                                      className={`hover:bg-gray-50 transition-colors duration-150 ${specIndex % 2 === 0
                                           ? "bg-white"
                                           : "bg-gray-25"
-                                      }`}
+                                        }`}
                                     >
                                       <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-medium text-gray-700">
@@ -1208,9 +1206,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                           return (
                             <tr
                               key={key}
-                              className={`hover:bg-gray-50 transition-colors duration-150 ${
-                                index % 2 === 0 ? "bg-white" : "bg-gray-25"
-                              }`}
+                              className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"
+                                }`}
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className="text-sm font-medium text-gray-700">
@@ -1262,7 +1259,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               setOpenAccordion(openAccordion === "vendor" ? null : "vendor")
             }
           >
-            <span className="font-bold text-xl">Vendor</span>
+            <span className="font-bold text-base md:text-xl">Vendor</span>
             <motion.div
               animate={{ rotate: openAccordion === "vendor" ? 180 : 0 }}
               transition={{ duration: 0.2 }}
@@ -1385,11 +1382,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   <motion.button
                     key={img.id}
                     onClick={() => setCurrentMediaIndex(index)}
-                    className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                      currentMediaIndex === index
+                    className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${currentMediaIndex === index
                         ? "border-orange-500"
                         : "border-transparent hover:border-gray-600"
-                    }`}
+                      }`}
                     aria-label={`Select media thumbnail ${index + 1}`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}

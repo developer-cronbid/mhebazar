@@ -304,7 +304,7 @@ const ProductCard = ({
                 </button>
                 <button
                   onClick={() => onBuyNowClick(id)}
-                  className="rounded-lg border border-green-600 text-green-600 hover:bg-green-600 hover:text-amber-100 py-3 font-medium text-base transition-colors flex-1"
+                  className="rounded-lg border border-green-600 text-green-600 hover:bg-green-50 py-3 font-medium text-base transition-colors flex-1"
                   aria-label="Buy now"
                   disabled={!isPurchasable}
                 >

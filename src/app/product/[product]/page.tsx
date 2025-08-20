@@ -77,7 +77,7 @@ export default async function IndividualProductPage({
 
   return (
     <>
-      <Breadcrumb
+      <Breadcrumb 
         items={[
           { label: 'Home', href: '/' },
           { label: category_name, href: `/${cat_slug}` },
