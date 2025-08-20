@@ -2,7 +2,7 @@
 // src/app/[category]/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
 import ProductListing, { Product } from "@/components/products/ProductListing";
 import Breadcrumb from "@/components/elements/Breadcrumb";
@@ -168,7 +168,13 @@ export default function CategoryOrTypePage({
       } else if (contextType === 'category' && categoryId) {
         queryParams.append("category", categoryId.toString());
       } else if (contextType === 'type') {
-        queryParams.append("type", contextName.toLowerCase());
+        if (contextName.toLowerCase() === 'rental') {
+          // New Logic: When on the rental page, fetch both 'rental' and 'used' products
+          queryParams.append("type", "rental");
+          queryParams.append("type", "used");
+        } else {
+          queryParams.append("type", contextName.toLowerCase());
+        }
       }
 
       queryParams.append("page", page.toString());
@@ -177,7 +183,6 @@ export default function CategoryOrTypePage({
       if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
       if (ratingFilter !== null) queryParams.append("average_rating", ratingFilter.toString());
 
-      // --- CORRECTED: Use the 'search' parameter for manufacturer lookup ---
       if (manufacturerFilter) queryParams.append("search", manufacturerFilter);
 
       if (sortByFilter && sortByFilter !== 'relevance') {
@@ -337,7 +342,7 @@ export default function CategoryOrTypePage({
       } else if (filterType === "rating") {
         newValue ? newSearchParams.set('average_rating', String(newValue)) : newSearchParams.delete('average_rating');
       } else if (filterType === "sort_by" && typeof filterValue === 'string') {
-        filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
+        filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', value);
       }
 
       newSearchParams.set('page', '1');
@@ -403,7 +408,8 @@ export default function CategoryOrTypePage({
         selectedRating={selectedRating}
         sortBy={sortBy}
         onSortChange={handleSortChange}
-        // category_id={product.category}
+        // Pass the URL param type to the listing component
+        pageUrlType={urlParamSlug}
       />
     </>
   );

@@ -76,6 +76,33 @@ const tingAnimation = `
   }
 `;
 
+const shineAnimation = `
+  @keyframes shine {
+    0% {
+      left: -150%;
+    }
+    100% {
+      left: 150%;
+    }
+  }
+
+  .shine-effect .shine-overlay {
+    background: linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.1) 60%,
+      transparent 100%
+    );
+    transform: skewX(-20deg);
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 50%;
+    height: 100%;
+    animation: shine 2s infinite;
+  }
+`;
+
 export default function Navbar(): JSX.Element {
   const categories: Category[] = categoriesData;
 
@@ -130,7 +157,7 @@ export default function Navbar(): JSX.Element {
 
   return (
     <header className="bg-white shadow-sm z-50 sticky top-0">
-      <style>{tingAnimation}</style>
+      <style>{tingAnimation}{shineAnimation}</style>
       <div className="bg-[#5CA131] text-white">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-2">
@@ -196,27 +223,18 @@ export default function Navbar(): JSX.Element {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
-              <Link href="/vendor-listing" className="flex-shrink-0">
-                {/* <motion.div
-                  animate={{ rotate: [0, 3, 0, -3, 0] }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  style={{ transformOrigin: "bottom center" }}
-                  className="rounded-md"
+              <Link href="/vendor-listing" className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect">
+                <Image
+                  src="/brand-image.png"
+                  alt="Brand Store"
+                  width={120}
+                  height={40}
+                  priority
+                  className="object-contain"
                   style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
-                > */}
-                  <Image
-                    src="/brandStore.svg"
-                    alt="Brand Store"
-                    width={120}
-                    height={40}
-                    priority
-                    className="object-contain"
-                  />
-                {/* </motion.div> */}
+                />
+                {/* Shine overlay */}
+                <span className="shine-overlay"></span>
               </Link>
             </div>
 
@@ -424,7 +442,7 @@ export default function Navbar(): JSX.Element {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
-              <Link href="/vendor-listing" className="flex-shrink-0">
+              <Link href="/vendor-listing" className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect">
                 <Image
                   src="/brand-image.png"
                   alt="Brand Store"
@@ -434,6 +452,7 @@ export default function Navbar(): JSX.Element {
                   className="object-contain"
                   style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                 />
+                <span className="shine-overlay"></span>
               </Link>
             </div>
           </div>
@@ -460,7 +479,6 @@ export default function Navbar(): JSX.Element {
                 <CategoryMenu
                   isOpen={categoriesOpen}
                   onClose={() => setCategoriesOpen(false)}
-                  // categories={categories}
                 />
               </div>
 
@@ -705,7 +723,7 @@ export default function Navbar(): JSX.Element {
                   ))}
                   <Link
                     href="/vendor-listing"
-                    className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${
+                    className={`block px-4 py-3 font-semibold border-b border-gray-100 transition relative overflow-hidden shine-effect ${
                       pathname === "/vendor-listing"
                         ? "text-gray-900 bg-gray-50 font-bold"
                         : "hover:bg-gray-50"
@@ -721,6 +739,7 @@ export default function Navbar(): JSX.Element {
                       className="object-contain"
                       style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                     />
+                    <span className="shine-overlay"></span>
                   </Link>
                   <Link
                     href="/contact"

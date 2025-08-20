@@ -42,7 +42,7 @@ const WhatsAppChat = () => {
               alt="MHE Bazar Logo"
               width={40}
               height={40}
-              className="rounded-full bg-white p-1"
+              className=" bg-white p-1"
             />
             <div>
               <h3 className="font-bold text-sm">MHE BAZAR</h3>
