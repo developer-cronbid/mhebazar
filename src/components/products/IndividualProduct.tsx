@@ -168,6 +168,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   // Use a ref to store a function that can refresh reviews
   const reviewsRefresher = useRef<(() => void) | null>(null);
 
+  console.log(data)
+
   // Ref to hold the latest state values for async operations
   const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
   useEffect(() => {
@@ -931,12 +933,12 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                               description: data.description,
                               price: data.price,
                               stock_quantity: data.stock_quantity,
-                              }}
-                              onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                            }}
+                            onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                           />
                         ) : (
-                              <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
-                              />
+                          <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                          />
                         )}
                       </DialogContent>
                     </Dialog>
@@ -1017,8 +1019,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                   />
                 ) : (
-                    <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
-                    />
+                  <QuoteForm product={data} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                  />
                 )}
               </DialogContent>
             </Dialog>
@@ -1087,63 +1089,110 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 transition={{ duration: 0.3 }}
                 className="p-0 overflow-hidden"
               >
-                {validSpecs.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full">
-                      <thead>
-                        <tr className="bg-gray-50 border-b border-gray-200">
-                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Specification
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Details
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-100">
-                        {validSpecs.map(([key, value], index) => (
-                          <tr
-                            key={key}
-                            className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"
-                              }`}
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="text-sm font-medium text-gray-700">
-                                {formatKey(key)}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4">
-                              <span className="text-sm text-gray-900 font-medium">
-                                {String(value)}
-                              </span>
-                            </td>
+                {
+                  validSpecs.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr className="bg-gray-50 border-b border-gray-200">
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              Specification
+                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              Details
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <div className="text-center py-12 px-6">
-                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-8 h-8 text-gray-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-100">
+                          {validSpecs.flatMap(([key, value], index) => {
+                            // Check if the value is a string that looks like a JSON array
+                            if (
+                              typeof value === "string" &&
+                              value.startsWith("[") &&
+                              value.endsWith("]")
+                            ) {
+                              try {
+                                const parsedArray = JSON.parse(value);
+                                // Ensure it's an array before mapping
+                                if (Array.isArray(parsedArray)) {
+                                  return parsedArray.map((item, specIndex) => {
+                                    // Split each string by the first colon to separate key and value
+                                    const parts = item.split(/:\s*(.*)/s);
+                                    const specKey = parts[0] || "Detail";
+                                    const specValue = parts[1] || item;
+
+                                    return (
+                                      <tr
+                                        key={`${key}-${specIndex}`}
+                                        className={`hover:bg-gray-50 transition-colors duration-150 ${specIndex % 2 === 0 ? "bg-white" : "bg-gray-25"
+                                          }`}
+                                      >
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                          <span className="text-sm font-medium text-gray-700">
+                                            {specKey}
+                                          </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                          <span className="text-sm text-gray-900 font-medium">
+                                            {specValue}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    );
+                                  });
+                                }
+                              } catch (e) {
+                                // If JSON.parse fails, it's not valid JSON. Fallback to default.
+                                console.error("Failed to parse spec string:", value, e);
+                              }
+                            }
+
+                            // Default rendering for normal key-value pairs
+                            return (
+                              <tr
+                                key={key}
+                                className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"
+                                  }`}
+                              >
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <span className="text-sm font-medium text-gray-700">
+                                    {formatKey(key)}
+                                  </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="text-sm text-gray-900 font-medium">
+                                    {String(value)}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-                    <p className="text-gray-500 text-sm">
-                      No specifications available at this time.
-                    </p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center py-12 px-6">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                        <svg
+                          className="w-8 h-8 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-gray-500 text-sm">
+                        No specifications available at this time.
+                      </p>
+                    </div>
+                  )
+                }
               </motion.div>
             )}
           </AnimatePresence>
