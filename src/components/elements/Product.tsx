@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog"
 import DOMPurify from 'dompurify';
 import categories from '@/data/categories.json';
+import ProductDetails from "@/app/products-details/[product_id]/page";
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -246,7 +247,7 @@ const ProductCard = ({
         <div className="flex-1">
           <Link href={productDetailUrl}>
             <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors">
-              {title}
+              {title + " " + productData.model + " " + (productData.manufacturer ? ` by ${productData.manufacturer}` : `by ${productData.user_name}`)}
             </h3>
           </Link>
           <p className="text-sm text-gray-500 mb-2 line-clamp-1">
@@ -380,6 +381,9 @@ interface ProductCardContainerProps {
   type: string;
   category_id: number | null;
   pageUrlType: string;
+  model: string | null;
+  manufacturer: string | null;
+  user_name: string | null;
 }
 
 interface ApiProductData {
@@ -429,6 +433,9 @@ export const ProductCardContainer = ({
   type,
   category_id,
   pageUrlType,
+  model,
+  manufacturer,
+  user_name,
 }: ProductCardContainerProps) => {
   const router = useRouter();
   const {
@@ -452,7 +459,7 @@ export const ProductCardContainer = ({
   const cartItemId = getCartItemId(id); // Context provides this if needed
 
   const productFullData: ProductCardContainerProps = {
-    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_id, pageUrlType
+    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_id, pageUrlType, model, manufacturer, user_name
   };
 
   const handleAddToCart = useCallback(async (productId: number) => {

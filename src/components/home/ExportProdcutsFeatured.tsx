@@ -36,7 +36,10 @@ interface ExportProduct {
   hide_price: boolean;
   stock_quantity: number;
   type: string;
-  category: string | number | null;
+  category_id: string | number | null;
+  model: string;
+  manufacturer: string;
+  user_name: string;
 }
 
 const sectionVariants = {
@@ -87,6 +90,9 @@ export default function ExportProductsFeatured() {
           stock_quantity: item.stock_quantity,
           type: item.type,
           category: item.category,
+          category_id: item.category,
+          model: item.model,
+          user_name: item.user_name,
         }));
 
         setExportProducts(formattedProducts);
@@ -141,7 +147,7 @@ export default function ExportProductsFeatured() {
           View More
         </Link>
       </motion.div>
-      
+
       {loading ? (
         <div className="w-full flex justify-center items-center py-16 text-gray-500 text-lg">
           Loading...
@@ -151,7 +157,7 @@ export default function ExportProductsFeatured() {
           <div
             ref={scrollContainerRef}
             className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide snap-x snap-mandatory"
-            style={{ 
+            style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
               WebkitOverflowScrolling: 'touch'
@@ -159,40 +165,42 @@ export default function ExportProductsFeatured() {
             onScroll={handleScroll}
           >
             {exportProducts.map((export_product) => (
-              <motion.div 
-                variants={itemVariants} 
+              <motion.div
+                variants={itemVariants}
                 key={export_product.id}
                 className="flex-shrink-0 snap-start w-72"
               >
                 {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full"> */}
-                  <ProductCardContainer
-                    id={Number(export_product.id)}
-                    image={export_product.image}
-                    title={export_product.title}
-                    subtitle={export_product.subtitle}
-                    price={export_product.price}
-                    currency={export_product.currency}
-                    directSale={export_product.direct_sale}
-                    is_active={export_product.is_active}
-                    hide_price={export_product.hide_price}
-                    stock_quantity={export_product.stock_quantity}
-                    type={export_product.type}
-                    category={export_product.category}
-                  />
+                <ProductCardContainer
+                  id={Number(export_product.id)}
+                  image={export_product.image}
+                  title={export_product.title}
+                  subtitle={export_product.subtitle}
+                  price={export_product.price}
+                  currency={export_product.currency}
+                  directSale={export_product.direct_sale}
+                  is_active={export_product.is_active}
+                  hide_price={export_product.hide_price}
+                  stock_quantity={export_product.stock_quantity}
+                  type={export_product.type}
+                  category_id={export_product.category}
+                  model={export_product.model}
+                  manufacturer={export_product.manufacturer}
+                  user_name={export_product.user_name}
+                />
                 {/* </div> */}
               </motion.div>
             ))}
           </div>
-          
+
           {totalDots > 1 && (
             <div className="flex justify-center space-x-2 mt-4">
               {Array.from({ length: totalDots }, (_, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleDotClick(idx)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                    idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
-                  }`}
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
+                    }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
               ))}
@@ -200,8 +208,8 @@ export default function ExportProductsFeatured() {
           )}
         </div>
       ) : (
-        <motion.div 
-          variants={itemVariants} 
+        <motion.div
+          variants={itemVariants}
           className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm border border-gray-100"
         >
           <Image

@@ -46,6 +46,9 @@ interface ApiProduct {
   stock_quantity: number;
   manufacturer: string;
   average_rating: number | null;
+  category: number | null;
+  model: string | null;
+  user_name: string | null;
 }
 
 interface ApiResponse<T> {
@@ -186,6 +189,9 @@ export default function SubCategoryPage({
         manufacturer: p.manufacturer,
         average_rating: p.average_rating,
         type: p.type,
+        category_id: p.category,
+        model: p.model,
+        user_name: p.user_name,
       }));
 
       if (transformedProducts.length === 0) {
