@@ -1,4 +1,3 @@
-// Footer.tsx
 "use client";
 
 import {
@@ -7,6 +6,7 @@ import {
   ShoppingCart,
   RotateCcw,
   ShieldCheck,
+  Download,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -30,20 +30,15 @@ export default function Footer() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch categories and subcategories in parallel for better performance
         const categoryResponse = await api.get("/categories/")
-
-        // Update state with data from the API response
-        // Make sure the response structure matches (e.g., response.data)
         setCategories(categoryResponse.data);
       } catch (error) {
         console.error("Failed to fetch data:", error);
-        // You could set an error state here to inform the user
       }
     };
 
     fetchData();
-  }, []); // Empty dependency array ensures this runs only once when the component mounts
+  }, []);
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,13 +52,13 @@ export default function Footer() {
       const response = await api.post('/newsletter-subscriptions/', { email });
       console.log('Newsletter subscription successful:', response.data);
       toast.success("Thank you for subscribing to our newsletter!");
-      setEmail(''); // Clear input on success
+      setEmail('');
     } catch (error: any) {
       console.error('Error subscribing to newsletter:', error);
       if (error.response && error.response.data && error.response.data.detail) {
-        toast.error(error.response.data.detail); // Display backend error message
+        toast.error(error.response.data.detail);
       } else if (error.response && error.response.data && error.response.data.email) {
-        toast.error(`Email: ${error.response.data.email.join(', ')}`); // Handle email specific errors
+        toast.error(`Email: ${error.response.data.email.join(', ')}`);
       }
       else {
         toast.error("Failed to subscribe. Please try again.");
@@ -179,7 +174,6 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  {/* Updated link from /used-mhe to /used to match Nav.tsx */}
                   <Link href="/used" className="text-gray-600 hover:text-blue-700 transition">
                     Rental/Used MHE
                   </Link>
@@ -190,13 +184,11 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  {/* New link from Nav.tsx */}
                   <Link href="/attachments" className="text-gray-600 hover:text-blue-700 transition">
                     Attachments
                   </Link>
                 </li>
                 <li>
-                  {/* New link from Nav.tsx */}
                   <Link href="/spare-parts" className="text-gray-600 hover:text-blue-700 transition">
                     Spare Parts
                   </Link>
@@ -207,7 +199,6 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  {/* New link from Nav.tsx */}
                   <Link href="/blog" className="text-gray-600 hover:text-blue-700 transition">
                     Blogs
                   </Link>
@@ -218,15 +209,19 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  {/* Updated link from /vendors to /vendor-listing to match Nav.tsx */}
                   <Link href="/vendor-listing" className="text-gray-600 hover:text-blue-700 transition">
                     Vendor Listing
                   </Link>
                 </li>
                 <li>
-                  {/* New link from Nav.tsx */}
                   <Link href="/services/subscription-plan" className="text-gray-600 hover:text-blue-700 transition">
                     Price Plan
+                  </Link>
+                </li>
+                {/* New Terms & Conditions Link */}
+                <li>
+                  <Link href="/terms-conditions" className="text-gray-600 underline hover:text-blue-700 transition">
+                    Terms & Conditions
                   </Link>
                 </li>
               </ul>
@@ -273,7 +268,6 @@ export default function Footer() {
                     Help Center
                   </Link>
                 </li>
-                
               </ul>
             </div>
 
