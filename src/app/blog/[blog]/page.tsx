@@ -169,7 +169,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   return (
     <>
       <div className="bg-background text-foreground">
-        <div className="container mx-auto px-4 py-8 lg:py-16">
+        <div className="container mx-auto px-2 py-8 lg:py-16">
           <div className="grid grid-cols-12 lg:gap-12">
 
             {/* --- Desktop Sidebar: Table of Contents --- */}
@@ -241,19 +241,19 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       </div>
 
       {/* --- NEW: Mobile TOC Drawer --- */}
-      <AnimatePresence>
+      {/* <AnimatePresence>
         {isTocOpen && (
-          <>
+          <> */}
             {/* Overlay */}
-            <motion.div
+            {/* <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsTocOpen(false)}
               className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            />
+            /> */}
             {/* Drawer */}
-            <motion.div
+            {/* <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
@@ -273,18 +273,18 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             </motion.div>
           </>
         )}
-      </AnimatePresence>
+      </AnimatePresence> */}
 
-      {/* --- NEW: Floating Button to open Mobile TOC --- */}
-      <div className="fixed bottom-6 right-6 z-30 lg:hidden">
+      {/* --- NEW: Floating Button to open Mobile TOC ---
+      <div className="fixed top-40 right-6 z-30 lg:hidden">
         <button
           onClick={() => setIsTocOpen(true)}
-          className="bg-[#5ca030] text-white p-4 rounded-full shadow-lg hover:bg-[#4a8a25] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5ca030]"
+          className="bg-[#5ca030] text-white p-2 rounded-full shadow-lg hover:bg-[#4a8a25] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5ca030]"
           aria-label="Open table of contents"
         >
           <Menu className="h-6 w-6" />
         </button>
-      </div>
+      </div> */}
     </>
   );
 }
