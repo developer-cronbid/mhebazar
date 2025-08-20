@@ -142,9 +142,9 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                   {product?.title || product?.name || "Product"}
                 </h2>
                 <div className="space-y-2 text-sm sm:text-base text-gray-600">
-                  <p>
+                  {/* <p>
                     <span className="font-medium">Qty:</span> {product?.stock_quantity || 0}
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>

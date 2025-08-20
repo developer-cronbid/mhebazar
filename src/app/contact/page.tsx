@@ -18,7 +18,7 @@ const offices = [
     phone: "+91 928 909 4445",
     email: "sales.1@mhebazar.com",
     mapUrl:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3502.184168869489!2d77.2430170754067!3d28.62433268496406!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce3e9b7e8e0e1%3A0x6e3b1e1c9e4b9a7e!2sMHE%20Bazar!5e0!3m2!1sen!2sin!4v1688123456789!5m2!1sen!2sin",
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3503.738018617578!2d77.23933067468166!3d28.57476629910515!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce341b9ab9da3%3A0xc22e1d33ae9532bd!2sMHE%20Bazar!5e0!3m2!1sen!2sin!4v1718872580795!5m2!1sen!2sin",
   },
   {
     title: "Corporate Office:",
@@ -27,7 +27,7 @@ const offices = [
     phone: "+91 984 008 8428",
     email: "sales.2@mhebazar.com",
     mapUrl:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3916.3333333333335!2d80.12345678901234!3d13.09876543210987!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a5267e8e0e1e0e1%3A0x6e3b1e1c9e4b9a7e!2sCorporate%20Office!5e0!3m2!1sen!2sin!4v1688123456790!5m2!1sen!2sin",
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3886.974577884489!2d80.1166708746818!3d13.045763987255395!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a52601ae56b9c9b%3A0x868c29b794f8b91c!2sVelappanchavadi%2C%20Chennai%2C%20Tamil%20Nadu%20600077!5e0!3m2!1sen!2sin!4v1718872658828!5m2!1sen!2sin",
   },
   {
     title: "Branch Office:",
@@ -36,7 +36,7 @@ const offices = [
     phone: "+91 730 5950 939",
     email: "sumedh.ramteke@mhebazar.com",
     mapUrl:
-      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3782.3333333333335!2d73.81234567890123!3d18.62345678901234!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b7e8e0e1e0e1%3A0x6e3b1e1c9e4b9a7e!2sBranch%20Office!5e0!3m2!1sen!2sin!4v1688123456791!5m2!1sen!2sin",
+      "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3780.0039233682977!2d73.7844005746825!3d18.636048182513476!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b9dfd1f1e9c7%3A0x6b6d27e2a967c132!2sSpree%20Hotel%20Pimpri!5e0!3m2!1sen!2sin!4v1718872719602!5m2!1sen!2sin",
   },
 ];
 
@@ -310,7 +310,8 @@ export default function ContactPage() {
           style={{ border: 0 }}
           allowFullScreen
           loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"></iframe>
+          referrerPolicy="no-referrer-when-downgrade"
+        ></iframe>
       </div>
     </>
   );
