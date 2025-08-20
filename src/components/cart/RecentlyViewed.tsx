@@ -22,6 +22,9 @@ interface ApiProduct {
   stock_quantity: number;
   manufacturer: string;
   average_rating: number | null;
+  model: string;
+  category_id: string | number | null;
+  user_name: string;
 }
 
 interface ApiResponse<T> {
@@ -96,6 +99,9 @@ export default function RecentlyViewed() {
               stock_quantity={item.stock_quantity}
               type={item.type}
               category_id={item.category}
+              model={item.model}
+              manufacturer={item.manufacturer}
+              user_name={item.user_name}
             />
           ))
         ) : (

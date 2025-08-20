@@ -22,8 +22,12 @@ interface ApiProduct {
   stock_quantity: number;
   manufacturer: string;
   average_rating: number | null;
+  category: string | number | null;
+  model: string;
+  user_name: string;
+  category_id: number;
   category_details?: {
-    cat_image: string | null;
+  cat_image: string | null;
   };
 }
 
@@ -100,7 +104,11 @@ export default function RelatedProducts() {
               hide_price={item.hide_price}
               stock_quantity={item.stock_quantity}
               type={item.type}
-              category_id={item.category}            />
+              category_id={item.category}
+              model={item.model}
+              manufacturer={item.manufacturer}
+              user_name={item.user_name}
+            />
           ))
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-16">

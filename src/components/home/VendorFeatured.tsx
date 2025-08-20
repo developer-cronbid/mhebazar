@@ -18,7 +18,10 @@ interface Product {
   hide_price: boolean;
   stock_quantity: number;
   type: string;
-  category: number | null;
+  category: number;
+  model: string;
+  manufacturer: string;
+  user_name: string;
 }
 
 const VendorProductsFeatured: React.FC = () => {
@@ -145,6 +148,9 @@ const VendorProductsFeatured: React.FC = () => {
                 stock_quantity={product.stock_quantity}
                 type={product.type}
                 category_id={product.category}
+                model={product.model}
+                manufacturer={product.manufacturer}
+                user_name={product.user_name}
               />
             </div>
           ))}

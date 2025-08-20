@@ -21,6 +21,9 @@ interface SparePart {
   price: number;
   currency: string;
   category: number;
+  model: string;
+  manufacturer: string;
+  user_name: string;
 }
 
 const sectionVariants = {
@@ -150,6 +153,9 @@ export default function SparePartsFeatured() {
                   stock_quantity={spare.stock_quantity} 
                   type={spare.type} 
                   category_id={spare.category}
+                  model={spare.model}
+                  manufacturer={spare.manufacturer}
+                  user_name={spare.user_name}
                 />
               </motion.div>
             ))}
