@@ -23,11 +23,10 @@ interface Product {
   stock_quantity: number;
   name: string;
   id: string | number;
-  category: string | number; // Added category field to get the category ID
-  // Optional: If your API returns category details within the product
-  category_details?: {
-    name: string;
-  };
+  category: string | number; 
+  category_id: string | number;
+  model: string;
+  manufacturer: string;
   subtitle: string;
   price: number;
   currency: string;
@@ -120,6 +119,11 @@ export default function CategoryProducts({ currentProductId }: CategoryProductsP
                     is_active={product.is_active}
                     hide_price={product.hide_price}
                     stock_quantity={product.stock_quantity}
+                    type={product.type}
+                    category_id={product.category}
+                    model={product.model}
+                    manufacturer={product.manufacturer}
+                    user_name={product.user_name}
                   />
                 </CarouselItem>
               ))}

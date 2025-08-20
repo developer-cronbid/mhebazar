@@ -29,6 +29,11 @@ interface Product {
   subtitle: string;
   price: number;
   currency: string;
+  category: number;
+  model: string;
+  manufacturer: string;
+  user_name: string;
+  type: string;
 }
 
 interface VendorProductsProps {
@@ -119,6 +124,11 @@ export default function VendorProducts({ currentProductId }: VendorProductsProps
                     is_active={product.is_active}
                     hide_price={product.hide_price}
                     stock_quantity={product.stock_quantity}
+                    type={product.type}
+                    category_id={product.category}
+                    model={product.model}
+                    manufacturer={product.manufacturer}
+                    user_name={product.user_name}
                   />
                 </CarouselItem>
               ))}

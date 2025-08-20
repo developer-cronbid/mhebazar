@@ -859,7 +859,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                       Out of Stock
                     </p>
                   ) : (
-                    <p className="text-base font-semibold text-blue-600">
+                    <p className="text-base font-semibold">
                       Available for{" "}
                       {data.type === "rental" ? "Rental" : "Quote"}
                     </p>
