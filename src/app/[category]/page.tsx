@@ -31,6 +31,8 @@ interface ApiProduct {
   manufacturer: string;
   average_rating: number | null;
   category: number | null;
+  model: string | null;
+  user_name: string | null;
 }
 
 interface ApiCategory {
@@ -219,6 +221,8 @@ export default function CategoryOrTypePage({
           average_rating: p.average_rating,
           type: p.type,
           category_id: p.category,
+          model: p.model,
+          user_name: p.user_name,
         }));
 
         setProducts(transformedProducts);
