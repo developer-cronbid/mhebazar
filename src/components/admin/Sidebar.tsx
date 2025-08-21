@@ -75,8 +75,8 @@ const Sidebar = () => {
                     <span className="text-white font-bold text-lg">M</span>
                   </div>
                   <div>
-                    <h1 className="text-lg font-bold text-gray-800">MTE</h1>
-                    <p className="text-xs text-[#5da031] font-semibold">Jagrat</p>
+                    <h1 className="text-lg font-bold text-gray-800">MHE</h1>
+                    <p className="text-xs text-[#5da031] font-semibold">BAZAR</p>
                   </div>
                 </div>
               ) : ""}
@@ -180,7 +180,7 @@ const Sidebar = () => {
           <div className="p-3 border-t-2 border-[#5da031]/20 bg-gradient-to-r from-[#5da031]/5 to-white">
             {isExpanded ? (
               <div className="text-center">
-                <p className="text-xs text-[#5da031] font-medium">© 2025 MTE Jagrat</p>
+                <p className="text-xs text-[#5da031] font-medium">© 2025 MHE BAZAR</p>
                 <p className="text-xs text-[#5da031]/70">All rights reserved</p>
               </div>
             ) : (

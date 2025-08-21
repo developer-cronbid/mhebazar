@@ -5,6 +5,9 @@ import api from '@/lib/api';
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef, SortingState } from '@tanstack/react-table';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+
 
 // --- TypeScript Interface ---
 interface ContactForm {
@@ -68,6 +71,61 @@ const ContactFormsTable = () => {
 
   const totalPages = Math.ceil(totalSubmissions / 20);
 
+  // Function to handle export to Excel (CSV)
+  const handleExportToExcel = async () => {
+    setLoading(true);
+    try {
+      // Fetch all data for export, applying filters and sorting
+      const params = new URLSearchParams();
+      if (debouncedGlobalFilter) params.append('search', debouncedGlobalFilter);
+      if (sortBy.length > 0) {
+        const sort = sortBy[0];
+        params.append('ordering', `${sort.desc ? '-' : ''}${sort.id}`);
+      }
+
+      const response = await api.get(`/contact-forms/`, { params });
+      const submissionsToExport: ContactForm[] = response.data.results;
+
+      // Generate CSV content
+      const headers = ['First Name', 'Last Name', 'Email', 'Company', 'Location', 'Phone', 'Message', 'Submitted At'];
+      const csvRows = [headers.join(',')];
+
+      submissionsToExport.forEach(sub => {
+        const row = [
+          `"${sub.first_name}"`,
+          `"${sub.last_name}"`,
+          `"${sub.email}"`,
+          `"${sub.company_name}"`,
+          `"${sub.location}"`,
+          `"${sub.phone}"`,
+          `"${sub.message.replace(/"/g, '""')}"`, // Handle quotes in message
+          `"${new Date(sub.created_at).toLocaleString()}"`,
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      const csvString = csvRows.join('\n');
+
+      // Create a Blob and trigger download
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'contact_form_submissions.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Failed to export submissions:", error);
+      alert("Failed to export data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = useMemo<ColumnDef<ContactForm>[]>(() => [
     {
       header: 'Sr. No.',
@@ -126,9 +184,15 @@ const ContactFormsTable = () => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Contact Form Submissions</h1>
-        <p className="text-sm text-gray-500 mt-1">View all inquiries submitted through the contact form.</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Contact Form Submissions</h1>
+          <p className="text-sm text-gray-500 mt-1">View all inquiries submitted through the contact form.</p>
+        </div>
+        <Button onClick={handleExportToExcel} disabled={loading || data.length === 0} className="flex items-center gap-2">
+          <Download size={16} />
+          Export as Excel
+        </Button>
       </div>
 
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">

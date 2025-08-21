@@ -190,6 +190,78 @@ const UsersTable = () => {
     }
   }
 
+  // Function to handle export to Excel
+  const handleExportToExcel = async () => {
+    setLoading(true);
+    try {
+      // Fetch all users based on current filters
+      const params = new URLSearchParams();
+
+      if (debouncedGlobalFilter) {
+        params.append('search', debouncedGlobalFilter);
+      }
+
+      if (sortBy.length > 0) {
+        const sortField = sortBy[0];
+        const ordering = sortField.desc ? `-${sortField.id}` : sortField.id;
+        params.append('ordering', ordering);
+      }
+
+      if (statusFilter && statusFilter !== 'all') {
+        if (statusFilter === 'verified') {
+          params.append('is_email_verified', 'true');
+        } else if (statusFilter === 'not_verified') {
+          params.append('is_email_verified', 'false');
+        }
+      }
+
+      if (roleFilter && roleFilter !== 'all') {
+        params.append('role__name', roleFilter);
+      }
+      
+      // Request all data, not just a single page
+      // Assuming the API returns all data if page size is not specified or set to a large number
+      const response = await api.get(`/users/`, { params });
+      const usersToExport: User[] = response.data.results;
+      
+      // Generate CSV content
+      const headers = ['Full Name', 'Email', 'Mobile No.', 'Username', 'Date Joined'];
+      const csvRows = [headers.join(',')]; // Add headers to the first row
+      
+      usersToExport.forEach(user => {
+        const row = [
+          `"${user.full_name}"`, // Use quotes to handle names with commas
+          `"${user.email}"`,
+          `"${user.phone || 'N/A'}"`,
+          `"${user.username}"`,
+          `"${new Date(user.date_joined).toLocaleDateString()}"`,
+        ];
+        csvRows.push(row.join(','));
+      });
+      
+      const csvString = csvRows.join('\n');
+      
+      // Create a Blob and download it
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'registered_users.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error("Failed to export user data:", error);
+      alert("Failed to export data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // --- IMPROVEMENT: Simplified pagination logic ---
   const generatePagination = () => {
     if (totalPages <= 5) {
@@ -218,7 +290,11 @@ const UsersTable = () => {
               <Trash2 size={16} />
               Delete
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors">
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleExportToExcel}
+              disabled={loading || data.length === 0}
+            >
               <Download size={16} />
               Export as Excel
             </button>

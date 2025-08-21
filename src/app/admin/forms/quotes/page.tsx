@@ -9,7 +9,8 @@ import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, Pagi
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { QuoteDetailsSheet } from './quotesDetails';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, Download } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 // Define TypeScript interfaces (can be shared in a types file)
 interface Image {
@@ -165,6 +166,70 @@ const QuotesTable = () => {
     }
   };
 
+  const handleExportToExcel = async () => {
+    setLoading(true);
+    try {
+      // Fetch all data for export, applying current filters and sorting
+      const params = new URLSearchParams();
+      if (debouncedGlobalFilter) params.append('search', debouncedGlobalFilter);
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
+      if (sortBy.length > 0) {
+        const sortField = sortBy[0];
+        const orderingKey = sortField.id === 'product_name' ? 'product__name' : sortField.id;
+        const ordering = sortField.desc ? `-${orderingKey}` : orderingKey;
+        params.append('ordering', ordering);
+      }
+      
+      const response = await api.get(`/quotes/`, { params });
+      const quotesToExport: Quote[] = response.data.results;
+      
+      // Define CSV headers
+      const headers = [
+        'Quote ID', 'Status', 'Date Requested', 'Requester Name',
+        'Product Name', 'Vendor Name', 'Product Model', 'Product Manufacturer',
+        'Product Price', 'Message'
+      ];
+      const csvRows = [headers.join(',')];
+      
+      // Map data to CSV rows
+      quotesToExport.forEach(quote => {
+        const row = [
+          `"${quote.id}"`,
+          `"${quote.status}"`,
+          `"${new Date(quote.created_at).toLocaleString()}"`,
+          `"${quote.user_name}"`,
+          `"${quote.product_details.name}"`,
+          `"${quote.product_details.user_name}"`,
+          `"${quote.product_details.model || 'N/A'}"`,
+          `"${quote.product_details.manufacturer || 'N/A'}"`,
+          `"${quote.product_details.price}"`,
+          `"${quote.message.replace(/"/g, '""')}"`
+        ];
+        csvRows.push(row.join(','));
+      });
+      
+      const csvString = csvRows.join('\n');
+      
+      // Create a Blob and trigger download
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'quote_requests.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error("Failed to export quotes:", error);
+      alert("Failed to export data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const totalPages = Math.ceil(totalQuotes / 20); // Assuming page size is 20
 
   const columns = useMemo<ColumnDef<Quote>[]>(
@@ -270,9 +335,15 @@ const QuotesTable = () => {
         onReject={handleRejectQuote}
       />
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Quote Requests</h1>
-        <p className="text-sm text-gray-500 mt-1">Browse and manage all quote requests from users.</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Quote Requests</h1>
+          <p className="text-sm text-gray-500 mt-1">Browse and manage all quote requests from users.</p>
+        </div>
+        <Button onClick={handleExportToExcel} disabled={loading || data.length === 0} className="flex items-center gap-2">
+          <Download size={16} />
+          Export as Excel
+        </Button>
       </div>
 
       {/* Controls */}
@@ -362,7 +433,7 @@ const QuotesTable = () => {
                     }}
                   >
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className="py-2 px-4 text-gray-800"> 
+                      <td key={cell.id} className="py-2 px-4 text-gray-800">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
