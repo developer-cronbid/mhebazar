@@ -119,6 +119,9 @@ export default function HomePage() {
             <Image src={"/logos/Tallboy.png"} alt="Tallboy Logo" width={100} height={64} className="h-16 w-auto mx-4" />
             <Image src={"/logos/Troax.png"} alt="Troax Logo" width={100} height={64} className="h-16 w-auto mx-4" />
             <Image src={"/logos/Unik.png"} alt="Unik Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            <Image src={"/logos/metalkraft.png"} alt="MetalkraftIndustries Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+
+            
           </Marquee>
         </SectionWrapper>
       </div>
