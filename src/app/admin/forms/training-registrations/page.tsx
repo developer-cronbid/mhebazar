@@ -5,6 +5,8 @@ import api from '@/lib/api';
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef, SortingState } from '@tanstack/react-table';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Button } from "@/components/ui/button"; // Button import add kiya
+import { Download } from "lucide-react"; // Download icon import add kiya
 
 // --- TypeScript Interface ---
 interface TrainingRegistration {
@@ -79,6 +81,62 @@ const TrainingRegistrationsTable = () => {
 
   const totalPages = Math.ceil(totalRegistrations / 20);
 
+  // Export to Excel function
+  const handleExportToExcel = async () => {
+    setLoading(true);
+    try {
+      // Fetch all data for export, applying current filters
+      const params = new URLSearchParams();
+      if (debouncedGlobalFilter) params.append('search', debouncedGlobalFilter);
+      if (trainingFilter !== 'all') params.append('training_name', trainingFilter);
+      if (sortBy.length > 0) {
+        const sort = sortBy[0];
+        params.append('ordering', `${sort.desc ? '-' : ''}${sort.id}`);
+      }
+
+      const response = await api.get(`/training-registrations/`, { params });
+      const registrationsToExport: TrainingRegistration[] = response.data.results;
+
+      // Generate CSV content
+      const headers = ['Training Program', 'Full Name', 'Company', 'Phone', 'Email', 'Message', 'Date Submitted'];
+      const csvRows = [headers.join(',')];
+
+      registrationsToExport.forEach(reg => {
+        const row = [
+          `"${reg.training_name}"`,
+          `"${reg.full_name}"`,
+          `"${reg.company_name}"`,
+          `"${reg.phone}"`,
+          `"${reg.email}"`,
+          `"${reg.message.replace(/"/g, '""')}"`, // Handle quotes in message
+          `"${new Date(reg.submitted_at).toLocaleString()}"`,
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      const csvString = csvRows.join('\n');
+
+      // Create a Blob and trigger download
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'training_registrations.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Failed to export registrations:", error);
+      alert("Failed to export data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   const columns = useMemo<ColumnDef<TrainingRegistration>[]>(() => [
     {
       header: 'Sr. No.',
@@ -136,9 +194,15 @@ const TrainingRegistrationsTable = () => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Training Registrations</h1>
-        <p className="text-sm text-gray-500 mt-1">View all submitted requests for training programs.</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Training Registrations</h1>
+          <p className="text-sm text-gray-500 mt-1">View all submitted requests for training programs.</p>
+        </div>
+        <Button onClick={handleExportToExcel} disabled={loading || data.length === 0} className="flex items-center gap-2">
+          <Download size={16} />
+          Export as Excel
+        </Button>
       </div>
 
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">

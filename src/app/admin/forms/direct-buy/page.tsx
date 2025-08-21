@@ -7,6 +7,9 @@ import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, Pagi
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { OrderDetailsSheet } from './orderDetails';
+import { Button } from "@/components/ui/button"; // Add Button import
+import { Download } from "lucide-react"; // Add Download icon import
+
 
 // --- TypeScript Interfaces based on your Serializers ---
 interface Image {
@@ -111,6 +114,61 @@ const OrdersTable = () => {
 
   const totalPages = Math.ceil(totalOrders / 20);
 
+  // New function to handle export to Excel
+  const handleExportToExcel = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      // Add filters and sorting to the export request
+      if (debouncedGlobalFilter) params.append('search', debouncedGlobalFilter);
+      if (statusFilter !== 'all') params.append('status', statusFilter);
+      if (sortBy.length > 0) {
+        const sort = sortBy[0];
+        params.append('ordering', `${sort.desc ? '-' : ''}${sort.id}`);
+      }
+
+      // Fetch all data for export, assuming API returns all if no page is specified
+      const response = await api.get(`/orders/`, { params });
+      const ordersToExport: Order[] = response.data.results;
+
+      // Generate CSV content
+      const headers = ['Order #', 'Customer', 'Date Ordered', 'Items', 'Total Amount (INR)', 'Status'];
+      const csvRows = [headers.join(',')];
+
+      ordersToExport.forEach(order => {
+        const row = [
+          `"${order.order_number}"`,
+          `"${order.user_name}"`,
+          `"${new Date(order.created_at).toLocaleDateString()}"`,
+          order.item_count,
+          order.total_amount,
+          `"${order.status}"`,
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      const csvString = csvRows.join('\n');
+
+      // Create a Blob and trigger download
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'orders_export.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Failed to export order data:", error);
+      alert("Failed to export data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = useMemo<ColumnDef<Order>[]>(() => [
     {
       accessorKey: 'order_number',
@@ -161,7 +219,6 @@ const OrdersTable = () => {
   };
 
   const generatePagination = () => {
-    // Logic remains the same
     if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
     if (page <= 3) return [1, 2, 3, 4, '...', totalPages];
     if (page >= totalPages - 2) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
@@ -177,9 +234,19 @@ const OrdersTable = () => {
         onOpenChange={setIsSheetOpen}
         onUpdateStatus={handleUpdateOrderStatus}
       />
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Customer Orders</h1>
-        <p className="text-sm text-gray-500 mt-1">Browse and manage all customer orders.</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Customer Orders</h1>
+          <p className="text-sm text-gray-500 mt-1">Browse and manage all customer orders.</p>
+        </div>
+        <Button
+          onClick={handleExportToExcel}
+          disabled={loading || data.length === 0}
+          className="flex items-center gap-2 px-4 py-2"
+        >
+          <Download size={16} />
+          Export as Excel
+        </Button>
       </div>
 
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">

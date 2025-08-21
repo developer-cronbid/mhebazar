@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Search, Bell, User,LogOut, Home } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Search, Bell, User, LogOut, Home } from 'lucide-react';
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -16,10 +16,40 @@ import { handleLogout } from "@/lib/auth/logout";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 
+// Admin pages ki list
+const PAGES = [
+  { name: 'Dashboard', href: '/admin' },
+  { name: 'Users', href: '/admin/accounts/users' },
+  { name: 'Vendors', href: '/admin/accounts/registered-vendors' },
+  { name: 'Categories', href: '/admin/add-products/categories' },
+  { name: 'Subcategories', href: '/admin/add-products/subcategories' },
+  { name: 'Contact Form Submissions', href: '/admin/contact/contact-form' },
+  { name: 'Newsletter Subscriptions', href: '/admin/contact/newsletter' },
+  { name: 'Direct Buy Forms', href: '/admin/forms/direct-buy' },
+  { name: 'Quote Requests', href: '/admin/forms/quotes' },
+  { name: 'Rental Requests', href: '/admin/forms/rentals' },
+  { name: 'Training Registrations', href: '/admin/forms/training-registrations' },
+];
+
 const Navbar = () => {
   const { setUser } = useUser();
   const router = useRouter();
-  
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredPages = useMemo(() => {
+    if (!searchQuery) return [];
+    const lowercasedQuery = searchQuery.toLowerCase();
+    return PAGES.filter(page =>
+      page.name.toLowerCase().includes(lowercasedQuery)
+    );
+  }, [searchQuery]);
+
+  const handleSearchItemClick = (href: string) => {
+    router.push(href);
+    setSearchQuery(''); // Clear search bar after navigation
+  };
+
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between ">
@@ -36,7 +66,7 @@ const Navbar = () => {
 
         {/* Right side - Search, notifications, and account */}
         <div className="flex items-center space-x-4 w-2/3">
-          {/* Search */}
+          {/* Simple Search with custom dropdown */}
           <div className="relative w-full">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
@@ -45,7 +75,23 @@ const Navbar = () => {
               type="text"
               placeholder="Search"
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {filteredPages.length > 0 && (
+              <div className="absolute top-full mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
+                {filteredPages.map((page) => (
+                  <Link
+                    key={page.href}
+                    href={page.href}
+                    onClick={() => handleSearchItemClick(page.href)}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    {page.name}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Notification bell */}
@@ -65,10 +111,6 @@ const Navbar = () => {
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                {/* <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem> */}
                 <DropdownMenuItem>
                   <Link href={'/'} className='flex'>
                     <Home className="mr-2 h-4 w-4" />
