@@ -67,7 +67,7 @@ const Sidebar = () => {
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="px-3 py-3 border-b-2 border-[#5da031]/20 bg-gradient-to-r from-[#5da031]/5 to-white">
+          <div className="px-3 py-4 border-b-2 border-[#5da031]/20 bg-gradient-to-r from-[#5da031]/5 to-white">
             <div className="flex items-center justify-between">
               {isExpanded ? (
                 <div className="flex items-center space-x-2">

@@ -1,7 +1,25 @@
+'use client';
+
 import React from 'react';
-import { Search, Bell, User } from 'lucide-react';
+import { Search, Bell, User,LogOut, Home } from 'lucide-react';
+import Link from 'next/link';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuGroup,
+} from "@/components/ui/dropdown-menu"
+import { handleLogout } from "@/lib/auth/logout";
+import { useUser } from "@/context/UserContext";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
+  const { setUser } = useUser();
+  const router = useRouter();
+  
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between ">
@@ -31,15 +49,40 @@ const Navbar = () => {
           </div>
 
           {/* Notification bell */}
-          <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <Link href='/admin/forms/quotes' className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <Bell className="h-5 w-5 text-gray-600" />
-          </button>
+          </Link>
 
           {/* My Account button */}
-          <button className="flex items-center space-x-2 bg-[#5CA131] hover:bg-green-700 text-white px-4 py-2 rounded-full transition-colors">
-            <User className="h-4 w-4" />
-            <span className="text-sm font-medium text-nowrap">My Account</span>
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center space-x-2 bg-[#5CA131] hover:bg-green-700 text-white px-4 py-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                <User className="h-4 w-4" />
+                <span className="text-sm font-medium text-nowrap">My Account</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                {/* <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem> */}
+                <DropdownMenuItem>
+                  <Link href={'/'} className='flex'>
+                    <Home className="mr-2 h-4 w-4" />
+                    <span>Home Page</span>
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleLogout(() => setUser(null), router)}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </nav>

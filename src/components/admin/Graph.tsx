@@ -85,20 +85,20 @@ const AnalyticsDashboard = () => {
       setLoading(true);
       try {
         const dateFilter = { created_at__gte: format(thirtyDaysAgo, 'yyyy-MM-dd') };
-        const submissionDateFilter = { submitted_at__gte: format(thirtyDaysAgo, 'yyyy-MM-dd') };
+        // const submissionDateFilter = { submitted_at__gte: format(thirtyDaysAgo, 'yyyy-MM-dd') };
 
         // Fetch all data in parallel
         const [quoteRes, rentalRes, orderRes, contactRes] = await Promise.all([
           api.get('/quotes/', { params: { ...dateFilter, page_size: 1000 } }),
           api.get('/rentals/', { params: { ...dateFilter, page_size: 1000 } }),
           api.get('/orders/', { params: { ...dateFilter, page_size: 1000 } }),
-          api.get('/contact-forms/', { params: { ...submissionDateFilter, page_size: 1000 } })
+          api.get('/contact-forms/', { params: { ...dateFilter, page_size: 1000 } })
         ]);
 
         // Process and set state for each chart
         setProductQuoteData(processDailyCounts(quoteRes.data.results, 'created_at'));
         setRentalData(processDailyCounts(rentalRes.data.results, 'created_at'));
-        setContactData(processDailyCounts(contactRes.data.results, 'submitted_at'));
+        setContactData(processDailyCounts(contactRes.data.results, 'created_at'));
         setRentBuyData(processCumulativeCounts(rentalRes.data.results, orderRes.data.results));
 
       } catch (error) {
