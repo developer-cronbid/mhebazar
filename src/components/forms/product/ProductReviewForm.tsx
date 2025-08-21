@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera, Star, Loader2 } from "lucide-react";
+import { Camera, Star, Loader2, Trash2 } from "lucide-react";
 import React, { useState, ChangeEvent, useEffect, useRef } from "react";
 import Image from "next/image";
 import api from "@/lib/api";
@@ -27,7 +27,7 @@ type Props = {
 };
 
 // Assuming Role ID for a regular User from models.py
-const USER_ROLE_ID = 3;
+// const USER_ROLE_ID = 3;
 
 export default function MheWriteAReview({ productId, onOpenChange }: Props) {
   const { user } = useUser();
@@ -101,10 +101,6 @@ export default function MheWriteAReview({ productId, onOpenChange }: Props) {
   const handleSubmitReview = async () => {
     if (!user) {
       toast.error("You must be logged in to submit a review.");
-      return;
-    }
-    if (!user.role || user.role.id !== USER_ROLE_ID) {
-      toast.error("Only regular users can submit reviews.");
       return;
     }
 
