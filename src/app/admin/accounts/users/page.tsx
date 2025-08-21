@@ -1,18 +1,17 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import api from '@/lib/api';
 import { Trash2, Download, MoreHorizontal } from 'lucide-react';
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   useReactTable,
   getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
   flexRender,
   ColumnDef,
+  SortingState,
 } from '@tanstack/react-table';
-import { ProductQuote } from '@/types';
 import {
   Select,
   SelectTrigger,
@@ -27,67 +26,123 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
+// User type remains the same
+interface User {
+  id: number;
+  full_name: string;
+  email: string;
+  phone: string;
+  username: string;
+  date_joined: string;
+}
+
 const UsersTable = () => {
+  const [data, setData] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalUsers, setTotalUsers] = useState(0);
+
+  // States for filtering
+  const [statusFilter, setStatusFilter] = useState('all'); // Default to 'all'
+  const [roleFilter, setRoleFilter] = useState('all'); // Default to 'all'
+
+  // States for server-side operations
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  // const [pageSize, setPageSize] = useState(10);
   const [globalFilter, setGlobalFilter] = useState('');
-  const [sortBy, setSortBy] = useState<{ id: string; desc: boolean }[]>([
-    { id: 'date', desc: true }
+  const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
+  const [sortBy, setSortBy] = useState<SortingState>([
+    { id: 'date_joined', desc: true }
   ]);
 
-  const totalEntries = 29;
+  // Debounce the search input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedGlobalFilter(globalFilter);
+      setPage(1); // Reset page on new search
+    }, 500);
 
-  // Simulated data for all entries (replace with real data in production)
-  const allData = useMemo<ProductQuote[]>(() =>
-    Array.from({ length: totalEntries }, (_, i) => ({
-      id: i + 1,
-      name: "John Doe John",
-      email: "jdoe@email.com",
-      mobile: "9876543210",
-      company: "Armin Industries",
-      product: "Godrej Uno Electric Stacker 1.5 Tonne ES...",
-      date: `${String(25 - i).padStart(2, "0")}/05/25`
-    })), [totalEntries]
-  );
+    return () => clearTimeout(handler);
+  }, [globalFilter]);
+
+
+  // API Request Logic
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams();
+        params.append('page', String(page));
+        // params.append('page_size', String(pageSize));
+
+        if (debouncedGlobalFilter) {
+          params.append('search', debouncedGlobalFilter);
+        }
+
+        if (sortBy.length > 0) {
+          const sortField = sortBy[0];
+          const ordering = sortField.desc ? `-${sortField.id}` : sortField.id;
+          params.append('ordering', ordering);
+        }
+
+        // --- FIX: Correctly handle 'all' filter option ---
+        if (statusFilter && statusFilter !== 'all') {
+          if (statusFilter === 'verified') {
+            params.append('is_email_verified', 'true');
+          } else if (statusFilter === 'not_verified') {
+            params.append('is_email_verified', 'false');
+          }
+        }
+
+        if (roleFilter && roleFilter !== 'all') {
+          params.append('role__name', roleFilter);
+        }
+
+        const response = await api.get(`/users/`, { params });
+        setData(response.data.results);
+        setTotalUsers(response.data.count);
+
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    // --- FIX: Added roleFilter to dependency array ---
+  }, [page, debouncedGlobalFilter, sortBy, statusFilter, roleFilter]);
+
+  const totalPages = Math.ceil(totalUsers / 20);
 
   // Table columns definition
-  const columns = useMemo<ColumnDef<ProductQuote>[]>(
+  const columns = useMemo<ColumnDef<User>[]>(
     () => [
       {
-        accessorKey: 'id',
         header: 'Sr. No.',
-        cell: info => info.getValue(),
+        cell: info => info.row.index + 1 + (page - 1) * 20,
         size: 64,
       },
       {
-        accessorKey: 'name',
-        header: 'Name',
-        cell: info => info.getValue(),
+        accessorKey: 'full_name',
+        header: 'Full Name',
       },
       {
         accessorKey: 'email',
         header: 'Email',
-        cell: info => info.getValue(),
       },
       {
-        accessorKey: 'mobile',
+        accessorKey: 'phone',
         header: 'Mobile No.',
-        cell: info => info.getValue(),
+        cell: info => info.getValue() || 'N/A',
       },
       {
-        accessorKey: 'company',
-        header: 'Company Name',
-        cell: info => info.getValue(),
+        accessorKey: 'username',
+        header: 'Username',
       },
       {
-        accessorKey: 'product',
-        header: 'Product Name',
-        cell: info => info.getValue(),
-      },
-      {
-        accessorKey: 'date',
-        header: 'Date',
-        cell: info => info.getValue(),
+        accessorKey: 'date_joined',
+        header: 'Date Joined',
+        cell: info => new Date(info.getValue() as string).toLocaleDateString(),
       },
       {
         id: 'actions',
@@ -110,44 +165,24 @@ const UsersTable = () => {
           </DropdownMenu>
         ),
         size: 48,
+        enableSorting: false,
       },
     ],
-    []
+    [page]
   );
 
-  // Filtering and sorting logic
-  const filteredData = useMemo(() => {
-    if (!globalFilter) return allData;
-    const filter = globalFilter.toLowerCase();
-    return allData.filter(
-      item =>
-        item.name.toLowerCase().includes(filter) ||
-        item.email.toLowerCase().includes(filter) ||
-        item.mobile.toLowerCase().includes(filter) ||
-        item.company.toLowerCase().includes(filter) ||
-        item.product.toLowerCase().includes(filter) ||
-        item.date.toLowerCase().includes(filter)
-    );
-  }, [allData, globalFilter]);
-
-  // Table instance
+  // Configure TanStack Table
   const table = useReactTable({
-    data: filteredData,
+    data,
     columns,
-    state: {
-      sorting: sortBy,
-    },
+    state: { sorting: sortBy },
     onSortingChange: setSortBy,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    getCoreRowModel: getCoreRowModel(), // ✅ correct
     manualPagination: true,
-    pageCount: Math.ceil(filteredData.length / pageSize),
+    manualFiltering: true,
+    manualSorting: true,
+    pageCount: totalPages,
   });
-
-  // Paginated data
-  const paginatedRows = table.getSortedRowModel().rows.slice((page - 1) * pageSize, page * pageSize);
-  const totalPages = Math.ceil(filteredData.length / pageSize);
 
   function handlePageChange(newPage: number) {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -155,8 +190,25 @@ const UsersTable = () => {
     }
   }
 
+  // --- IMPROVEMENT: Simplified pagination logic ---
+  const generatePagination = () => {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (page <= 3) {
+      return [1, 2, 3, 4, '...', totalPages];
+    }
+
+    if (page >= totalPages - 2) {
+      return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [1, '...', page - 1, page, page + 1, '...', totalPages];
+  };
+
   return (
-    <div className="bg-white p-6 overflow-y-auto">
+    <div className="bg-white p-6">
       <div className="w-full mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
@@ -174,119 +226,159 @@ const UsersTable = () => {
         </div>
 
         {/* Controls */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-2">
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">Show</span>
-            <Select value={String(pageSize)} onValueChange={val => { setPageSize(Number(val)); setPage(1); }}>
-              <SelectTrigger className="w-[80px] border border-gray-300 rounded px-3 py-1 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="25">25</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className='flex gap-6'>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">Sort by</span>
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
+          <div className='flex items-center gap-4 flex-wrap'>
+            {/* Status Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Status</span>
               <Select
-                value={
-                  sortBy[0]?.id === 'date'
-                    ? sortBy[0].desc
-                      ? 'Latest'
-                      : 'Oldest'
-                    : sortBy[0]?.id === 'name'
-                      ? 'Name'
-                      : sortBy[0]?.id === 'company'
-                        ? 'Company'
-                        : 'Latest'
-                }
+                value={statusFilter}
                 onValueChange={value => {
-                  if (value === 'Latest') setSortBy([{ id: 'date', desc: true }]);
-                  else if (value === 'Oldest') setSortBy([{ id: 'date', desc: false }]);
-                  else if (value === 'Name') setSortBy([{ id: 'name', desc: false }]);
-                  else if (value === 'Company') setSortBy([{ id: 'company', desc: false }]);
+                  setStatusFilter(value);
+                  setPage(1);
                 }}
               >
-                <SelectTrigger className="w-[120px] border border-gray-300 rounded px-3 py-1 text-sm">
-                  <SelectValue />
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Latest">Latest</SelectItem>
-                  <SelectItem value="Oldest">Oldest</SelectItem>
-                  <SelectItem value="Name">Name</SelectItem>
-                  <SelectItem value="Company">Company</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="not_verified">Not Verified</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Role Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Role</span>
+              <Select
+                value={roleFilter}
+                onValueChange={value => {
+                  setRoleFilter(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[140px]">
+                  {/* --- FIX: Corrected placeholder text --- */}
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="USER">User</SelectItem>
+                  <SelectItem value="VENDOR">Vendor</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Sort by</span>
+              <Select
+                value={sortBy[0] ? `${sortBy[0].id}:${sortBy[0].desc}` : 'date_joined:true'}
+                onValueChange={value => {
+                  const [id, desc] = value.split(':');
+                  setSortBy([{ id, desc: desc === 'true' }]);
+                }}
+              >
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date_joined:true">Latest</SelectItem>
+                  <SelectItem value="date_joined:false">Oldest</SelectItem>
+                  <SelectItem value="full_name:false">Name</SelectItem>
+                  <SelectItem value="username:false">Username</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Search Input */}
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 placeholder="Search..."
                 value={globalFilter}
-                onChange={e => {
-                  setGlobalFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="border border-gray-300 rounded px-3 py-1 text-sm"
+                onChange={e => setGlobalFilter(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-1 text-sm h-9"
               />
             </div>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-gray-100">
-                {table.getHeaderGroups()[0].headers.map(header => {
-                  const isSortable = header.column.getCanSort?.();
-                  const sorted = header.column.getIsSorted?.();
-                  return (
-                    <TableHead
-                      key={header.id}
-                      style={{ width: header.getSize() }}
-                      className={`px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer select-none ${isSortable ? 'hover:text-blue-600' : ''}`}
-                      onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {sorted === 'asc' && <span> ▲</span>}
-                      {sorted === 'desc' && <span> ▼</span>}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedRows.length === 0 ? (
-                <TableRow className="">
-                  <TableCell colSpan={columns.length} className="text-center py-8">
-                    No data found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                paginatedRows.map(row => (
-                  <TableRow key={row.original.id} className="hover:bg-[#5ca131]/20">
-                    {row.getVisibleCells().map(cell => (
-                      <TableCell
-                        key={cell.id}
-                        className="px-4 py-4 text-sm text-gray-900 "
+        {/* Table - FIXED VERSION */}
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <div className="relative overflow-auto h-[68vh]">
+            <table className="w-full border-collapse">
+              <thead>
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <th
+                        key={header.id}
+                        className={`
+                          sticky top-0 z-30 bg-gray-100 py-3 px-4 text-left font-medium text-gray-900 border-b border-gray-200
+                          ${header.column.getCanSort() ? 'cursor-pointer select-none hover:bg-gray-200' : ''}
+                        `}
+                        onClick={header.column.getToggleSortingHandler()}
+                        style={{
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 30,
+                          backgroundColor: '#f3f4f6',
+                        }}
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
+                        <div className="flex items-center gap-1">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getCanSort() && (
+                            <span className="text-gray-400">
+                              {{ asc: ' ▲', desc: ' ▼' }[header.column.getIsSorted() as string] ?? '⇅'}
+                            </span>
+                          )}
+                        </div>
+                      </th>
                     ))}
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="bg-white">
+                {loading ? (
+                  <tr>
+                    <td colSpan={columns.length} className="text-center h-24 py-8">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : table.getRowModel().rows.length === 0 ? (
+                  <tr>
+                    <td colSpan={columns.length} className="text-center py-8">
+                      No data found.
+                    </td>
+                  </tr>
+                ) : (
+                  table.getRowModel().rows.map((row, index) => (
+                    <tr
+                      key={row.id}
+                      className={`border-b border-gray-100 hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}
+                    >
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id} className="py-3 px-4 text-sm text-gray-900">
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between gap-4 mt-6">
+        <div className="flex items-center justify-between gap-4 mt-6">
+          <div className="text-sm text-gray-600">
+            {!loading && `Showing ${data.length > 0 ? (page - 1) * 20 + 1 : 0} to ${Math.min(page * 20, totalUsers)} of ${totalUsers} entries`}
+          </div>
           <div className="cursor-default">
             <Pagination>
               <PaginationContent>
@@ -297,34 +389,12 @@ const UsersTable = () => {
                     className={`${page === 1 ? "pointer-events-none opacity-50" : ""} rounded-md border-none bg-transparent hover:bg-gray-100 text-green-600`}
                   />
                 </PaginationItem>
-                {page > 2 && totalPages > 4 && (
-                  <PaginationItem>
-                    <PaginationLink
-                      isActive={page === 1}
-                      onClick={() => handlePageChange(1)}
-                      className={`w-8 h-8 p-0 rounded-md border-none text-sm ${page === 1
-                        ? "bg-[#5CA131] text-white hover:bg-green-700"
-                        : "bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                        }`}
-                    >
-                      1
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
-                {page > 3 && totalPages > 5 && (
-                  <PaginationItem>
-                    <span className="px-2 text-gray-400">...</span>
-                  </PaginationItem>
-                )}
-                {Array.from({ length: totalPages }, (_, idx) => idx + 1)
-                  .filter(
-                    (p) =>
-                      p === 1 ||
-                      p === totalPages ||
-                      (p >= page - 1 && p <= page + 1)
-                  )
-                  .map((p) => (
-                    <PaginationItem key={p}>
+
+                {generatePagination().map((p, index) => (
+                  <PaginationItem key={index}>
+                    {typeof p === 'string' ? (
+                      <PaginationEllipsis />
+                    ) : (
                       <PaginationLink
                         isActive={page === p}
                         onClick={() => handlePageChange(p)}
@@ -335,27 +405,10 @@ const UsersTable = () => {
                       >
                         {p}
                       </PaginationLink>
-                    </PaginationItem>
-                  ))}
-                {page < totalPages - 2 && totalPages > 5 && (
-                  <PaginationItem>
-                    <span className="px-2 text-gray-400">...</span>
+                    )}
                   </PaginationItem>
-                )}
-                {page < totalPages - 1 && totalPages > 4 && (
-                  <PaginationItem>
-                    <PaginationLink
-                      isActive={page === totalPages}
-                      onClick={() => handlePageChange(totalPages)}
-                      className={`w-8 h-8 p-0 rounded-md border-none text-sm ${page === totalPages
-                        ? "bg-[#5CA131] text-white hover:bg-green-700"
-                        : "bg-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-                        }`}
-                    >
-                      {totalPages}
-                    </PaginationLink>
-                  </PaginationItem>
-                )}
+                ))}
+
                 <PaginationItem>
                   <PaginationNext
                     onClick={() => handlePageChange(page + 1)}
@@ -365,9 +418,6 @@ const UsersTable = () => {
                 </PaginationItem>
               </PaginationContent>
             </Pagination>
-          </div>
-          <div className="text-sm text-gray-600">
-            Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, filteredData.length)} out of {filteredData.length} entries
           </div>
         </div>
       </div>
