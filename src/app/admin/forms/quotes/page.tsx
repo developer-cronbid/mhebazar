@@ -36,6 +36,17 @@ interface Quote {
   created_at: string;
 }
 
+const formatProductName = (productData: ProductDetails) => {
+  const title = productData.name || '';
+  const manufacturer = productData.manufacturer || productData.user_name || '';
+  const model = productData.model || '';
+
+  return `${manufacturer} ${title} ${model}`
+    .replace(/[^a-zA-Z0-9 \-]/g, "") // Remove special characters
+    .replace(/\s+/g, " ") // Collapse multiple spaces
+    .trim();
+};
+
 const QuotesTable = () => {
   const [data, setData] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -188,7 +199,7 @@ const QuotesTable = () => {
       },
       {
         id: 'product_name',
-        accessorFn: row => row.product_details.name,
+        accessorFn: row => formatProductName(row.product_details),
         header: 'Product Name',
       },
       {
