@@ -72,6 +72,9 @@ export default async function IndividualProductPage({
   }
 
   const { category_name, subcategory_name, name: productName } = productData;
+  const product = productName.replace(/[^a-zA-Z0-9 \-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
   const cat_slug = category_name.toLowerCase().replace(/\s+/g, '-');
   const subcat_slug = subcategory_name?.toLowerCase().replace(/\s+/g, '-');
 
@@ -83,7 +86,7 @@ export default async function IndividualProductPage({
           { label: category_name, href: `/${cat_slug}` },
           ...(subcategory_name ? [{ label: subcategory_name, href: `/${cat_slug}/${subcat_slug}` }] : []),
           // Use the actual product name for the label for better UX
-          { label: productName, href: `/product/${productSlug}?id=${productId}` },
+          { label: product, href: `/product/${productSlug}?id=${productId}` },
         ]}
       />
 

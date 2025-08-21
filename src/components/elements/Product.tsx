@@ -247,7 +247,13 @@ const ProductCard = ({
         <div className="flex-1">
           <Link href={productDetailUrl}>
             <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors">
-              {title + " " + productData.model + " " + (productData.manufacturer ? ` by ${productData.manufacturer}` : `by ${productData.user_name}`)}
+              {`${productData.manufacturer
+                ? `${productData.manufacturer}`
+                : `${productData.user_name}`
+                } ${title} ${productData.model} `
+                .replace(/[^a-zA-Z0-9 \-]/g, "")
+                .replace(/\s+/g, " ")
+                .trim()}
             </h3>
           </Link>
           <p className="text-sm text-gray-500 mb-2 line-clamp-1">
@@ -304,7 +310,7 @@ const ProductCard = ({
                 </button>
                 <button
                   onClick={() => onBuyNowClick(id)}
-                  className="rounded-lg border border-green-600 text-green-600 hover:bg-green-600 hover:text-amber-100 py-3 font-medium text-base transition-colors flex-1"
+                  className="rounded-lg border border-green-600 text-green-600 hover:bg-green-50 py-3 font-medium text-base transition-colors flex-1"
                   aria-label="Buy now"
                   disabled={!isPurchasable}
                 >
@@ -487,17 +493,17 @@ export const ProductCardContainer = ({
   }, [user, router, isInCart, addToCart]);
 
 
-    const handleRemoveFromCart = useCallback(async (productId: number) => {
-      if (!user) return;
-      const success = await removeFromCart(productId);
-      if (success) {
-        toast.success("Product removed from cart.");
-      } else {
-        toast.error("Failed to remove product from cart.");
-      }
-    }, [user, removeFromCart]);
-  
-  
+  const handleRemoveFromCart = useCallback(async (productId: number) => {
+    if (!user) return;
+    const success = await removeFromCart(productId);
+    if (success) {
+      toast.success("Product removed from cart.");
+    } else {
+      toast.error("Failed to remove product from cart.");
+    }
+  }, [user, removeFromCart]);
+
+
   const handleIncreaseQuantity = useCallback(async (productId: number) => {
     if (!user) return;
     const newQuantity = currentCartQuantity + 1;
