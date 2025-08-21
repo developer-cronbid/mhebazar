@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import Loading from "./loading";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
-import WhatsAppChat from "@/components/elements/WhatsAppChat";
+// import WhatsAppChat from "@/components/elements/WhatsAppChat";
 
 // Import Inter font
 const inter = Inter({
@@ -82,7 +82,7 @@ export default function RootLayout({
           <SiteLayout>
             <Suspense fallback={<Loading />}>{children}</Suspense>
           </SiteLayout>
-          <WhatsAppChat />
+          {/* <WhatsAppChat /> */}
         </UserProvider>
       </body>
     </html>
