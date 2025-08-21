@@ -483,7 +483,7 @@ const TrainingPage = () => {
                         onClick={() => handleRegisterClick(program.title)}
                         className="bg-[#5CA131] hover:bg-[#4a8c28] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 shadow hover:shadow-md"
                       >
-                        Get a Quote
+                        Register Now!
                       </button>
                     </div>
                   </div>

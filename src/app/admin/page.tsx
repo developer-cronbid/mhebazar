@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Check, X, Building, LucideIcon, PackageCheck, PackageX, UserCheck, UserX, Package, ChevronRightIcon } from 'lucide-react';
+import { Check, X, Building, PackageCheck, PackageX, UserCheck, UserX, Package, ChevronRightIcon } from 'lucide-react';
 import AnalyticsDashboard from '@/components/admin/Graph';
 import api from '@/lib/api'; // Use the configured axios instance
 import Cookies from 'js-cookie';
@@ -21,15 +21,12 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-// import { Separator } from '@/components/ui/separator';
-
 
 // --- Type Definitions ---
 export interface StatsCardProps {
   icon: string;
   number: string;
   label: string;
-  color?: string;
 }
 
 export interface VendorApplication {
@@ -39,7 +36,7 @@ export interface VendorApplication {
   company_name: string;
   company_email: string;
   brand: string;
-  user_name: string; // From the list view serializer
+  user_name: string;
 }
 
 export interface Product {
@@ -52,30 +49,32 @@ export interface Product {
   category_name: string;
 }
 
-// Grouped products structure
 type GroupedProducts = {
   [key: string]: Product[];
 }
 
-// --- Helper Components ---
-const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label }) => (
-  <div className="bg-white p-3 w-72 h-48 rounded-lg flex items-center justify-between cursor-pointer transition-shadow duration-300 hover:shadow-md">
-    {/* Left section with icon + text */}
-    <div className=" space-x-4">
-      {/* Background circle with tag outline icon */}
-      <img src={Icon} className="w-16 h-16" />
+// A more comprehensive stats type
+interface DashboardStats {
+  productQuotes: number;
+  directBuys: number;
+  rentals: number;
+  trainingRequests: number;
+  contactRequests: number;
+  totalVendors: number; // Added for clarity
+  pendingVendors: number;
+}
 
-      {/* Number + Label stacked vertically */}
+
+// --- Helper Components ---
+const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label }) => (
+  <div className="bg-white p-3 w-72 h-48 rounded-lg flex items-center justify-between cursor-pointer transition-shadow duration-300 hover:shadow-md">
+    <div className="space-x-4">
+      <img src={icon} className="w-16 h-16" alt={label} />
       <div>
-        <h2 className="text-2xl font-bold" style={{ color: "#4CAF50" }}>
-          {number}
-        </h2>
-        <p className="text-base" style={{ color: "#757575" }}>
-          {label}
-        </p>
+        <h2 className="text-2xl font-bold" style={{ color: "#4CAF50" }}>{number}</h2>
+        <p className="text-base" style={{ color: "#757575" }}>{label}</p>
       </div>
     </div>
-
     <ChevronRightIcon className="w-6 h-6 text-gray-400" />
   </div>
 );
@@ -85,13 +84,23 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon: Icon, number, label }) => (
 const CompleteDashboard = () => {
   const [vendorApps, setVendorApps] = useState<VendorApplication[]>([]);
   const [pendingProducts, setPendingProducts] = useState<GroupedProducts>({});
-  const [stats, setStats] = useState({ total_applications: 0, pending_applications: 0, approved_vendors: 0 });
+
+  // Use the new, more descriptive stats state
+  const [stats, setStats] = useState<DashboardStats>({
+    productQuotes: 0,
+    directBuys: 0,
+    rentals: 0,
+    trainingRequests: 0,
+    contactRequests: 0,
+    totalVendors: 0,
+    pendingVendors: 0,
+  });
+
   const [isLoading, setIsLoading] = useState(true);
   const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
 
-  // New state declarations for product rejection
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
   const [productRejectionReason, setProductRejectionReason] = useState("");
@@ -100,22 +109,33 @@ const CompleteDashboard = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [vendorResponse, productResponse, statsResponse] = await Promise.all([
+      // --- MODIFIED: Fetch counts from all relevant endpoints ---
+      const [
+        vendorResponse,
+        productResponse,
+        vendorStatsResponse,
+        quoteResponse,
+        rentalResponse,
+        orderResponse,
+        trainingResponse,
+        contactResponse
+      ] = await Promise.all([
         api.get('/vendor/'),
         api.get('/products/'),
-        api.get('/vendor/stats/') // Fetching stats
+        api.get('/vendor/stats/'), // Still useful for vendor-specific counts
+        api.get('/quotes/?page_size=1'), // Fetching only count is efficient
+        api.get('/rentals/?page_size=1'),
+        api.get('/orders/?page_size=1'),
+        api.get('/training-registrations/?page_size=1'),
+        api.get('/contact-forms/?page_size=1'),
       ]);
 
-      // Process Vendor Applications
-      const pendingVendors = vendorResponse.data.results.filter(
-        (app: any) => !app.is_approved
-      );
+      // Process Vendor Applications (unchanged)
+      const pendingVendors = vendorResponse.data.results.filter((app: any) => !app.is_approved);
       setVendorApps(pendingVendors);
 
-      // Process and Group Pending Products
-      const activeProducts = productResponse.data.results.filter(
-        (product: Product) => !product.is_active
-      );
+      // Process and Group Pending Products (unchanged)
+      const activeProducts = productResponse.data.results.filter((product: Product) => !product.is_active);
       const grouped = activeProducts.reduce((acc: GroupedProducts, product: Product) => {
         const vendorName = product.user_name || 'Unknown Vendor';
         if (!acc[vendorName]) {
@@ -125,7 +145,17 @@ const CompleteDashboard = () => {
         return acc;
       }, {});
       setPendingProducts(grouped);
-      setStats(statsResponse.data);
+
+      // --- MODIFIED: Set the new comprehensive stats state ---
+      setStats({
+        productQuotes: quoteResponse.data.count,
+        directBuys: orderResponse.data.count,
+        rentals: rentalResponse.data.count,
+        trainingRequests: trainingResponse.data.count,
+        contactRequests: contactResponse.data.count,
+        totalVendors: vendorStatsResponse.data.total_applications,
+        pendingVendors: vendorStatsResponse.data.pending_applications,
+      });
 
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
@@ -135,6 +165,7 @@ const CompleteDashboard = () => {
     }
   }, []);
 
+  // useEffect and handler functions remain the same
   useEffect(() => {
     const checkUserAndFetch = async () => {
       try {
@@ -244,12 +275,13 @@ const CompleteDashboard = () => {
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Left Section */}
           <div className="flex-1 space-y-10">
+            {/* --- MODIFIED: StatsCards now use correct data from the `stats` state --- */}
             <div className="flex flex-wrap gap-6">
-              <StatsCard icon='prodQuote.png' number={String(stats.total_applications)} label="Product Quote" color="blue" />
-              <StatsCard icon='rentBuy.png' number={String(stats.approved_vendors)} label="Rent & Buy" color="green" />
-              <StatsCard icon='Rental.png' number={String(stats.pending_applications)} label="Rental" color="yellow" />
-              <StatsCard icon='getCAt.png' number={String(totalPendingProducts)} label="Specification" color="orange" />
-              <StatsCard icon='specs.png' number={String(totalPendingProducts)} label="Get Catalogue" color="orange" />
+              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" />
+              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" />
+              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" />
+              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" />
+              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" />
             </div>
 
             <AnalyticsDashboard />

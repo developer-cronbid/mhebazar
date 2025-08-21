@@ -4,8 +4,6 @@ import {
   LayoutDashboard,
   FileText,
   Users,
-  UserPlus,
-  Plus,
   MessageSquare,
   ChevronLeft,
   ChevronRight,
@@ -33,8 +31,7 @@ const Sidebar = () => {
         { label: 'Quotes', href: '/admin/forms/quotes' },
         { label: 'Direct Purchase', href: '/admin/forms/direct-buy' },
         { label: 'Rental', href: '/admin/forms/rentals' },
-        // { label: 'Specification Forms', href: '/admin/forms/specification' },
-        // { label: 'Catalogue Forms', href: '/admin/forms/catalogue' }
+        { label: 'Training Registrations', href: '/admin/forms/training-registrations' },
       ]
     },
     {
@@ -47,33 +44,12 @@ const Sidebar = () => {
       ]
     },
     {
-      icon: UserPlus,
-      label: 'Add Sub Admin',
-      // href: '/admin/add-admin',
-      subItems: [
-        { label: 'Create Admin', href: '/admin/add-admin/create' },
-        { label: 'Admin Permissions', href: '/admin/add-admin/permissions' },
-        { label: 'Admin Roles', href: '/admin/add-admin/roles' }
-      ]
-    },
-    {
-      icon: Plus,
-      label: 'Add Products',
-      // href: '/admin/add-product',
-      subItems: [
-        { label: 'Categories', href: '/admin/add-products/categories' },
-        { label: 'Subcategories', href: '/admin/add-products/subcategories' },
-      ]
-    },
-    {
       icon: MessageSquare,
-      label: 'Enquiry History',
+      label: 'Contact History',
       // href: '/admin/enquiry',
       subItems: [
-        { label: 'Recent Enquiries', href: '/admin/enquiry/recent' },
-        { label: 'Pending Enquiries', href: '/admin/enquiry/pending' },
-        { label: 'Resolved Enquiries', href: '/admin/enquiry/resolved' },
-        { label: 'Enquiry Reports', href: '/admin/enquiry/reports' }
+        { label: 'Newsletter', href: '/admin/contact/newsletter' },
+        { label: 'Contact Forms', href: '/admin/contact/contact-form' },
       ]
     },
   ];
