@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import api from '@/lib/api';
 import { Trash2, Download, MoreHorizontal } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   useReactTable,
   getCoreRowModel,
