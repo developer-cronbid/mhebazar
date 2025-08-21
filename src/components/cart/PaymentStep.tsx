@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Truck, ShoppingCart } from 'lucide-react';
+import { CreditCard, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -117,13 +117,13 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
       icon: <CreditCard className="w-5 h-5" />,
       description: 'Secure payment via Razorpay'
     },
-    {
-      id: 'cod',
-      type: 'cod',
-      name: 'Cash on Delivery',
-      icon: <Truck className="w-5 h-5" />,
-      description: 'Pay when your order is delivered'
-    }
+    // {
+    //   id: 'cod',
+    //   type: 'cod',
+    //   name: 'Cash on Delivery',
+    //   icon: <Truck className="w-5 h-5" />,
+    //   description: 'Pay when your order is delivered'
+    // }
   ];
 
   const formatPrice = (price: number) => `₹ ${price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

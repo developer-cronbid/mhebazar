@@ -27,12 +27,12 @@ const Sidebar = () => {
     },
     {
       icon: FileText,
-      label: 'All Forms',
+      label: 'Enquiry',
       // href: '/admin/forms',
       subItems: [
-        { label: 'Quotes Forms', href: '/admin/forms/quotes' },
-        { label: 'Rent and Buy Forms', href: '/admin/forms/rent-buy' },
-        { label: 'Rental Forms', href: '/admin/forms/rentals' },
+        { label: 'Quotes', href: '/admin/forms/quotes' },
+        { label: 'Direct Purchase', href: '/admin/forms/direct-buy' },
+        { label: 'Rental', href: '/admin/forms/rentals' },
         // { label: 'Specification Forms', href: '/admin/forms/specification' },
         // { label: 'Catalogue Forms', href: '/admin/forms/catalogue' }
       ]
