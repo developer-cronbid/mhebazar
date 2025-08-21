@@ -109,7 +109,7 @@ export default function HomePage() {
             <Image src={"/logos/Logisnext-1.png"} alt="Logisnext-1 Logo" width={100} height={64} className="h-16 w-auto mx-4" />
             <Image src={"/logos/Logisnext-2.png"} alt="Logisnext-2 Logo" width={100} height={64} className="h-16 w-auto mx-4" />
             <Image src={"/logos/Logisnext-3.png"} alt="Logisnext-3 Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Manasi Engineering.png"} alt="Manasi Engineering Logo" width={100} height={64} className="h-16 w-auto mx-4" />
+            {/* <Image src={"/logos/Manasi Engineering.png"} alt="Manasi Engineering Logo" width={100} height={64} className="h-16 w-auto mx-4" /> */}
             <Image src={"/logos/manasi-engineering.png"} alt="Manasi Engineering Logo" width={100} height={64} className="h-16 w-auto mx-4" />
             <Image src={"/logos/MHE Bazar.png"} alt="MHE Bazar Logo" width={100} height={64} className="h-16 w-auto mx-4" />
             <Image src={"/logos/PHL.png"} alt="PHL Logo" width={100} height={64} className="h-16 w-auto mx-4" />
