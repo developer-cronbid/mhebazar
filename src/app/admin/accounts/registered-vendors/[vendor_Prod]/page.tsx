@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { FileSpreadsheet, Trash2, CheckCircle, PackageX, PackageCheck, MoreVertical, Pencil, ExternalLink } from 'lucide-react';
+import { FileSpreadsheet, Trash2, CheckCircle, PackageX, PackageCheck, MoreVertical, Pencil, ExternalLink, Star } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -288,9 +288,10 @@ const VendorProducts = () => {
   const StarRating = ({ average_rating }: { average_rating: number }) => (
     <div className="flex space-x-1">
       {[1, 2, 3, 4, 5].map((star) => (
-        <div
+        <Star
           key={star}
-          className={`w-2 h-2 rounded-full ${star <= average_rating ? 'bg-yellow-300' : 'bg-gray-300'}`}
+          className={`w-4 h-4 ${star <= average_rating ? "fill-yellow-400 text-yellow-400"
+            : "text-gray-300"}`}
         />
       ))}
     </div>
@@ -326,7 +327,7 @@ const VendorProducts = () => {
     }
   };
 
-  const uniqueCategories = useMemo(() => ['All', ...Array.from(new Set(categories.map(c => c.name)))], [products]);
+  const uniqueCategories = useMemo(() => ['All', ...Array.from(new Set(categories.map(c => c.name)))], [categories]);
 
 
   if (loading && products.length === 0) { // Show loading only on initial load
