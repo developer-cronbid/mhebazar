@@ -283,6 +283,71 @@ const VendorProducts = () => {
     }
   };
 
+  // ✅ Export to Excel function added
+  const handleExportToExcel = async () => {
+    if (totalProductsCount === 0) {
+      toast.error("No products to export.");
+      return;
+    }
+
+    toast.info("Preparing your export...", { description: "This may take a moment." });
+
+    // Construct query parameters to fetch all data based on current filters
+    const params = new URLSearchParams({
+      user: vendorId!,
+      ordering: getOrderingParam(sortBy),
+      page_size: totalProductsCount.toString(), // Fetch all products in one go
+    });
+
+    if (selectedCategory !== 'All') {
+      params.append('category_name', selectedCategory);
+    }
+
+    try {
+      const response = await api.get(`products/?${params.toString()}`);
+      const productsToExport: Product[] = response.data.results || [];
+
+      const headers = [
+        'ID', 'Name', 'Category', 'Type', 'Price', 'Description',
+        'Manufacturer', 'Model', 'Rating', 'Status', 'Updated At'
+      ];
+      const csvRows = [headers.join(',')];
+
+      productsToExport.forEach(product => {
+        const row = [
+          `"${product.id}"`,
+          `"${product.name}"`,
+          `"${product.category_name}"`,
+          `"${product.type}"`,
+          `"${product.price || ''}"`,
+          `"${product.description?.replace(/"/g, '""') || ''}"`,
+          `"${product.manufacturer?.replace(/"/g, '""') || ''}"`,
+          `"${product.model?.replace(/"/g, '""') || ''}"`,
+          `"${product.average_rating ?? 0}"`,
+          `"${product.is_active ? 'Approved' : 'Pending'}"`,
+          `"${new Date(product.updated_at).toLocaleString()}"`,
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      const csvString = csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'vendor_products.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("Products exported successfully!");
+
+    } catch (err) {
+      console.error("Failed to export products:", err);
+      toast.error("An error occurred while exporting products.");
+    }
+  };
 
   // Star Rating Component
   const StarRating = ({ average_rating }: { average_rating: number }) => (
@@ -353,7 +418,7 @@ const VendorProducts = () => {
               <span>Approve Selected</span>
             </button>
             <button
-              onClick={() => { /* Implement export logic */ }}
+              onClick={handleExportToExcel}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center space-x-2 transition-colors"
             >
               <FileSpreadsheet className="w-4 h-4" />
