@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -37,7 +38,7 @@ const getOrderingParam = (sortByValue: string) => {
 
 const VendorProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -56,8 +57,9 @@ const VendorProducts = () => {
 
   const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
   const [productRejectionReason, setProductRejectionReason] = useState("");
+
+  // --- STATE CONSOLIDATION: `selectedProduct` is now used for both edit and reject actions ---
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [editedProduct, setEditedProduct] = useState<Product | undefined>(undefined);
 
   const searchParams = useSearchParams();
   const vendorId = searchParams.get('user');
@@ -80,7 +82,7 @@ const VendorProducts = () => {
     fetchCategories();
   }, []);
 
-  // --- OPTIMIZATION: Data fetching now includes all filter, sort, and pagination params ---
+  // --- Data fetching now includes all filter, sort, and pagination params ---
   useEffect(() => {
     if (!vendorId) {
       setError("Vendor ID is missing from the URL query parameter.");
@@ -106,14 +108,11 @@ const VendorProducts = () => {
       try {
         const response = await api.get(`products/?${params.toString()}`);
 
-        // The API now returns a paginated response object
         if (response.data && Array.isArray(response.data.results)) {
           setProducts(response.data.results);
           setTotalProductsCount(response.data.count);
-          // Assuming backend provides this count in the response (see backend optimization)
           setNotApprovedCount(response.data.not_approved_count || 0);
-        }
-        else {
+        } else {
           console.warn("API response was not in the expected format:", response.data);
           setProducts([]);
           setTotalProductsCount(0);
@@ -131,20 +130,17 @@ const VendorProducts = () => {
     };
 
     fetchProducts();
-    // This effect re-runs whenever any of these dependencies change
   }, [vendorId, currentPage, showCount, sortBy, selectedCategory]);
 
-  // --- OPTIMIZATION: This useEffect resets the page to 1 when filters change ---
+  // --- This useEffect resets the page to 1 when filters change ---
   useEffect(() => {
     setCurrentPage(1);
     setSelectAll(false);
     setSelectedProducts(new Set());
   }, [selectedCategory, sortBy, showCount]);
 
-  // Pagination logic now uses the total count from the API
   const totalPages = Math.ceil(totalProductsCount / showCount);
   const startIndex = (currentPage - 1) * showCount;
-  // const currentProducts = ...; // REMOVED, we now use `products` state directly
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage);
@@ -154,7 +150,7 @@ const VendorProducts = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
     if (newSelectAll) {
-      setSelectedProducts(new Set(products.map(p => p.id))); // Use `products` directly
+      setSelectedProducts(new Set(products.map(p => p.id)));
     } else {
       setSelectedProducts(new Set());
     }
@@ -165,7 +161,7 @@ const VendorProducts = () => {
     if (newSelected.has(productId)) newSelected.delete(productId);
     else newSelected.add(productId);
     setSelectedProducts(newSelected);
-    setSelectAll(newSelected.size === products.length && products.length > 0); // Use `products` directly
+    setSelectAll(newSelected.size === products.length && products.length > 0);
   };
 
   const handleApproveSelected = async () => {
@@ -194,7 +190,6 @@ const VendorProducts = () => {
     }
   };
 
-  // Individual product approve/reject functionality
   const handleProductAction = async (productId: number, action: 'approve' | 'reject') => {
     if (action === 'reject') {
       const product = products.find(p => p.id === productId);
@@ -205,11 +200,8 @@ const VendorProducts = () => {
 
     try {
       await api.post(`products/${productId}/${action}/`);
-      toast.success(`Product ${action === 'approve' ? 'Approved' : 'Rejected'}`, {
-        description: `The product has been successfully ${action === 'approve' ? 'approved' : 'rejected'}.`
-      });
+      toast.success(`Product ${action === 'approve' ? 'Approved' : 'Rejected'}`);
 
-      // Update local state to reflect the change
       setProducts(prev =>
         prev.map(p =>
           p.id === productId ? { ...p, is_active: action === 'approve' } : p
@@ -217,14 +209,13 @@ const VendorProducts = () => {
       );
     } catch (error) {
       console.error(`Failed to ${action} product:`, error);
-      toast.error("Action Failed", { description: `Could not ${action} the product.` });
+      toast.error(`Could not ${action} the product.`);
     }
   };
 
-  // Handle product rejection submission
   const handleProductRejectSubmit = async () => {
     if (!selectedProduct || !productRejectionReason.trim()) {
-      return toast.error("Validation Error", { description: "Rejection reason is required." });
+      return toast.error("Rejection reason is required.");
     }
 
     try {
@@ -232,9 +223,8 @@ const VendorProducts = () => {
         reason: productRejectionReason,
       });
 
-      toast.success("Product Rejected", { description: "The product has been rejected." });
+      toast.success("Product Rejected");
 
-      // Update local state
       setProducts(prev =>
         prev.map(p =>
           p.id === selectedProduct.id ? { ...p, is_active: false } : p
@@ -253,29 +243,33 @@ const VendorProducts = () => {
     }
   };
 
-  // Handle product edit
+  // --- IMPLEMENTATION: Handles opening the form for editing a product ---
   const handleEditClick = async (productId: number) => {
     try {
-      setEditedProduct(undefined);
+      setSelectedProduct(null);
       const response = await api.get(`/products/${productId}/`);
-      setEditedProduct(response.data);
-      setIsSheetOpen(true);
+      setSelectedProduct(response.data);
+      setIsSheetOpen(true); // This happens too quickly
     } catch (error) {
       console.error('Error fetching product details:', error);
       toast.error("Failed to load product data for editing.");
     }
   };
 
-  // Handle product delete
+  // --- IMPLEMENTATION: Handles opening the form for adding a new product ---
+  const handleAddClick = () => {
+    setSelectedProduct(null); // Ensure form is empty for new product
+    setIsSheetOpen(true);
+  };
+
   const handleDeleteProduct = async (productId: number, productTitle: string) => {
     if (window.confirm(`Are you sure you want to delete "${productTitle}"?`)) {
       try {
         await api.delete(`products/${productId}/`);
         toast.success(`Product "${productTitle}" deleted.`);
-        // Refresh data by fetching again
-        setCurrentPage(1); // Or stay on the same page if desired
         // A full refetch is simplest after a delete
-        // This can be done by adding a "refetch" state trigger to the useEffect dependency array
+        const event = new Event('refetch');
+        window.dispatchEvent(event);
       } catch (err) {
         console.error("Failed to delete product:", err);
         toast.error("Failed to delete the product.");
@@ -394,8 +388,7 @@ const VendorProducts = () => {
 
   const uniqueCategories = useMemo(() => ['All', ...Array.from(new Set(categories.map(c => c.name)))], [categories]);
 
-
-  if (loading && products.length === 0) { // Show loading only on initial load
+  if (loading && products.length === 0) {
     return <div className="flex justify-center items-center h-screen">Loading products...</div>;
   }
 
@@ -409,6 +402,14 @@ const VendorProducts = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Vendor Products</h1>
           <div className="flex space-x-2">
+            {/* --- IMPLEMENTATION: Button now triggers the add product flow --- */}
+            <Button
+              variant="default"
+              className="bg-[#5CA131] hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
+              onClick={handleAddClick}
+            >
+              + Add Product
+            </Button>
             <button
               onClick={handleApproveSelected}
               className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-[#5CA131] flex items-center space-x-2 transition-colors disabled:bg-gray-400"
@@ -570,7 +571,7 @@ const VendorProducts = () => {
                         {new Date(product.updated_at).toLocaleDateString()}
                       </span>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="flex items-center justify-center gap-2">
                       <div className="flex items-center justify-center space-x-2">
                         {!product.is_active && (
                           <>
@@ -605,6 +606,18 @@ const VendorProducts = () => {
                           </Button>
                         )}
                       </div>
+                      <div>
+                        <Button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleEditClick(product.id);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Edit</span>
+                        </Button>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -614,16 +627,7 @@ const VendorProducts = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-[160px]">
-                          <DropdownMenuItem
-                            onSelect={(e) => {
-                              e.preventDefault();
-                              handleEditClick(product.id);
-                            }}
-                            className="cursor-pointer"
-                          >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            <span>Edit</span>
-                          </DropdownMenuItem>
+                          {/* --- IMPLEMENTATION: Edit button now calls the correct handler --- */}
                           <DropdownMenuItem onClick={() => window.open(`/products-details/${product.id}`, '_blank')}>
                             <ExternalLink className="mr-2 h-4 w-4" />
                             View Details
@@ -695,18 +699,26 @@ const VendorProducts = () => {
         </DialogContent>
       </Dialog>
 
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+      <Sheet
+        open={isSheetOpen}
+        onOpenChange={(open) => {
+          setIsSheetOpen(open);
+          if (!open) {
+            setSelectedProduct(null); // Reset on close
+          }
+        }}
+      >
         <SheetContent className="w-full sm:max-w-md p-0 flex flex-col">
           <SheetHeader className="p-4 border-b">
-            <SheetTitle>{editedProduct ? 'Edit Product' : 'Add Product'}</SheetTitle>
+            <SheetTitle>{selectedProduct ? 'Edit Product' : 'Add New Product'}</SheetTitle>
             <SheetDescription>
-              Make changes to the product details below.
+              {selectedProduct ? 'Make changes to the product details below.' : 'Fill in the details to add a new product.'}
             </SheetDescription>
           </SheetHeader>
 
-          {/* The form goes AFTER the header and has its own scrolling */}
           <div className="flex-1 overflow-y-auto">
-            {editedProduct && <ProductForm product={editedProduct} />}
+            {/* Pass the selected product to the form. It will be null for new products */}
+            <ProductForm product={selectedProduct} />
           </div>
         </SheetContent>
       </Sheet>
