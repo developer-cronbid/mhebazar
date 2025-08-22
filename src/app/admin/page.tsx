@@ -8,6 +8,8 @@ import api from '@/lib/api'; // Use the configured axios instance
 import Cookies from 'js-cookie';
 import { toast } from "sonner";
 import Image from "next/image";
+import { useRouter } from 'next/navigation';
+
 
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ export interface StatsCardProps {
   icon: string;
   number: string;
   label: string;
+  link: string;
 }
 
 export interface VendorApplication {
@@ -65,37 +68,34 @@ interface DashboardStats {
 }
 
 
-const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label }) => (
-  <div className="relative bg-white p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 aspect-square">
-    <div className="flex flex-col h-full">
-      
-      {/* Icon */}
-      <div className="flex items-center">
-        <div className="w-25 h-20 rounded-full flex items-center justify-center bg-green-100">
-          <Image 
-            src={icon} 
-            alt={label} 
-            width={48} 
-            height={48} 
-            className="w-30 h-30 object-contain" 
-          />
+// --- Helper Components ---
+const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
+  const router = useRouter();
+
+  const handleCardClick = () => {
+    router.push(link);
+  };
+
+  return (
+    <div
+      className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 "
+      onClick={handleCardClick}
+    >
+      <div>
+        <div className="flex items-center space-x-4 mb-4 p-4">
+          <Image src={icon} alt={label} width={100} height={100} className="w-30 h-30" />
+        </div>
+        <div>
+          <h2 className="text-5xl font-bold text-green-600">{number}</h2>
+          <p className="text-lg text-gray-500">{label}</p>
         </div>
       </div>
-
-      {/* Number + Label */}
-      <div className="mt-auto">
-        <h2 className="text-6xl font-bold text-green-600">{number}</h2>
-        <p className="text-lg text-gray-500">{label}</p>
+      <div className="flex justify-end mt-auto">
+        <ChevronRightIcon className="w-6 h-6 text-green-600 " />
       </div>
     </div>
-
-    {/* Arrow bottom right */}
-    <div className="absolute bottom-4 right-4">
-      <ChevronRightIcon className="w-6 h-6 text-green-600" />
-    </div>
-  </div>
-);
-
+  );
+};
 
 
 // --- Main Dashboard Component ---
@@ -122,6 +122,8 @@ const CompleteDashboard = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
   const [productRejectionReason, setProductRejectionReason] = useState("");
+
+  
 
   // --- Auth Check and Data Fetching ---
   const fetchData = useCallback(async () => {
@@ -295,13 +297,13 @@ const CompleteDashboard = () => {
           <div className="flex-1 space-y-8">
             {/* StatsCards with image icons */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" />
-              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" />
-              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" />
+              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://mhebazar.vercel.app/admin/forms/quotes" />
+              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://mhebazar.vercel.app/admin/forms/direct-buy" />
+              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://mhebazar.vercel.app/admin/forms/rentals" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" />
-              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" />
+              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://mhebazar.vercel.app/admin/forms/training-registrations" />
+              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://mhebazar.vercel.app/admin/contact/contact-form" />
             </div>
 
             <AnalyticsDashboard />
