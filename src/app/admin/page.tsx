@@ -78,19 +78,19 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
 
   return (
     <div
-      className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 "
+      className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 aspect-square w-full max-w-xs"
       onClick={handleCardClick}
     >
-      <div>
-        <div className="flex items-center space-x-4 mb-4 p-4">
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-start mb-4 p-4">
           <Image src={icon} alt={label} width={100} height={100} className="w-30 h-30" />
         </div>
-        <div>
+        <div className="mt-auto">
           <h2 className="text-5xl font-bold text-green-600">{number}</h2>
           <p className="text-lg text-gray-500">{label}</p>
         </div>
       </div>
-      <div className="flex justify-end mt-auto">
+      <div className="flex justify-end mt-auto -mr-1 -mb-1">
         <ChevronRightIcon className="w-6 h-6 text-green-600 " />
       </div>
     </div>
