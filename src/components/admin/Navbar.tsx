@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -55,36 +56,36 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between ">
+    <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
+      <div className="flex items-center justify-between flex-wrap sm:flex-nowrap gap-4">
         {/* Left side - Logo and greeting */}
-        <div className="flex items-center space-x-3 w-1/3">
-          <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+        <div className="flex items-center space-x-3 w-full sm:w-auto">
+          <Link href="/" className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
             <Image
               src="/favicon-32x32.png"
-              alt="Logo"
+              alt="MHE Logo"
               width={40}
               height={40}
-              className="w-full h-full object-contain"
+              className="w-10 h-10 object-contain"
             />
-          </div>
+          </Link>
 
-          <div>
+          <div className="hidden sm:block">
             <h1 className="text-lg font-semibold text-gray-900">Greetings</h1>
             <p className="text-sm text-gray-600">Start your day with MHE</p>
           </div>
         </div>
 
         {/* Right side - Search, notifications, and account */}
-        <div className="flex items-center space-x-4 w-2/3">
+        <div className="flex items-center justify-end space-x-2 sm:space-x-4 w-full sm:w-auto">
           {/* Simple Search with custom dropdown */}
-          <div className="relative w-full">
+          <div className="relative w-full sm:w-auto sm:min-w-[200px]">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <Search className="h-5 w-5 text-gray-400" />
             </div>
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -118,7 +119,7 @@ const Navbar = () => {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center space-x-2 bg-[#5CA131] hover:bg-green-700 text-white px-4 py-2 rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                 <User className="h-4 w-4" />
-                <span className="text-sm font-medium text-nowrap">
+                <span className="text-sm font-medium text-nowrap hidden sm:inline">
                   My Account
                 </span>
               </button>
@@ -128,7 +129,7 @@ const Navbar = () => {
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem>
-                  <Link href={"/"} className="flex">
+                  <Link href={"/"} className="flex w-full">
                     <Home className="mr-2 h-4 w-4" />
                     <span>Home Page</span>
                   </Link>
