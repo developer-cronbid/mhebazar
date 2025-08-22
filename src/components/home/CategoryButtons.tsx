@@ -71,10 +71,12 @@ const itemVariants = {
  * Added hover effect: image pops out with 3D-like scaling & shadow.
  */
 const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element => {
-  const MAX_LABEL_LENGTH = 12;
+  const [showInitials, setShowInitials] = useState<boolean>(false);
+  const fullImageUrl = getImageUrl(imageSrc);
 
-  const displayedLabel =
-    label.length > MAX_LABEL_LENGTH ? `${label.substring(0, MAX_LABEL_LENGTH)}...` : label;
+  const handleImageError = () => {
+    setShowInitials(true);
+  };
 
   const initials = label
     ?.split(" ")
@@ -82,13 +84,6 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
     .slice(0, 2)
     .join("")
     .toUpperCase();
-
-  const [showInitials, setShowInitials] = useState<boolean>(false);
-  const fullImageUrl = getImageUrl(imageSrc);
-
-  const handleImageError = () => {
-    setShowInitials(true);
-  };
 
   return (
     <Link href={`/${slug}`} className="flex flex-col items-center justify-center gap-4 relative">
@@ -104,7 +99,6 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
             whileHover={{
               scale: 1.65,
               z: 10,
-             
             }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
           >
@@ -123,10 +117,9 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
       </motion.div>
 
       <div
-        className="relative w-fit [font-family:'Inter-Regular',Helvetica] font-normal text-black text-base tracking-[0] leading-[normal] whitespace-nowrap"
-        title={label}
+        className="relative w-fit text-center [font-family:'Inter-Regular',Helvetica] font-normal text-black text-base tracking-[0] leading-[normal]"
       >
-        {displayedLabel}
+        {label}
       </div>
     </Link>
   );

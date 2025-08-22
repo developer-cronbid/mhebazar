@@ -127,7 +127,7 @@ const AboutPage = () => {
             <div className="bg-white rounded-3xl overflow-hidden mb-8">
               <div className="relative w-full h-72 md:h-96">
                 <Image
-                  src="/about/three.png"
+                  src="/about/three.jpg"
                   alt="MHE Bazar Vision Mission"
                   layout="fill"
                   objectFit="cover"
