@@ -16,7 +16,7 @@ import { useUser } from '@/context/UserContext'
 import Image from 'next/image'
 import { Product } from '@/types'
 import { toast } from "sonner"
-import { useRouter } from 'next/navigation'
+// import { useRouter } from 'next/navigation'
 
 type FieldOption = {
   label: string
@@ -77,12 +77,12 @@ interface ProductFormProps {
 }
 
 export default function ProductForm({ product }: ProductFormProps) {
-  const router = useRouter()
+  // const router = useRouter()
 
   const [defaultCategory, setDefaultCategory] = useState<string>('')
   const [defaultSubcategory, setDefaultSubcategory] = useState<string>('')
   const [imageFiles, setImageFiles] = useState<File[]>([]) // For new image uploads
-  const [keptImageIds, setKeptImageIds] = useState<number[]>([]) // For tracking existing images
+  const [, setKeptImageIds] = useState<number[]>([]) // For tracking existing images
 
   const {
     register,
