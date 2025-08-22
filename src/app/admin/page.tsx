@@ -65,19 +65,37 @@ interface DashboardStats {
 }
 
 
-// --- Helper Components ---
 const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label }) => (
-  <div className="bg-white p-3 w-72 h-48 rounded-lg flex items-center justify-between cursor-pointer transition-shadow duration-300 hover:shadow-md">
-    <div className="space-x-4">
-      <img src={icon} className="w-16 h-16" alt={label} />
-      <div>
-        <h2 className="text-2xl font-bold" style={{ color: "#4CAF50" }}>{number}</h2>
-        <p className="text-base" style={{ color: "#757575" }}>{label}</p>
+  <div className="relative bg-white p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 aspect-square">
+    <div className="flex flex-col h-full">
+      
+      {/* Icon */}
+      <div className="flex items-center">
+        <div className="w-25 h-20 rounded-full flex items-center justify-center bg-green-100">
+          <Image 
+            src={icon} 
+            alt={label} 
+            width={48} 
+            height={48} 
+            className="w-30 h-30 object-contain" 
+          />
+        </div>
+      </div>
+
+      {/* Number + Label */}
+      <div className="mt-auto">
+        <h2 className="text-6xl font-bold text-green-600">{number}</h2>
+        <p className="text-lg text-gray-500">{label}</p>
       </div>
     </div>
-    <ChevronRightIcon className="w-6 h-6 text-gray-400" />
+
+    {/* Arrow bottom right */}
+    <div className="absolute bottom-4 right-4">
+      <ChevronRightIcon className="w-6 h-6 text-green-600" />
+    </div>
   </div>
 );
+
 
 
 // --- Main Dashboard Component ---
@@ -274,12 +292,14 @@ const CompleteDashboard = () => {
 
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Left Section */}
-          <div className="flex-1 space-y-10">
-            {/* --- MODIFIED: StatsCards now use correct data from the `stats` state --- */}
-            <div className="flex flex-wrap gap-6">
+          <div className="flex-1 space-y-8">
+            {/* StatsCards with image icons */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" />
               <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" />
               <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" />
               <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" />
             </div>
