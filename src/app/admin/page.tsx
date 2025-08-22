@@ -78,15 +78,15 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
 
   return (
     <div
-      className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 aspect-square w-full"
+      className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 aspect-square w-full max-w-xs"
       onClick={handleCardClick}
     >
       <div className="flex flex-col h-full">
         <div className="flex items-center justify-start mb-4 p-4">
-          <Image src={icon} alt={label} width={100} height={100} className="w-30 h-30" />
+          <Image src={icon} alt={label} width={100} height={100} className="w-25 h-25" />
         </div>
         <div className="mt-auto">
-          <h2 className="text-5xl font-bold text-green-600">{number}</h2>
+          <h2 className="text-4xl font-bold text-green-600">{number}</h2>
           <p className="text-lg text-gray-500">{label}</p>
         </div>
       </div>
@@ -124,6 +124,7 @@ const CompleteDashboard = () => {
   const [productRejectionReason, setProductRejectionReason] = useState("");
 
   
+
   // --- Auth Check and Data Fetching ---
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -295,12 +296,12 @@ const CompleteDashboard = () => {
           {/* Left Section */}
           <div className="flex-1 space-y-8">
             {/* StatsCards with image icons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://mhebazar.vercel.app/admin/forms/quotes" />
               <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://mhebazar.vercel.app/admin/forms/direct-buy" />
               <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://mhebazar.vercel.app/admin/forms/rentals" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://mhebazar.vercel.app/admin/forms/training-registrations" />
               <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://mhebazar.vercel.app/admin/contact/contact-form" />
             </div>
@@ -327,13 +328,13 @@ const CompleteDashboard = () => {
             {vendorApps.length > 0 && (
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-blue-700"><Building /> Vendor Applications</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-lg text-blue-700"><Building /> Vendor Applications</CardTitle>
                   <CardDescription>Review and process new vendor sign-ups.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 pt-2">
                   {vendorApps.map((app) => (
-                    <div key={app.id} className="border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between bg-white shadow-sm">
-                      <div className="mb-2 sm:mb-0">
+                    <div key={app.id} className="border rounded-lg p-4 flex items-center justify-between bg-white shadow-sm">
+                      <div>
                         <p className="font-semibold text-gray-900">{app.company_name}</p>
                         <p className="text-sm text-gray-500">Applied by: {app.user_name || app.username}</p>
                       </div>
@@ -364,8 +365,8 @@ const CompleteDashboard = () => {
                       <h4 className="font-semibold text-gray-700 mb-3">From: {vendorName}</h4>
                       <div className="border rounded-lg p-4 space-y-4 bg-white shadow-sm">
                         {products.map(product => (
-                          <div key={product.id} className="flex flex-col sm:flex-row sm:items-center justify-between">
-                            <div className="flex items-center gap-4 mb-2 sm:mb-0">
+                          <div key={product.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
                               <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded bg-gray-100 object-contain" />
                               <div>
                                 <p className="font-medium text-gray-900">{product.name}</p>
@@ -409,7 +410,7 @@ const CompleteDashboard = () => {
               className="min-h-[100px]"
             />
           </div>
-          <DialogFooter className="flex-col-reverse sm:flex-row">
+          <DialogFooter>
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={handleVendorRejectSubmit}>Submit Rejection</Button>
           </DialogFooter>
@@ -433,7 +434,7 @@ const CompleteDashboard = () => {
               className="min-h-[100px]"
             />
           </div>
-          <DialogFooter className="flex-col-reverse sm:flex-row">
+          <DialogFooter>
             <Button variant="outline" onClick={() => setIsProductRejectModalOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={handleProductRejectSubmit}>Submit Rejection</Button>
           </DialogFooter>
