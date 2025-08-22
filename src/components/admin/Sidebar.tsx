@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   LayoutDashboard,
   FileText,
@@ -9,10 +9,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronDown,
-  LayoutTemplate
-} from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
+  LayoutTemplate,
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const Sidebar = () => {
@@ -23,51 +23,57 @@ const Sidebar = () => {
   const menuItems = [
     {
       icon: LayoutDashboard,
-      label: 'Dashboard',
-      href: '/admin',
+      label: "Dashboard",
+      href: "/admin",
     },
     {
       icon: FileText,
-      label: 'Enquiry',
+      label: "Enquiry History",
       // href: '/admin/forms',
       subItems: [
-        { label: 'Quotes', href: '/admin/forms/quotes' },
-        { label: 'Direct Purchase', href: '/admin/forms/direct-buy' },
-        { label: 'Rental', href: '/admin/forms/rentals' },
-        { label: 'Training Registrations', href: '/admin/forms/training-registrations' },
-      ]
+        { label: "Quotes", href: "/admin/forms/quotes" },
+        { label: "Direct Purchase", href: "/admin/forms/direct-buy" },
+        { label: "Rental", href: "/admin/forms/rentals" },
+        {
+          label: "Training Registrations",
+          href: "/admin/forms/training-registrations",
+        },
+      ],
     },
     {
       icon: Users,
-      label: 'Registered User',
+      label: "Registered User",
       // href: '/admin/accounts',
       subItems: [
-        { label: 'Registered Vendors', href: '/admin/accounts/registered-vendors' },
-        { label: 'Registered Users', href: '/admin/accounts/users' },
-      ]
+        {
+          label: "Registered Vendors",
+          href: "/admin/accounts/registered-vendors",
+        },
+        { label: "Registered Users", href: "/admin/accounts/users" },
+      ],
     },
     {
       icon: Plus,
-      label: 'Add Products',
+      label: "Add Products",
       // href: '/admin/add-product',
       subItems: [
-        { label: 'Categories', href: '/admin/add-products/categories' },
-        { label: 'Subcategories', href: '/admin/add-products/subcategories' },
-      ]
+        { label: "Categories", href: "/admin/add-products/categories" },
+        { label: "Subcategories", href: "/admin/add-products/subcategories" },
+      ],
     },
     {
       icon: MessageSquare,
-      label: 'Contact History',
+      label: "Contact History",
       // href: '/admin/enquiry',
       subItems: [
-        { label: 'Newsletter', href: '/admin/contact/newsletter' },
-        { label: 'Contact Forms', href: '/admin/contact/contact-form' },
-      ]
+        { label: "Newsletter", href: "/admin/contact/newsletter" },
+        { label: "Contact Forms", href: "/admin/contact/contact-form" },
+      ],
     },
     {
       icon: LayoutTemplate,
-      label: 'Blogs',
-      href: '/admin/blogs',
+      label: "Blogs",
+      href: "/admin/blogs",
       // subItems: [
       //   { label: 'Add Blog', href: '/admin/blogs/newsletter' },
       // ]
@@ -82,24 +88,24 @@ const Sidebar = () => {
   return (
     <div className="sticky top-0 left-0 w-fit h-screen">
       <div
-        className={`h-full bg-gradient-to-b from-white to-white-50 border-r-2 border-[#5da031]/20 shadow-lg transition-all duration-100 ease-linear ${isExpanded ? 'w-64' : 'w-16'
-          }`}
+        className={`h-full bg-gradient-to-b from-white to-white-50 border-r-2 border-[#5da031]/20 shadow-lg transition-all duration-100 ease-linear ${
+          isExpanded ? "w-64" : "w-16"
+        }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="px-3 py-4 border-b-2 border-[#5da031]/20 bg-gradient-to-r from-[#5da031]/5 to-white">
             <div className="flex items-center justify-between">
-              {isExpanded ? (
-
-<div className="flex items-center justify-center">
-  <Image
-    src="/mhe-logo.png"
-    alt="MHE Bazar Logo"
-    width={72}
-    height={72}
-  />
-</div>
-              ) : ""}
+              {isExpanded && (
+                <div className="flex items-center justify-center flex-grow">
+                  <Image
+                    src="/mhe-logo.png"
+                    alt="MHE Bazar Logo"
+                    width={72}
+                    height={72}
+                  />
+                </div>
+              )}
 
               <button
                 onClick={() => {
@@ -126,11 +132,23 @@ const Sidebar = () => {
                   <div>
                     <div
                       className={`flex items-center p-1.5 rounded-lg cursor-pointer group border border-transparent
-                      ${pathname === item.href ? 'text-[#5da031] font-semibold' : 'text-gray-700'}`}
-                      onClick={() => item.subItems ? toggleSubmenu(index) : null}
+                      ${
+                        pathname === item.href
+                          ? "text-[#5da031] font-semibold"
+                          : "text-gray-700"
+                      }`}
+                      onClick={() =>
+                        item.subItems ? toggleSubmenu(index) : null
+                      }
                     >
-                      <div className={`p-1 rounded-md border border-transparent 
-                        ${pathname === item.href ? 'text-[#5da031]' : 'text-gray-600'}`}>
+                      <div
+                        className={`p-1 rounded-md border border-transparent 
+                        ${
+                          pathname === item.href
+                            ? "text-[#5da031]"
+                            : "text-gray-600"
+                        }`}
+                      >
                         <item.icon className="w-5 h-5" />
                       </div>
 
@@ -140,14 +158,22 @@ const Sidebar = () => {
                             <Link
                               href={item.href}
                               className={`ml-2 font-medium flex-1 
-                                ${pathname === item.href ? 'text-[#5da031] font-semibold' : 'text-gray-700'}`}
+                                ${
+                                  pathname === item.href
+                                    ? "text-[#5da031] font-semibold"
+                                    : "text-gray-700"
+                                }`}
                             >
                               {item.label}
                             </Link>
                           ) : (
                             <span
                               className={`ml-2 font-medium flex-1 
-                                ${pathname === item.href ? 'text-[#5da031] font-semibold' : 'text-gray-700'}`}
+                                ${
+                                  pathname === item.href
+                                    ? "text-[#5da031] font-semibold"
+                                    : "text-gray-700"
+                                }`}
                             >
                               {item.label}
                             </span>
@@ -157,8 +183,16 @@ const Sidebar = () => {
                             <div className="p-1 rounded">
                               <ChevronDown
                                 className={`w-4 h-4 transition-all duration-100 
-                                  ${openSubmenu === index ? 'rotate-0' : '-rotate-90'}
-                                  ${pathname === item.href ? 'text-[#5da031]' : 'text-gray-400'}`}
+                                  ${
+                                    openSubmenu === index
+                                      ? "rotate-0"
+                                      : "-rotate-90"
+                                  }
+                                  ${
+                                    pathname === item.href
+                                      ? "text-[#5da031]"
+                                      : "text-gray-400"
+                                  }`}
                               />
                             </div>
                           )}
@@ -168,23 +202,34 @@ const Sidebar = () => {
 
                     {/* Submenu */}
                     {isExpanded && item.subItems && (
-                      <div className={`overflow-hidden transition-all duration-100 ${openSubmenu === index ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
-                        }`}>
+                      <div
+                        className={`overflow-hidden transition-all duration-100 ${
+                          openSubmenu === index
+                            ? "max-h-40 opacity-100"
+                            : "max-h-0 opacity-0"
+                        }`}
+                      >
                         <div className="mt-0.5 ml-5 space-y-0.5">
                           {item.subItems.map((subItem) => (
                             <Link
                               key={subItem.label}
                               href={subItem.href}
                               className={`flex items-center p-1 pl-2 rounded-lg border-l-2
-                                ${pathname === subItem.href
-                                  ? 'border-[#5da031] text-[#5da031] font-medium'
-                                  : 'border-[#5da031]/20 text-gray-600'}`}
+                                ${
+                                  pathname === subItem.href
+                                    ? "border-[#5da031] text-[#5da031] font-medium"
+                                    : "border-[#5da031]/20 text-gray-600"
+                                }`}
                             >
-                              <div className={`w-2 h-2 rounded-full mr-2
-                                ${pathname === subItem.href ? 'bg-[#5da031] scale-110' : 'bg-[#5da031]/40'}`} />
-                              <span>
-                                {subItem.label}
-                              </span>
+                              <div
+                                className={`w-2 h-2 rounded-full mr-2
+                                ${
+                                  pathname === subItem.href
+                                    ? "bg-[#5da031] scale-110"
+                                    : "bg-[#5da031]/40"
+                                }`}
+                              />
+                              <span>{subItem.label}</span>
                             </Link>
                           ))}
                         </div>
@@ -200,7 +245,9 @@ const Sidebar = () => {
           <div className="p-3 border-t-2 border-[#5da031]/20 bg-gradient-to-r from-[#5da031]/5 to-white">
             {isExpanded ? (
               <div className="text-center">
-                <p className="text-xs text-[#5da031] font-medium">© 2025 MHE BAZAR</p>
+                <p className="text-xs text-[#5da031] font-medium">
+                  © 2025 MHE BAZAR
+                </p>
                 <p className="text-xs text-[#5da031]/70">All rights reserved</p>
               </div>
             ) : (
@@ -211,6 +258,6 @@ const Sidebar = () => {
       </div>
     </div>
   );
-}
+};
 
 export default Sidebar;
