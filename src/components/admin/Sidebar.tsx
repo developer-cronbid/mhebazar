@@ -11,6 +11,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from "next/navigation";
 
 const Sidebar = () => {
@@ -72,7 +73,7 @@ const Sidebar = () => {
   return (
     <div className="sticky top-0 left-0 w-fit h-screen">
       <div
-        className={`h-full bg-gradient-to-b from-white to-green-50 border-r-2 border-[#5da031]/20 shadow-lg transition-all duration-100 ease-linear ${isExpanded ? 'w-64' : 'w-16'
+        className={`h-full bg-gradient-to-b from-white to-white-50 border-r-2 border-[#5da031]/20 shadow-lg transition-all duration-100 ease-linear ${isExpanded ? 'w-64' : 'w-16'
           }`}
       >
         <div className="flex flex-col h-full">
@@ -80,15 +81,15 @@ const Sidebar = () => {
           <div className="px-3 py-4 border-b-2 border-[#5da031]/20 bg-gradient-to-r from-[#5da031]/5 to-white">
             <div className="flex items-center justify-between">
               {isExpanded ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-9 h-9 bg-gradient-to-br from-[#5da031] to-[#4a8b2a] rounded-lg flex items-center justify-center shadow-lg shadow-[#5da031]/25 ring-2 ring-[#5da031]/10">
-                    <span className="text-white font-bold text-lg">M</span>
-                  </div>
-                  <div>
-                    <h1 className="text-lg font-bold text-gray-800">MHE</h1>
-                    <p className="text-xs text-[#5da031] font-semibold">BAZAR</p>
-                  </div>
-                </div>
+
+<div className="flex items-center justify-center">
+  <Image
+    src="/mhe-logo.png"
+    alt="MHE Bazar Logo"
+    width={72}
+    height={72}
+  />
+</div>
               ) : ""}
 
               <button

@@ -70,12 +70,17 @@ export default function VendorCard({ vendor }: Props) {
             View Product
           </Button>
         </Link>
+        <Link href="/contact" className="flex-1">
+
         <Button
           variant="outline"
           className="flex-1 text-sm font-medium py-2 rounded-lg border border-[#5CA131] text-[#5CA131] hover:bg-[#f2fbf2] transition-colors duration-150"
         >
           Contact
         </Button>
+
+        </Link>
+
       </div>
     </div>
   );
