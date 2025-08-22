@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   FileText,
   Users,
+  Plus,
   MessageSquare,
   ChevronLeft,
   ChevronRight,
@@ -41,6 +42,15 @@ const Sidebar = () => {
       subItems: [
         { label: 'Registered Vendors', href: '/admin/accounts/registered-vendors' },
         { label: 'Registered Users', href: '/admin/accounts/users' },
+      ]
+    },
+    {
+      icon: Plus,
+      label: 'Add Products',
+      // href: '/admin/add-product',
+      subItems: [
+        { label: 'Categories', href: '/admin/add-products/categories' },
+        { label: 'Subcategories', href: '/admin/add-products/subcategories' },
       ]
     },
     {
