@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+// REMOVE: import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef, SortingState } from '@tanstack/react-table';
+import { toast } from "sonner";
 
-// UI Components from shadcn/ui
+// --- Component & UI Imports ---
+import { BlogSheet } from './BlogSheet'; // 👈 IMPORT YOUR NEW COMPONENT
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -20,68 +22,53 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { toast } from "sonner"; // Assuming you use a toast library like sonner
+import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 
-// Icons
-import { PlusCircle, Pencil, Trash2, LayoutTemplate } from "lucide-react";
 
-// --- TypeScript Interface for a Blog Post ---
+// --- TypeScript Interface (add blog_url if you have it) ---
 interface Blog {
   id: number;
   blog_title: string;
-  image1: string;
   author_name: string | null;
   created_at: string;
+  blog_url: string; // 👈 Add blog_url to fetch for editing
 }
 
-const PAGE_SIZE = 10; // You can adjust the page size
+const PAGE_SIZE = 20;
 
 const BlogsTable = () => {
-  const router = useRouter();
+  // REMOVE: const router = useRouter();
   const [data, setData] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalBlogs, setTotalBlogs] = useState(0);
-
-  // States for filtering, sorting, pagination
   const [page, setPage] = useState(1);
   const [globalFilter, setGlobalFilter] = useState('');
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
-  const [sortBy, setSortBy] = useState<SortingState>([
-    { id: 'created_at', desc: true } // Default sort by newest
-  ]);
+  const [sortBy, setSortBy] = useState<SortingState>([{ id: 'created_at', desc: true }]);
 
-  // Debounce search input to avoid excessive API calls
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedGlobalFilter(globalFilter);
-      setPage(1); // Reset to first page on new search
+      setPage(1);
     }, 500);
     return () => clearTimeout(handler);
   }, [globalFilter]);
 
-  // --- API Request Logic ---
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.append('page', String(page));
-      params.append('page_size', String(PAGE_SIZE));
-
-      if (debouncedGlobalFilter) {
-        params.append('search', debouncedGlobalFilter);
-      }
-
-      if (sortBy.length > 0) {
-        const sort = sortBy[0];
-        params.append('ordering', `${sort.desc ? '-' : ''}${sort.id}`);
-      }
-
+      const params = new URLSearchParams({
+        page: String(page),
+        page_size: String(PAGE_SIZE),
+        ...(debouncedGlobalFilter && { search: debouncedGlobalFilter }),
+        ...(sortBy.length > 0 && { ordering: `${sortBy[0].desc ? '-' : ''}${sortBy[0].id}` }),
+      });
       const response = await api.get(`/blogs/`, { params });
       setData(response.data.results);
       setTotalBlogs(response.data.count);
     } catch (error) {
-      console.error("Failed to fetch blogs:", error);
       toast.error("Failed to fetch blogs. Please try again.");
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -93,53 +80,29 @@ const BlogsTable = () => {
 
   const totalPages = Math.ceil(totalBlogs / PAGE_SIZE);
 
-  // --- Delete Blog Handler ---
-  const handleDelete = async (blogId: number) => {
+  const handleDelete = async (blogUrl: string) => {
     try {
-      await api.delete(`/blogs/${blogId}/`);
+      await api.delete(`/blogs/${blogUrl}/`); // Assuming delete uses url/slug
       toast.success("Blog deleted successfully!");
-      // Refresh data after deletion
-      fetchData();
+      fetchData(); // Refresh data
     } catch (error) {
-      console.error("Failed to delete blog:", error);
       toast.error("Failed to delete blog. Please try again.");
+      console.log(error);
     }
   };
 
-  // --- Table Column Definitions ---
   const columns = useMemo<ColumnDef<Blog>[]>(() => [
     {
       header: 'Sr. No.',
       cell: info => info.row.index + 1 + (page - 1) * PAGE_SIZE,
     },
-    // {
-    //   accessorKey: 'image1',
-    //   header: 'Image',
-    //   cell: ({ row }) => (
-    //     <img
-    //       src={row.original.image1 || } // Provide a fallback image
-    //       alt={row.original.blog_title}
-    //       className="w-16 h-10 object-cover rounded"
-    //       onError={(e) => { e.currentTarget.src = '/placeholder.png'; }} // Fallback on error
-    //     />
-    //   ),
-    // },
-    {
-      accessorKey: 'blog_title',
-      header: 'Blog Title',
-    },
-    {
-      accessorKey: 'author_name',
-      header: 'Author',
-      cell: info => info.getValue() || 'N/A',
-    },
+    { accessorKey: 'blog_title', header: 'Blog Title' },
+    { accessorKey: 'author_name', header: 'Author', cell: info => info.getValue() || 'N/A' },
     {
       accessorKey: 'created_at',
       header: 'Date Published',
       cell: info => new Date(info.getValue() as string).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+        day: 'numeric', month: 'long', year: 'numeric',
       }),
     },
     {
@@ -147,16 +110,16 @@ const BlogsTable = () => {
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          {/* Edit Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push(`/dashboard/blogs/edit/${row.original.id}`)}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-
-          {/* Delete Button with Confirmation */}
+          {/* 👇 EDIT BUTTON NOW TRIGGERS THE SHEET */}
+          <BlogSheet
+            blogUrl={row.original.blog_url}
+            onSuccess={fetchData}
+            trigger={
+              <Button variant="outline" size="sm">
+                <Pencil className="h-4 w-4" />
+              </Button>
+            }
+          />
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm">
@@ -167,12 +130,12 @@ const BlogsTable = () => {
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete the blog post.
+                  This will permanently delete the blog post. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleDelete(row.original.id)}>
+                <AlertDialogAction onClick={() => handleDelete(row.original.blog_url)}>
                   Delete
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -181,7 +144,7 @@ const BlogsTable = () => {
         </div>
       ),
     },
-  ], [page, router]);
+  ], [page, fetchData]); // Add fetchData to dependency array
 
   const table = useReactTable({
     data,
@@ -195,7 +158,7 @@ const BlogsTable = () => {
     pageCount: totalPages,
   });
 
-  // --- Pagination Logic ---
+  // Pagination logic remains the same...
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
@@ -222,10 +185,16 @@ const BlogsTable = () => {
           <h1 className="text-2xl font-semibold text-gray-900">Manage Blogs</h1>
           <p className="text-sm text-gray-500 mt-1">Add, edit, or delete blog posts.</p>
         </div>
-        <Button onClick={() => router.push('/admin/blogs/add')} className="flex items-center gap-2">
-          <PlusCircle size={16} />
-          Add New Blog
-        </Button>
+        {/* 👇 ADD NEW BLOG BUTTON NOW TRIGGERS THE SHEET */}
+        <BlogSheet
+          onSuccess={fetchData}
+          trigger={
+            <Button className="flex items-center gap-2">
+              <PlusCircle size={16} />
+              Add New Blog
+            </Button>
+          }
+        />
       </div>
 
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
