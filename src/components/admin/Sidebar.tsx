@@ -8,7 +8,8 @@ import {
   MessageSquare,
   ChevronLeft,
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  LayoutTemplate
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -62,6 +63,14 @@ const Sidebar = () => {
         { label: 'Newsletter', href: '/admin/contact/newsletter' },
         { label: 'Contact Forms', href: '/admin/contact/contact-form' },
       ]
+    },
+    {
+      icon: LayoutTemplate,
+      label: 'Blogs',
+      href: '/admin/blogs',
+      // subItems: [
+      //   { label: 'Add Blog', href: '/admin/blogs/newsletter' },
+      // ]
     },
   ];
 
