@@ -1,21 +1,41 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { FileSpreadsheet, Trash2, CheckCircle, PackageX, PackageCheck, MoreVertical, Pencil, ExternalLink, Star } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FileSpreadsheet, Trash2, CheckCircle, PackageX, PackageCheck } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical, Pencil, ExternalLink } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import Image from "next/image";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import api from '@/lib/api';
 import ProductForm from "@/components/forms/uploadForm/ProductForm";
 import { Product } from '@/types';
 
-// Define proper error type
+
 interface ApiError {
   response?: {
     data?: {
@@ -24,33 +44,16 @@ interface ApiError {
   };
 }
 
-// Helper to translate frontend sort options to backend ordering parameters
-const getOrderingParam = (sortByValue: string) => {
-  switch (sortByValue) {
-    case 'Latest': return '-updated_at';
-    case 'Oldest': return 'updated_at';
-    case 'Name A-Z': return 'name';
-    case 'Name Z-A': return '-name';
-    default: return '-updated_at'; // Default ordering
-  }
-};
-
 const VendorProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // --- OPTIMIZATION: State for server-side filtering, sorting, and pagination ---
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('Latest');
   const [showCount, setShowCount] = useState(10);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [totalProductsCount, setTotalProductsCount] = useState(0);
-  const [notApprovedCount, setNotApprovedCount] = useState(0);
-  // --- END OPTIMIZATION ---
-
   const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
 
@@ -63,25 +66,6 @@ const VendorProducts = () => {
   const vendorId = searchParams.get('user');
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await api.get(`/categories/`);
-        if (res.data && Array.isArray(res.data)) {
-          setCategories(res.data);
-        } else {
-          console.warn("Categories API response was not in the expected format:", res.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch categories:", err);
-        toast.error("Could not load categories.");
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  // --- OPTIMIZATION: Data fetching now includes all filter, sort, and pagination params ---
-  useEffect(() => {
     if (!vendorId) {
       setError("Vendor ID is missing from the URL query parameter.");
       setLoading(false);
@@ -90,33 +74,13 @@ const VendorProducts = () => {
 
     const fetchProducts = async () => {
       setLoading(true);
-
-      // Construct query parameters
-      const params = new URLSearchParams({
-        user: vendorId,
-        page: currentPage.toString(),
-        page_size: showCount.toString(),
-        ordering: getOrderingParam(sortBy),
-      });
-
-      if (selectedCategory !== 'All') {
-        params.append('category_name', selectedCategory);
-      }
-
       try {
-        const response = await api.get(`products/?${params.toString()}`);
-
-        // The API now returns a paginated response object
-        if (response.data && Array.isArray(response.data.results)) {
+        const response = await api.get(`products/?user=${vendorId}`);
+        if (Array.isArray(response.data.results)) {
           setProducts(response.data.results);
-          setTotalProductsCount(response.data.count);
-          // Assuming backend provides this count in the response (see backend optimization)
-          setNotApprovedCount(response.data.not_approved_count || 0);
-        }
-        else {
-          console.warn("API response was not in the expected format:", response.data);
+        } else {
+          console.warn("API response for products was not an array:", response.data.results);
           setProducts([]);
-          setTotalProductsCount(0);
         }
         setError(null);
       } catch (err) {
@@ -124,27 +88,43 @@ const VendorProducts = () => {
         setError("Could not load vendor products. Please try again later.");
         toast.error("Failed to fetch products!");
         setProducts([]);
-        setTotalProductsCount(0);
       } finally {
         setLoading(false);
       }
     };
-
     fetchProducts();
-    // This effect re-runs whenever any of these dependencies change
-  }, [vendorId, currentPage, showCount, sortBy, selectedCategory]);
+  }, [vendorId]);
 
-  // --- OPTIMIZATION: This useEffect resets the page to 1 when filters change ---
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = products;
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(product => product.category_name === selectedCategory);
+    }
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'Latest': return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        case 'Oldest': return new Date(a.updated_at).getTime() - new Date(b.updated_at).getTime();
+        case 'Name A-Z': return a.name.localeCompare(b.name);
+        case 'Name Z-A': return b.name.localeCompare(a.name);
+        default: return 0;
+      }
+    });
+  }, [products, selectedCategory, sortBy]);
+
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / showCount);
+  const startIndex = (currentPage - 1) * showCount;
+  const endIndex = startIndex + showCount;
+  const currentProducts = filteredAndSortedProducts.slice(startIndex, endIndex);
+
   useEffect(() => {
     setCurrentPage(1);
     setSelectAll(false);
     setSelectedProducts(new Set());
   }, [selectedCategory, sortBy, showCount]);
 
-  // Pagination logic now uses the total count from the API
-  const totalPages = Math.ceil(totalProductsCount / showCount);
-  const startIndex = (currentPage - 1) * showCount;
-  // const currentProducts = ...; // REMOVED, we now use `products` state directly
+  const categories = ['All', ...Array.from(new Set(products.map(p => p.category_name)))];
+  const totalProducts = products.length;
+  const notApprovedCount = products.filter(p => !p.is_active).length;
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage);
@@ -154,7 +134,7 @@ const VendorProducts = () => {
     const newSelectAll = !selectAll;
     setSelectAll(newSelectAll);
     if (newSelectAll) {
-      setSelectedProducts(new Set(products.map(p => p.id))); // Use `products` directly
+      setSelectedProducts(new Set(currentProducts.map(p => p.id)));
     } else {
       setSelectedProducts(new Set());
     }
@@ -165,7 +145,7 @@ const VendorProducts = () => {
     if (newSelected.has(productId)) newSelected.delete(productId);
     else newSelected.add(productId);
     setSelectedProducts(newSelected);
-    setSelectAll(newSelected.size === products.length && products.length > 0); // Use `products` directly
+    setSelectAll(newSelected.size === currentProducts.length && currentProducts.length > 0);
   };
 
   const handleApproveSelected = async () => {
@@ -194,7 +174,6 @@ const VendorProducts = () => {
     }
   };
 
-  // Individual product approve/reject functionality
   const handleProductAction = async (productId: number, action: 'approve' | 'reject') => {
     if (action === 'reject') {
       const product = products.find(p => p.id === productId);
@@ -208,20 +187,18 @@ const VendorProducts = () => {
       toast.success(`Product ${action === 'approve' ? 'Approved' : 'Rejected'}`, {
         description: `The product has been successfully ${action === 'approve' ? 'approved' : 'rejected'}.`
       });
-
-      // Update local state to reflect the change
       setProducts(prev =>
         prev.map(p =>
           p.id === productId ? { ...p, is_active: action === 'approve' } : p
         )
       );
     } catch (error) {
+      const apiError = error as ApiError;
       console.error(`Failed to ${action} product:`, error);
-      toast.error("Action Failed", { description: `Could not ${action} the product.` });
+      toast.error("Action Failed", { description: apiError.response?.data?.error || "An error occurred." });
     }
   };
 
-  // Handle product rejection submission
   const handleProductRejectSubmit = async () => {
     if (!selectedProduct || !productRejectionReason.trim()) {
       return toast.error("Validation Error", { description: "Rejection reason is required." });
@@ -231,16 +208,12 @@ const VendorProducts = () => {
       await api.post(`products/${selectedProduct.id}/reject/`, {
         reason: productRejectionReason,
       });
-
       toast.success("Product Rejected", { description: "The product has been rejected." });
-
-      // Update local state
       setProducts(prev =>
         prev.map(p =>
           p.id === selectedProduct.id ? { ...p, is_active: false } : p
         )
       );
-
       setIsProductRejectModalOpen(false);
       setProductRejectionReason("");
       setSelectedProduct(null);
@@ -253,7 +226,6 @@ const VendorProducts = () => {
     }
   };
 
-  // Handle product edit
   const handleEditClick = async (productId: number) => {
     try {
       setEditedProduct(undefined);
@@ -266,16 +238,12 @@ const VendorProducts = () => {
     }
   };
 
-  // Handle product delete
   const handleDeleteProduct = async (productId: number, productTitle: string) => {
     if (window.confirm(`Are you sure you want to delete "${productTitle}"?`)) {
       try {
         await api.delete(`products/${productId}/`);
         toast.success(`Product "${productTitle}" deleted.`);
-        // Refresh data by fetching again
-        setCurrentPage(1); // Or stay on the same page if desired
-        // A full refetch is simplest after a delete
-        // This can be done by adding a "refetch" state trigger to the useEffect dependency array
+        setProducts(prev => prev.filter(p => p.id !== productId));
       } catch (err) {
         console.error("Failed to delete product:", err);
         toast.error("Failed to delete the product.");
@@ -283,20 +251,19 @@ const VendorProducts = () => {
     }
   };
 
-  // Function to handle export to Excel (CSV)
+  // ✅ Export to Excel function
   const handleExportToExcel = () => {
     if (filteredAndSortedProducts.length === 0) {
       toast.error("No products to export.");
       return;
     }
     
-    // Define CSV headers
     const headers = [
-      'ID', 'Name', 'Category', 'Vendor Name', 'Type', 'Price', 'Description', 'Manufacturer', 'Model', 'Rating', 'Status', 'Updated At'
+      'ID', 'Name', 'Category', 'Vendor Name', 'Type', 'Price', 'Description',
+      'Manufacturer', 'Model', 'Rating', 'Status', 'Updated At'
     ];
     const csvRows = [headers.join(',')];
 
-    // Map data to CSV rows
     filteredAndSortedProducts.forEach(product => {
       const row = [
         `"${product.id}"`,
@@ -316,8 +283,6 @@ const VendorProducts = () => {
     });
 
     const csvString = csvRows.join('\n');
-
-    // Create a Blob and trigger download
     const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -331,14 +296,12 @@ const VendorProducts = () => {
     toast.success("Products exported successfully!");
   };
 
-  // Star Rating Component
   const StarRating = ({ average_rating }: { average_rating: number }) => (
     <div className="flex space-x-1">
       {[1, 2, 3, 4, 5].map((star) => (
-        <Star
+        <div
           key={star}
-          className={`w-4 h-4 ${star <= average_rating ? "fill-yellow-400 text-yellow-400"
-            : "text-gray-300"}`}
+          className={`w-2 h-2 rounded-full ${star <= average_rating ? 'bg-yellow-300' : 'bg-gray-300'}`}
         />
       ))}
     </div>
@@ -359,10 +322,8 @@ const VendorProducts = () => {
     </button>
   );
 
-  // Add this helper function for image URLs
   const getImageUrl = (imageUrl: string | undefined): string => {
     if (!imageUrl) return '/no-product.png';
-
     try {
       if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
         return imageUrl;
@@ -374,10 +335,7 @@ const VendorProducts = () => {
     }
   };
 
-  const uniqueCategories = useMemo(() => ['All', ...Array.from(new Set(categories.map(c => c.name)))], [categories]);
-
-
-  if (loading && products.length === 0) { // Show loading only on initial load
+  if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading products...</div>;
   }
 
@@ -409,7 +367,6 @@ const VendorProducts = () => {
           </div>
         </div>
 
-        {/* --- START: Implemented Filter Bar --- */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
@@ -448,17 +405,15 @@ const VendorProducts = () => {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="border rounded-md px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
                 >
-                  {/* Use the new variable and add the string type to 'cat' */}
-                  {uniqueCategories.map((cat: string) => <option key={cat} value={cat}>{cat}</option>)}
+                  {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
               </div>
             </div>
             <div className="text-sm text-gray-600">
-              Total: <span className="font-medium">{totalProductsCount}</span> products | Pending Approval: <span className="font-medium text-yellow-700">{notApprovedCount}</span>
+              Total: <span className="font-medium">{totalProducts}</span> products | Pending Approval: <span className="font-medium text-yellow-700">{notApprovedCount}</span>
             </div>
           </div>
         </div>
-        {/* --- END: Implemented Filter Bar --- */}
 
         <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
           <Table>
@@ -481,9 +436,8 @@ const VendorProducts = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* OPTIMIZATION: Map over `products` directly */}
-              {products.length > 0 ? (
-                products.map((product) => (
+              {currentProducts.length > 0 ? (
+                currentProducts.map((product) => (
                   <TableRow key={product.id} className="hover:bg-gray-50">
                     <TableCell className="px-4">
                       <input
@@ -633,11 +587,9 @@ const VendorProducts = () => {
           </Table>
         </div>
 
-        {/* --- START: Implemented Pagination --- */}
         <div className="flex justify-between items-center mt-6">
           <span className="text-sm text-gray-600">
-            {/* OPTIMIZATION: Update pagination text */}
-            Showing {Math.min(startIndex + 1, totalProductsCount)} to {Math.min(startIndex + showCount, totalProductsCount)} of {totalProductsCount} results
+            Showing {Math.min(startIndex + 1, filteredAndSortedProducts.length)} to {Math.min(endIndex, filteredAndSortedProducts.length)} of {filteredAndSortedProducts.length} results
           </span>
           <div className="flex items-center space-x-2">
             <PaginationButton onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
@@ -651,9 +603,9 @@ const VendorProducts = () => {
             </PaginationButton>
           </div>
         </div>
+
       </div>
 
-      {/* Product Rejection Modal */}
       <Dialog open={isProductRejectModalOpen} onOpenChange={setIsProductRejectModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -686,7 +638,6 @@ const VendorProducts = () => {
             </SheetDescription>
           </SheetHeader>
 
-          {/* The form goes AFTER the header and has its own scrolling */}
           <div className="flex-1 overflow-y-auto">
             {editedProduct && <ProductForm product={editedProduct} />}
           </div>
