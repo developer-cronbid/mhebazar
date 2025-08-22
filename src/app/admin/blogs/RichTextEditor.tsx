@@ -27,7 +27,7 @@ import {
   Minus, Paintbrush, Eraser, Subscript as SubscriptIcon, Superscript as SuperscriptIcon,
   Table as TableIcon, CheckSquare, Undo2, Redo2, Type, Palette
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Toggle } from '@/components/ui/toggle';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from '@/components/ui/popover';
 
 // Custom Image extension for styling
 const CustomImage = Image.extend({
@@ -105,6 +105,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
           className="h-8 w-8 p-0"
+          title="Undo (Ctrl+Z)"
         >
           <Undo2 className="h-4 w-4" />
         </Button>
@@ -114,6 +115,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
           className="h-8 w-8 p-0"
+          title="Redo (Ctrl+Y)"
         >
           <Redo2 className="h-4 w-4" />
         </Button>
@@ -126,6 +128,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('bold')}
           onPressedChange={() => editor.chain().focus().toggleBold().run()}
           className="h-8 w-8 p-0"
+          title="Bold (Ctrl+B)"
         >
           <Bold className="h-4 w-4" />
         </Toggle>
@@ -134,6 +137,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('italic')}
           onPressedChange={() => editor.chain().focus().toggleItalic().run()}
           className="h-8 w-8 p-0"
+          title="Italic (Ctrl+I)"
         >
           <Italic className="h-4 w-4" />
         </Toggle>
@@ -142,6 +146,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('underline')}
           onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
           className="h-8 w-8 p-0"
+          title="Underline (Ctrl+U)"
         >
           <UnderlineIcon className="h-4 w-4" />
         </Toggle>
@@ -150,6 +155,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('strike')}
           onPressedChange={() => editor.chain().focus().toggleStrike().run()}
           className="h-8 w-8 p-0"
+          title="Strikethrough"
         >
           <Strikethrough className="h-4 w-4" />
         </Toggle>
@@ -158,6 +164,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('subscript')}
           onPressedChange={() => editor.chain().focus().toggleSubscript().run()}
           className="h-8 w-8 p-0"
+          title="Subscript"
         >
           <SubscriptIcon className="h-4 w-4" />
         </Toggle>
@@ -166,6 +173,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('superscript')}
           onPressedChange={() => editor.chain().focus().toggleSuperscript().run()}
           className="h-8 w-8 p-0"
+          title="Superscript"
         >
           <SuperscriptIcon className="h-4 w-4" />
         </Toggle>
@@ -175,7 +183,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         {/* Headings */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 px-2">
+            <Button variant="ghost" size="sm" className="h-8 px-2" title="Text Format">
               <Type className="h-4 w-4 mr-1" />
               <span className="text-xs">
                 {editor.isActive('heading', { level: 1 }) ? 'H1' :
@@ -212,6 +220,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('bulletList')}
           onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
           className="h-8 w-8 p-0"
+          title="Bullet List"
         >
           <List className="h-4 w-4" />
         </Toggle>
@@ -220,6 +229,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('orderedList')}
           onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
           className="h-8 w-8 p-0"
+          title="Numbered List"
         >
           <ListOrdered className="h-4 w-4" />
         </Toggle>
@@ -228,6 +238,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('taskList')}
           onPressedChange={() => editor.chain().focus().toggleTaskList().run()}
           className="h-8 w-8 p-0"
+          title="Task List"
         >
           <CheckSquare className="h-4 w-4" />
         </Toggle>
@@ -240,6 +251,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive({ textAlign: 'left' })}
           onPressedChange={() => editor.chain().focus().setTextAlign('left').run()}
           className="h-8 w-8 p-0"
+          title="Align Left"
         >
           <AlignLeft className="h-4 w-4" />
         </Toggle>
@@ -248,6 +260,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive({ textAlign: 'center' })}
           onPressedChange={() => editor.chain().focus().setTextAlign('center').run()}
           className="h-8 w-8 p-0"
+          title="Align Center"
         >
           <AlignCenter className="h-4 w-4" />
         </Toggle>
@@ -256,6 +269,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive({ textAlign: 'right' })}
           onPressedChange={() => editor.chain().focus().setTextAlign('right').run()}
           className="h-8 w-8 p-0"
+          title="Align Right"
         >
           <AlignRight className="h-4 w-4" />
         </Toggle>
@@ -264,6 +278,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive({ textAlign: 'justify' })}
           onPressedChange={() => editor.chain().focus().setTextAlign('justify').run()}
           className="h-8 w-8 p-0"
+          title="Justify"
         >
           <AlignJustify className="h-4 w-4" />
         </Toggle>
@@ -276,6 +291,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('blockquote')}
           onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
           className="h-8 w-8 p-0"
+          title="Block Quote"
         >
           <Quote className="h-4 w-4" />
         </Toggle>
@@ -284,6 +300,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('codeBlock')}
           onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
           className="h-8 w-8 p-0"
+          title="Code Block"
         >
           <Code className="h-4 w-4" />
         </Toggle>
@@ -292,6 +309,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           size="sm"
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           className="h-8 w-8 p-0"
+          title="Horizontal Rule"
         >
           <Minus className="h-4 w-4" />
         </Button>
@@ -304,6 +322,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           size="sm"
           onClick={addImage}
           className="h-8 w-8 p-0"
+          title="Insert Image"
         >
           <ImageIcon className="h-4 w-4" />
         </Button>
@@ -312,6 +331,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           pressed={editor.isActive('link')}
           onClick={setLink}
           className="h-8 w-8 p-0"
+          title="Insert/Edit Link"
         >
           <LinkIcon className="h-4 w-4" />
         </Toggle>
@@ -321,7 +341,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         {/* Table */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Table Options">
               <TableIcon className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -379,7 +399,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
         {/* Colors */}
         <Popover open={showColorPicker} onOpenChange={setShowColorPicker}>
           <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Text Color">
               <Paintbrush className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
@@ -406,6 +426,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
               size="sm"
               pressed={editor.isActive('highlight')}
               className="h-8 w-8 p-0"
+              title="Highlight Text"
             >
               <Palette className="h-4 w-4" />
             </Toggle>
@@ -432,6 +453,7 @@ const EditorToolbar = ({ editor }: { editor: Editor | null }) => {
           size="sm"
           onClick={() => editor.chain().focus().unsetAllMarks().unsetColor().unsetHighlight().run()}
           className="h-8 w-8 p-0"
+          title="Clear Formatting"
         >
           <Eraser className="h-4 w-4" />
         </Button>
@@ -514,6 +536,7 @@ export const RichTextEditor = ({
             pressed={editor.isActive('bold')}
             onPressedChange={() => editor.chain().focus().toggleBold().run()}
             className="h-8 w-8 p-0"
+            title="Bold"
           >
             <Bold className="h-3 w-3" />
           </Toggle>
@@ -522,6 +545,7 @@ export const RichTextEditor = ({
             pressed={editor.isActive('italic')}
             onPressedChange={() => editor.chain().focus().toggleItalic().run()}
             className="h-8 w-8 p-0"
+            title="Italic"
           >
             <Italic className="h-3 w-3" />
           </Toggle>
@@ -530,6 +554,7 @@ export const RichTextEditor = ({
             pressed={editor.isActive('strike')}
             onPressedChange={() => editor.chain().focus().toggleStrike().run()}
             className="h-8 w-8 p-0"
+            title="Strikethrough"
           >
             <Strikethrough className="h-3 w-3" />
           </Toggle>
@@ -547,6 +572,7 @@ export const RichTextEditor = ({
               editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
             }}
             className="h-8 w-8 p-0"
+            title="Link"
           >
             <LinkIcon className="h-3 w-3" />
           </Toggle>
