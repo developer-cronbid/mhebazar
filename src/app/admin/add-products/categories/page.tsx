@@ -1,3 +1,4 @@
+//src/app/admin/add-products/categories/page.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -113,8 +114,6 @@ const CategoriesTable = () => {
     if (searchTerm) {
       filtered = filtered.filter(category =>
         category.name.toLowerCase().includes(searchTerm.toLowerCase())
-        // ||
-        // category.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -239,6 +238,51 @@ const CategoriesTable = () => {
     }
   };
 
+  // Function to handle export to Excel (CSV)
+  const handleExportToExcel = () => {
+    if (filteredAndSortedCategories.length === 0) {
+      toast.error("No categories to export.");
+      return;
+    }
+
+    // Define CSV headers
+    const headers = [
+      'ID', 'Name', 'Description', 'Meta Title', 'Meta Description',
+      'Fields Count', 'Is Active', 'Updated At'
+    ];
+    const csvRows = [headers.join(',')];
+
+    // Map data to CSV rows
+    filteredAndSortedCategories.forEach(category => {
+      const row = [
+        `"${category.id}"`,
+        `"${category.name}"`,
+        `"${category.description?.replace(/"/g, '""') || ''}"`,
+        `"${category.meta_title?.replace(/"/g, '""') || ''}"`,
+        `"${category.meta_description?.replace(/"/g, '""') || ''}"`,
+        `"${category.product_details?.length || 0}"`,
+        `"${category.is_active ? 'Active' : 'Inactive'}"`,
+        `"${new Date(category.updated_at).toLocaleString()}"`,
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+
+    // Create a Blob and trigger download
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'categories_export.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Categories exported successfully!");
+  };
+
   // Helper function for image URLs
   const getImageUrl = (imageUrl: string | undefined): string => {
     if (!imageUrl) return '/no-image.png';
@@ -298,7 +342,7 @@ const CategoriesTable = () => {
               <span>Delete Selected</span>
             </Button>
             <Button
-              onClick={() => {/* Implement export logic */ }}
+              onClick={handleExportToExcel}
               className="bg-blue-500 hover:bg-blue-600 flex items-center space-x-2"
             >
               <FileSpreadsheet className="w-4 h-4" />
@@ -394,7 +438,6 @@ const CategoriesTable = () => {
                 <TableHead>Description</TableHead>
                 <TableHead>Fields Count</TableHead>
                 <TableHead>Products</TableHead>
-                {/* <TableHead>Status</TableHead> */}
                 <TableHead>Updated</TableHead>
                 <TableHead className="text-center">Actions</TableHead>
                 <TableHead className="text-right">More</TableHead>
@@ -454,14 +497,6 @@ const CategoriesTable = () => {
                         {category.product_count || 0}
                       </span>
                     </TableCell>
-                    {/* <TableCell>
-                      <span className={`text-xs px-2 py-0.5 rounded font-medium ${category.is_active
-                          ? "text-green-600 bg-green-50"
-                          : "text-gray-600 bg-gray-50"
-                        }`}>
-                        {category.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </TableCell> */}
                     <TableCell>
                       <span className="text-xs text-gray-400">
                         {new Date(category.updated_at).toLocaleDateString()}
@@ -527,10 +562,6 @@ const CategoriesTable = () => {
                             <Pencil className="mr-2 h-4 w-4" />
                             <span>Edit</span>
                           </DropdownMenuItem>
-                          {/* <DropdownMenuItem onClick={() => window.open(`/categories/${category.id}`, '_blank')}>
-                            <ExternalLink className="mr-2 h-4 w-4" />
-                            View Details
-                          </DropdownMenuItem> */}
                           <DropdownMenuItem
                             onClick={() => {
                               setCategoryToDelete(category);

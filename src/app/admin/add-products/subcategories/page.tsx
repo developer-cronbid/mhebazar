@@ -1,3 +1,4 @@
+//src/app/admin/add-products/subcategories/page.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -90,11 +91,6 @@ const SubcategoriesTable = () => {
 
     fetchData();
   }, []);
-
-  // Helper function to get category name
-  // const getCategoryName = (subcategory: Subcategory): string => {
-  //   return subcategory.category_name || 'Unknown Category';
-  // };
 
   // Filter and sort subcategories
   const filteredAndSortedSubcategories = useMemo(() => {
@@ -238,6 +234,52 @@ const SubcategoriesTable = () => {
     }
   };
 
+  // Function to handle export to Excel (CSV)
+  const handleExportToExcel = () => {
+    if (filteredAndSortedSubcategories.length === 0) {
+      toast.error("No subcategories to export.");
+      return;
+    }
+    
+    // Define CSV headers
+    const headers = [
+      'ID', 'Subcategory Name', 'Category Name', 'Description', 'Meta Title',
+      'Meta Description', 'Fields Count', 'Products Count', 'Updated At'
+    ];
+    const csvRows = [headers.join(',')];
+
+    // Map data to CSV rows
+    filteredAndSortedSubcategories.forEach(subcategory => {
+      const row = [
+        `"${subcategory.id}"`,
+        `"${subcategory.name}"`,
+        `"${subcategory.category_name}"`,
+        `"${subcategory.description?.replace(/"/g, '""') || ''}"`,
+        `"${subcategory.meta_title?.replace(/"/g, '""') || ''}"`,
+        `"${subcategory.meta_description?.replace(/"/g, '""') || ''}"`,
+        `"${subcategory.product_details?.length || 0}"`,
+        `"${subcategory.product_count || 0}"`,
+        `"${new Date(subcategory.updated_at).toLocaleString()}"`,
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+
+    // Create a Blob and trigger download
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'subcategories_export.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Subcategories exported successfully!");
+  };
+
   // Helper function for image URLs
   const getImageUrl = (imageUrl: string | undefined): string => {
     if (!imageUrl) return '/no-image.png';
@@ -297,7 +339,7 @@ const SubcategoriesTable = () => {
               <span>Delete Selected</span>
             </Button>
             <Button
-              onClick={() => {/* Implement export logic */ }}
+              onClick={handleExportToExcel}
               className="bg-blue-500 hover:bg-blue-600 flex items-center space-x-2"
             >
               <FileSpreadsheet className="w-4 h-4" />

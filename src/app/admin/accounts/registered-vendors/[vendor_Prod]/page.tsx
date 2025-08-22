@@ -280,6 +280,53 @@ const VendorProducts = () => {
     }
   };
 
+  // Function to handle export to Excel (CSV)
+  const handleExportToExcel = () => {
+    if (filteredAndSortedProducts.length === 0) {
+      toast.error("No products to export.");
+      return;
+    }
+    
+    // Define CSV headers
+    const headers = [
+      'ID', 'Name', 'Category', 'Vendor Name', 'Type', 'Price', 'Description', 'Manufacturer', 'Model', 'Rating', 'Status', 'Updated At'
+    ];
+    const csvRows = [headers.join(',')];
+
+    // Map data to CSV rows
+    filteredAndSortedProducts.forEach(product => {
+      const row = [
+        `"${product.id}"`,
+        `"${product.name}"`,
+        `"${product.category_name}"`,
+        `"${product.user_name}"`,
+        `"${product.type}"`,
+        `"${product.price}"`,
+        `"${product.description?.replace(/"/g, '""') || ''}"`,
+        `"${product.manufacturer?.replace(/"/g, '""') || ''}"`,
+        `"${product.model?.replace(/"/g, '""') || ''}"`,
+        `"${product.average_rating ?? 0}"`,
+        `"${product.is_active ? 'Approved' : 'Pending'}"`,
+        `"${new Date(product.updated_at).toLocaleString()}"`,
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+
+    // Create a Blob and trigger download
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'vendor_products.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Products exported successfully!");
+  };
 
   // Star Rating Component
   const StarRating = ({ average_rating }: { average_rating: number }) => (
@@ -346,7 +393,7 @@ const VendorProducts = () => {
               <span>Approve Selected</span>
             </button>
             <button
-              onClick={() => { /* Implement export logic */ }}
+              onClick={handleExportToExcel}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center space-x-2 transition-colors"
             >
               <FileSpreadsheet className="w-4 h-4" />
