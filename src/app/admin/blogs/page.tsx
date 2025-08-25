@@ -1,43 +1,30 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-// REMOVE: import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef, SortingState } from '@tanstack/react-table';
 import { toast } from "sonner";
 
 // --- Component & UI Imports ---
-import { BlogSheet } from './BlogSheet'; // 👈 IMPORT YOUR NEW COMPONENT
+import BlogForm, { BlogData, BlogCategory } from './BlogForm'; // Import types from BlogForm
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 
-
-// --- TypeScript Interface (add blog_url if you have it) ---
+// --- TypeScript Interfaces ---
 interface Blog {
   id: number;
   blog_title: string;
   author_name: string | null;
   created_at: string;
-  blog_url: string; // 👈 Add blog_url to fetch for editing
+  blog_url: string;
 }
 
 const PAGE_SIZE = 20;
 
 const BlogsTable = () => {
-  // REMOVE: const router = useRouter();
   const [data, setData] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalBlogs, setTotalBlogs] = useState(0);
@@ -46,14 +33,12 @@ const BlogsTable = () => {
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
   const [sortBy, setSortBy] = useState<SortingState>([{ id: 'created_at', desc: true }]);
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedGlobalFilter(globalFilter);
-      setPage(1);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [globalFilter]);
+  // --- State for the controlled BlogForm ---
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editingBlog, setEditingBlog] = useState<BlogData | null>(null);
+  const [categories, setCategories] = useState<BlogCategory[]>([]);
 
+  // Fetch blogs data for the table
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -67,59 +52,80 @@ const BlogsTable = () => {
       setData(response.data.results);
       setTotalBlogs(response.data.count);
     } catch (error) {
-      toast.error("Failed to fetch blogs. Please try again.");
-      console.log(error);
+      toast.error("Failed to fetch blogs.");
     } finally {
       setLoading(false);
     }
   }, [page, debouncedGlobalFilter, sortBy]);
 
+  // Debounce search filter
+  useEffect(() => {
+    const handler = setTimeout(() => { setDebouncedGlobalFilter(globalFilter); setPage(1); }, 500);
+    return () => clearTimeout(handler);
+  }, [globalFilter]);
+
+  // Fetch data on page load and when dependencies change
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const totalPages = Math.ceil(totalBlogs / PAGE_SIZE);
+  // Fetch categories once on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/categories/'); // Adjust endpoint if necessary
+        setCategories(response.data.results || response.data);
+      } catch (error) {
+        toast.error("Failed to load blog categories.");
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleDelete = async (blogUrl: string) => {
     try {
-      await api.delete(`/blogs/${blogUrl}/`); // Assuming delete uses url/slug
+      await api.delete(`/blogs/${blogUrl}/`);
       toast.success("Blog deleted successfully!");
       fetchData(); // Refresh data
     } catch (error) {
-      toast.error("Failed to delete blog. Please try again.");
-      console.log(error);
+      toast.error("Failed to delete blog.");
+    }
+  };
+
+  // Handlers to open the form sheet
+  const handleCreateClick = () => {
+    setEditingBlog(null); // Set to null for create mode
+    setIsSheetOpen(true);
+  };
+
+  const handleEditClick = async (blogUrl: string) => {
+    try {
+      toast.loading("Loading blog data...");
+      const response = await api.get(`/blogs/${blogUrl}/`);
+      // Ensure the category ID is a string for the Select component
+      const blogData = { ...response.data, blog_category: String(response.data.blog_category) };
+      setEditingBlog(blogData);
+      setIsSheetOpen(true);
+      toast.dismiss();
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Failed to load blog for editing.");
     }
   };
 
   const columns = useMemo<ColumnDef<Blog>[]>(() => [
-    {
-      header: 'Sr. No.',
-      cell: info => info.row.index + 1 + (page - 1) * PAGE_SIZE,
-    },
+    { header: 'Sr. No.', cell: info => info.row.index + 1 + (page - 1) * PAGE_SIZE },
     { accessorKey: 'blog_title', header: 'Blog Title' },
     { accessorKey: 'author_name', header: 'Author', cell: info => info.getValue() || 'N/A' },
-    {
-      accessorKey: 'created_at',
-      header: 'Date Published',
-      cell: info => new Date(info.getValue() as string).toLocaleDateString('en-IN', {
-        day: 'numeric', month: 'long', year: 'numeric',
-      }),
-    },
+    { accessorKey: 'created_at', header: 'Date', cell: info => new Date(info.getValue() as string).toLocaleDateString() },
     {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          {/* 👇 EDIT BUTTON NOW TRIGGERS THE SHEET */}
-          <BlogSheet
-            blogUrl={row.original.blog_url}
-            onSuccess={fetchData}
-            trigger={
-              <Button variant="outline" size="sm">
-                <Pencil className="h-4 w-4" />
-              </Button>
-            }
-          />
+          <Button variant="outline" size="sm" onClick={() => handleEditClick(row.original.blog_url)}>
+            <Pencil className="h-4 w-4" />
+          </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" size="sm">
@@ -144,7 +150,7 @@ const BlogsTable = () => {
         </div>
       ),
     },
-  ], [page, fetchData]); // Add fetchData to dependency array
+  ], [page, fetchData]); // Added fetchData to dependency array for correctness
 
   const table = useReactTable({
     data,
@@ -155,10 +161,11 @@ const BlogsTable = () => {
     manualPagination: true,
     manualFiltering: true,
     manualSorting: true,
-    pageCount: totalPages,
+    pageCount: Math.ceil(totalBlogs / PAGE_SIZE),
   });
 
-  // Pagination logic remains the same...
+  const totalPages = table.getPageCount();
+
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
@@ -166,15 +173,9 @@ const BlogsTable = () => {
   };
 
   const generatePagination = () => {
-    if (totalPages <= 5) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-    if (page <= 3) {
-      return [1, 2, 3, 4, '...', totalPages];
-    }
-    if (page >= totalPages - 2) {
-      return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
-    }
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    if (page <= 3) return [1, 2, 3, 4, '...', totalPages];
+    if (page >= totalPages - 2) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
     return [1, '...', page - 1, page, page + 1, '...', totalPages];
   };
 
@@ -185,16 +186,11 @@ const BlogsTable = () => {
           <h1 className="text-2xl font-semibold text-gray-900">Manage Blogs</h1>
           <p className="text-sm text-gray-500 mt-1">Add, edit, or delete blog posts.</p>
         </div>
-        {/* 👇 ADD NEW BLOG BUTTON NOW TRIGGERS THE SHEET */}
-        <BlogSheet
-          onSuccess={fetchData}
-          trigger={
-            <Button className="flex items-center gap-2">
-              <PlusCircle size={16} />
-              Add New Blog
-            </Button>
-          }
-        />
+        {/* ✅ CORRECTED: Use a standard button with an onClick handler */}
+        <Button className="flex items-center gap-2" onClick={handleCreateClick}>
+          <PlusCircle size={16} />
+          Add New Blog
+        </Button>
       </div>
 
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
@@ -285,6 +281,18 @@ const BlogsTable = () => {
           </Pagination>
         )}
       </div>
+
+      {/* ✅ RENDER THE SINGLE, CONTROLLED FORM INSTANCE */}
+      <BlogForm
+        isOpen={isSheetOpen}
+        onOpenChange={setIsSheetOpen}
+        initialData={editingBlog}
+        categories={categories}
+        onSuccess={() => {
+          setIsSheetOpen(false);
+          fetchData(); // Refresh table data on success
+        }}
+      />
     </div>
   );
 };

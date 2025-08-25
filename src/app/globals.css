@@ -156,3 +156,380 @@
   scrollbar-width: thin;
   scrollbar-color: #5CA131 transparent;
 }
+
+
+/* blog ckeditor styling */
+
+.ck-content {
+  background: #ffffff;
+  /* ENHANCED: Better responsive max-width with fluid scaling */
+  max-width: min(100%, 1200px);
+  width: 100%;
+  /* ENHANCED: Responsive margin using clamp() */
+  margin: clamp(1rem, 5vw, 3rem) auto;
+  /* ENHANCED: Fluid padding that scales with viewport */
+  padding: clamp(2rem, 5vw, 4rem);
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* --- HEADINGS --- */
+.ck-content h1,
+.ck-content h2,
+.ck-content h3,
+.ck-content h4 {
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+  /* ENHANCED: Responsive margin using clamp() */
+  margin-top: clamp(1.5rem, 4vw, 2.75rem);
+  margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+  scroll-margin-top: 5rem;
+  letter-spacing: -0.02em;
+}
+
+/* ENHANCED: Better fluid font sizes with wider range */
+.ck-content h1 {
+  /* Scales from 1.75rem on mobile to 2.75rem on desktop */
+  font-size: clamp(1.75rem, 4vw + 1rem, 2.75rem);
+  border-bottom: 2px solid #e2e8f0;
+  /* ENHANCED: Responsive padding */
+  padding-bottom: clamp(0.5rem, 2vw, 1rem);
+}
+
+.ck-content h2 {
+  /* Scales from 1.5rem on mobile to 2rem on desktop */
+  font-size: clamp(1.5rem, 3vw + 0.75rem, 2rem);
+  border-left: 4px solid #5ca030;
+  /* ENHANCED: Responsive padding */
+  padding-left: clamp(0.75rem, 2vw, 1rem);
+}
+
+.ck-content h3 {
+  /* Scales from 1.25rem on mobile to 1.6rem on desktop */
+  font-size: clamp(1.25rem, 2.5vw + 0.5rem, 1.6rem);
+  color: #1e293b;
+}
+
+.ck-content h4 {
+  /* Scales from 1.1rem on mobile to 1.25rem on desktop */
+  font-size: clamp(1.1rem, 2vw + 0.5rem, 1.25rem);
+  color: #475569;
+  font-weight: 600;
+}
+
+/* --- PARAGRAPHS & LINKS --- */
+.ck-content p {
+  /* ENHANCED: Responsive margin and font size */
+  margin-bottom: clamp(1rem, 3vw, 1.6rem);
+  font-size: clamp(0.95rem, 2vw + 0.5rem, 1.05rem);
+}
+
+.ck-content strong {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.ck-content a {
+  color: #2563eb;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.25s ease;
+}
+
+.ck-content a:hover {
+  color: #1d4ed8;
+  border-bottom-color: #1d4ed8;
+  background-color: #eff6ff;
+  border-radius: 0.2rem;
+  padding: 0 0.2rem;
+}
+
+/* --- LISTS --- */
+.ck-content ul,
+.ck-content ol {
+  /* ENHANCED: Responsive padding and margin */
+  padding-left: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+}
+
+.ck-content li {
+  /* ENHANCED: Responsive spacing */
+  margin-bottom: clamp(0.5rem, 1.5vw, 0.75rem);
+  padding-left: clamp(0.25rem, 1vw, 0.5rem);
+  line-height: 1.6;
+}
+
+.ck-content ul li::marker,
+.ck-content ol li::marker {
+  color: #5ca030;
+  font-weight: 700;
+}
+
+/* --- BLOCKQUOTES & CODE --- */
+.ck-content blockquote {
+  /* ENHANCED: Responsive margin and padding */
+  margin: clamp(1.5rem, 4vw, 2rem) 0;
+  padding: clamp(1rem, 3vw, 1.25rem) clamp(1.25rem, 4vw, 1.75rem);
+  border-left: 4px solid #5ca030;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  color: #475569;
+  font-style: italic;
+  border-radius: 0.5rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.ck-content code {
+  font-family: 'JetBrains Mono', 'SF Mono', Monaco, Consolas, monospace;
+  background: #f1f5f9;
+  color: #b91c1c;
+  border-radius: 0.4rem;
+  padding: 0.25em 0.45em;
+  /* ENHANCED: Responsive font size */
+  font-size: clamp(0.8em, 1.5vw + 0.6em, 0.9em);
+  border: 1px solid #e2e8f0;
+  /* ENHANCED: Prevent code from breaking layout on small screens */
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.ck-content pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 0.75rem;
+  /* ENHANCED: Responsive padding */
+  padding: clamp(1rem, 3vw, 1.5rem);
+  margin: clamp(1.5rem, 4vw, 2rem) 0;
+  overflow-x: auto;
+  /* ENHANCED: Responsive font size */
+  font-size: clamp(0.8rem, 1.5vw + 0.6rem, 0.9rem);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  /* ENHANCED: Better mobile scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+
+.ck-content pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border: none;
+  font-size: inherit;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/* --- IMAGES & TABLES --- */
+.imgtxt {
+  display: flex;
+  justify-content: center;
+}
+
+.ck-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 1rem;
+  /* ENHANCED: Responsive margin */
+  margin: clamp(1.5rem, 4vw, 2.5rem) 0;
+  /* ENHANCED: Prevent layout shift */
+  display: block;
+}
+
+.ck-content table {
+  width: 100%;
+  border-collapse: collapse;
+  /* ENHANCED: Responsive margin */
+  margin: clamp(1.5rem, 4vw, 2.5rem) 0;
+  /* ENHANCED: Responsive font size */
+  font-size: clamp(0.85rem, 1.5vw + 0.7rem, 1rem);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  /* ENHANCED: Better mobile table handling */
+  overflow-x: auto;
+  display: block;
+  white-space: nowrap;
+}
+
+.ck-content thead,
+.ck-content tbody,
+.ck-content tr {
+  /* ENHANCED: Restore table display on larger screens */
+  display: table-header-group;
+}
+
+.ck-content tbody {
+  display: table-row-group;
+}
+
+.ck-content tr {
+  display: table-row;
+}
+
+.ck-content th,
+.ck-content td {
+  display: table-cell;
+  white-space: normal;
+}
+
+.ck-content th {
+  background: #f1f5f9;
+  color: #0f172a;
+  font-weight: 600;
+  /* ENHANCED: Responsive padding */
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2.5vw, 1.25rem);
+  text-align: left;
+}
+
+.ck-content td {
+  /* ENHANCED: Responsive padding */
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 2.5vw, 1.25rem);
+  border-top: 1px solid #e2e8f0;
+}
+
+.ck-content tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+/* --- ENHANCED RESPONSIVE DESIGN --- */
+/* Large screens (1200px+) */
+@media (min-width: 1200px) {
+  .ck-content {
+    max-width: 1200px;
+  }
+}
+
+/* Tablets and small laptops (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 768px) {
+  .ck-content {
+    margin: 2rem auto;
+  }
+}
+
+/* Mobile tablets (768px and below) */
+@media (max-width: 768px) {
+  .ck-content {
+    border-radius: 0.5rem;
+    margin: 1rem;
+  }
+
+  /* ENHANCED: Better mobile table scrolling */
+  .ck-content table {
+    font-size: 0.9rem;
+    border-radius: 0.5rem;
+  }
+
+  /* ENHANCED: Stack list items more compactly on mobile */
+  .ck-content li {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Small mobile phones (480px and below) */
+@media (max-width: 480px) {
+  .ck-content {
+    border-radius: 0.25rem;
+    margin: 0.5rem;
+    /* ENHANCED: Minimum padding for very small screens */
+    padding: max(1rem, 4vw);
+  }
+
+  .ck-content table,
+  .ck-content pre {
+    font-size: 0.85rem;
+    border-radius: 0.5rem;
+  }
+
+  /* ENHANCED: More compact spacing on very small screens */
+  .ck-content h1,
+  .ck-content h2,
+  .ck-content h3,
+  .ck-content h4 {
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  /* ENHANCED: Tighter line height for mobile readability */
+  .ck-content p {
+    line-height: 1.6;
+  }
+}
+
+/* Extra small screens (360px and below) */
+@media (max-width: 360px) {
+  .ck-content {
+    margin: 0.25rem;
+    padding: 1rem;
+  }
+
+  .ck-content h2 {
+    padding-left: 0.5rem;
+  }
+
+  .ck-content blockquote {
+    padding: 1rem;
+  }
+}
+
+/* --- LANDSCAPE ORIENTATION ADJUSTMENTS --- */
+@media (max-height: 600px) and (orientation: landscape) {
+  .ck-content {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .ck-content h1,
+  .ck-content h2,
+  .ck-content h3,
+  .ck-content h4 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* --- ANIMATIONS --- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- PRINT STYLES --- */
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .ck-content {
+    box-shadow: none;
+    border: none;
+    margin: 0;
+    max-width: 100%;
+    padding: 2rem;
+  }
+
+  .ck-content a {
+    color: #1e293b !important;
+    border: none;
+    text-decoration: underline;
+  }
+
+  .ck-content blockquote,
+  .ck-content pre {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+  }
+
+  /* ENHANCED: Better print table handling */
+  .ck-content table {
+    display: table;
+    white-space: normal;
+    font-size: 0.9rem;
+  }
+}

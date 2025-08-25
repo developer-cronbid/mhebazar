@@ -30,6 +30,7 @@ import ReviewSection from "./Reviews";
 import DOMPurify from "dompurify";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import categories from '@/data/categories.json'
 
 type ProductImage = {
   id: number;
@@ -89,6 +90,7 @@ interface ProductSectionProps {
   productId: number | string | null;
 }
 
+const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 // Custom Image component with an error handler to show a fallback
 const FallbackImage = ({
   src,
@@ -647,7 +649,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
             aria-label="View product images in full-screen gallery"
           >
             <FallbackImage
-              src={data.images[selectedImage]?.image || "/no-product.png"}
+              src={data.images[selectedImage]?.image || imgUrl + (categories.find(cat => cat.id === data.category)?.image_url || '')}
               alt={data.name}
               className="h-full w-full object-contain"
               width={700}

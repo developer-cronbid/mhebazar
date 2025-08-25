@@ -133,13 +133,24 @@ const BlogListPage: React.FC = () => {
     return temp.textContent || temp.innerText || "";
   };
 
-  const getImageUrl = (imagePath: string | null, hasError: boolean) => {
-    if (hasError || !imagePath) {
+  const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
+    // 1. If there's no image path from the API, return the ultimate fallback.
+    if (!imagePath) {
       return "/mhe-logo.png";
     }
 
-    const filename = imagePath.split('/').pop();
-    return `/css/asset/blogimg/${filename}`;
+    // 2. If the original link has an error, construct the path for old blog images.
+    if (hasError) {
+      const filename = imagePath.split('/').pop();
+      if (filename) {
+        return `/css/asset/blogimg/${filename}`;
+      }
+      // If for some reason a filename can't be extracted, still show the fallback.
+      return "/mhe-logo.png";
+    }
+
+    // 3. If there are no errors, return the original, full image path.
+    return imagePath;
   };
 
   const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
@@ -268,10 +279,9 @@ const BlogListPage: React.FC = () => {
             </div>
 
             {/* Blog Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {blogs.map((blog) => {
-                const filename = blog.image1?.split('/').pop() || null;
-                const imageUrl = getImageUrl(filename, imageError[blog.id] || false);
+                const imageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
 
                 return (
                   <Card key={blog.id} className="group hover:shadow-xl transition-all duration-300 overflow-hidden">
@@ -289,7 +299,7 @@ const BlogListPage: React.FC = () => {
                       </div>
 
                       <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between my-2">
                           <Badge variant="secondary" className="text-xs">
                             {blog.blog_category_name}
                           </Badge>
@@ -332,29 +342,35 @@ const BlogListPage: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {(nextPage || previousPage) && (
-              <div className="flex justify-center items-center space-x-4 mt-12">
-                <Button
-                  variant="outline"
-                  onClick={handlePreviousPage}
-                  disabled={!previousPage || loading}
-                >
-                  Previous
-                </Button>
+                {(nextPage || previousPage) && (
+                  <div className="flex justify-center items-center space-x-4 mt-12">
+                    {/* Previous Page Button */}
+                    <Button
+                      variant="outline"
+                      onClick={handlePreviousPage}
+                      disabled={!previousPage || loading}
+                    >
+                      Previous
+                    </Button>
 
-                <span className="text-gray-600">
-                  Page {currentPage}
-                </span>
+                    {/* Current Page Indicator */}
+                    <span className="font-bold text-white text-sm px-3 py-1 rounded-full bg-green-500">
+                      {currentPage}
+                    </span>
 
-                <Button
-                  variant="outline"
-                  onClick={handleNextPage}
-                  disabled={!nextPage || loading}
-                >
-                  Next
-                </Button>
-              </div>
-            )}
+                    {/* Next Page Number (only shown if a next page exists) */}
+                    {nextPage && <span className="text-gray-500">{currentPage + 1}</span>}
+
+                    {/* Next Page Button */}
+                    <Button
+                      variant="outline"
+                      onClick={handleNextPage}
+                      disabled={!nextPage || loading}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                )}
           </>
         )}
       </div>

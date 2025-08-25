@@ -41,13 +41,16 @@ type CompareProduct = {
   hide_price: boolean;
   stock_quantity: number;
   category_name: string;
-  manufacturer: string;
-  model: string;
   ratings: number; // Mapped from average_rating
   ratingsCount: number; // Placeholder, not in API
   soldBy: string; // Placeholder
   brand: string; // Mapped from manufacturer
   type: string;
+  category_id: number;
+  pageUrlType: string;
+  model: string;
+  manufacturer: string
+  user_name: string;
   product_details: Record<string, string | number | null>; // Added dynamic product_details
 };
 
@@ -237,6 +240,11 @@ const ComparePage = () => {
                 hide_price={product.hide_price}
                 stock_quantity={product.stock_quantity}
                 type={product.type}
+                category_id={product.category_id}
+                pageUrlType={product.pageUrlType}
+                model={product.model}
+                manufacturer={product.manufacturer}
+                user_name={product.user_name}
               />
               <button
                 onClick={() => handleRemoveProduct(product.id)}
@@ -350,8 +358,8 @@ const ComparePage = () => {
                                       <svg
                                         key={i}
                                         className={`inline w-3 h-3 sm:w-4 sm:h-4 ${i < Math.round(product.ratings)
-                                            ? "fill-yellow-400"
-                                            : "fill-gray-200"
+                                          ? "fill-yellow-400"
+                                          : "fill-gray-200"
                                           }`}
                                         viewBox="0 0 20 20"
                                       >

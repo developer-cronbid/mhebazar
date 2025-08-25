@@ -3,11 +3,11 @@
 import { useEffect, useState, useRef } from 'react';
 import api from '@/lib/api';
 // NEW: AnimatePresence for exit animations and new icons
-import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, Hash, Menu, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Calendar, Clock, Hash } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import './blog-styles.css';
+import '@/styles/blog-styles.css'
 
 // Interfaces remain the same
 interface Blog {
@@ -71,7 +71,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   // NEW: State to manage the mobile TOC drawer visibility
-  const [isTocOpen, setIsTocOpen] = useState(false);
+  const [, setIsTocOpen] = useState(false);
 
   // Effect for fetching the blog data (no changes here)
   useEffect(() => {
