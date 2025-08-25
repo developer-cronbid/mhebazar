@@ -312,10 +312,10 @@ export default function CategoryMenu({
                         <Package className="w-8 h-8 text-gray-400" />
                       </div>
                       <h4 className="font-medium text-gray-900 mb-2">
-                        No subcategories found
+                           Browse all products in this category .
                       </h4>
                       <p className="text-gray-500 text-sm mb-4 max-w-sm">
-                        Browse all products in this category instead.
+                         click the button below to explore all available products within the {displayedCategory.name} category.
                       </p>
                       <Link
                         href={`/${createSlug(displayedCategory.name)}`}
