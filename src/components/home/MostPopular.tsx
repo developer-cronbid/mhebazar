@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
 // ====================
 // Types (Unchanged)
@@ -195,15 +196,17 @@ export default function MostPopular() {
             </p>
           </div>
           
-          {/* Main Image - Large Size */}
+          {/* Main Image - Large Size (Now clickable) */}
           <div className="relative w-64 h-64 sm:w-80 sm:h-80 flex-shrink-0">
-            <Image
-              src={popularData.mainImage}
-              alt={popularData.mainLabel}
-              fill
-              className="object-contain"
-              onError={() => setMainImageError(true)}
-            />
+            <Link href={`/product/${popularData.slug}/?id=${popularData.id}`} passHref>
+              <Image
+                src={popularData.mainImage}
+                alt={popularData.mainLabel}
+                fill
+                className="object-contain"
+                onError={() => setMainImageError(true)}
+              />
+            </Link>
           </div>
         </div>
 

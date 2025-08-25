@@ -86,7 +86,7 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
     .toUpperCase();
 
   return (
-    <Link href={`/${slug}`} className="flex flex-col items-center justify-center gap-4 relative">
+    <Link href={`/${slug}`} className="flex flex-col items-center gap-4 relative text-center">
       <motion.div
         variants={itemVariants}
         whileHover={{ scale: 1.05 }}
@@ -116,9 +116,7 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
         )}
       </motion.div>
 
-      <div
-        className="relative w-fit text-center [font-family:'Inter-Regular',Helvetica] font-normal text-black text-base tracking-[0] leading-[normal]"
-      >
+      <div className="relative w-fit">
         {label}
       </div>
     </Link>
