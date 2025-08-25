@@ -142,7 +142,7 @@ export default function ExportProductsFeatured() {
       className="w-full mx-auto px-4 py-4"
     >
       <motion.div variants={itemVariants} className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Export Products</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Used Products</h2>
         <Link href="/used" className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
           View More
         </Link>

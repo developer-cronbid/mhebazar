@@ -15,6 +15,9 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Minus,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -68,7 +71,7 @@ type ProductData = {
   user_description: string | null;
   user_image: string | null;
   category_details?: {
-  cat_image: string | null;
+    cat_image: string | null;
   };
 };
 
@@ -778,12 +781,13 @@ export default function ProductSection({ productId }: ProductSectionProps) {
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
               <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
-                {`${data.manufacturer
-                  ? data.manufacturer
-                  : data.user_name.replace("_", " ")
-                  } ${data.name} ${data.model} `
-                  .replace(/[^a-zA-Z0-9 \-]/g, '') // 🧹 Collapse all whitespace into a single space
-                  .replace(/\s+/g, ' ')
+                {`${
+                  data.manufacturer
+                    ? data.manufacturer
+                    : data.user_name.replace("_", " ")
+                } ${data.name} ${data.model} `
+                  .replace(/[^a-zA-Z0-9 \-]/g, "") // 🧹 Collapse all whitespace into a single space
+                  .replace(/\s+/g, " ")
                   .trim() // ✨ Remove any space from the beginning or end
                 }
               </h1>
@@ -793,11 +797,11 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`w-4 h-4 transition-colors ${data.average_rating !== null &&
-                          star <= data.average_rating
+                      className={`w-4 h-4 transition-colors ${
+                        data.average_rating !== null && star <= data.average_rating
                           ? "fill-orange-400 text-orange-400"
                           : "text-gray-300"
-                        }`}
+                      }`}
                     />
                   ))}
                   <span className="text-base text-gray-600 ml-1">
@@ -875,39 +879,93 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     </p>
                   )}
                 </div>
-                {data.direct_sale && isPurchasable ? (
-                  <div className="mt-4 flex flex-col gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleAddToCart(data.id)}
-                      className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
-                      aria-label="Add to cart"
-                    >
-                      <ShoppingCart className="inline-block mr-2 w-5 h-5" /> Add
-                      to Cart
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleBuyNow}
-                      className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-md text-base transition"
-                      aria-label="Buy now"
-                    >
-                      Buy Now
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleCompare}
-                      className="w-full border border-gray-300 text-gray-700 font-semibold py-3 rounded-md text-base hover:bg-gray-50 transition"
-                      disabled={!data.is_active}
-                      aria-label="Compare product"
-                    >
-                      Compare
-                    </motion.button>
-                  </div>
+                {/* Conditional rendering for direct sale */}
+                {data.direct_sale ? (
+                  isPurchasable ? (
+                    // This is the added conditional block
+                    isInCart ? (
+                        <div className="mt-4 flex items-center justify-between bg-green-50 text-green-700 font-medium py-1 px-1 rounded-lg">
+                          <motion.button
+                            onClick={() => handleDecreaseQuantity(cartItemId as number)}
+                            disabled={currentCartQuantity <= 1 || !isPurchasable}
+                            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Decrease quantity"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </motion.button>
+                          <span className="text-green-800 font-semibold text-center flex-1 text-base">
+                            {currentCartQuantity}
+                          </span>
+                          <motion.button
+                            onClick={() => handleIncreaseQuantity(cartItemId as number)}
+                            disabled={!isPurchasable}
+                            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </motion.button>
+                          <motion.button
+                            onClick={() => handleRemoveFromCart(cartItemId as number)}
+                            className="h-8 w-8 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors ml-1"
+                            aria-label="Remove from cart"
+                            title="Remove from Cart"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </motion.button>
+                        </div>
+                    ) : (
+                      <div className="mt-4 flex flex-col gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleAddToCart(data.id)}
+                          className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                          aria-label="Add to cart"
+                        >
+                          <ShoppingCart className="inline-block mr-2 w-5 h-5" />{" "}
+                          Add to Cart
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleBuyNow}
+                          className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-md text-base transition"
+                          aria-label="Buy now"
+                        >
+                          Buy Now
+                        </motion.button>
+                      </div>
+                    )
+                  ) : (
+                    // Logic for out-of-stock direct sale
+                    <div className="mt-4 flex flex-col gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
+                            aria-label="Get a quote"
+                            disabled={!data.is_active}
+                          >
+                            Get a Quote
+                          </motion.button>
+                        </DialogTrigger>
+                        <DialogContent className="w-full max-w-2xl">
+                          <QuoteForm
+                            product={data}
+                            onClose={() =>
+                              document
+                                .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                                ?.click()
+                            }
+                          />
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  )
                 ) : (
+                  // Logic for non-direct sale (rental/quote)
                   <div className="mt-4 flex flex-col gap-2">
                     {data.type === "rental" || data.type === "used" ? (
                       <>
@@ -1181,10 +1239,11 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                                   return (
                                     <tr
                                       key={`${key}-${specIndex}`}
-                                      className={`hover:bg-gray-50 transition-colors duration-150 ${specIndex % 2 === 0
+                                      className={`hover:bg-gray-50 transition-colors duration-150 ${
+                                        specIndex % 2 === 0
                                           ? "bg-white"
                                           : "bg-gray-25"
-                                        }`}
+                                      }`}
                                     >
                                       <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-medium text-gray-700">
@@ -1212,8 +1271,9 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                           return (
                             <tr
                               key={key}
-                              className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"
-                                }`}
+                              className={`hover:bg-gray-50 transition-colors duration-150 ${
+                                index % 2 === 0 ? "bg-white" : "bg-gray-25"
+                              }`}
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className="text-sm font-medium text-gray-700">

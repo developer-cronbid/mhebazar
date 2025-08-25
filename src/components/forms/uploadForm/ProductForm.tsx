@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -10,13 +10,25 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { FileText, Image as ImageIcon, Package, AlertCircle, X } from 'lucide-react'
+import { FileText, Image as ImageIcon, Package, AlertCircle, X, Loader2 } from 'lucide-react'
 import api from '@/lib/api'
 import { useUser } from '@/context/UserContext'
 import Image from 'next/image'
 import { Product } from '@/types'
 import { toast } from "sonner"
-// import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+
+// Helper function for SEO-friendly slug
+const slugify = (text: string): string => {
+  return (text || '')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .replace(/-+$/, '')
+}
 
 type FieldOption = {
   label: string
@@ -77,12 +89,11 @@ interface ProductFormProps {
 }
 
 export default function ProductForm({ product }: ProductFormProps) {
-  // const router = useRouter()
-
   const [defaultCategory, setDefaultCategory] = useState<string>('')
   const [defaultSubcategory, setDefaultSubcategory] = useState<string>('')
-  const [imageFiles, setImageFiles] = useState<File[]>([]) // For new image uploads
-  const [, setKeptImageIds] = useState<number[]>([]) // For tracking existing images
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [keptImageIds, setKeptImageIds] = useState<number[]>([])
+  const [keptBrochureUrl, setKeptBrochureUrl] = useState<string | null>(null);
 
   const {
     register,
@@ -92,34 +103,52 @@ export default function ProductForm({ product }: ProductFormProps) {
     resetField,
     formState: { errors },
   } = useForm<ProductFormData>({
-    defaultValues: product ? {
-      category: String(product.category),
-      subcategory: String(product.subcategory),
-      name: product.name,
-      description: product.description,
-      meta_title: product.meta_title,
-      meta_description: product.meta_description,
-      manufacturer: product.manufacturer,
-      model: product.model,
-      price: product.price,
-      type: product.type,
-      direct_sale: product.direct_sale,
-      hide_price: product.hide_price,
-      online_payment: product.online_payment,
-      stock_quantity: product.stock_quantity,
-      product_details: typeof product.product_details === 'string'
-        ? JSON.parse(product.product_details || '{}')
-        : product.product_details || {}
-    } : undefined
+    defaultValues: product
+      ? {
+          category: String(product.category),
+          subcategory: String(product.subcategory),
+          name: product.name,
+          description: product.description,
+          meta_title: product.meta_title,
+          meta_description: product.meta_description,
+          manufacturer: product.manufacturer,
+          model: product.model,
+          price: product.price,
+          type: product.type,
+          direct_sale: product.direct_sale,
+          hide_price: product.hide_price,
+          online_payment: product.online_payment,
+          stock_quantity: product.stock_quantity,
+          product_details: typeof product.product_details === 'string'
+            ? JSON.parse(product.product_details || '{}')
+            : product.product_details || {},
+        }
+      : {
+          direct_sale: true,
+          hide_price: false,
+          online_payment: false,
+          stock_quantity: 1,
+          type: 'new',
+        },
   })
 
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [dynamicFields, setDynamicFields] = useState<ProductDetailField[]>([])
-  const [dynamicValues, setDynamicValues] = useState<Record<string, string>>({})
+  const [dynamicValues, setDynamicValues] = useState<Record<string, string>>(() => {
+    if (product && typeof product.product_details === 'string') {
+        return JSON.parse(product.product_details || '{}');
+    }
+    return product?.product_details || {};
+  });
 
   const selectedCategoryId = watch('category')
   const selectedSubcategoryId = watch('subcategory')
+  const productName = watch('name');
+  const productManufacturer = watch('manufacturer');
+  const productModel = watch('model');
+  const { user } = useUser();
+
   const hasSelectedRequiredFields = selectedCategoryId &&
     (!subcategories.length || (subcategories.length > 0 && selectedSubcategoryId))
 
@@ -137,8 +166,8 @@ export default function ProductForm({ product }: ProductFormProps) {
       try {
         setLoading(true)
         const response = await axios.get(`${API_BASE_URL}/categories/`)
-
-        const categoriesData = response.data?.results || response.data || [];
+        const categoriesData = response.data?.results || response.data || []
+        
         if (Array.isArray(categoriesData)) {
           setCategories(categoriesData)
           if (product?.category) {
@@ -147,7 +176,6 @@ export default function ProductForm({ product }: ProductFormProps) {
             setValue('category', categoryId)
           }
         } else {
-          console.error('Unexpected API response format:', response.data)
           setCategories([])
         }
       } catch (error) {
@@ -158,7 +186,6 @@ export default function ProductForm({ product }: ProductFormProps) {
         setLoading(false)
       }
     }
-
     fetchCategories()
   }, [product, setValue, API_BASE_URL])
 
@@ -209,20 +236,20 @@ export default function ProductForm({ product }: ProductFormProps) {
     }))
   }
 
-  // Initialize kept image IDs when editing a product
+  // Initialize kept image IDs and brochure URL when editing a product
   useEffect(() => {
     if (product?.images) {
       setKeptImageIds(product.images.map(img => Number(img.id)))
     }
+    if (product?.brochure) {
+      setKeptBrochureUrl(product.brochure);
+    }
   }, [product])
-
-  const { user } = useUser();
 
   const onSubmit = async (data: ProductFormData) => {
     setIsSubmitting(true);
     const formData = new FormData();
 
-    // Append all standard fields to formData
     if (user?.id) formData.append("user", String(user.id));
     formData.append('category', data.category);
     formData.append('subcategory', data.subcategory || '');
@@ -241,28 +268,20 @@ export default function ProductForm({ product }: ProductFormProps) {
     formData.append('product_details', JSON.stringify(dynamicValues));
 
     try {
-      // Step 1: Create or update the product details
       const method = product ? 'put' : 'post';
       const url = product ? `/products/${product.id}/` : '/products/';
       const productResponse = await api[method](url, formData, {
-        headers: {
-          // Ensure correct content type for the main form data part
-          'Content-Type': 'multipart/form-data',
-        }
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       const productId = product?.id || productResponse.data.id;
 
-      // Step 2: Upload brochure if provided
       if (brochureFile) {
         const brochureFormData = new FormData()
         brochureFormData.append('brochure', brochureFile)
-        // Use a PUT request for both new and existing brochure uploads for simplicity
         const brochureUrl = `/products/${productId}/upload_brochure/`
         try {
-          await api.put(brochureUrl, brochureFormData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          })
+          await api.put(brochureUrl, brochureFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
           console.log("Brochure uploaded successfully")
         } catch (brochureError) {
           console.error("Failed to upload brochure:", brochureError)
@@ -270,18 +289,12 @@ export default function ProductForm({ product }: ProductFormProps) {
         }
       }
 
-      // Step 3: Upload NEW images if provided
       if (imageFiles.length > 0) {
         const imagesFormData = new FormData()
         imageFiles.forEach((img) => imagesFormData.append('images', img))
-
-        // **FIX:** Use the `upload_images` endpoint with POST for both new and existing products
-        // This treats adding images as an "append" operation, avoiding the `update-images` error.
         const imagesUrl = `/products/${productId}/upload_images/`;
         try {
-          await api.post(imagesUrl, imagesFormData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-          })
+          await api.post(imagesUrl, imagesFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
           console.log("New images uploaded successfully")
         } catch (imagesError) {
           console.error("Failed to upload images:", imagesError)
@@ -296,9 +309,6 @@ export default function ProductForm({ product }: ProductFormProps) {
           duration: 3000,
         }
       )
-      // Optional: Redirect or refresh after success
-      // router.push('/products/'); // or window.location.reload();
-
     } catch (error) {
       console.error(error)
       toast.error(
@@ -325,9 +335,7 @@ export default function ProductForm({ product }: ProductFormProps) {
   const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (files) {
-      const validImages = Array.from(files).filter(file =>
-        file.type.startsWith('image/')
-      )
+      const validImages = Array.from(files).filter(file => file.type.startsWith('image/'))
       if (validImages.length !== files.length) {
         toast.warning('Some files were not images and were skipped.')
       }
@@ -348,12 +356,9 @@ export default function ProductForm({ product }: ProductFormProps) {
   const removeExistingImage = async (imageId: number) => {
     if (!product?.id) return;
     try {
-      await api.delete(`/products/${product.id}/delete-images/`, {
-        data: { image_ids: [imageId] }
-      })
+      await api.delete(`/products/${product.id}/delete-images/`, { data: { image_ids: [imageId] } })
       setKeptImageIds(prev => prev.filter(id => id !== imageId))
       toast.success('Image removed successfully')
-      window.location.reload() // Reload to reflect changes from server
     } catch (error) {
       console.error('Failed to remove image:', error)
       toast.error('Failed to remove image')
@@ -364,8 +369,8 @@ export default function ProductForm({ product }: ProductFormProps) {
     if (!product?.id) return
     try {
       await api.delete(`/products/${product.id}/delete-brochure/`)
+      setKeptBrochureUrl(null);
       toast.success('Brochure removed successfully')
-      window.location.reload() // Reload to reflect changes
     } catch (error) {
       console.error('Failed to remove brochure:', error)
       toast.error('Failed to remove brochure')
@@ -478,6 +483,19 @@ export default function ProductForm({ product }: ProductFormProps) {
     }
   }
 
+  const livePreviewUrl = useMemo(() => {
+    if (productName) {
+      const slug = slugify(productName);
+      return `https://www.mhebazar.in/product/${slug}`;
+    }
+    return '';
+  }, [productName]);
+
+  const livePreviewName = useMemo(() => {
+    const formattedName = `${productManufacturer || ''} ${productName || ''} ${productModel || ''}`.trim().replace(/\s+/g, ' ');
+    return formattedName;
+  }, [productName, productManufacturer, productModel]);
+
   return (
     <div className="overflow-auto bg-white">
       <div className="max-w-md mx-auto bg-white">
@@ -500,8 +518,7 @@ export default function ProductForm({ product }: ProductFormProps) {
                   disabled={loading}
                   required
                 >
-                  <SelectTrigger className={`h-10 border-gray-300 text-sm text-gray-500 ${errors.category ? 'border-red-500' : ''
-                    }`}>
+                  <SelectTrigger className={`h-10 border-gray-300 text-sm text-gray-500 ${errors.category ? 'border-red-500' : ''}`}>
                     <SelectValue>
                       {categories.find(cat => String(cat.id) === (selectedCategoryId || defaultCategory))?.name || "Select"}
                     </SelectValue>
@@ -537,14 +554,9 @@ export default function ProductForm({ product }: ProductFormProps) {
                     value={watch('subcategory') || defaultSubcategory}
                     required
                   >
-                    <SelectTrigger
-                      className={`h-10 border-gray-300 text-sm text-gray-500 ${errors.subcategory ? 'border-red-500' : ''
-                        }`}
-                    >
+                    <SelectTrigger className={`h-10 border-gray-300 text-sm text-gray-500 ${errors.subcategory ? 'border-red-500' : ''}`}>
                       <SelectValue>
-                        {subcategories.find(
-                          sub => String(sub.id) === (watch('subcategory') || defaultSubcategory)
-                        )?.name || "Select subcategory"}
+                        {subcategories.find(sub => String(sub.id) === (watch('subcategory') || defaultSubcategory))?.name || "Select subcategory"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -562,7 +574,6 @@ export default function ProductForm({ product }: ProductFormProps) {
               )}
             </div>
 
-            {/* Only show other fields when category (and subcategory if required) are selected */}
             {hasSelectedRequiredFields && (
               <>
                 {/* Product Name */}
@@ -578,6 +589,19 @@ export default function ProductForm({ product }: ProductFormProps) {
                   {errors.name && (
                     <p className="text-red-500 text-xs mt-1">Product name is required</p>
                   )}
+                  {/* Live Name and URL Preview */}
+                  <div className="mt-2 text-xs text-gray-500">
+                    <p>
+                      <span className="font-semibold text-gray-700">Live Product Name:</span>{' '}
+                      {livePreviewName || 'Enter product details to see a preview'}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-gray-700">Live URL:</span>{' '}
+                      <Link href={livePreviewUrl} className="text-blue-600 hover:underline">
+                        {livePreviewUrl}
+                      </Link>
+                    </p>
+                  </div>
                 </div>
 
                 {/* Description */}
@@ -648,7 +672,7 @@ export default function ProductForm({ product }: ProductFormProps) {
                 {/* Type Selection */}
                 <div>
                   <Label className="text-sm text-gray-600 mb-1 block">Type</Label>
-                  <Select onValueChange={(val) => setValue('type', val)}>
+                  <Select onValueChange={(val) => setValue('type', val)} value={watch('type')}>
                     <SelectTrigger className="h-10 border-gray-300 text-sm text-gray-500">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -694,21 +718,24 @@ export default function ProductForm({ product }: ProductFormProps) {
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="direct_sale"
-                        {...register('direct_sale')}
+                        checked={watch('direct_sale')}
+                        onCheckedChange={(checked) => setValue('direct_sale', !!checked)}
                       />
                       <Label htmlFor="direct_sale">Direct Sale</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="hide_price"
-                        {...register('hide_price')}
+                        checked={watch('hide_price')}
+                        onCheckedChange={(checked) => setValue('hide_price', !!checked)}
                       />
                       <Label htmlFor="hide_price">Hide Price</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="online_payment"
-                        {...register('online_payment')}
+                        checked={watch('online_payment')}
+                        onCheckedChange={(checked) => setValue('online_payment', !!checked)}
                       />
                       <Label htmlFor="online_payment">Online Payment</Label>
                     </div>
@@ -803,7 +830,7 @@ export default function ProductForm({ product }: ProductFormProps) {
                   <div className="mt-4">
                     <Label className="text-sm text-gray-600 mb-1 block">Current Images</Label>
                     <div className="grid grid-cols-4 gap-2">
-                      {product.images.map((img) => (
+                      {product.images.filter(img => keptImageIds.includes(img.id)).map((img) => (
                         <div key={img.id} className="relative group">
                           <div className="aspect-square bg-gray-100 rounded overflow-hidden">
                             <Image
@@ -832,13 +859,13 @@ export default function ProductForm({ product }: ProductFormProps) {
                     <Label className="text-sm text-gray-600 mb-1 block">Current Brochure</Label>
                     <div className="flex items-center justify-between">
                       <a
-                        href={product.brochure}
+                        href={keptBrochureUrl || product.brochure}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:underline text-sm flex items-center"
                       >
                         <FileText className="w-4 h-4 mr-2" />
-                        View Brochure
+                        View Existing Brochure
                       </a>
                       <Button
                         type="button"
@@ -856,7 +883,7 @@ export default function ProductForm({ product }: ProductFormProps) {
               </>
             )}
 
-            {/* Submit Button - disable if required fields aren't selected */}
+            {/* Submit Button */}
             <Button
               type="submit"
               disabled={isSubmitting || !hasSelectedRequiredFields}
@@ -864,7 +891,7 @@ export default function ProductForm({ product }: ProductFormProps) {
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
                   Creating Product...
                 </>
               ) : (
@@ -876,10 +903,7 @@ export default function ProductForm({ product }: ProductFormProps) {
             </Button>
 
             {message && (
-              <div className={`p-3 rounded text-center text-xs ${message.includes('successfully')
-                ? 'bg-green-50 text-green-800 border border-green-200'
-                : 'bg-red-50 text-red-800 border border-red-200'
-                }`}>
+              <div className={`p-3 rounded text-center text-xs ${message.includes('successfully') ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
                 {message}
               </div>
             )}

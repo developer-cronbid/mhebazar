@@ -97,14 +97,16 @@ const Sidebar = () => {
           <div className="px-3 py-4 border-b-2 border-[#5da031]/20 bg-gradient-to-r from-[#5da031]/5 to-white">
             <div className="flex items-center justify-between">
               {isExpanded && (
-                <div className="flex items-center justify-center flex-grow">
+                 <Link href="/" className="flex-grow flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity">
                   <Image
                     src="/mhe-logo.png"
                     alt="MHE Bazar Logo"
-                    width={72}
-                    height={72}
+                    width={100}
+                    height={40}
+                    className="w-auto h-10 object-contain"
+                    
                   />
-                </div>
+                </Link>
               )}
 
               <button
