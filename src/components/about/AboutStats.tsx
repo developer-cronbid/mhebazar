@@ -139,8 +139,8 @@ const AnimatedCircle = ({
       ref={ref}
       className={`flex flex-col items-center transition-transform duration-300 ${
         isSpecial
-          ? "hover:scale-[1.1] hover:shadow-[0_8px_30px_rgba(38,71,117,0.4)]"
-          : "hover:scale-[1.05] hover:shadow-md"
+          ? "hover:scale-[1.1]"
+          : "hover:scale-[1.1]"
       }`}
     >
       <div className="relative flex items-center justify-center">
