@@ -157,7 +157,7 @@ export default function ExportProductsFeatured() {
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
       variants={sectionVariants}
-      className="w-full mx-auto px-4 py-4"
+      className="w-full mx-auto md:px-4 py-4"
     >
       <motion.div variants={itemVariants} className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Used Products</h2>

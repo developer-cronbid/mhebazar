@@ -51,7 +51,7 @@ export default function HomePage() {
       </SectionWrapper>
 
       <div className="w-full bg-[#F5F7F8] py-6 md:py-8">
-        <div className="max-w-[93vw] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 justify-center items-start px-4 md:px-0">
+        <div className="max-w-[93vw] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 justify-center items-start">
           <SectionWrapper>
             <MostPopular />
           </SectionWrapper>
