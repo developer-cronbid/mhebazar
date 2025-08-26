@@ -273,6 +273,7 @@ export default function ProductListing({
   const [mobileFilterOpen, setMobileFilterOpen] = useState<boolean>(false);
   const router = useRouter();
 
+
   const handleViewChange = (view: "grid" | "list") => {
     setCurrentView(view);
   };
@@ -363,7 +364,7 @@ export default function ProductListing({
                     {title || 'New Arrivals'}
                   </span>
                   <p className="text-sm sm:text-base text-gray-500 font-normal font-sans mt-1">
-                    Showing 1–{products.length} results
+                    Showing {1 + (currentPage - 1) * products.length}–{products.length * currentPage} of {totalCount} results
                   </p>
                 </div>
                 {/* Used/Rental Toggle Buttons */}
