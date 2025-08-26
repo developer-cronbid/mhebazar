@@ -6,7 +6,6 @@ import {
   ShoppingCart,
   RotateCcw,
   ShieldCheck,
-  Download,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -53,6 +52,7 @@ export default function Footer() {
       console.log('Newsletter subscription successful:', response.data);
       toast.success("Thank you for subscribing to our newsletter!");
       setEmail('');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Error subscribing to newsletter:', error);
       if (error.response && error.response.data && error.response.data.detail) {
@@ -146,22 +146,22 @@ export default function Footer() {
               {/* Social Media Links */}
               <div className="flex items-center gap-4 mt-8">
                 <Link href="https://www.linkedin.com/company/mhe-bazar/" target="_blank" aria-label="LinkedIn">
-                  <Image src="/linkedinlogo.png" alt="LinkedIn Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 transition-all duration-300" />
+                  <Image src="/linkedinlogo.png" alt="LinkedIn Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://www.instagram.com/mhebazar.in/" target="_blank" aria-label="Instagram">
-                  <Image src="/instagram.png" alt="Instagram Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 transition-all duration-300" />
+                  <Image src="/instagram.png" alt="Instagram Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://www.facebook.com/mhebazar.in/" target="_blank" aria-label="Facebook">
-                  <Image src="/facebook.png" alt="Facebook Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 transition-all duration-300" />
+                  <Image src="/facebook.png" alt="Facebook Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://twitter.com/Greentech_MH" target="_blank" aria-label="Twitter (X)">
-                  <Image src="/x.png" alt="X Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 transition-all duration-300" />
+                  <Image src="/x.png" alt="X Logo" width={30} height={30} className="filter hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://www.youtube.com/@mhebazar" target="_blank" aria-label="YouTube">
-                  <Image src="/youtube.png" alt="YouTube Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 transition-all duration-300" />
+                  <Image src="/youtube.png" alt="YouTube Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://in.pinterest.com/greentechindiamh/" target="_blank" aria-label="Pinterest">
-                  <Image src="/pinterest.png" alt="Pinterest Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 transition-all duration-300" />
+                  <Image src="/pinterest.png" alt="Pinterest Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
               </div>
             </div>
