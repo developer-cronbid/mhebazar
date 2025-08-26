@@ -119,7 +119,7 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
                   src={banner.image}
                   alt={banner.alt}
                   fill
-                  className={`object-fill object-center transition-opacity duration-700 ${
+                  className={`object-contain md:object-fill object-center transition-opacity duration-700 ${
                     loaded[idx] ? "opacity-100" : "opacity-0"
                   }`}
                   priority={idx === 0}
