@@ -61,6 +61,9 @@ interface ApiProduct {
   stock_quantity: number;
   manufacturer: string;
   average_rating: number | null;
+  category: number | null;
+  model: string | null;
+  user_name: string | null;
 }
 
 interface ApiResponse<T> {
