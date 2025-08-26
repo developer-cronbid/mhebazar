@@ -33,7 +33,7 @@ interface Category {
 }
 
 // ====================
-// Data Transformation
+// Data Transformation (Unchanged)
 // ====================
 const createSlug = (text: string | undefined) => text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#";
 
@@ -76,7 +76,10 @@ export default function MostPopular() {
   const [error, setError] = useState<string | null>(null);
   const [mainImageError, setMainImageError] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [scrollIndex, setScrollIndex] = useState(0);
+
+  // NEW: State and ref for automatic carousel
+  const [activePage, setActivePage] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = useCallback(async () => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -87,7 +90,7 @@ export default function MostPopular() {
     try {
       const response = await fetch(`${baseUrl}/products/most_popular/`);
       const apiProducts = await response.json();
-      
+
       if (Array.isArray(apiProducts) && apiProducts.length > 0) {
         const formattedData = transformApiData(apiProducts);
         setCategories(formattedData);
@@ -105,28 +108,51 @@ export default function MostPopular() {
     fetchData();
   }, [fetchData]);
 
-  const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const scrollLeft = scrollContainerRef.current.scrollLeft;
-      const itemWidth = 180; // Approximate width of each item
-      const newIndex = Math.round(scrollLeft / itemWidth);
-      setScrollIndex(newIndex);
-    }
-  };
+  const popularData = categories[0];
+  const visibleProducts = popularData?.products.slice(0, 9) || [];
+  const itemsPerPage = 3;
+  const itemWidth = 180; // Approximate width of each item + gap
+  const totalPages = Math.ceil(visibleProducts.length / itemsPerPage);
 
-  const handleDotClick = (index: number) => {
+  // NEW: Function to start the auto-scroll interval
+  const startAutoScroll = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+    intervalRef.current = setInterval(() => {
+      setActivePage(prevPage => (prevPage + 1) % totalPages);
+    }, 2000); // 2-second interval
+  }, [totalPages]);
+
+  // NEW: Effect to manage the lifecycle of the auto-scroll
+  useEffect(() => {
+    if (totalPages > 1) {
+      startAutoScroll();
+    }
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [totalPages, startAutoScroll]);
+
+  // NEW: Effect to perform the actual scroll when activePage changes
+  useEffect(() => {
     if (scrollContainerRef.current) {
-      const itemWidth = 180;
       scrollContainerRef.current.scrollTo({
-        left: index * itemWidth,
+        left: activePage * itemsPerPage * itemWidth,
         behavior: 'smooth',
       });
     }
+  }, [activePage, itemsPerPage]);
+
+  // MODIFIED: Dot click handler now sets the page and resets the timer
+  const handleDotClick = (pageIndex: number) => {
+    setActivePage(pageIndex);
+    startAutoScroll(); // Reset interval on user interaction
   };
 
   if (isLoading) return <LoadingSkeleton />;
-
-  const popularData = categories[0];
 
   if (!popularData || mainImageError) {
     return (
@@ -141,14 +167,9 @@ export default function MostPopular() {
     );
   }
 
-  // Component to handle individual carousel item rendering and image error
   const CarouselProductItem = ({ product, idx }: { product: { image: string; label: string; slug: string; id: string | number; }; idx: number }) => {
     const [itemImageError, setItemImageError] = useState(false);
-
-    if (itemImageError) {
-      return null;
-    }
-
+    if (itemImageError) return null;
     return (
       <div key={idx} className="w-44 flex-shrink-0 mr-4">
         <Link href={`/product/${product.slug}/?id=${product.id}`} className="block">
@@ -168,8 +189,6 @@ export default function MostPopular() {
     );
   };
 
-  const visibleProducts = popularData.products.slice(0, 9); // Show max 9 products for 3 dots
-
   return (
     <section className="w-full">
       {/* Header */}
@@ -177,14 +196,10 @@ export default function MostPopular() {
         <h2 className="text-2xl font-bold text-gray-900">
           Top Selling Products
         </h2>
-        {/* <Link href="/new" className="text-green-600 text-sm font-medium hover:underline">
-          View more
-        </Link> */}
       </div>
 
       {/* Main Container */}
       <div className="bg-white border rounded-lg p-6">
-        
         {/* Top Section with Main Product */}
         <div className="flex flex-col items-center gap-8 mb-10">
           <div className="w-full">
@@ -195,8 +210,7 @@ export default function MostPopular() {
               {popularData.subtitle}
             </p>
           </div>
-          
-          {/* Main Image - Large Size (Now clickable) */}
+
           <div className="relative w-64 h-64 sm:w-80 sm:h-80 flex-shrink-0">
             <Link href={`/product/${popularData.slug}/?id=${popularData.id}`} passHref>
               <Image
@@ -210,12 +224,12 @@ export default function MostPopular() {
           </div>
         </div>
 
-        {/* Bottom Products Grid - 3 per row */}
+        {/* Bottom Products Carousel */}
         <div className="relative">
           <div
             ref={scrollContainerRef}
             className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide"
-            onScroll={handleScroll}
+            // REMOVED: onScroll handler is no longer needed
             style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
@@ -226,18 +240,17 @@ export default function MostPopular() {
             ))}
           </div>
 
-          {/* Dots Navigation */}
-          {visibleProducts.length > 3 && (
+          {/* Dots Navigation - MODIFIED */}
+          {totalPages > 1 && (
             <div className="flex justify-center space-x-2 mt-4">
-              {[...Array(Math.ceil(visibleProducts.length / 3))].map((_, dotIndex) => (
+              {[...Array(totalPages)].map((_, dotIndex) => (
                 <button
                   key={dotIndex}
-                  onClick={() => handleDotClick(dotIndex * 3)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                    Math.floor(scrollIndex / 3) === dotIndex
+                  onClick={() => handleDotClick(dotIndex)}
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${activePage === dotIndex
                       ? "bg-green-600"
                       : "bg-gray-300 hover:bg-gray-400"
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -255,7 +268,7 @@ export default function MostPopular() {
 }
 
 // ====================
-// Skeleton Loader
+// Skeleton Loader (Unchanged)
 // ====================
 function LoadingSkeleton() {
   return (
