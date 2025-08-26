@@ -131,7 +131,25 @@ export default function ExportProductsFeatured() {
     }
   };
 
-  const totalDots = exportProducts.length > 0 ? Math.ceil(exportProducts.length / Math.floor((scrollContainerRef.current?.clientWidth || 1200) / 280)) : 0;
+  // Safe calculation for totalDots with proper validation
+  const calculateTotalDots = () => {
+    if (!exportProducts.length || exportProducts.length <= 0) return 0;
+
+    const containerWidth = scrollContainerRef.current?.clientWidth;
+    if (!containerWidth || containerWidth <= 0) return 0; // Handle invalid container width
+
+    const itemsPerView = Math.floor(containerWidth / 280);
+    const safeItemsPerView = Math.max(1, itemsPerView); // Ensure at least 1
+
+    const calculated = Math.ceil(exportProducts.length / safeItemsPerView);
+
+    // Validate the result before returning
+    if (!Number.isFinite(calculated) || calculated <= 0) return 0;
+
+    return calculated;
+  };
+
+  const totalDots = calculateTotalDots();
 
   return (
     <motion.section
@@ -195,15 +213,18 @@ export default function ExportProductsFeatured() {
 
           {totalDots > 1 && (
             <div className="flex justify-center space-x-2 mt-4">
-              {Array.from({ length: totalDots }, (_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handleDotClick(idx)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
-                    }`}
-                  aria-label={`Go to slide ${idx + 1}`}
-                />
-              ))}
+              {/* Safe array creation with additional validation */}
+              {totalDots > 0 && Number.isFinite(totalDots) &&
+                Array.from({ length: totalDots }, (_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleDotClick(idx)}
+                    className={`w-3 h-3 rounded-full transition-colors duration-300 ${idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
+                      }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))
+              }
             </div>
           )}
         </div>

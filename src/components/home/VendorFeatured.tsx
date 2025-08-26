@@ -53,7 +53,7 @@ const VendorProductsFeatured: React.FC = () => {
   const handleDotClick = (index: number) => {
     if (scrollContainerRef.current && products.length > 0) {
       const container = scrollContainerRef.current;
-      const itemsPerView = Math.floor(container.clientWidth / 280); 
+      const itemsPerView = Math.floor(container.clientWidth / 280);
       const targetIndex = index * itemsPerView;
       const itemWidth = container.children[0]?.clientWidth + 16 || 280;
       container.scrollTo({
@@ -74,7 +74,31 @@ const VendorProductsFeatured: React.FC = () => {
     }
   };
 
-  const totalDots = products.length > 0 ? Math.ceil(products.length / Math.floor((scrollContainerRef.current?.clientWidth || 1200) / 280)) : 0;
+  // Calculate items per view safely with better error handling
+  const getItemsPerView = () => {
+    if (!scrollContainerRef.current) return 4; // Default fallback
+    const containerWidth = scrollContainerRef.current.clientWidth;
+    if (!containerWidth || containerWidth <= 0) return 4; // Handle invalid width
+    return Math.floor(containerWidth / 280);
+  };
+
+  const itemsPerView = getItemsPerView();
+  const safeItemsPerView = Math.max(1, itemsPerView); // Ensure at least 1
+
+  // Safe calculation for totalDots with additional validation
+  const calculateTotalDots = () => {
+    if (!products.length || products.length <= 0) return 0;
+    if (!safeItemsPerView || safeItemsPerView <= 0) return 0;
+
+    const calculated = Math.ceil(products.length / safeItemsPerView);
+
+    // Validate the result before returning
+    if (!Number.isFinite(calculated) || calculated <= 0) return 0;
+
+    return calculated;
+  };
+
+  const totalDots = calculateTotalDots();
 
   if (loading) {
     return (
@@ -118,12 +142,12 @@ const VendorProductsFeatured: React.FC = () => {
           View More
         </Link>
       </div>
-      
+
       <div className="relative">
         <div
           ref={scrollContainerRef}
           className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide snap-x snap-mandatory"
-          style={{ 
+          style={{
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch'
@@ -155,19 +179,21 @@ const VendorProductsFeatured: React.FC = () => {
             </div>
           ))}
         </div>
-        
+
         {totalDots > 1 && (
           <div className="flex justify-center space-x-2 mt-4">
-            {Array.from({ length: totalDots }, (_, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleDotClick(idx)}
-                className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                  idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
-                }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            ))}
+            {/* Safe array creation with validation */}
+            {totalDots > 0 && Number.isFinite(totalDots) &&
+              Array.from({ length: totalDots }, (_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleDotClick(idx)}
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
+                    }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))
+            }
           </div>
         )}
       </div>

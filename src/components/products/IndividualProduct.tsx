@@ -646,7 +646,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
         {/* Left Side - Product Images (Now fully responsive) */}
         <div className="flex flex-col md:flex-row-reverse gap-4 w-full md:w-[40%]">
           {/* Main Product Image with Trigger */}
-          <button
+          <div
             className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-full md:h-[464px] mx-auto group cursor-zoom-in"
             onClick={() => openGallery(selectedImage)}
             aria-label="View product images in full-screen gallery"
@@ -704,7 +704,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 <RotateCcw className="w-4 h-4 text-gray-600" />
               </motion.button>
             </div>
-          </button>
+          </div>
 
           {/* Thumbnail Images (Responsive horizontal scroll on mobile, vertical on desktop) */}
           <div className="relative w-full md:w-[20%] h-28 md:h-[464px] overflow-x-auto md:overflow-hidden">
