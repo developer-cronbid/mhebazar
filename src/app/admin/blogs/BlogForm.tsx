@@ -178,11 +178,18 @@ export default function BlogForm({ initialData, categories, isOpen, onOpenChange
               <Label htmlFor="description1">Meta Description</Label>
               <Textarea id="description1" name="description1" value={formData.description1} onChange={handleInputChange} rows={3} />
             </div>
-            <div>
-              <Label htmlFor="image1">Main Blog Image</Label>
-              <Input id="image1" name="image1" type="file" onChange={handleFileChange} accept="image/*" />
-              {isEditMode && <p className="text-xs text-gray-500 mt-1">Leave blank to keep current image.</p>}
+            <div className='flex w-full gap-4'>
+              <div className='w-full'>
+                <Label htmlFor="author_name">Author</Label>
+                <Input id="author_name" name="author_name" value={formData.author_name} onChange={handleInputChange} required />
+              </div>
+              <div className='w-full'>
+                <Label htmlFor="image1">Main Blog Image</Label>
+                <Input id="image1" name="image1" type="file" onChange={handleFileChange} accept="image/*" />
+                {isEditMode && <p className="text-xs text-gray-500 mt-1">Leave blank to keep current image.</p>}
+              </div>
             </div>
+            
             <div>
               <Label>Blog Content</Label>
               <RichTextEditor
@@ -191,16 +198,12 @@ export default function BlogForm({ initialData, categories, isOpen, onOpenChange
                 onFilesChange={(files) => setEditorFiles(files)}
               />
             </div>
-            <div>
-              <Label htmlFor="author_name">Author</Label>
-              <Input id="author_name" name="author_name" value={formData.author_name} onChange={handleInputChange} required />
-            </div>
           </div>
           <SheetFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" variant="default" className='bg-green-700' disabled={isLoading}>
               {isLoading ? 'Saving...' : 'Save Changes'}
             </Button>
+            <Button type="button" variant="destructive" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
           </SheetFooter>
         </form>
       </SheetContent>
