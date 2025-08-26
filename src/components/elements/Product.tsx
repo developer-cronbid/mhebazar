@@ -18,6 +18,7 @@ import {
 import DOMPurify from 'dompurify';
 import categories from '@/data/categories.json';
 import ProductDetails from "@/app/products-details/[product_id]/page";
+import { Badge } from "../ui/badge";
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -191,6 +192,13 @@ const ProductCard = ({
   // CHANGE 2: Look up the image URL from the map using the category_id.
   const categoryFallbackImage = category_id ? categoryImageMap[category_id] : null;
 
+  const badgeStyles = {
+    new: 'border-green-400 bg-green-100 text-green-800',
+    used: 'border-yellow-400 bg-yellow-100 text-yellow-800',
+    rental: 'border-blue-400 bg-blue-100 text-blue-800',
+    attachments: 'border-slate-400 bg-slate-100 text-slate-800',
+  };
+
   // console.log(`catId: "${category_id}"`);
   // console.log(`categoryFallbackImage: "${categoryFallbackImage}"`);
 
@@ -239,6 +247,9 @@ const ProductCard = ({
           >
             <Share2 className="w-4 h-4 text-gray-600" />
           </button>
+        </div>
+        <div className="absolute top-3 right-3">
+          <Badge className={badgeStyles[productType] || badgeStyles.attachments}>{ productType }</Badge>
         </div>
       </div>
 
