@@ -30,6 +30,8 @@ import { handleLogout } from "@/lib/auth/logout";
 
 // Import the local JSON data directly
 import categoriesData from "@/data/categories.json";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import ContactForm from "../forms/publicforms/ContactForm";
 
 // Define interfaces based on the local JSON structure
 export interface Subcategory {
@@ -500,20 +502,31 @@ export default function Navbar(): JSX.Element {
             </div>
 
             <div className="flex items-center">
-              <Link
-                href="/contact"
-                className={`flex items-center gap-2 px-4 py-3 transition ${
-                  pathname === "/contact"
-                    ? "text-gray-900 font-bold"
-                    : "text-gray-600 hover:text-gray-900 font-normal"
-                }`}
-              >
-                <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
-                  {" "}
-                  ?
-                </div>
-                <span className="text-sm font-normal">Help</span>{" "}
-              </Link>
+              <Dialog>
+                <DialogTrigger>
+                  <button
+                  className={`flex items-center gap-2 px-4 py-3 transition ${pathname === "/contact"
+                      ? "text-gray-900 font-bold"
+                      : "text-gray-600 hover:text-gray-900 font-normal"
+                    }`}
+                >
+                  <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
+                    {" "}
+                    ?
+                  </div>
+                  <span className="text-sm font-normal">Help</span>{" "}
+                  </button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Help</DialogTitle>
+                    <DialogDescription>
+                      <ContactForm/>
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+              
 
               {isLoading ? (
                 <span className="px-4 py-3 text-sm text-gray-600 font-normal">
