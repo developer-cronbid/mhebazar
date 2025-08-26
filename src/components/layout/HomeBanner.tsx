@@ -114,7 +114,7 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
         <CarouselContent className="-ml-0">
           {banners.map((banner, idx) => (
             <CarouselItem key={idx} className="pl-0 w-full">
-              <div className="relative w-full h-[300px] sm:h-[350px] md:h-[400px] lg:h-[450px] xl:h-[500px] overflow-hidden cursor-pointer">
+              <div className="relative w-full h-auto aspect-[72/23] overflow-hidden cursor-pointer">
                 <Image
                   src={banner.image}
                   alt={banner.alt}
