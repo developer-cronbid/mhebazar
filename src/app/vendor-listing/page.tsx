@@ -25,6 +25,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useUser } from "@/context/UserContext";
 
 // ... (The Vendor and VendorResponse types remain the same) ...
 type Vendor = {
@@ -50,6 +51,9 @@ function ClientSideVendorsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const user = useUser();
+  console.log(user.user?.role.id);
 
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [searchValue, setSearchValue] = useState(searchParams.get('search') || "");
@@ -178,12 +182,14 @@ function ClientSideVendorsPage() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <h1 className="text-2xl font-bold text-gray-800 mt-2">Vendors at MHEBazar</h1>
-            <Button
-              onClick={() => setVendorDrawerOpen(true)}
-              className="bg-[#5CA131] hover:bg-[#4a8f28] text-white"
-            >
-              Become a Vendor
-            </Button>
+            {user.user?.role.id !== 2 && user.user?.role.id !== 1 && (
+              <Button
+                onClick={() => setVendorDrawerOpen(true)}
+                className="bg-[#5CA131] hover:bg-[#4a8f28] text-white"
+              >
+                Become a Vendor
+              </Button>
+            )}
           </div>
           <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div className="flex-grow">
