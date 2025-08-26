@@ -221,6 +221,9 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
           manufacturer: p.manufacturer,
           average_rating: p.average_rating,
           type: p.type,
+          category_id: p.category,
+          model: p.model,
+          user_name: p.user_name,
         }));
 
         setProducts(transformedProducts);
