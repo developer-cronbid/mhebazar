@@ -264,7 +264,8 @@ export default function Frame() {
     { id: "pcode", label: "P Code", value: formData.pcode },
   ];
 
-  const API_BASE_URL = "http://localhost:8000/";
+  const API_BASE_URL =
+    process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
   return (
     <div className="flex flex-col w-full max-w-7xl mx-auto items-center gap-6 px-4 sm:px-6 lg:px-8 py-6">
