@@ -2,7 +2,7 @@
 
 "use client";
 
-import { useState, useEffect, JSX, useRef } from "react";
+import { useState, useEffect, JSX, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -103,8 +103,11 @@ export default function NewArrivalsAndTopSearches() {
   const [newArrivalsCount, setNewArrivalsCount] = useState<number>(0);
   const [isLoadingNewArrivals, setIsLoadingNewArrivals] = useState<boolean>(true);
   const [isLoadingTopRated, setIsLoadingTopRated] = useState<boolean>(true);
+
+  // Carousel state and refs
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [scrollIndex, setScrollIndex] = useState(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [activePage, setActivePage] = useState(0);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -123,7 +126,7 @@ export default function NewArrivalsAndTopSearches() {
         setIsLoadingNewArrivals(true);
         const response = await fetch(`${API_BASE_URL}/products/new-arrival/`);
         const res = await response.json();
-        
+
         const products = res?.products || [];
         const transformed = products.map((p: ProductApiResponse) => ({
           id: p.id,
@@ -146,7 +149,7 @@ export default function NewArrivalsAndTopSearches() {
         setIsLoadingTopRated(true);
         const response = await fetch(`${API_BASE_URL}/products/top-rated/`);
         const res = await response.json();
-        
+
         const products = res?.products || [];
         const transformed = products.map((p: ProductApiResponse) => ({
           id: p.id,
@@ -167,33 +170,50 @@ export default function NewArrivalsAndTopSearches() {
     fetchData();
   }, [API_BASE_URL]);
 
+  // --- Automatic Carousel Logic ---
+  const itemsPerPage = 3;
+  const itemWidth = 192; // 176px width + 16px margin-right
+  const totalPages = Math.ceil(newArrivals.length / itemsPerPage);
+
+  const startAutoScroll = useCallback(() => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setActivePage(prev => (prev + 1) % totalPages);
+    }, 2000); // 2-second interval
+  }, [totalPages]);
+
+  useEffect(() => {
+    if (totalPages > 1) {
+      startAutoScroll();
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [totalPages, startAutoScroll]);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        left: activePage * itemsPerPage * itemWidth,
+        behavior: 'smooth',
+      });
+    }
+  }, [activePage, itemsPerPage, itemWidth]);
+
+  const handleDotClick = (pageIndex: number) => {
+    setActivePage(pageIndex);
+    startAutoScroll(); // Reset interval on user interaction
+  };
+  // --- End Carousel Logic ---
+
   const LoadingBoxSkeleton = () => <div className="w-44 h-44 bg-gray-200 rounded-lg animate-pulse flex-shrink-0 mr-4"></div>;
-  
+
   const LoadingListItemSkeleton = () => (
     <div className="flex items-center gap-6 p-4 bg-white rounded-lg border border-gray-200 animate-pulse min-h-[120px]">
       <div className="w-20 h-20 rounded-lg bg-gray-200 flex-shrink-0"></div>
       <div className="h-5 bg-gray-200 rounded w-3/4"></div>
     </div>
   );
-
-  const handleScroll = () => {
-    if (scrollContainerRef.current) {
-      const scrollLeft = scrollContainerRef.current.scrollLeft;
-      const itemWidth = 192; // 176px width + 16px margin
-      const newIndex = Math.round(scrollLeft / itemWidth);
-      setScrollIndex(newIndex);
-    }
-  };
-
-  const handleDotClick = (index: number) => {
-    if (scrollContainerRef.current) {
-      const itemWidth = 192;
-      scrollContainerRef.current.scrollTo({
-        left: index * itemWidth,
-        behavior: 'smooth',
-      });
-    }
-  };
 
   return (
     <div className="space-y-8 w-full">
@@ -213,7 +233,6 @@ export default function NewArrivalsAndTopSearches() {
             <div
               ref={scrollContainerRef}
               className="flex overflow-x-auto pb-4"
-              onScroll={handleScroll}
               style={{
                 msOverflowStyle: 'none',
                 scrollbarWidth: 'none',
@@ -228,17 +247,16 @@ export default function NewArrivalsAndTopSearches() {
               )}
             </div>
             {/* Dots Navigation */}
-            {newArrivals.length > 3 && (
+            {totalPages > 1 && (
               <div className="flex justify-center space-x-2 mt-4">
-                {[0, 1, 2].map((dotIndex) => (
+                {[...Array(totalPages-1)].map((_, dotIndex) => (
                   <button
                     key={dotIndex}
-                    onClick={() => handleDotClick(dotIndex * 3)}
-                    className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                      Math.floor(scrollIndex / 3) === dotIndex
+                    onClick={() => handleDotClick(dotIndex)}
+                    className={`w-3 h-3 rounded-full transition-colors duration-300 ${activePage === dotIndex
                         ? "bg-green-600"
                         : "bg-gray-300 hover:bg-gray-400"
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
@@ -251,7 +269,6 @@ export default function NewArrivalsAndTopSearches() {
       <div>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Top Searched Categories</h2>
-          {/* <Link href="/new" className="text-green-600 text-sm font-medium hover:underline">View more</Link> */}
         </div>
         <div className="space-y-4">
           {isLoadingTopRated ? (

@@ -114,12 +114,12 @@ export default function BannerCarousel({ className }: BannerCarouselProps) {
         <CarouselContent className="-ml-0">
           {banners.map((banner, idx) => (
             <CarouselItem key={idx} className="pl-0 w-full">
-              <div className="relative w-full h-[200px] sm:h-[280px] md:h-[350px] lg:h-[400px] xl:h-[450px] overflow-hidden cursor-pointer">
+              <div className="relative w-full h-[300px] sm:h-[350px] md:h-[400px] lg:h-[450px] xl:h-[500px] overflow-hidden cursor-pointer">
                 <Image
                   src={banner.image}
                   alt={banner.alt}
                   fill
-                  className={`object-contain object-center transition-opacity duration-700 ${
+                  className={`object-fill object-center transition-opacity duration-700 ${
                     loaded[idx] ? "opacity-100" : "opacity-0"
                   }`}
                   priority={idx === 0}
