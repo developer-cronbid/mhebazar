@@ -83,7 +83,7 @@ const VendorProfilePage: React.FC = () => {
                           src={banner.image} // API provides the full URL
                           alt="Vendor Banner"
                           fill
-                          className="object-cover"
+                          className="object-contain"
                           priority
                         />
                       </div>

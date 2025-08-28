@@ -348,7 +348,7 @@ export default function Frame() {
                       <img
                         src={banner.url}
                         alt={`Banner ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg border"
+                        className="w-full h-24 object-contain rounded-lg border"
                       />
                       <button
                         onClick={() => removeBannerImage(index)}
