@@ -161,18 +161,19 @@ export default function Navbar(): JSX.Element {
     <header className="bg-white shadow-sm z-50 sticky top-0">
       <style>{tingAnimation}{shineAnimation}</style>
       <div className="bg-[#5CA131] text-white">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-2 py-3 sm:py-2">
-            <div className="flex items-center gap-2 text-sm text-nowrap">
-              <Phone className="w-4 h-4" />
-              <span>+91 73059 50939</span>
+        <div className="max-w-full mx-auto px-2 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-1 sm:gap-2 py-2">
+            <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+              <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="">+91 73059 50939</span>
+              {/* <span className="xs:hidden">Call</span> */}
             </div>
             <div className="flex items-center gap-4 text-xs sm:text-sm">
               {isLoading ? (
                 <span>Loading...</span>
               ) : user ? (
                 // Added text-center for mobile view
-                  <span className="font-semibold text-center sm:text-left text-xs sm:text-sm text-nowrap">
+                <span className="font-semibold text-center sm:text-left text-xs sm:text-sm text-nowrap">
                   | Welcome,{" "}
                   {typeof user.username === "string"
                     ? user.username
@@ -197,36 +198,37 @@ export default function Navbar(): JSX.Element {
 
       <div className="bg-white">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-3">
+          <div className="flex items-center justify-between py-2 sm:py-3">
             <button
-              className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900"
+              className="lg:hidden p-1 sm:p-2 rounded-md text-gray-600 hover:text-gray-900"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open navigation menu"
             >
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
 
-            <div className="flex items-center ml-5">
+            <div className="flex items-center ml-2 sm:ml-5">
               <Link href="/" className="flex items-center">
                 <Image
                   src="/mhe-logo.png"
                   alt="MHE BAZAR Logo"
-                  width={140}
-                  height={40}
-                  className="h-10 w-auto object-contain"
-                  style={{ maxWidth: 140 }}
+                  width={120}
+                  height={35}
+                  className="h-8 sm:h-10 w-auto object-contain"
+                  style={{ maxWidth: "120px" }}
                   priority
                 />
               </Link>
             </div>
 
-            <div className="hidden md:flex flex-1 max-w-5xl mx-8 items-center gap-4">
+            {/* Update search bar container */}
+            <div className="hidden md:flex flex-1 max-w-5xl mx-2 sm:mx-8 items-center gap-2 sm:gap-4">
               <SearchBar
                 categories={categories}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
-              <Link href="/vendor-listing" className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect">
+              <Link href="/vendor-listing" className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect hidden sm:block">
                 <Image
                   src="/brand-image.png"
                   alt="Brand Store"
@@ -236,18 +238,18 @@ export default function Navbar(): JSX.Element {
                   className="object-contain"
                   style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                 />
-                {/* Shine overlay */}
                 <span className="shine-overlay"></span>
               </Link>
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* Update icons section */}
+            <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/compare"
-                className="flex items-center text-gray-600 hover:text-gray-900 transition"
+                className="hidden sm:flex items-center text-gray-600 hover:text-gray-900 transition"
                 aria-label="Compare Products"
               >
-                <Repeat className="w-6 h-6" />
+                <Repeat className="w-5 h-5 sm:w-6 sm:h-6" />
               </Link>
 
               {!isLoading && user && (
@@ -256,10 +258,11 @@ export default function Navbar(): JSX.Element {
                   className="flex items-center text-gray-600 hover:text-gray-900 transition"
                   aria-label="Cart"
                 >
-                  <ShoppingCart className="w-6 h-6" />
+                  <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
                 </Link>
               )}
 
+              {/* Update profile button */}
               <div className="relative" ref={profileMenuRef}>
                 <button
                   onClick={() => setProfileMenuOpen((v) => !v)}
@@ -268,29 +271,28 @@ export default function Navbar(): JSX.Element {
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
-                      <UserIcon className="w-6 h-6 text-gray-500" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
+                      <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
                     </div>
                   ) : user ? (
                     <>
-                      {Array.isArray(user.username) &&
-                      user.username[0]?.image ? (
+                      {Array.isArray(user.username) && user.username[0]?.image ? (
                         <Image
                           src={user.username[0].image}
                           alt="Profile"
                           width={40}
                           height={40}
-                          className="w-10 h-10 rounded-full border-2 border-green-600 shadow-sm object-cover"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-600 shadow-sm object-cover"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                          <UserIcon className="w-6 h-6 text-green-600" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center">
+                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                         </div>
                       )}
                     </>
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <UserIcon className="w-6 h-6 text-gray-500" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
                     </div>
                   )}
                 </button>
@@ -438,7 +440,8 @@ export default function Navbar(): JSX.Element {
             </div>
           </div>
 
-          <div className="md:hidden pb-3">
+          {/* 3. Update mobile search bar section */}
+          <div className="md:hidden pb-2 sm:pb-3">
             <div className="flex items-center gap-2">
               <SearchBar
                 categories={categories}
@@ -449,8 +452,8 @@ export default function Navbar(): JSX.Element {
                 <Image
                   src="/brand-image.png"
                   alt="Brand Store"
-                  width={120}
-                  height={40}
+                  width={100}
+                  height={35}
                   priority
                   className="object-contain"
                   style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
@@ -468,11 +471,10 @@ export default function Navbar(): JSX.Element {
             <div className="flex items-center">
               <div className="relative" ref={categoryMenuRef}>
                 <button
-                  className={`flex items-center gap-2 px-4 py-3 text-sm transition ${
-                    pathname.includes("categories") || categoriesOpen
+                  className={`flex items-center gap-2 px-4 py-3 text-sm transition ${pathname.includes("categories") || categoriesOpen
                       ? "text-gray-900 font-bold"
                       : "text-gray-700 hover:text-gray-900 font-normal"
-                  }`}
+                    }`}
                   onClick={() => setCategoriesOpen(!categoriesOpen)}
                 >
                   <Menu className="w-5 h-5" />
@@ -490,11 +492,10 @@ export default function Navbar(): JSX.Element {
                   <Link
                     key={index}
                     href={link.href}
-                    className={`px-4 py-3 text-sm transition ${
-                      pathname === link.href
+                    className={`px-4 py-3 text-sm transition ${pathname === link.href
                         ? "text-gray-900 font-bold"
                         : "text-gray-700 hover:text-gray-900 font-normal"
-                    }`}
+                      }`}
                   >
                     {link.name}
                   </Link>
@@ -506,28 +507,28 @@ export default function Navbar(): JSX.Element {
               <Dialog>
                 <DialogTrigger>
                   <button
-                  className={`flex items-center gap-2 px-4 py-3 transition ${pathname === "/contact"
+                    className={`flex items-center gap-2 px-4 py-3 transition ${pathname === "/contact"
                       ? "text-gray-900 font-bold"
                       : "text-gray-600 hover:text-gray-900 font-normal"
-                    }`}
-                >
-                  <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
-                    {" "}
-                    ?
-                  </div>
-                  <span className="text-sm font-normal">Help</span>{" "}
+                      }`}
+                  >
+                    <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
+                      {" "}
+                      ?
+                    </div>
+                    <span className="text-sm font-normal">Help</span>{" "}
                   </button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Help</DialogTitle>
                     <DialogDescription>
-                      <ContactForm/>
+                      <ContactForm />
                     </DialogDescription>
                   </DialogHeader>
                 </DialogContent>
               </Dialog>
-              
+
 
               {isLoading ? (
                 <span className="px-4 py-3 text-sm text-gray-600 font-normal">
@@ -538,11 +539,10 @@ export default function Navbar(): JSX.Element {
                 user.role?.id === 2 ? (
                   <Link
                     href="/vendor/dashboard"
-                    className={`flex items-center gap-2 px-4 py-3 transition ${
-                      pathname.includes("/vendor/dashboard")
+                    className={`flex items-center gap-2 px-4 py-3 transition ${pathname.includes("/vendor/dashboard")
                         ? "text-gray-900 font-bold"
                         : "text-gray-600 hover:text-gray-900 font-normal"
-                    }`}
+                      }`}
                   >
                     <User className="w-5 h-5" />
                     <span className="text-sm font-normal">
@@ -554,11 +554,10 @@ export default function Navbar(): JSX.Element {
                   <button
                     type="button"
                     onClick={() => setVendorDrawerOpen(true)}
-                    className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
-                      pathname === "/become-a-vendor"
+                    className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${pathname === "/become-a-vendor"
                         ? "text-gray-900 font-bold"
                         : "text-gray-600 hover:text-gray-900 font-normal"
-                    }`}
+                      }`}
                   >
                     <User className="w-5 h-5" />
                     <span className="text-sm font-normal">
@@ -570,11 +569,10 @@ export default function Navbar(): JSX.Element {
                 <button
                   type="button"
                   onClick={() => setVendorDrawerOpen(true)}
-                  className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
-                    pathname === "/become-a-vendor"
+                  className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${pathname === "/become-a-vendor"
                       ? "text-gray-900 font-bold"
                       : "text-gray-600 hover:text-gray-900 font-normal"
-                  }`}
+                    }`}
                 >
                   <User className="w-5 h-5" />
                   <span className="text-sm font-normal">Become a Vendor</span>
@@ -583,11 +581,10 @@ export default function Navbar(): JSX.Element {
 
               <Link
                 href="/services/subscription-plan"
-                className={`flex items-center gap-2 px-4 py-3 transition ${
-                  pathname === "/services/subscription-plan"
+                className={`flex items-center gap-2 px-4 py-3 transition ${pathname === "/services/subscription-plan"
                     ? "text-gray-900 font-bold"
                     : "text-gray-600 hover:text-gray-900 font-normal"
-                }`}
+                  }`}
               >
                 <Tag className="w-5 h-5" />
                 <span className="text-sm font-normal">Price Plan</span>{" "}
@@ -653,17 +650,15 @@ export default function Navbar(): JSX.Element {
                             openCategory === category.id ? null : category.id
                           );
                         }}
-                        className={`w-full flex justify-between items-center px-6 py-3 text-left transition ${
-                          pathname.startsWith(`/${createSlug(category.name)}`)
+                        className={`w-full flex justify-between items-center px-6 py-3 text-left transition ${pathname.startsWith(`/${createSlug(category.name)}`)
                             ? "text-gray-900 font-bold"
                             : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                          }`}
                       >
                         <span>{category.name}</span>
                         <ChevronDown
-                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                            openCategory === category.id ? "rotate-180" : ""
-                          }`}
+                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${openCategory === category.id ? "rotate-180" : ""
+                            }`}
                         />
                       </button>
 
@@ -678,11 +673,10 @@ export default function Navbar(): JSX.Element {
                           >
                             <Link
                               href={`/${createSlug(category.name)}`}
-                              className={`block pl-10 pr-6 py-3 font-medium transition ${
-                                pathname === `/${createSlug(category.name)}`
+                              className={`block pl-10 pr-6 py-3 font-medium transition ${pathname === `/${createSlug(category.name)}`
                                   ? "text-gray-900 font-bold"
                                   : "text-gray-800 hover:bg-gray-50"
-                              }`}
+                                }`}
                               onClick={() => setMobileMenuOpen(false)}
                             >
                               All {category.name}
@@ -695,14 +689,13 @@ export default function Navbar(): JSX.Element {
                                   href={`/${createSlug(
                                     category.name
                                   )}/${createSlug(sub.name)}`}
-                                  className={`block pl-10 pr-6 py-3 transition ${
-                                    pathname ===
-                                    `/${createSlug(category.name)}/${createSlug(
-                                      sub.name
-                                    )}`
+                                  className={`block pl-10 pr-6 py-3 transition ${pathname ===
+                                      `/${createSlug(category.name)}/${createSlug(
+                                        sub.name
+                                      )}`
                                       ? "text-gray-900 font-bold"
                                       : "text-gray-600 hover:bg-gray-50"
-                                  }`}
+                                    }`}
                                   onClick={() => setMobileMenuOpen(false)}
                                 >
                                   {sub.name}
@@ -725,11 +718,10 @@ export default function Navbar(): JSX.Element {
                     <Link
                       key={index}
                       href={link.href}
-                      className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
-                        pathname === link.href
+                      className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${pathname === link.href
                           ? "text-gray-900 bg-gray-50 font-bold"
                           : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                        }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {link.name}
@@ -737,11 +729,10 @@ export default function Navbar(): JSX.Element {
                   ))}
                   <Link
                     href="/vendor-listing"
-                    className={`block px-4 py-3 font-semibold border-b border-gray-100 transition relative overflow-hidden shine-effect ${
-                      pathname === "/vendor-listing"
+                    className={`block px-4 py-3 font-semibold border-b border-gray-100 transition relative overflow-hidden shine-effect ${pathname === "/vendor-listing"
                         ? "text-gray-900 bg-gray-50 font-bold"
                         : "hover:bg-gray-50"
-                    }`}
+                      }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Image
@@ -757,11 +748,10 @@ export default function Navbar(): JSX.Element {
                   </Link>
                   <Link
                     href="/contact"
-                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
-                      pathname === "/contact"
+                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${pathname === "/contact"
                         ? "text-gray-900 bg-gray-50 font-bold"
                         : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Help
@@ -773,11 +763,10 @@ export default function Navbar(): JSX.Element {
                   ) : user?.role?.id === 2 ? (
                     <Link
                       href="/vendor/dashboard"
-                      className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${
-                        pathname.includes("/vendor/dashboard")
+                      className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${pathname.includes("/vendor/dashboard")
                           ? "text-gray-900 bg-gray-50 font-bold"
                           : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                        }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       My Vendor Dashboard
@@ -796,11 +785,10 @@ export default function Navbar(): JSX.Element {
                   )}
                   <Link
                     href="/services/subscription-plan"
-                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
-                      pathname === "/services/subscription-plan"
+                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${pathname === "/services/subscription-plan"
                         ? "text-gray-900 bg-gray-50 font-bold"
                         : "text-gray-700 hover:bg-gray-50"
-                    }`}
+                      }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Price Plan
