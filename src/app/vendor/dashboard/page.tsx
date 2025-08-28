@@ -352,10 +352,10 @@ export default function DashboardStats() {
             <img src="/v1.png" alt="Sell New Products" className="h-20 w-20 object-contain" />
             {/* <Cross className="h-14 w-14 text-white" /> */}
             <div>
-              <h3 className="text-white text-2xl font-semibold">Sell New Products</h3>
-              <p className="text-white text-sm">List your products and start selling in minutes.</p>
+              <h3 className="text-gray-800 text-2xl font-semibold">Sell New Products</h3>
+              <p className="text-gray-800 text-sm">List your products and start selling in minutes.</p>
             </div>
-            <ChevronRight className="text-white" />
+            <ChevronRight className="text-gray-800" />
           </div>
 
           {/* Sell Old Products */}
@@ -363,10 +363,10 @@ export default function DashboardStats() {
             <img src="/v2.png" alt="Sell Old Products" className="h-20 w-20 object-contain" />
             {/* <Cross className="h-14 w-14 text-white" /> */}
             <div>
-              <h3 className="text-white text-2xl font-semibold">Sell Old Products</h3>
-              <p className="text-white text-sm">List your products and start selling in minutes.</p>
+              <h3 className="text-gray-800 text-2xl font-semibold">Sell Old Products</h3>
+              <p className="text-gray-800 text-sm">List your products and start selling in minutes.</p>
             </div>
-            <ChevronRight className="text-white" />
+            <ChevronRight className="text-gray-800" />
           </div>
 
           {/* Rent Products */}
@@ -374,10 +374,10 @@ export default function DashboardStats() {
             <img src="/v3.png" alt="Rent Products" className="h-20 w-20 object-contain" />
             {/* <Shapes className="h-14 w-14 text-white" /> */}
             <div>
-              <h3 className="text-white text-2xl font-semibold">Rent Products</h3>
-              <p className="text-white text-sm">List your products and start selling in minutes.</p>
+              <h3 className="text-gray-800 text-2xl font-semibold">Rent Products</h3>
+              <p className="text-gray-800 text-sm">List your products and start selling in minutes.</p>
             </div>
-            <ChevronRight className="text-white" />
+            <ChevronRight className="text-gray-800" />
           </div>
         </div>
 
