@@ -99,13 +99,13 @@ function ProductGrid({
           >
             <div className="flex flex-col sm:flex-row items-stretch">
               {/* Image Section */}
-              <div className="w-full sm:w-32 md:w-44 lg:w-52 h-48 sm:h-32 md:h-36 lg:h-40 flex-shrink-0 relative overflow-hidden">
+              <div className="w-full sm:w-32 md:w-44 lg:w-52 flex-shrink-0 relative overflow-hidden p-4 sm:p-5 md:p-6">
                 <Image
                   src={product.image}
                   alt={product.title}
                   width={300}
                   height={300}
-                  className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                  className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-300"
                   quality={90}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
