@@ -349,8 +349,8 @@ export default function DashboardStats() {
         <div className="grid gap-4 md:grid-cols-3 mt-5">
           {/* Sell New Products */}
           <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#FECEBC] to-[#FF3434] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
-            {/* <img src="/no-product.png" alt="Sell New Products" className="h-14 w-14 object-contain" /> */}
-            <Cross className="h-14 w-14 text-white" />
+            <img src="/v1.png" alt="Sell New Products" className="h-20 w-20 object-contain" />
+            {/* <Cross className="h-14 w-14 text-white" /> */}
             <div>
               <h3 className="text-white text-2xl font-semibold">Sell New Products</h3>
               <p className="text-white text-sm">List your products and start selling in minutes.</p>
@@ -360,8 +360,8 @@ export default function DashboardStats() {
 
           {/* Sell Old Products */}
           <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#FECEBC] to-[#E55117] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
-            {/* <img src="/images/forklift-old.png" alt="Sell Old Products" className="h-14 w-14 object-contain" /> */}
-            <Cross className="h-14 w-14 text-white" />
+            <img src="/v2.png" alt="Sell Old Products" className="h-20 w-20 object-contain" />
+            {/* <Cross className="h-14 w-14 text-white" /> */}
             <div>
               <h3 className="text-white text-2xl font-semibold">Sell Old Products</h3>
               <p className="text-white text-sm">List your products and start selling in minutes.</p>
@@ -371,8 +371,8 @@ export default function DashboardStats() {
 
           {/* Rent Products */}
           <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
-            {/* <img src="/images/forklift-rent.png" alt="Rent Products" className="h-14 w-14 object-contain" /> */}
-            <Shapes className="h-14 w-14 text-white" />
+            <img src="/v3.png" alt="Rent Products" className="h-20 w-20 object-contain" />
+            {/* <Shapes className="h-14 w-14 text-white" /> */}
             <div>
               <h3 className="text-white text-2xl font-semibold">Rent Products</h3>
               <p className="text-white text-sm">List your products and start selling in minutes.</p>
