@@ -33,6 +33,7 @@ interface ApiProduct {
   category: number | null;
   model: string | null;
   user_name: string | null;
+  created_at: string;
 }
 
 interface ApiCategory {
@@ -223,6 +224,7 @@ export default function CategoryOrTypePage({
           category_id: p.category,
           model: p.model,
           user_name: p.user_name,
+          created_at: p.created_at
         }));
 
         setProducts(transformedProducts);

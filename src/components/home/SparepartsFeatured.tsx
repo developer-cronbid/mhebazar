@@ -24,6 +24,7 @@ interface SparePart {
   model: string;
   manufacturer: string;
   user_name: string;
+  created_at: string;
 }
 
 const sectionVariants = {
@@ -156,6 +157,7 @@ export default function SparePartsFeatured() {
                   model={spare.model}
                   manufacturer={spare.manufacturer}
                   user_name={spare.user_name}
+                  created_at={spare.created_at}
                 />
               </motion.div>
             ))}

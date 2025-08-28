@@ -718,11 +718,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 <motion.button
                   key={img.id}
                   onClick={() => setSelectedImage(index)}
-                  className={`rounded border-2 overflow-hidden flex-shrink-0 w-fit ${
-                    selectedImage === index
+                  className={`rounded border-2 overflow-hidden flex-shrink-0 w-fit ${selectedImage === index
                       ? "border-orange-500"
                       : "border-gray-200"
-                  } hover:border-orange-300 transition-colors`}
+                    } hover:border-orange-300 transition-colors`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label={`Select image ${index + 1}`}
@@ -781,11 +780,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
             <div className="w-full lg:w-2/3">
               {/* Product Title */}
               <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
-                {`${
-                  data.manufacturer
+                {`${data.manufacturer
                     ? data.manufacturer
                     : data.user_name.replace("_", " ")
-                } ${data.name} ${data.model} `
+                  } ${data.name} ${data.model} `
                   .replace(/[^a-zA-Z0-9 \-]/g, "") // 🧹 Collapse all whitespace into a single space
                   .replace(/\s+/g, " ")
                   .trim() // ✨ Remove any space from the beginning or end
@@ -797,11 +795,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`w-4 h-4 transition-colors ${
-                        data.average_rating !== null && star <= data.average_rating
+                      className={`w-4 h-4 transition-colors ${data.average_rating !== null && star <= data.average_rating
                           ? "fill-orange-400 text-orange-400"
                           : "text-gray-300"
-                      }`}
+                        }`}
                     />
                   ))}
                   <span className="text-base text-gray-600 ml-1">
@@ -840,18 +837,23 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     ₹ *******
                   </span>
                 ) : (
-                  <>
-                    <p className="text-3xl font-semibold text-[#5CA131]">
-                      ₹{displayPrice} excl. GST
-                      </p>
-                      <div className="flex gap-2">
-                        <p className="text-base text-gray-500">
-                          M.R.P:
+                    <>
+                      <div className="flex gap-4">
+                        <p className="text-3xl font-semibold text-red-400">
+                          -10%
                         </p>
-                        <p className="text-base text-gray-500 line-through">
-                          ₹{fakePrice}
+                        <p className="text-3xl font-semibold text-[#5CA131]">
+                          ₹{displayPrice} excl. GST
                         </p>
                       </div>
+                    <div className="flex gap-2">
+                      <p className="text-base text-gray-500">
+                        M.R.P:
+                      </p>
+                      <p className="text-base text-gray-500 line-through">
+                        ₹{fakePrice}
+                      </p>
+                    </div>
                     <p className="text-sm mt-1">
                       You Save: ₹{youSaveAmount} incl. of all taxes
                     </p>
@@ -889,35 +891,35 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   isPurchasable ? (
                     // This is the added conditional block
                     isInCart ? (
-                        <div className="mt-4 flex items-center justify-between bg-green-50 text-green-700 font-medium py-1 px-1 rounded-lg">
-                          <motion.button
-                            onClick={() => handleDecreaseQuantity(cartItemId as number)}
-                            disabled={currentCartQuantity <= 1 || !isPurchasable}
-                            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                            aria-label="Decrease quantity"
-                          >
-                            <Minus className="w-4 h-4" />
-                          </motion.button>
-                          <span className="text-green-800 font-semibold text-center flex-1 text-base">
-                            {currentCartQuantity}
-                          </span>
-                          <motion.button
-                            onClick={() => handleIncreaseQuantity(cartItemId as number)}
-                            disabled={!isPurchasable}
-                            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                            aria-label="Increase quantity"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </motion.button>
-                          <motion.button
-                            onClick={() => handleRemoveFromCart(cartItemId as number)}
-                            className="h-8 w-8 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors ml-1"
-                            aria-label="Remove from cart"
-                            title="Remove from Cart"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </motion.button>
-                        </div>
+                      <div className="mt-4 flex items-center justify-between bg-green-50 text-green-700 font-medium py-1 px-1 rounded-lg">
+                        <motion.button
+                          onClick={() => handleDecreaseQuantity(cartItemId as number)}
+                          disabled={currentCartQuantity <= 1 || !isPurchasable}
+                          className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </motion.button>
+                        <span className="text-green-800 font-semibold text-center flex-1 text-base">
+                          {currentCartQuantity}
+                        </span>
+                        <motion.button
+                          onClick={() => handleIncreaseQuantity(cartItemId as number)}
+                          disabled={!isPurchasable}
+                          className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </motion.button>
+                        <motion.button
+                          onClick={() => handleRemoveFromCart(cartItemId as number)}
+                          className="h-8 w-8 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors ml-1"
+                          aria-label="Remove from cart"
+                          title="Remove from Cart"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </motion.button>
+                      </div>
                     ) : (
                       <div className="mt-4 flex flex-col gap-2">
                         <motion.button
@@ -1244,11 +1246,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                                   return (
                                     <tr
                                       key={`${key}-${specIndex}`}
-                                      className={`hover:bg-gray-50 transition-colors duration-150 ${
-                                        specIndex % 2 === 0
+                                      className={`hover:bg-gray-50 transition-colors duration-150 ${specIndex % 2 === 0
                                           ? "bg-white"
                                           : "bg-gray-25"
-                                      }`}
+                                        }`}
                                     >
                                       <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-medium text-gray-700">
@@ -1276,9 +1277,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                           return (
                             <tr
                               key={key}
-                              className={`hover:bg-gray-50 transition-colors duration-150 ${
-                                index % 2 === 0 ? "bg-white" : "bg-gray-25"
-                              }`}
+                              className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"
+                                }`}
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className="text-sm font-medium text-gray-700">
@@ -1454,8 +1454,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     key={img.id}
                     onClick={() => setCurrentMediaIndex(index)}
                     className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${currentMediaIndex === index
-                        ? "border-orange-500"
-                        : "border-transparent hover:border-gray-600"
+                      ? "border-orange-500"
+                      : "border-transparent hover:border-gray-600"
                       }`}
                     aria-label={`Select media thumbnail ${index + 1}`}
                     whileHover={{ scale: 1.05 }}

@@ -49,6 +49,7 @@ interface ApiProduct {
   category: number | null;
   model: string | null;
   user_name: string | null;
+  created_at: string;
 }
 
 interface ApiResponse<T> {
@@ -192,6 +193,7 @@ export default function SubCategoryPage({
         category_id: p.category,
         model: p.model,
         user_name: p.user_name,
+        created_at: p.created_at
       }));
 
       if (transformedProducts.length === 0) {

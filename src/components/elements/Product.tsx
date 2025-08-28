@@ -19,6 +19,7 @@ import DOMPurify from 'dompurify';
 import categories from '@/data/categories.json';
 import ProductDetails from "@/app/products-details/[product_id]/page";
 import { Badge } from "../ui/badge";
+import { prototype } from "events";
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -160,6 +161,8 @@ const ProductCard = ({
   const isUsedPage = pageUrlType === 'used';
   const formButtonText = isRentalPage ? "Rent Now" : "Get a Quote";
 
+  console.log(productType)
+
   // Format price with Rupee symbol and handle hidden/zero price
   const displayPrice = (hide_price || parseFloat(price.toString()) <= 0) ? (
     <span className="text-xl font-bold text-gray-400 tracking-wider">
@@ -199,6 +202,15 @@ const ProductCard = ({
     attachments: 'border-slate-400 bg-slate-100 text-slate-800',
   };
 
+  const showNewBadge = () => {
+    const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+    const productDate = new Date(productData.created_at);
+    const currentDate = new Date();
+    const differenceInMs = currentDate.getTime() - productDate.getTime();
+
+    // The product is new if it was created within the last 30 days
+    return differenceInMs <= thirtyDaysInMs;
+  };
   // console.log(`catId: "${category_id}"`);
   // console.log(`categoryFallbackImage: "${categoryFallbackImage}"`);
 
@@ -249,7 +261,27 @@ const ProductCard = ({
           </button>
         </div>
         <div className="absolute top-3 right-3">
-          <Badge className={badgeStyles[productType] || badgeStyles.attachments}>{ productType }</Badge>
+          {Array.isArray(productType) && productType.map((type, index) => {
+
+            // CASE 1: Handle the special logic for the 'new' badge.
+            // It only renders if the type is 'new' AND showNewBadge() is true.
+            if (type === 'new') {
+              return showNewBadge() && (
+                <Badge key={index} className={badgeStyles.new || 'default-new-badge'}>
+                  New
+                </Badge>
+              );
+            }
+
+            // CASE 2: Handle all other badge types.
+            // This renders a badge for any other type in the array.
+            return (
+              <Badge key={index} className={badgeStyles[type] || 'default-badge-style'}>
+                {/* Capitalize the first letter for better display */}
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </Badge>
+            );
+          })}
         </div>
       </div>
 
@@ -271,8 +303,13 @@ const ProductCard = ({
             <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(subtitle || '') }} />
           </p>
           {/* Price */}
-          <div className="mb-3">
-            {displayPrice}
+          <div className="flex justify-between mb-4">
+            <div className="mb-3">
+              {displayPrice}
+            </div>
+            {category_id == 18 && (<Badge className={stock_quantity > 0 ? 'border-green-400 bg-green-100 text-green-800' : 'border-red-400 bg-red-100 text-red-800'}>
+              {is_active ? (stock_quantity > 0 ? `Available` : 'Unavailable') : 'Inactive'}
+            </Badge>)}
           </div>
         </div>
 
@@ -401,6 +438,7 @@ interface ProductCardContainerProps {
   model: string | null;
   manufacturer: string | null;
   user_name: string | null;
+  created_at: string | null;
 }
 
 interface ApiProductData {
@@ -453,6 +491,7 @@ export const ProductCardContainer = ({
   model,
   manufacturer,
   user_name,
+  created_at, // Add created_at to the destructured props
 }: ProductCardContainerProps) => {
   const router = useRouter();
   const {
@@ -476,7 +515,7 @@ export const ProductCardContainer = ({
   const cartItemId = getCartItemId(id); // Context provides this if needed
 
   const productFullData: ProductCardContainerProps = {
-    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_id, pageUrlType, model, manufacturer, user_name
+    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_id, pageUrlType, model, manufacturer, user_name, created_at,
   };
 
   const handleAddToCart = useCallback(async (productId: number) => {

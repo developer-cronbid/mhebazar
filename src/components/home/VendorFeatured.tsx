@@ -22,6 +22,7 @@ interface Product {
   model: string;
   manufacturer: string;
   user_name: string;
+  created_at: string;
 }
 
 const VendorProductsFeatured: React.FC = () => {
@@ -32,8 +33,7 @@ const VendorProductsFeatured: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const PRODUCT_IDS = [
-    588, 614, 190, 388, 412, 177, 182, 120, 343, 94, 108, 362, 133, 145, 273,
-    343, 102, 86,
+    588, 614, 190, 388, 412, 177, 182, 120, 343, 94, 108, 362, 133, 145, 273, 102, 86,
   ];
 
   useEffect(() => {
@@ -195,6 +195,7 @@ const VendorProductsFeatured: React.FC = () => {
                 model={product.model}
                 manufacturer={product.manufacturer}
                 user_name={product.user_name}
+                created_at={product.created_at}
               />
             </div>
           ))}

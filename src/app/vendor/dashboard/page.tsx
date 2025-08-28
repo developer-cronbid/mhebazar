@@ -311,7 +311,7 @@ export default function DashboardStats() {
         - w-auto: Removed fixed width to allow natural text wrapping.
       */}
               <h2 className="text-3xl sm:text-5xl font-extrabold text-gray-600">{products.length}</h2>
-              <p className="text-xl sm:text-2xl text-gray-500 mt-1">No. of Products</p>
+              <p className="text-xl sm:text-2xl text-gray-500 mt-1">Total Products Added</p>
             </div>
             {/*
       - w-24 h-24 sm:w-28 sm:h-28: Smaller icon circle on small screens.
@@ -337,7 +337,7 @@ export default function DashboardStats() {
           <div className="p-6 sm:p-8 bg-gradient-to-r from-white to-[#FAE5A4] rounded-xl shadow-sm flex items-center justify-between">
             <div>
               <h2 className="text-3xl sm:text-5xl font-extrabold text-gray-600">{stats?.enquiry_stats?.total_enquiries || 0}</h2>
-              <p className="text-xl sm:text-2xl text-gray-500 mt-1 text-wrap">Number of queries</p>
+              <p className="text-xl sm:text-2xl text-gray-500 mt-1 text-wrap">Total Enquiries</p>
             </div>
             <div className="p-3 rounded-full border-4 border-[#F1BF25]/30 w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
               <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-[#F1BF25]" />

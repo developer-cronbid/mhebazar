@@ -67,7 +67,7 @@ type ProductFormData = {
   manufacturer?: string;
   model?: string;
   price: string;
-  type: string;
+  type: string[];
   direct_sale: boolean;
   hide_price: boolean;
   online_payment: boolean;
@@ -105,31 +105,31 @@ export default function ProductForm({ product }: ProductFormProps) {
   } = useForm<ProductFormData>({
     defaultValues: product
       ? {
-          category: String(product.category),
-          subcategory: String(product.subcategory),
-          name: product.name,
-          description: product.description,
-          meta_title: product.meta_title,
-          meta_description: product.meta_description,
-          manufacturer: product.manufacturer,
-          model: product.model,
-          price: product.price,
-          type: product.type,
-          direct_sale: product.direct_sale,
-          hide_price: product.hide_price,
-          online_payment: product.online_payment,
-          stock_quantity: product.stock_quantity,
-          product_details: typeof product.product_details === 'string'
-            ? JSON.parse(product.product_details || '{}')
-            : product.product_details || {},
-        }
+        category: String(product.category),
+        subcategory: String(product.subcategory),
+        name: product.name,
+        description: product.description,
+        meta_title: product.meta_title,
+        meta_description: product.meta_description,
+        manufacturer: product.manufacturer,
+        model: product.model,
+        price: product.price,
+        type: Array.isArray(product.type) ? product.type : [],
+        direct_sale: product.direct_sale,
+        hide_price: product.hide_price,
+        online_payment: product.online_payment,
+        stock_quantity: product.stock_quantity,
+        product_details: typeof product.product_details === 'string'
+          ? JSON.parse(product.product_details || '{}')
+          : product.product_details || {},
+      }
       : {
-          direct_sale: true,
-          hide_price: false,
-          online_payment: false,
-          stock_quantity: 1,
-          type: 'new',
-        },
+        direct_sale: true,
+        hide_price: false,
+        online_payment: false,
+        stock_quantity: 1,
+        type: ['new'],
+      },
   })
 
   const [categories, setCategories] = useState<Category[]>([])
@@ -137,7 +137,7 @@ export default function ProductForm({ product }: ProductFormProps) {
   const [dynamicFields, setDynamicFields] = useState<ProductDetailField[]>([])
   const [dynamicValues, setDynamicValues] = useState<Record<string, string>>(() => {
     if (product && typeof product.product_details === 'string') {
-        return JSON.parse(product.product_details || '{}');
+      return JSON.parse(product.product_details || '{}');
     }
     return product?.product_details || {};
   });
@@ -167,7 +167,7 @@ export default function ProductForm({ product }: ProductFormProps) {
         setLoading(true)
         const response = await axios.get(`${API_BASE_URL}/categories/`)
         const categoriesData = response.data?.results || response.data || []
-        
+
         if (Array.isArray(categoriesData)) {
           setCategories(categoriesData)
           if (product?.category) {
@@ -260,7 +260,7 @@ export default function ProductForm({ product }: ProductFormProps) {
     formData.append('manufacturer', data.manufacturer || '');
     formData.append('model', data.model || '');
     formData.append('price', data.price);
-    formData.append('type', data.type);
+    formData.append('type', JSON.stringify(data.type || []));
     formData.append('direct_sale', String(data.direct_sale));
     formData.append('hide_price', String(data.hide_price));
     formData.append('online_payment', String(data.online_payment));
@@ -671,19 +671,31 @@ export default function ProductForm({ product }: ProductFormProps) {
 
                 {/* Type Selection */}
                 <div>
-                  <Label className="text-sm text-gray-600 mb-1 block">Type</Label>
-                  <Select onValueChange={(val) => setValue('type', val)} value={watch('type')}>
-                    <SelectTrigger className="h-10 border-gray-300 text-sm text-gray-500">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TYPE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm text-gray-600 mb-2 block">Type</Label>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    {TYPE_OPTIONS.map((option) => (
+                      <div key={option.value} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`type-${option.value}`}
+                          checked={watch('type')?.includes(option.value) || false}
+                          onCheckedChange={(checked) => {
+                            const currentTypes = watch('type') || []
+                            if (checked) {
+                              setValue('type', [...currentTypes, option.value])
+                            } else {
+                              setValue('type', currentTypes.filter((value) => value !== option.value))
+                            }
+                          }}
+                        />
+                        <Label
+                          htmlFor={`type-${option.value}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {option.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Dynamic Fields */}

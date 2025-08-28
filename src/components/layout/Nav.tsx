@@ -14,8 +14,11 @@ import {
   LogOut,
   UserIcon,
   Repeat,
-  Bell,
+  LayoutDashboard,
   ClipboardList,
+  Bell,
+  ShieldCheck,
+  UserPlus,
 } from "lucide-react";
 import { useRef, useState, useEffect, JSX } from "react";
 import Image from "next/image";
@@ -27,6 +30,15 @@ import SearchBar from "./SearchBar";
 import { useUser } from "@/context/UserContext";
 import { useRouter, usePathname } from "next/navigation";
 import { handleLogout } from "@/lib/auth/logout";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Import the local JSON data directly
 import categoriesData from "@/data/categories.json";
@@ -157,6 +169,10 @@ export default function Navbar(): JSX.Element {
     };
   }, [categoriesOpen]);
 
+    const onLogoutClick = async () => {
+      await handleLogout(() => setUser(null), router);
+    };
+
   return (
     <header className="bg-white shadow-sm z-50 sticky top-0">
       <style>{tingAnimation}{shineAnimation}</style>
@@ -264,7 +280,7 @@ export default function Navbar(): JSX.Element {
 
               {/* Update profile button */}
               <div className="relative" ref={profileMenuRef}>
-                <button
+                {/* <button
                   onClick={() => setProfileMenuOpen((v) => !v)}
                   className="focus:outline-none"
                   aria-label="Open profile menu"
@@ -295,147 +311,118 @@ export default function Navbar(): JSX.Element {
                       <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
                     </div>
                   )}
-                </button>
-                <AnimatePresence>
-                  {profileMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50"
-                    >
-                      {user ? (
-                        <>
-                          <div className="px-6 py-2 text-sm text-gray-500 font-semibold uppercase">
-                            My Account
-                          </div>
-                          <Link
-                            href="/account"
-                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                            onClick={() => setProfileMenuOpen(false)}
-                          >
-                            <User className="w-5 h-5 text-green-600" />
-                            My Account
-                          </Link>
-                          <Link
-                            href="/account/orders"
-                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                            onClick={() => setProfileMenuOpen(false)}
-                          >
-                            <Package className="w-5 h-5 text-green-600" />
-                            My Orders
-                          </Link>
-                          <Link
-                            href="/account/wishlist"
-                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                            onClick={() => setProfileMenuOpen(false)}
-                          >
-                            <Heart className="w-5 h-5 text-green-600" />
-                            Wishlist
-                          </Link>
+                </button> */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    {/* The trigger button. Customize this as needed. */}
+                    <button className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                      {/* You can display a user avatar here */}
+                      <User className="w-6 h-6 text-gray-600" />
+                    </button>
+                  </DropdownMenuTrigger>
 
-                          {user.role?.id === 2 && (
-                            <>
-                              <div className="border-t border-gray-100 mt-2" />
-                              <div className="px-6 py-2 text-sm text-gray-500 font-semibold uppercase">
-                                Vendor Panel
-                              </div>
-                              <Link
-                                href="/vendor/dashboard"
-                                className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                                onClick={() => setProfileMenuOpen(false)}
-                              >
-                                <User className="w-5 h-5 text-blue-600" />
-                                Dashboard
-                              </Link>
-                              <Link
-                                href="/vendor/product-list"
-                                className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                                onClick={() => setProfileMenuOpen(false)}
-                              >
-                                <Tag className="w-5 h-5 text-blue-600" />
-                                My Products
-                              </Link>
-                              <Link
-                                href="/vendor/profile"
-                                className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                                onClick={() => setProfileMenuOpen(false)}
-                              >
-                                <User className="w-5 h-5 text-blue-600" />
-                                Vendor Profile
-                              </Link>
-                              <Link
-                                href="/vendor/notifications"
-                                className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                                onClick={() => setProfileMenuOpen(false)}
-                              >
-                                <Bell className="w-5 h-5 text-blue-600" />
-                                Vendor Notifications
-                              </Link>
-                              <Link
-                                href="/vendor/enquiry"
-                                className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                                onClick={() => setProfileMenuOpen(false)}
-                              >
-                                <ClipboardList className="w-5 h-5 text-blue-600" />
-                                Vendor Enquiries
-                              </Link>
-                            </>
-                          )}
-
-                          {user.role?.id === 1 && (
-                            <>
-                              <div className="border-t border-gray-100 mt-2" />
-                              <div className="px-6 py-2 text-sm text-gray-500 font-semibold uppercase">
-                                Admin Panel
-                              </div>
-                              <Link
-                                href="/admin/"
-                                className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                                onClick={() => setProfileMenuOpen(false)}
-                              >
-                                <User className="w-5 h-5 text-red-600" />
-                                Admin Dashboard
-                              </Link>
-                            </>
-                          )}
-
-                          <div className="border-t border-gray-100 mt-2" />
-                          <button
-                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base w-full text-left"
-                            onClick={async () => {
-                              setProfileMenuOpen(false);
-                              await handleLogout(() => setUser(null), router);
-                            }}
-                          >
-                            <LogOut className="w-5 h-5 text-green-600" />
-                            Logout
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <Link
-                            href="/login"
-                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                            onClick={() => setProfileMenuOpen(false)}
-                          >
-                            <User className="w-5 h-5 text-green-600" />
-                            Sign In
+                  <DropdownMenuContent className="w-64" align="end">
+                    {user ? (
+                      // --- LOGGED-IN USER VIEW ---
+                      <>
+                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuItem asChild>
+                          <Link href="/account" className="cursor-pointer">
+                            <User className="mr-2 h-4 w-4 text-green-600" />
+                            <span>My Account</span>
                           </Link>
-                          <Link
-                            href="/register"
-                            className="flex items-center gap-3 px-6 py-3 text-gray-800 hover:bg-gray-50 transition text-base"
-                            onClick={() => setProfileMenuOpen(false)}
-                          >
-                            <User className="w-5 h-5 text-green-600" />
-                            Sign Up
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/account/orders" className="cursor-pointer">
+                            <Package className="mr-2 h-4 w-4 text-green-600" />
+                            <span>My Orders</span>
                           </Link>
-                        </>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/account/wishlist" className="cursor-pointer">
+                            <Heart className="mr-2 h-4 w-4 text-green-600" />
+                            <span>Wishlist</span>
+                          </Link>
+                        </DropdownMenuItem>
+
+                        {/* --- VENDOR PANEL (Conditional) --- */}
+                        {user.role?.id === 2 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Vendor Panel</DropdownMenuLabel>
+                            <DropdownMenuItem asChild>
+                              <Link href="/vendor/dashboard" className="cursor-pointer">
+                                <LayoutDashboard className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>Dashboard</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href="/vendor/product-list" className="cursor-pointer">
+                                <Tag className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>My Products</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href="/vendor/profile" className="cursor-pointer">
+                                <User className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>Vendor Profile</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href="/vendor/notifications" className="cursor-pointer">
+                                <Bell className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>Notifications</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href="/vendor/enquiry" className="cursor-pointer">
+                                <ClipboardList className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>Enquiries</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+
+                        {/* --- ADMIN PANEL (Conditional) --- */}
+                        {user.role?.id === 1 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Admin Panel</DropdownMenuLabel>
+                            <DropdownMenuItem asChild>
+                              <Link href="/admin" className="cursor-pointer">
+                                <ShieldCheck className="mr-2 h-4 w-4 text-red-600" />
+                                <span>Admin Dashboard</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+
+                        {/* --- LOGOUT BUTTON --- */}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={onLogoutClick} className="cursor-pointer text-red-500 focus:text-red-500">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Logout</span>
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      // --- LOGGED-OUT USER VIEW ---
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link href="/login" className="cursor-pointer">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Sign In</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link href="/register" className="cursor-pointer">
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            <span>Sign Up</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>

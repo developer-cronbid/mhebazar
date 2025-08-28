@@ -31,11 +31,11 @@ interface SideFilterProps {
   onFilterChange: (
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
-    newValue?: number | string | { min: number | ''; max: number | '' } | null
+    newValue?: number | string | string[] | { min: number | ''; max: number | '' } | null
   ) => void;
   selectedCategoryName: string | null;
   selectedSubcategoryName: string | null;
-  selectedTypeName: string | null;
+  selectedTypes: string[];
   minPrice: number | '';
   maxPrice: number | '';
   selectedManufacturer: string | null;
@@ -48,7 +48,7 @@ const SideFilter = ({
   onFilterChange,
   selectedCategoryName,
   selectedSubcategoryName,
-  selectedTypeName,
+  selectedTypes = [],
   minPrice,
   maxPrice,
   selectedManufacturer,
@@ -142,8 +142,7 @@ const SideFilter = ({
     const lowerValue = value.toLowerCase();
     if (selectedCategoryName && lowerValue === selectedCategoryName.toLowerCase()) return true;
     if (selectedSubcategoryName && lowerValue === selectedSubcategoryName.toLowerCase()) return true;
-    if (selectedTypeName && lowerValue === selectedTypeName.toLowerCase()) return true;
-    return false;
+    if (Array.isArray(selectedTypes) && selectedTypes.includes(lowerValue)) return true;
   };
 
   return (
@@ -242,21 +241,38 @@ const SideFilter = ({
           ))}
         </div>
 
-        {/* Product Types Section */}
-        <h2 className="text-base font-semibold mb-2 text-gray-800">Product Types</h2>
-        <div className="space-y-1 mb-4">
-          {filteredProductTypes.map((type: string, index: number) => (
-            <button
-              key={index}
-              onClick={() => onFilterChange(type, "type")}
-              className={`w-full text-left px-2 py-2 rounded-md transition-colors duration-200 ${isFilterActive(type)
-                ? "bg-purple-50 text-purple-700 font-medium"
-                : "hover:bg-gray-50 text-gray-700"
-                }`}
-            >
-              <span className="text-sm">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
-            </button>
-          ))}
+        {/* Product Types Section (Corrected for Multi-Select) */}
+        <h2 className="text-base font-bold text-black font-sans mb-2.5">Product Types</h2>
+        <div className="space-y-0 mb-4">
+          {filteredProductTypes.map((type: string, index: number) => {
+            // Check if the current type is in the selectedTypes array
+            const isActive = selectedTypes.includes(type);
+
+            // Click handler to add/remove the type from the selection
+            const handleTypeChange = () => {
+              // If the type is already selected, remove it. Otherwise, add it.
+              const newSelectedTypes = isActive
+                ? selectedTypes.filter((t) => t !== type)
+                : [...selectedTypes, type];
+
+              // Call the parent's onFilterChange with the updated array
+              onFilterChange(type, "type", newSelectedTypes);
+            };
+
+            return (
+              <button
+                key={index}
+                onClick={handleTypeChange}
+                className={`w-full text-left py-2 px-0 transition-colors duration-200 ${isActive
+                    ? "bg-green-50 text-green-700 font-medium" // Active style
+                    : "hover:bg-gray-50 text-black" // Default style
+                  }`}
+                aria-pressed={isActive}
+              >
+                <span className="text-sm font-sans truncate line-clamp-1">{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Price Range Filter */}

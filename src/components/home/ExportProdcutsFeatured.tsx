@@ -40,6 +40,7 @@ interface ExportProduct {
   model: string;
   manufacturer: string;
   user_name: string;
+  created_at: string;
 }
 
 const sectionVariants = {
@@ -93,6 +94,7 @@ export default function ExportProductsFeatured() {
           category_id: item.category,
           model: item.model,
           user_name: item.user_name,
+          created_at: item.created_at
         }));
 
         setExportProducts(formattedProducts);
@@ -205,6 +207,7 @@ export default function ExportProductsFeatured() {
                   model={export_product.model}
                   manufacturer={export_product.manufacturer}
                   user_name={export_product.user_name}
+                  created_at={export_product.created_at}
                 />
                 {/* </div> */}
               </motion.div>
