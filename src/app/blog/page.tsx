@@ -314,7 +314,7 @@ const BlogListPage: React.FC = () => {
         transition={{ delay: 0.4, duration: 0.5 }}
         className="bg-gray-50 py-6"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className=" mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
               <div className="flex items-center gap-3">
@@ -387,7 +387,7 @@ const BlogListPage: React.FC = () => {
       </motion.div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <div className=" mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div
@@ -449,7 +449,7 @@ const BlogListPage: React.FC = () => {
                   >
                     <span className="text-gray-600 text-sm">Results for:</span>
                     <Badge className="bg-gray-100 text-gray-700 border border-gray-300 px-3 py-1 font-medium rounded-full">
-                      "{searchTerm}"
+                      {searchTerm}
                     </Badge>
                   </motion.div>
                 )}
@@ -470,10 +470,10 @@ const BlogListPage: React.FC = () => {
                         whileHover="hover"
                         custom={index}
                       >
-                        <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg h-full transition-all duration-300">
+                        <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg h-full transition-all duration-300 pt-0">
                           <Link href={`/blog/${blog.blog_url}`} className="block h-full">
                             <div className="relative overflow-hidden rounded-t-lg">
-                              <div className="w-full h-48 relative">
+                              <div className="w-full h-auto aspect-[155/96] relative">
                                 <motion.img
                                   src={imageUrl}
                                   alt={blog.blog_title}
