@@ -843,10 +843,15 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   <>
                     <p className="text-3xl font-semibold text-[#5CA131]">
                       ₹{displayPrice} excl. GST
-                    </p>
-                    <p className="text-base text-gray-500 line-through">
-                      ₹{fakePrice} incl. GST
-                    </p>
+                      </p>
+                      <div className="flex gap-2">
+                        <p className="text-base text-gray-500">
+                          M.R.P:
+                        </p>
+                        <p className="text-base text-gray-500 line-through">
+                          ₹{fakePrice}
+                        </p>
+                      </div>
                     <p className="text-sm mt-1">
                       You Save: ₹{youSaveAmount} incl. of all taxes
                     </p>
