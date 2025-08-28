@@ -162,17 +162,18 @@ export default function Navbar(): JSX.Element {
       <style>{tingAnimation}{shineAnimation}</style>
       <div className="bg-[#5CA131] text-white">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-2">
-            <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center justify-between gap-2 py-3 sm:py-2">
+            <div className="flex items-center gap-2 text-sm text-nowrap">
               <Phone className="w-4 h-4" />
               <span>+91 73059 50939</span>
             </div>
-            <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-4 text-xs sm:text-sm">
               {isLoading ? (
                 <span>Loading...</span>
               ) : user ? (
-                <span className="font-semibold">
-                  Welcome,{" "}
+                // Added text-center for mobile view
+                  <span className="font-semibold text-center sm:text-left text-xs sm:text-sm text-nowrap">
+                  | Welcome,{" "}
                   {typeof user.username === "string"
                     ? user.username
                     : user.email}
@@ -183,7 +184,7 @@ export default function Navbar(): JSX.Element {
                   <Link href="/login" className="hover:underline">
                     Sign In
                   </Link>
-                  <span>|</span>
+                  <span className="opacity-50">|</span>
                   <Link href="/register" className="hover:underline">
                     Sign Up
                   </Link>

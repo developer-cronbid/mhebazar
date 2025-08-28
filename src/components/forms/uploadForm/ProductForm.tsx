@@ -614,12 +614,12 @@ export default function ProductForm({ product }: ProductFormProps) {
                   />
                 </div>
 
-                {/* Manufacturer */}
+                {/* Vendor */}
                 <div>
-                  <Label className="text-sm text-gray-600 mb-1 block">Manufacturer</Label>
+                  <Label className="text-sm text-gray-600 mb-1 block">Vendor</Label>
                   <Input
                     {...register('manufacturer')}
-                    placeholder="Manufacturer name"
+                    placeholder="Vendor name"
                     className="h-10 border-gray-300 text-sm"
                   />
                 </div>

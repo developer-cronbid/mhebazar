@@ -117,8 +117,6 @@ const vendorApi = {
   },
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000';
-
 // Updated functions to work with `is_active` boolean
 function getStatusText(isActive: boolean): 'Approved' | 'Pending' {
   return isActive ? 'Approved' : 'Pending';
@@ -181,9 +179,9 @@ export default function DashboardStats() {
   // const categoryFallbackImage = category_id ? categoryImageMap[category_id] : null;
 
   function getImageSrc(images?: { image: string }[] | string,): string {
-    if (typeof images === 'string' && images) return `${API_BASE_URL}${images}`;
+    if (typeof images === 'string' && images) return `${imgUrl}${images}`;
     if (Array.isArray(images) && images.length > 0 && images[0].image) {
-      return `${API_BASE_URL}${images[0].image}`;
+      return `${imgUrl}${images[0].image}`;
     }
     // if (category_id) {
     //   console.log(category_id)
@@ -299,37 +297,50 @@ export default function DashboardStats() {
         )}
 
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {/* Products Card */}
-          <div className="p-8 bg-gradient-to-r from-white to-[#DDF2D0] rounded-xl shadow-sm border-0 flex items-center justify-between">
+          {/*
+    - p-6 sm:p-8: Reduced padding on small screens.
+    - flex-wrap: Allows items to wrap if needed on very small screens.
+  */}
+          <div className="p-6 sm:p-8 bg-gradient-to-r from-white to-[#DDF2D0] rounded-xl shadow-sm flex items-center justify-between flex-wrap">
             <div>
-              <h2 className="text-3xl font-extrabold text-gray-900">{products.length}</h2>
-              <p className="text-2xl w-52 text-gray-500">No. of Products Added</p>
+              {/*
+        - text-2xl sm:text-3xl: Smaller number font size on small screens.
+        - text-xl sm:text-2xl: Smaller paragraph font size.
+        - w-auto: Removed fixed width to allow natural text wrapping.
+      */}
+              <h2 className="text-3xl sm:text-5xl font-extrabold text-gray-600">{products.length}</h2>
+              <p className="text-xl sm:text-2xl text-gray-500 mt-1">No. of Products</p>
             </div>
-            <div className="p-3 rounded-full border-4 border-[#5CA131]/30 w-28 h-28 flex items-center justify-center">
-              <ShoppingCart className="h-12 w-12 text-[#5CA131]" />
+            {/*
+      - w-24 h-24 sm:w-28 sm:h-28: Smaller icon circle on small screens.
+      - h-10 w-10 sm:h-12 sm:w-12: Smaller icon size.
+    */}
+            <div className="p-3 rounded-full border-4 border-[#5CA131]/30 w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+              <ShoppingCart className="h-10 w-10 sm:h-12 sm:w-12 text-[#5CA131]" />
             </div>
           </div>
 
           {/* Offers Card */}
-          <div className="p-8 bg-gradient-to-r from-white to-[#D8EBF8] rounded-xl shadow-sm border-0 flex items-center justify-between">
+          <div className="p-6 sm:p-8 bg-gradient-to-r from-white to-[#D8EBF8] rounded-xl shadow-sm flex items-center justify-between flex-wrap">
             <div>
-              <h2 className="text-3xl font-extrabold text-gray-900">{stats?.enquiry_stats?.total_quotes || 0}</h2>
-              <p className="text-2xl w-52 text-gray-500">Total Quotes</p>
+              <h2 className="text-3xl sm:text-5xl font-extrabold text-gray-600">{stats?.enquiry_stats?.total_quotes || 0}</h2>
+              <p className="text-xl sm:text-2xl text-gray-500 mt-1">Total Quotes</p>
             </div>
-            <div className="p-3 rounded-full border-4 border-[#018CFC]/30 w-28 h-28 flex items-center justify-center">
-              <IoDocuments className="h-12 w-12 text-[#018CFC]" />
+            <div className="p-3 rounded-full border-4 border-[#018CFC]/30 w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+              <IoDocuments className="h-10 w-10 sm:h-12 sm:w-12 text-[#018CFC]" />
             </div>
           </div>
 
           {/* Queries Card */}
-          <div className="p-8 bg-gradient-to-r from-white to-[#FAE5A4] rounded-xl shadow-sm border-0 flex items-center justify-between">
+          <div className="p-6 sm:p-8 bg-gradient-to-r from-white to-[#FAE5A4] rounded-xl shadow-sm flex items-center justify-between">
             <div>
-              <h2 className="text-3xl font-extrabold text-gray-900">{stats?.enquiry_stats?.total_enquiries || 0}</h2>
-              <p className="text-2xl text-gray-500">Number of queries</p>
+              <h2 className="text-3xl sm:text-5xl font-extrabold text-gray-600">{stats?.enquiry_stats?.total_enquiries || 0}</h2>
+              <p className="text-xl sm:text-2xl text-gray-500 mt-1 text-wrap">Number of queries</p>
             </div>
-            <div className="p-3 rounded-full border-4 border-[#F1BF25]/30 w-28 h-28 flex items-center justify-center">
-              <FileText className="h-12 w-12 text-[#F1BF25]" />
+            <div className="p-3 rounded-full border-4 border-[#F1BF25]/30 w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center">
+              <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-[#F1BF25]" />
             </div>
           </div>
         </div>
@@ -447,7 +458,8 @@ export default function DashboardStats() {
                             }}
                           />
                         </div>
-                        <div className="space-y-1 w-full">
+                        {/* 👇 Add min-w-0 here */}
+                        <div className="space-y-1 w-full min-w-0">
                           <div className="flex flex-wrap justify-between items-center gap-2">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className={`text-xs px-2 py-1 rounded font-medium flex items-center gap-1 ${getStatusColor(product.is_active)}`}>
@@ -462,7 +474,13 @@ export default function DashboardStats() {
                               {product.type}
                             </div>
                           </div>
-                          <h3 className="font-medium text-gray-900 truncate">{product.name}</h3>
+                          <h3
+                            // 👇 Removed `overflow-hidden` (redundant with truncate) and `break-all`
+                            className="font-medium text-gray-900 truncate max-w-xs"
+                            title={product.name}
+                          >
+                            {product.name}
+                          </h3>
                           <div className="flex items-center gap-2">
                             <Button variant="link" className="text-blue-600 px-0 py-0 h-auto text-sm" onClick={() => handleEditClick(product.id)}>
                               Edit
