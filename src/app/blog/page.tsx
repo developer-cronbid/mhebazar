@@ -312,7 +312,7 @@ const BlogListPage: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
-        className="bg-gray-50 py-6"
+        className="bg-gray-50 py-6 px-5"
       >
         <div className=" mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
@@ -428,7 +428,8 @@ const BlogListPage: React.FC = () => {
               key="blogs"
               initial="hidden"
               animate="visible"
-              variants={containerVariants}
+                  variants={containerVariants}
+                  className="px-5"
             >
               {/* Results Info */}
               <motion.div
