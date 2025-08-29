@@ -59,7 +59,6 @@ export interface Category {
 }
 
 const navigationLinks = [
-  // { name: "About", href: "/about" },
   { name: "Rental/Used MHE", href: "/used" },
   { name: "Attachments", href: "/attachments" },
   { name: "Spare Parts", href: "/spare-parts" },
@@ -399,7 +398,7 @@ export default function Navbar(): JSX.Element {
 
                         {/* --- LOGOUT BUTTON --- */}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={onLogoutClick} className="cursor-pointer text-red-500 focus:text-red-500">
+                        <DropdownMenuItem onClick={onLogoutClick} className="cursor-pointer text-red-500 focus:text-red-700">
                           <LogOut className="mr-2 h-4 w-4" />
                           <span>Logout</span>
                         </DropdownMenuItem>
