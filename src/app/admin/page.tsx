@@ -2,9 +2,10 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info } from 'lucide-react';
+// IMPORT THE LOADER ICON
+import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info, Loader2 } from 'lucide-react';
 import AnalyticsDashboard from '@/components/admin/Graph';
-import api from '@/lib/api'; // Use the configured axios instance
+import api from '@/lib/api';
 import Cookies from 'js-cookie';
 import { toast } from "sonner";
 import Image from "next/image";
@@ -19,15 +20,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-
 
 // --- Type Definitions ---
+// (Interface definitions for StatsCardProps, VendorApplication, Product, etc. remain the same)
 export interface StatsCardProps {
   icon: string;
   number: string;
@@ -45,7 +44,6 @@ export interface VendorApplication {
   user_name: string;
 }
 
-// EXPANDED PRODUCT TYPE TO MATCH YOUR JSON DATA
 export interface Product {
   id: number;
   name: string;
@@ -69,7 +67,7 @@ export interface Product {
   model: string;
   online_payment: boolean;
   price: string;
-  product_details: { [key: string]: any }; // Flexible for different specs
+  product_details: { [key: string]: any };
   rejection_reason: string;
   status: "pending" | "approved" | "rejected";
   stock_quantity: number;
@@ -77,7 +75,6 @@ export interface Product {
   type: string[];
   updated_at: string;
 }
-
 
 type GroupedProducts = {
   [key: string]: Product[];
@@ -120,7 +117,6 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
   );
 };
 
-// A small helper to render product details neatly
 const DetailRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <div className="grid grid-cols-3 gap-2 py-2 border-b border-gray-100">
     <dt className="text-sm font-medium text-gray-500">{label}</dt>
@@ -140,20 +136,23 @@ const CompleteDashboard = () => {
 
   const [isLoading, setIsLoading] = useState(true);
 
-  // State for Vendor Modals
+  // MODAL STATES
   const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
   const [isVendorRejectModalOpen, setIsVendorRejectModalOpen] = useState(false);
   const [vendorRejectionReason, setVendorRejectionReason] = useState("");
-
-  // State for Product Modals
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [isProductDetailModalOpen, setIsProductDetailModalOpen] = useState(false); // <-- NEW STATE
+  const [isProductDetailModalOpen, setIsProductDetailModalOpen] = useState(false);
   const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
   const [productRejectionReason, setProductRejectionReason] = useState("");
 
+  // NEW LOADING STATES
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingVendorId, setLoadingVendorId] = useState<number | null>(null);
 
-  // --- Auth Check and Data Fetching ---
+
+  // --- Data Fetching ---
   const fetchData = useCallback(async () => {
+    // fetchData function remains the same, using the corrected client-side filtering
     setIsLoading(true);
     try {
       const [
@@ -161,7 +160,6 @@ const CompleteDashboard = () => {
         rentalResponse, orderResponse, trainingResponse, contactResponse
       ] = await Promise.all([
         api.get('/vendor/'),
-        // REVERTED: Fetch all products first
         api.get('/products/'),
         api.get('/vendor/stats/'),
         api.get('/quotes/?page_size=1'),
@@ -174,7 +172,6 @@ const CompleteDashboard = () => {
       const pendingVendors = vendorResponse.data.results.filter((app: any) => !app.is_approved);
       setVendorApps(pendingVendors);
 
-      // REVERTED: Filter for non-active products on the client-side
       const pendingProductsList = productResponse.data.results.filter((product: Product) => !product.is_active);
 
       const grouped = pendingProductsList.reduce((acc: GroupedProducts, product: Product) => {
@@ -200,6 +197,7 @@ const CompleteDashboard = () => {
   }, []);
 
   useEffect(() => {
+    // useEffect for auth check remains the same
     const checkUserAndFetch = async () => {
       try {
         const userResponse = await api.get('/users/me/');
@@ -222,11 +220,16 @@ const CompleteDashboard = () => {
 
   // Vendor Handlers
   const handleVendorApprove = async (vendorId: number) => {
+    setLoadingVendorId(vendorId); // Set loading for specific vendor
     try {
       await api.post(`/vendor/${vendorId}/approve/`, { action: 'approve' });
       toast.success("Vendor Approved");
       fetchData();
-    } catch (error) { toast.error("Approval Failed"); }
+    } catch (error) {
+      toast.error("Approval Failed");
+    } finally {
+      setLoadingVendorId(null); // Clear loading state
+    }
   };
 
   const handleOpenVendorRejectModal = (vendor: VendorApplication) => {
@@ -238,13 +241,18 @@ const CompleteDashboard = () => {
     if (!selectedVendor || !vendorRejectionReason.trim()) {
       return toast.error("Rejection reason is required.");
     }
+    setIsSubmitting(true); // Set general modal submitting state
     try {
       await api.post(`/vendor/${selectedVendor.id}/approve/`, { action: 'reject', reason: vendorRejectionReason });
       toast.success("Vendor Rejected");
       setIsVendorRejectModalOpen(false);
       setVendorRejectionReason("");
       fetchData();
-    } catch (error: any) { toast.error("Rejection Failed", { description: error.response?.data?.error }); }
+    } catch (error: any) {
+      toast.error("Rejection Failed", { description: error.response?.data?.error });
+    } finally {
+      setIsSubmitting(false); // Clear submitting state
+    }
   };
 
   // Product Handlers
@@ -255,43 +263,52 @@ const CompleteDashboard = () => {
 
   const handleProductApprove = async () => {
     if (!selectedProduct) return;
+    setIsSubmitting(true);
     try {
       await api.post(`/products/${selectedProduct.id}/approve/`);
       toast.success("Product Approved", { description: `${selectedProduct.name} is now live.` });
       setIsProductDetailModalOpen(false);
       fetchData();
-    } catch (error) { toast.error("Approval Failed"); }
+    } catch (error) {
+      toast.error("Approval Failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOpenProductRejectModal = () => {
     if (!selectedProduct) return;
-    setIsProductDetailModalOpen(false); // Close detail modal first
-    setIsProductRejectModalOpen(true); // Then open reject reason modal
+    setIsProductDetailModalOpen(false);
+    setIsProductRejectModalOpen(true);
   };
 
   const handleProductRejectSubmit = async () => {
     if (!selectedProduct || !productRejectionReason.trim()) {
       return toast.error("Rejection reason is required.");
     }
+    setIsSubmitting(true);
     try {
       await api.post(`/products/${selectedProduct.id}/reject/`, { reason: productRejectionReason });
       toast.success("Product Rejected");
       setIsProductRejectModalOpen(false);
       setProductRejectionReason("");
       fetchData();
-    } catch (error: any) { toast.error("Rejection Failed", { description: error.response?.data?.error }); }
+    } catch (error: any) {
+      toast.error("Rejection Failed", { description: error.response?.data?.error });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const totalPendingProducts = Object.values(pendingProducts).reduce((sum, prods) => sum + prods.length, 0);
 
   return (
     <>
+      {/* Main layout and stats cards remain the same */}
       <div className="overflow-auto bg-gray-50 p-6 sm:p-8 lg:p-10 min-h-screen">
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h2>
         <div className="flex flex-col lg:flex-row gap-10">
-          {/* Left Section */}
           <div className="flex-1 space-y-8">
-            {/* StatsCards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://mhebazar.vercel.app/admin/forms/quotes" />
               <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://mhebazar.vercel.app/admin/forms/direct-buy" />
@@ -302,7 +319,6 @@ const CompleteDashboard = () => {
             <AnalyticsDashboard />
           </div>
 
-          {/* Right Section - Notifications */}
           <div className="w-full lg:w-1/3 space-y-8">
             <div>
               <h3 className="text-2xl font-semibold text-gray-800 mb-4">Pending Actions</h3>
@@ -315,7 +331,7 @@ const CompleteDashboard = () => {
               ) : null}
             </div>
 
-            {/* Vendor Applications */}
+            {/* Vendor Applications with Loading Buttons */}
             {vendorApps.length > 0 && (
               <Card>
                 <CardHeader>
@@ -329,8 +345,16 @@ const CompleteDashboard = () => {
                         <p className="text-sm text-gray-500">{app.user_name || app.username}</p>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button size="sm" variant="outline" onClick={() => handleOpenVendorRejectModal(app)}><X className="w-4 h-4 mr-1" />Reject</Button>
-                        <Button size="sm" className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={() => handleVendorApprove(app.id)}><Check className="w-4 h-4 mr-1" />Approve</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleOpenVendorRejectModal(app)} disabled={loadingVendorId === app.id}>
+                          <X className="w-4 h-4 mr-1" />Reject
+                        </Button>
+                        <Button size="sm" className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={() => handleVendorApprove(app.id)} disabled={loadingVendorId === app.id}>
+                          {loadingVendorId === app.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <><Check className="w-4 h-4 mr-1" />Approve</>
+                          )}
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -338,7 +362,7 @@ const CompleteDashboard = () => {
               </Card>
             )}
 
-            {/* Product Approvals */}
+            {/* Product Approvals section remains the same */}
             {totalPendingProducts > 0 && (
               <Card>
                 <CardHeader>
@@ -357,7 +381,7 @@ const CompleteDashboard = () => {
                                 <p className="font-medium text-gray-900">{product.name}</p>
                                 <p className="text-sm text-gray-500">{product.category_name}</p>
                               </div>
-                              _        </div>
+                            </div>
                             <Button size="sm" variant="outline" onClick={() => handleOpenProductDetailModal(product)}>
                               <Info className="w-4 h-4 mr-2" /> Review
                             </Button>
@@ -385,12 +409,15 @@ const CompleteDashboard = () => {
           <Textarea placeholder="Type reason here..." value={vendorRejectionReason} onChange={(e) => setVendorRejectionReason(e.target.value)} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsVendorRejectModalOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleVendorRejectSubmit}>Submit Rejection</Button>
+            <Button variant="destructive" onClick={handleVendorRejectSubmit} disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Submit Rejection
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* NEW: Product Detail and Approval Modal */}
+      {/* Product Detail and Approval Modal */}
       <Dialog open={isProductDetailModalOpen} onOpenChange={setIsProductDetailModalOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {selectedProduct && (
@@ -398,11 +425,11 @@ const CompleteDashboard = () => {
               <DialogHeader>
                 <DialogTitle className="text-2xl">{selectedProduct.name}</DialogTitle>
                 <DialogDescription>
-                  Review the product details below before making a decision. Submitted by <span className="font-semibold">{selectedProduct.user_name}</span>.
+                  Review the product details below. Submitted by <span className="font-semibold">{selectedProduct.user_name}</span>.
                 </DialogDescription>
               </DialogHeader>
+              {/* The detail display grid remains unchanged */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 py-4">
-                {/* Left Column */}
                 <div className="space-y-2">
                   <h4 className="font-semibold text-lg border-b pb-2 mb-2">Product Information</h4>
                   <dl>
@@ -421,8 +448,6 @@ const CompleteDashboard = () => {
                     </>
                   )}
                 </div>
-
-                {/* Right Column */}
                 <div className="space-y-4">
                   <h4 className="font-semibold text-lg border-b pb-2 mb-2">Images</h4>
                   {selectedProduct.images.length > 0 ? (
@@ -434,13 +459,11 @@ const CompleteDashboard = () => {
                   ) : (
                     <p className="text-sm text-gray-500">No images provided.</p>
                   )}
-
                   <h4 className="font-semibold text-lg border-b pb-2 mb-2 pt-4">Meta Information</h4>
                   <dl>
                     <DetailRow label="Meta Title" value={selectedProduct.meta_title} />
                     <DetailRow label="Meta Description" value={selectedProduct.meta_description} />
                   </dl>
-
                   <h4 className="font-semibold text-lg border-b pb-2 mb-2 pt-4">Admin Details</h4>
                   <dl>
                     <DetailRow label="Status" value={<Badge className="capitalize">{selectedProduct.status}</Badge>} />
@@ -452,12 +475,16 @@ const CompleteDashboard = () => {
               <DialogFooter className="pt-4 border-t">
                 <Button variant="outline" onClick={() => setIsProductDetailModalOpen(false)}>Close</Button>
                 <div className='flex items-center space-x-2'>
-                  <Button variant="destructive" onClick={handleOpenProductRejectModal}>
+                  <Button variant="destructive" onClick={handleOpenProductRejectModal} disabled={isSubmitting}>
                     <PackageX className="w-4 h-4 mr-2" />
                     Reject
                   </Button>
-                  <Button className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={handleProductApprove}>
-                    <PackageCheck className="w-4 h-4 mr-2" />
+                  <Button className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={handleProductApprove} disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <PackageCheck className="w-4 h-4 mr-2" />
+                    )}
                     Approve
                   </Button>
                 </div>
@@ -466,7 +493,6 @@ const CompleteDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
-
 
       {/* Product Rejection Reason Modal */}
       <Dialog open={isProductRejectModalOpen} onOpenChange={setIsProductRejectModalOpen}>
@@ -478,7 +504,10 @@ const CompleteDashboard = () => {
           <Textarea placeholder="Type reason here..." value={productRejectionReason} onChange={(e) => setProductRejectionReason(e.target.value)} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsProductRejectModalOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleProductRejectSubmit}>Submit Rejection</Button>
+            <Button variant="destructive" onClick={handleProductRejectSubmit} disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Submit Rejection
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
