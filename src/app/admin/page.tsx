@@ -98,20 +98,27 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
 
   return (
     <div
-      className="bg-white p-4 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 aspect-square w-full max-w-xs"
+      className="group relative bg-white p-4 md:p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 aspect-square w-full"
       onClick={handleCardClick}
     >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-start mb-4 p-4">
-          <Image src={icon} alt={label} width={100} height={100} className="w-25 h-25" />
-        </div>
-        <div className="mt-auto">
-          <h2 className="text-4xl font-bold text-green-600">{number}</h2>
-          <p className="text-lg text-gray-500">{label}</p>
-        </div>
+      {/* Icon Container */}
+      <div>
+        {/* 5. Image size is now responsive. `width` and `height` props on `Image` should match the largest size for optimization. */}
+        <Image src={icon} alt={label} width={80} height={80} className="w-16 h-16 md:w-20 md:h-20" />
       </div>
-      <div className="flex justify-end mt-auto -mr-1 -mb-1">
-        <ChevronRightIcon className="w-6 h-6 text-green-600 " />
+
+      {/* Text content - `mt-auto` pushes this block to the bottom of the card. */}
+      <div className="mt-auto">
+        {/* 6. Font sizes are responsive for better readability. */}
+        <h2 className="text-3xl sm:text-4xl font-bold text-green-600">{number}</h2>
+        <p className="text-base md:text-lg text-gray-500">{label}</p>
+      </div>
+
+      {/* 7. Chevron icon is now absolutely positioned for a robust and clean layout. */}
+      {/* Its position adjusts with the card's padding. */}
+      <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6">
+        {/* 8. Added a subtle transition effect on hover for better user feedback. */}
+        <ChevronRightIcon className="h-6 w-6 md:h-7 md:w-7 text-green-600 transition-transform duration-300 group-hover:translate-x-1" />
       </div>
     </div>
   );
