@@ -2,14 +2,13 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon } from 'lucide-react';
+import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info } from 'lucide-react';
 import AnalyticsDashboard from '@/components/admin/Graph';
 import api from '@/lib/api'; // Use the configured axios instance
 import Cookies from 'js-cookie';
 import { toast } from "sonner";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
-
 
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";
@@ -20,9 +19,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+
 
 // --- Type Definitions ---
 export interface StatsCardProps {
@@ -42,6 +45,7 @@ export interface VendorApplication {
   user_name: string;
 }
 
+// EXPANDED PRODUCT TYPE TO MATCH YOUR JSON DATA
 export interface Product {
   id: number;
   name: string;
@@ -49,21 +53,43 @@ export interface Product {
   images: { image: string }[];
   user: number;
   user_name: string;
+  user_description: string;
+  user_image: string;
   category_name: string;
+  average_rating: number | null;
+  brochure: string | null;
+  category: number;
+  created_at: string;
+  description: string;
+  direct_sale: boolean;
+  hide_price: boolean;
+  manufacturer: string;
+  meta_description: string;
+  meta_title: string;
+  model: string;
+  online_payment: boolean;
+  price: string;
+  product_details: { [key: string]: any }; // Flexible for different specs
+  rejection_reason: string;
+  status: "pending" | "approved" | "rejected";
+  stock_quantity: number;
+  subcategory: number | null;
+  type: string[];
+  updated_at: string;
 }
+
 
 type GroupedProducts = {
   [key: string]: Product[];
 }
 
-// A more comprehensive stats type
 interface DashboardStats {
   productQuotes: number;
   directBuys: number;
   rentals: number;
   trainingRequests: number;
   contactRequests: number;
-  totalVendors: number; // Added for clarity
+  totalVendors: number;
   pendingVendors: number;
 }
 
@@ -71,10 +97,7 @@ interface DashboardStats {
 // --- Helper Components ---
 const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
   const router = useRouter();
-
-  const handleCardClick = () => {
-    router.push(link);
-  };
+  const handleCardClick = () => router.push(link);
 
   return (
     <div
@@ -97,86 +120,77 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
   );
 };
 
+// A small helper to render product details neatly
+const DetailRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
+  <div className="grid grid-cols-3 gap-2 py-2 border-b border-gray-100">
+    <dt className="text-sm font-medium text-gray-500">{label}</dt>
+    <dd className="text-sm text-gray-900 col-span-2">{value || 'N/A'}</dd>
+  </div>
+);
+
 
 // --- Main Dashboard Component ---
 const CompleteDashboard = () => {
   const [vendorApps, setVendorApps] = useState<VendorApplication[]>([]);
   const [pendingProducts, setPendingProducts] = useState<GroupedProducts>({});
-
-  // Use the new, more descriptive stats state
   const [stats, setStats] = useState<DashboardStats>({
-    productQuotes: 0,
-    directBuys: 0,
-    rentals: 0,
-    trainingRequests: 0,
-    contactRequests: 0,
-    totalVendors: 0,
-    pendingVendors: 0,
+    productQuotes: 0, directBuys: 0, rentals: 0, trainingRequests: 0,
+    contactRequests: 0, totalVendors: 0, pendingVendors: 0,
   });
 
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState("");
 
+  // State for Vendor Modals
+  const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
+  const [isVendorRejectModalOpen, setIsVendorRejectModalOpen] = useState(false);
+  const [vendorRejectionReason, setVendorRejectionReason] = useState("");
+
+  // State for Product Modals
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isProductDetailModalOpen, setIsProductDetailModalOpen] = useState(false); // <-- NEW STATE
   const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
   const [productRejectionReason, setProductRejectionReason] = useState("");
 
-  
 
   // --- Auth Check and Data Fetching ---
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // --- MODIFIED: Fetch counts from all relevant endpoints ---
       const [
-        vendorResponse,
-        productResponse,
-        vendorStatsResponse,
-        quoteResponse,
-        rentalResponse,
-        orderResponse,
-        trainingResponse,
-        contactResponse
+        vendorResponse, productResponse, vendorStatsResponse, quoteResponse,
+        rentalResponse, orderResponse, trainingResponse, contactResponse
       ] = await Promise.all([
         api.get('/vendor/'),
+        // REVERTED: Fetch all products first
         api.get('/products/'),
-        api.get('/vendor/stats/'), // Still useful for vendor-specific counts
-        api.get('/quotes/?page_size=1'), // Fetching only count is efficient
+        api.get('/vendor/stats/'),
+        api.get('/quotes/?page_size=1'),
         api.get('/rentals/?page_size=1'),
         api.get('/orders/?page_size=1'),
         api.get('/training-registrations/?page_size=1'),
         api.get('/contact-forms/?page_size=1'),
       ]);
 
-      // Process Vendor Applications (unchanged)
       const pendingVendors = vendorResponse.data.results.filter((app: any) => !app.is_approved);
       setVendorApps(pendingVendors);
 
-      // Process and Group Pending Products (unchanged)
-      const activeProducts = productResponse.data.results.filter((product: Product) => !product.is_active);
-      const grouped = activeProducts.reduce((acc: GroupedProducts, product: Product) => {
+      // REVERTED: Filter for non-active products on the client-side
+      const pendingProductsList = productResponse.data.results.filter((product: Product) => !product.is_active);
+
+      const grouped = pendingProductsList.reduce((acc: GroupedProducts, product: Product) => {
         const vendorName = product.user_name || 'Unknown Vendor';
-        if (!acc[vendorName]) {
-          acc[vendorName] = [];
-        }
+        if (!acc[vendorName]) acc[vendorName] = [];
         acc[vendorName].push(product);
         return acc;
       }, {});
       setPendingProducts(grouped);
 
-      // --- MODIFIED: Set the new comprehensive stats state ---
       setStats({
-        productQuotes: quoteResponse.data.count,
-        directBuys: orderResponse.data.count,
-        rentals: rentalResponse.data.count,
-        trainingRequests: trainingResponse.data.count,
-        contactRequests: contactResponse.data.count,
-        totalVendors: vendorStatsResponse.data.total_applications,
+        productQuotes: quoteResponse.data.count, directBuys: orderResponse.data.count,
+        rentals: rentalResponse.data.count, trainingRequests: trainingResponse.data.count,
+        contactRequests: contactResponse.data.count, totalVendors: vendorStatsResponse.data.total_applications,
         pendingVendors: vendorStatsResponse.data.pending_applications,
       });
-
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
       toast.error("Error", { description: "Could not fetch dashboard data." });
@@ -185,14 +199,12 @@ const CompleteDashboard = () => {
     }
   }, []);
 
-  // useEffect and handler functions remain the same
   useEffect(() => {
     const checkUserAndFetch = async () => {
       try {
         const userResponse = await api.get('/users/me/');
         if (userResponse.data?.role?.name.toLowerCase() !== 'admin') {
-          window.location.href = "/";
-          return;
+          window.location.href = "/"; return;
         }
         fetchData();
       } catch (err: any) {
@@ -206,83 +218,68 @@ const CompleteDashboard = () => {
     checkUserAndFetch();
   }, [fetchData]);
 
-  // --- Handler Functions for Approve/Reject ---
+  // --- Handler Functions ---
+
+  // Vendor Handlers
   const handleVendorApprove = async (vendorId: number) => {
     try {
       await api.post(`/vendor/${vendorId}/approve/`, { action: 'approve' });
-      toast.success("Vendor Approved", { description: "The vendor application has been approved." });
+      toast.success("Vendor Approved");
       fetchData();
-    } catch (error) {
-      console.error("Failed to approve vendor:", error);
-      toast.error("Approval Failed", { description: "An error occurred." });
-    }
+    } catch (error) { toast.error("Approval Failed"); }
   };
 
-  const handleOpenRejectModal = (vendor: VendorApplication) => {
+  const handleOpenVendorRejectModal = (vendor: VendorApplication) => {
     setSelectedVendor(vendor);
-    setIsModalOpen(true);
+    setIsVendorRejectModalOpen(true);
   };
 
   const handleVendorRejectSubmit = async () => {
-    if (!selectedVendor || !rejectionReason.trim()) {
-      return toast.error("Validation Error", { description: "Rejection reason is required." });
+    if (!selectedVendor || !vendorRejectionReason.trim()) {
+      return toast.error("Rejection reason is required.");
     }
     try {
-      await api.post(`/vendor/${selectedVendor.id}/approve/`, {
-        action: 'reject',
-        reason: rejectionReason,
-      });
-      toast.success("Vendor Rejected", { description: "The application has been rejected and removed." });
-      setIsModalOpen(false);
-      setRejectionReason("");
+      await api.post(`/vendor/${selectedVendor.id}/approve/`, { action: 'reject', reason: vendorRejectionReason });
+      toast.success("Vendor Rejected");
+      setIsVendorRejectModalOpen(false);
+      setVendorRejectionReason("");
       fetchData();
-    } catch (error: any) {
-      console.error("Failed to reject vendor:", error);
-      toast.error("Rejection Failed", { description: error.response?.data?.error || "An error occurred." });
-    }
+    } catch (error: any) { toast.error("Rejection Failed", { description: error.response?.data?.error }); }
   };
 
-  // Modify the handleProductAction function
-  const handleProductAction = async (productId: number, action: 'approve' | 'reject') => {
-    if (action === 'reject') {
-      const product = Object.values(pendingProducts)
-        .flat()
-        .find(p => p.id === productId);
-      setSelectedProduct(product || null);
-      setIsProductRejectModalOpen(true);
-      return;
-    }
+  // Product Handlers
+  const handleOpenProductDetailModal = (product: Product) => {
+    setSelectedProduct(product);
+    setIsProductDetailModalOpen(true);
+  };
 
+  const handleProductApprove = async () => {
+    if (!selectedProduct) return;
     try {
-      await api.post(`/products/${productId}/${action}/`);
-      toast.success(`Product ${action === 'approve' ? 'Approved' : 'Rejected'}`, {
-        description: `The product has been successfully ${action === 'approve' ? 'approved' : 'rejected'}.`
-      });
+      await api.post(`/products/${selectedProduct.id}/approve/`);
+      toast.success("Product Approved", { description: `${selectedProduct.name} is now live.` });
+      setIsProductDetailModalOpen(false);
       fetchData();
-    } catch (error) {
-      console.error(`Failed to ${action} product:`, error);
-      toast.error("Action Failed", { description: `Could not ${action} the product.` });
-    }
+    } catch (error) { toast.error("Approval Failed"); }
   };
 
-  // Add this new function to handle product rejection submission
+  const handleOpenProductRejectModal = () => {
+    if (!selectedProduct) return;
+    setIsProductDetailModalOpen(false); // Close detail modal first
+    setIsProductRejectModalOpen(true); // Then open reject reason modal
+  };
+
   const handleProductRejectSubmit = async () => {
     if (!selectedProduct || !productRejectionReason.trim()) {
-      return toast.error("Validation Error", { description: "Rejection reason is required." });
+      return toast.error("Rejection reason is required.");
     }
     try {
-      await api.post(`/products/${selectedProduct.id}/reject/`, {
-        reason: productRejectionReason,
-      });
-      toast.success("Product Rejected", { description: "The product has been rejected." });
+      await api.post(`/products/${selectedProduct.id}/reject/`, { reason: productRejectionReason });
+      toast.success("Product Rejected");
       setIsProductRejectModalOpen(false);
       setProductRejectionReason("");
-      setSelectedProduct(null);
       fetchData();
-    } catch (error: any) {
-      console.error("Failed to reject product:", error);
-      toast.error("Rejection Failed", { description: error.response?.data?.error || "An error occurred." });
-    }
+    } catch (error: any) { toast.error("Rejection Failed", { description: error.response?.data?.error }); }
   };
 
   const totalPendingProducts = Object.values(pendingProducts).reduce((sum, prods) => sum + prods.length, 0);
@@ -291,21 +288,17 @@ const CompleteDashboard = () => {
     <>
       <div className="overflow-auto bg-gray-50 p-6 sm:p-8 lg:p-10 min-h-screen">
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h2>
-
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Left Section */}
           <div className="flex-1 space-y-8">
-            {/* StatsCards with image icons */}
+            {/* StatsCards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://mhebazar.vercel.app/admin/forms/quotes" />
               <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://mhebazar.vercel.app/admin/forms/direct-buy" />
               <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://mhebazar.vercel.app/admin/forms/rentals" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://mhebazar.vercel.app/admin/forms/training-registrations" />
               <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://mhebazar.vercel.app/admin/contact/contact-form" />
             </div>
-
             <AnalyticsDashboard />
           </div>
 
@@ -313,13 +306,11 @@ const CompleteDashboard = () => {
           <div className="w-full lg:w-1/3 space-y-8">
             <div>
               <h3 className="text-2xl font-semibold text-gray-800 mb-4">Pending Actions</h3>
-              {isLoading ? (
-                <p className="text-gray-500">Loading pending actions...</p>
-              ) : (vendorApps.length === 0 && totalPendingProducts === 0) ? (
-                <div className="text-center py-10 bg-white rounded-lg border border-gray-200 shadow-sm">
+              {isLoading ? <p>Loading...</p> : (vendorApps.length === 0 && totalPendingProducts === 0) ? (
+                <div className="text-center py-10 bg-white rounded-lg border">
                   <Check className="mx-auto h-12 w-12 text-green-500" />
-                  <h4 className="mt-3 text-lg font-medium text-gray-900">All Caught Up!</h4>
-                  <p className="mt-1 text-sm text-gray-500">There are no pending applications or products to review.</p>
+                  <h4 className="mt-3 text-lg font-medium">All Caught Up!</h4>
+                  <p className="mt-1 text-sm text-gray-500">No pending items.</p>
                 </div>
               ) : null}
             </div>
@@ -327,24 +318,19 @@ const CompleteDashboard = () => {
             {/* Vendor Applications */}
             {vendorApps.length > 0 && (
               <Card>
-                <CardHeader className="pb-2">
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg text-blue-700"><Building /> Vendor Applications</CardTitle>
-                  <CardDescription>Review and process new vendor sign-ups.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4 pt-2">
+                <CardContent className="space-y-4">
                   {vendorApps.map((app) => (
-                    <div key={app.id} className="border rounded-lg p-4 flex items-center justify-between bg-white shadow-sm">
+                    <div key={app.id} className="border rounded-lg p-4 flex items-center justify-between">
                       <div>
-                        <p className="font-semibold text-gray-900">{app.company_name}</p>
-                        <p className="text-sm text-gray-500">Applied by: {app.user_name || app.username}</p>
+                        <p className="font-semibold">{app.company_name}</p>
+                        <p className="text-sm text-gray-500">{app.user_name || app.username}</p>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button size="sm" variant="outline" className="text-red-600 border-red-500 hover:bg-red-50" onClick={() => handleOpenRejectModal(app)}>
-                          <X className="w-4 h-4 mr-1" />Reject
-                        </Button>
-                        <Button size="sm" className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={() => handleVendorApprove(app.id)}>
-                          <Check className="w-4 h-4 mr-1" />Approve
-                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleOpenVendorRejectModal(app)}><X className="w-4 h-4 mr-1" />Reject</Button>
+                        <Button size="sm" className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={() => handleVendorApprove(app.id)}><Check className="w-4 h-4 mr-1" />Approve</Button>
                       </div>
                     </div>
                   ))}
@@ -355,11 +341,10 @@ const CompleteDashboard = () => {
             {/* Product Approvals */}
             {totalPendingProducts > 0 && (
               <Card>
-                <CardHeader className="pb-2">
+                <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-orange-700"><Package /> Product Approvals</CardTitle>
-                  <CardDescription>Review new products submitted by vendors.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6 pt-2">
+                <CardContent className="space-y-6">
                   {Object.entries(pendingProducts).map(([vendorName, products]) => (
                     <div key={vendorName}>
                       <h4 className="font-semibold text-gray-700 mb-3">From: {vendorName}</h4>
@@ -367,20 +352,15 @@ const CompleteDashboard = () => {
                         {products.map(product => (
                           <div key={product.id} className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded bg-gray-100 object-contain" />
+                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded object-contain" />
                               <div>
                                 <p className="font-medium text-gray-900">{product.name}</p>
                                 <p className="text-sm text-gray-500">{product.category_name}</p>
                               </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Button size="sm" variant="outline" className="text-red-600 border-red-500 hover:bg-red-50" onClick={() => handleProductAction(product.id, 'reject')}>
-                                <PackageX className="w-4 h-4 mr-1" />Reject
-                              </Button>
-                              <Button size="sm" className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={() => handleProductAction(product.id, 'approve')}>
-                                <PackageCheck className="w-4 h-4 mr-1" />Approve
-                              </Button>
-                            </div>
+                              _        </div>
+                            <Button size="sm" variant="outline" onClick={() => handleOpenProductDetailModal(product)}>
+                              <Info className="w-4 h-4 mr-2" /> Review
+                            </Button>
                           </div>
                         ))}
                       </div>
@@ -393,47 +373,109 @@ const CompleteDashboard = () => {
         </div>
       </div>
 
-      {/* Rejection Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+      {/* --- MODALS --- */}
+
+      {/* Vendor Rejection Modal */}
+      <Dialog open={isVendorRejectModalOpen} onOpenChange={setIsVendorRejectModalOpen}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Vendor Application</DialogTitle>
-            <DialogDescription>
-              Provide a reason for rejecting the application for <span className="font-semibold">{selectedVendor?.company_name}</span>. This reason will be sent to the user.
-            </DialogDescription>
+            <DialogTitle>Reject Vendor: {selectedVendor?.company_name}</DialogTitle>
+            <DialogDescription>This reason will be sent to the user.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Textarea
-              placeholder="Type your reason here..."
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              className="min-h-[100px]"
-            />
-          </div>
+          <Textarea placeholder="Type reason here..." value={vendorRejectionReason} onChange={(e) => setVendorRejectionReason(e.target.value)} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setIsVendorRejectModalOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={handleVendorRejectSubmit}>Submit Rejection</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Product Rejection Modal */}
+      {/* NEW: Product Detail and Approval Modal */}
+      <Dialog open={isProductDetailModalOpen} onOpenChange={setIsProductDetailModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedProduct && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl">{selectedProduct.name}</DialogTitle>
+                <DialogDescription>
+                  Review the product details below before making a decision. Submitted by <span className="font-semibold">{selectedProduct.user_name}</span>.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 py-4">
+                {/* Left Column */}
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-lg border-b pb-2 mb-2">Product Information</h4>
+                  <dl>
+                    <DetailRow label="Category" value={selectedProduct.category_name} />
+                    <DetailRow label="Manufacturer" value={selectedProduct.manufacturer} />
+                    <DetailRow label="Model" value={selectedProduct.model} />
+                    <DetailRow label="Price" value={`₹ ${Number(selectedProduct.price).toLocaleString('en-IN')}`} />
+                    <DetailRow label="Stock" value={selectedProduct.stock_quantity} />
+                    <DetailRow label="Type" value={selectedProduct.type.map(t => <Badge key={t} variant="secondary" className="mr-1 capitalize">{t}</Badge>)} />
+                    <DetailRow label="Description" value={<p className="whitespace-pre-wrap">{selectedProduct.description}</p>} />
+                  </dl>
+                  {selectedProduct.product_details?.spare_specs && (
+                    <>
+                      <h4 className="font-semibold text-lg border-b pb-2 mb-2 pt-4">Spare Specs</h4>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedProduct.product_details.spare_specs}</p>
+                    </>
+                  )}
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-4">
+                  <h4 className="font-semibold text-lg border-b pb-2 mb-2">Images</h4>
+                  {selectedProduct.images.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedProduct.images.map((img, index) => (
+                        <Image key={index} src={img.image} alt={`${selectedProduct.name} image ${index + 1}`} width={150} height={150} className="rounded-md object-cover border" />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">No images provided.</p>
+                  )}
+
+                  <h4 className="font-semibold text-lg border-b pb-2 mb-2 pt-4">Meta Information</h4>
+                  <dl>
+                    <DetailRow label="Meta Title" value={selectedProduct.meta_title} />
+                    <DetailRow label="Meta Description" value={selectedProduct.meta_description} />
+                  </dl>
+
+                  <h4 className="font-semibold text-lg border-b pb-2 mb-2 pt-4">Admin Details</h4>
+                  <dl>
+                    <DetailRow label="Status" value={<Badge className="capitalize">{selectedProduct.status}</Badge>} />
+                    <DetailRow label="Created On" value={new Date(selectedProduct.created_at).toLocaleString()} />
+                    <DetailRow label="Last Updated" value={new Date(selectedProduct.updated_at).toLocaleString()} />
+                  </dl>
+                </div>
+              </div>
+              <DialogFooter className="pt-4 border-t">
+                <Button variant="outline" onClick={() => setIsProductDetailModalOpen(false)}>Close</Button>
+                <div className='flex items-center space-x-2'>
+                  <Button variant="destructive" onClick={handleOpenProductRejectModal}>
+                    <PackageX className="w-4 h-4 mr-2" />
+                    Reject
+                  </Button>
+                  <Button className="bg-[#5CA131] hover:bg-green-700 text-white" onClick={handleProductApprove}>
+                    <PackageCheck className="w-4 h-4 mr-2" />
+                    Approve
+                  </Button>
+                </div>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+
+      {/* Product Rejection Reason Modal */}
       <Dialog open={isProductRejectModalOpen} onOpenChange={setIsProductRejectModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Product</DialogTitle>
-            <DialogDescription>
-              Provide a reason for rejecting the product <span className="font-semibold">{selectedProduct?.name}</span>. This reason will be sent to the vendor.
-            </DialogDescription>
+            <DialogTitle>Reject Product: {selectedProduct?.name}</DialogTitle>
+            <DialogDescription>This reason will be sent to the vendor.</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <Textarea
-              placeholder="Type your reason here..."
-              value={productRejectionReason}
-              onChange={(e) => setProductRejectionReason(e.target.value)}
-              className="min-h-[100px]"
-            />
-          </div>
+          <Textarea placeholder="Type reason here..." value={productRejectionReason} onChange={(e) => setProductRejectionReason(e.target.value)} />
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsProductRejectModalOpen(false)}>Cancel</Button>
             <Button variant="destructive" onClick={handleProductRejectSubmit}>Submit Rejection</Button>
