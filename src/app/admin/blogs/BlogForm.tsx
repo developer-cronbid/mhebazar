@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from "sonner";
+import Cookies from 'js-cookie'; // Make sure you have js-cookie installed
 import api from '@/lib/api';
 
 // --- UI Components ---
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetClose
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +21,6 @@ const RichTextEditor = dynamic(() => import('./RichTextEditor'), {
 });
 
 // --- Type Definitions ---
-// Full blog data structure expected from the parent
 export interface BlogData {
   blog_title: string;
   description: string;
@@ -38,11 +38,12 @@ export interface BlogCategory {
 }
 
 interface BlogFormProps {
-  initialData: BlogData | null; // Receive the full blog object or null for creation
-  categories: BlogCategory[];     // Receive categories from parent
-  isOpen: boolean;                // Control visibility from parent
-  onOpenChange: (isOpen: boolean) => void; // Notify parent of visibility changes
-  onSuccess: () => void;          // Callback to refresh the table
+  formSessionId: number; // Add the new prop
+  initialData: BlogData | null;
+  categories: BlogCategory[];
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  onSuccess: () => void;
 }
 
 const initialFormState: BlogData = {
@@ -56,28 +57,59 @@ const initialFormState: BlogData = {
   image1: null,
 };
 
-export default function BlogForm({ initialData, categories, isOpen, onOpenChange, onSuccess }: BlogFormProps) {
+const DRAFT_COOKIE_KEY = 'blogDraft';
+
+export default function BlogForm({ formSessionId, initialData, categories, isOpen, onOpenChange, onSuccess }: BlogFormProps) {
   const [formData, setFormData] = useState<BlogData>(initialFormState);
   const [editorFiles, setEditorFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const isEditMode = !!initialData;
 
-  // Effect to populate form when initialData changes (e.g., when an edit button is clicked)
   useEffect(() => {
     if (isOpen) {
-      // If in edit mode, populate with initialData, otherwise use the empty state
-      setFormData(initialData || initialFormState);
+      // If editing a saved blog, use its data.
+      if (isEditMode) {
+        setFormData(initialData);
+      } else {
+        // If creating a new blog, check for a draft in cookies.
+        const draft = Cookies.get(DRAFT_COOKIE_KEY);
+        if (draft) {
+          toast.info("Loaded a saved draft.");
+          // console.log("LOADING FROM COOKIE:", JSON.parse(draft));
+          setFormData(JSON.parse(draft));
+        } else {
+          setFormData(initialFormState);
+        }
+      }
     } else {
       // Reset form when the sheet is closed
       setFormData(initialFormState);
       setEditorFiles([]);
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, isEditMode]);
+
+  // ✅ HELPER FUNCTION to update state and save draft to cookie
+  const updateAndSaveDraft = (updatedValues: Partial<BlogData>) => {
+    const newFormData = { ...formData, ...updatedValues };
+    setFormData(newFormData);
+    // Only save to cookies if we are in "create" mode (not editing a pre-existing blog)
+    if (!isEditMode) {
+      // We don't save the File object in cookies, so we exclude it.
+      const { image1, ...dataToSave } = newFormData;
+      // console.log("SAVING TO COOKIE:", dataToSave); 
+      Cookies.set(DRAFT_COOKIE_KEY, JSON.stringify(dataToSave), { expires: 1 }); // Expires in 24 hours
+    }
+  };
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    updateAndSaveDraft({ [name]: value });
+  };
+
+  const handleSelectChange = (value: string) => {
+    updateAndSaveDraft({ blog_category: value });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,7 +122,6 @@ export default function BlogForm({ initialData, categories, isOpen, onOpenChange
     event.preventDefault();
     setIsLoading(true);
 
-    // Image placeholder logic remains the same...
     let processedHtml = formData.description;
     const finalFiles: File[] = [];
     if (editorFiles.length > 0) {
@@ -123,11 +154,15 @@ export default function BlogForm({ initialData, categories, isOpen, onOpenChange
     data.set('description', processedHtml);
 
     try {
-      const url = isEditMode ? `/blogs/${initialData.blog_url}/` : '/blogs/';
+      const url = isEditMode && initialData.blog_url ? `/blogs/${initialData.blog_url}/` : '/blogs/';
       const method = isEditMode ? 'patch' : 'post';
 
       await api[method](url, data, { headers: { 'Content-Type': 'multipart/form-data' } });
       toast.success(`Blog ${isEditMode ? 'updated' : 'created'} successfully!`);
+
+      // ✅ Clear the draft from cookies on successful submission
+      Cookies.remove(DRAFT_COOKIE_KEY);
+
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
@@ -141,7 +176,6 @@ export default function BlogForm({ initialData, categories, isOpen, onOpenChange
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="w-full sm:max-w-4xl overflow-y-auto">
         <form onSubmit={handleSubmit}>
-          {/* The form layout (SheetHeader, inputs, RichTextEditor, SheetFooter) remains identical to the previous version */}
           <SheetHeader>
             <SheetTitle>{isEditMode ? 'Edit Blog Post' : 'Create New Blog Post'}</SheetTitle>
             <SheetDescription>
@@ -166,7 +200,8 @@ export default function BlogForm({ initialData, categories, isOpen, onOpenChange
               </div>
               <div>
                 <Label htmlFor="blog_category">Category</Label>
-                <Select name="blog_category" value={String(formData.blog_category)} onValueChange={(value) => setFormData(p => ({ ...p, blog_category: value }))} required>
+                {/* ✅ Use the dedicated handler for select change */}
+                <Select name="blog_category" value={String(formData.blog_category)} onValueChange={handleSelectChange} required>
                   <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                   <SelectContent>
                     {categories.map(cat => <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>)}
@@ -189,13 +224,20 @@ export default function BlogForm({ initialData, categories, isOpen, onOpenChange
                 {isEditMode && <p className="text-xs text-gray-500 mt-1">Leave blank to keep current image.</p>}
               </div>
             </div>
-            
+
             <div>
               <Label>Blog Content</Label>
               <RichTextEditor
+                key={formSessionId} // Keep the key from the previous step
                 initialData={formData.description}
-                onChange={(data) => setFormData(p => ({ ...p, description: data }))}
                 onFilesChange={(files) => setEditorFiles(files)}
+                onChange={(data) => {
+                  // Only save changes to the cookie if the form is actually open.
+                  // This prevents the final "on-close" event from erasing the data.
+                  if (isOpen) {
+                    updateAndSaveDraft({ description: data });
+                  }
+                }}
               />
             </div>
           </div>

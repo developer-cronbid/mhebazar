@@ -4,9 +4,10 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
 import { useReactTable, getCoreRowModel, flexRender, ColumnDef, SortingState } from '@tanstack/react-table';
 import { toast } from "sonner";
+import Cookies from 'js-cookie';
 
 // --- Component & UI Imports ---
-import BlogForm, { BlogData, BlogCategory } from './BlogForm'; // Import types from BlogForm
+import BlogForm, { BlogData, BlogCategory } from './BlogForm';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -15,14 +16,16 @@ import { PlusCircle, Pencil, Trash2 } from "lucide-react";
 
 // --- TypeScript Interfaces ---
 interface Blog {
-  id: number;
+  id: number | string;
   blog_title: string;
   author_name: string | null;
   created_at: string;
   blog_url: string;
+  isDraft?: boolean;
 }
 
 const PAGE_SIZE = 20;
+const DRAFT_COOKIE_KEY = 'blogDraft';
 
 const BlogsTable = () => {
   const [data, setData] = useState<Blog[]>([]);
@@ -33,12 +36,12 @@ const BlogsTable = () => {
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
   const [sortBy, setSortBy] = useState<SortingState>([{ id: 'created_at', desc: true }]);
 
-  // --- State for the controlled BlogForm ---
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState<BlogData | null>(null);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
 
-  // Fetch blogs data for the table
+  const [formSessionId, setFormSessionId] = useState<number>(Date.now());
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -49,8 +52,31 @@ const BlogsTable = () => {
         ...(sortBy.length > 0 && { ordering: `${sortBy[0].desc ? '-' : ''}${sortBy[0].id}` }),
       });
       const response = await api.get(`/blogs/`, { params });
-      setData(response.data.results);
-      setTotalBlogs(response.data.count);
+
+      let blogs: Blog[] = response.data.results;
+      let finalCount = response.data.count;
+      const draftCookie = Cookies.get(DRAFT_COOKIE_KEY);
+
+      if (draftCookie) {
+        try {
+          const draftData = JSON.parse(draftCookie);
+          if (draftData && draftData.blog_title) {
+            const draftEntry: Blog = {
+              ...draftData,
+              id: 'draft',
+              created_at: new Date().toISOString(),
+              isDraft: true,
+            };
+            blogs = [draftEntry, ...blogs];
+            finalCount += 1;
+          }
+        } catch (e) {
+          console.error("Failed to parse blog draft cookie:", e);
+          Cookies.remove(DRAFT_COOKIE_KEY);
+        }
+      }
+      setData(blogs);
+      setTotalBlogs(finalCount);
     } catch (error) {
       toast.error("Failed to fetch blogs.");
     } finally {
@@ -58,22 +84,19 @@ const BlogsTable = () => {
     }
   }, [page, debouncedGlobalFilter, sortBy]);
 
-  // Debounce search filter
   useEffect(() => {
     const handler = setTimeout(() => { setDebouncedGlobalFilter(globalFilter); setPage(1); }, 500);
     return () => clearTimeout(handler);
   }, [globalFilter]);
 
-  // Fetch data on page load and when dependencies change
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Fetch categories once on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await api.get('/categories/'); // Adjust endpoint if necessary
+        const response = await api.get('/categories/');
         setCategories(response.data.results || response.data);
       } catch (error) {
         toast.error("Failed to load blog categories.");
@@ -86,25 +109,25 @@ const BlogsTable = () => {
     try {
       await api.delete(`/blogs/${blogUrl}/`);
       toast.success("Blog deleted successfully!");
-      fetchData(); // Refresh data
+      fetchData();
     } catch (error) {
       toast.error("Failed to delete blog.");
     }
   };
 
-  // Handlers to open the form sheet
-  const handleCreateClick = () => {
-    setEditingBlog(null); // Set to null for create mode
+  const handleCreateOrContinueDraft = () => {
+    setEditingBlog(null);
+    setFormSessionId(Date.now()); // Generate a new key for this session
     setIsSheetOpen(true);
   };
 
-  const handleEditClick = async (blogUrl: string) => {
+  const handleEditSavedBlog = async (blog: Blog) => {
     try {
       toast.loading("Loading blog data...");
-      const response = await api.get(`/blogs/${blogUrl}/`);
-      // Ensure the category ID is a string for the Select component
+      const response = await api.get(`/blogs/${blog.blog_url}/`);
       const blogData = { ...response.data, blog_category: String(response.data.blog_category) };
       setEditingBlog(blogData);
+      setFormSessionId(Date.now()); // Generate a new key for this session
       setIsSheetOpen(true);
       toast.dismiss();
     } catch (error) {
@@ -114,44 +137,56 @@ const BlogsTable = () => {
   };
 
   const columns = useMemo<ColumnDef<Blog>[]>(() => [
-    { header: 'Sr. No.', cell: info => info.row.index + 1 + (page - 1) * PAGE_SIZE },
+    { header: 'Sr. No.', cell: info => info.row.original.isDraft ? <span className="font-bold text-blue-600">Draft</span> : info.row.index + (page - 1) * PAGE_SIZE },
     { accessorKey: 'blog_title', header: 'Blog Title' },
     { accessorKey: 'author_name', header: 'Author', cell: info => info.getValue() || 'N/A' },
-    { accessorKey: 'created_at', header: 'Date', cell: info => new Date(info.getValue() as string).toLocaleDateString() },
+    { accessorKey: 'created_at', header: 'Date', cell: info => info.row.original.isDraft ? '—' : new Date(info.getValue() as string).toLocaleDateString() },
     {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleEditClick(row.original.blog_url)}>
+          {/* ✅ --- START: THE KEY FIX --- */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (row.original.isDraft) {
+                // For drafts, open the form in "create" mode.
+                handleCreateOrContinueDraft();
+              } else {
+                // For saved blogs, open the form in "edit" mode.
+                handleEditSavedBlog(row.original);
+              }
+            }}
+          >
             <Pencil className="h-4 w-4" />
           </Button>
+          {/* ✅ --- END: THE KEY FIX --- */}
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm">
+              <Button variant="destructive" size="sm" disabled={row.original.isDraft}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete the blog post. This action cannot be undone.
-                </AlertDialogDescription>
+                <AlertDialogDescription>This will permanently delete the blog post. This action cannot be undone.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={() => handleDelete(row.original.blog_url)}>
-                  Delete
-                </AlertDialogAction>
+                <AlertDialogAction onClick={() => handleDelete(row.original.blog_url)}>Delete</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
         </div>
       ),
     },
-  ], [page, fetchData]); // Added fetchData to dependency array for correctness
+  ], [page, fetchData]); // Dependency array is correct
 
+  // The rest of the component (table definition, pagination, JSX) remains unchanged.
+  // ...
   const table = useReactTable({
     data,
     columns,
@@ -186,8 +221,7 @@ const BlogsTable = () => {
           <h1 className="text-2xl font-semibold text-gray-900">Manage Blogs</h1>
           <p className="text-sm text-gray-500 mt-1">Add, edit, or delete blog posts.</p>
         </div>
-        {/* ✅ CORRECTED: Use a standard button with an onClick handler */}
-        <Button className="flex items-center gap-2" onClick={handleCreateClick}>
+        <Button className="flex items-center gap-2" onClick={handleCreateOrContinueDraft}>
           <PlusCircle size={16} />
           Add New Blog
         </Button>
@@ -245,7 +279,7 @@ const BlogsTable = () => {
                 <tr><td colSpan={columns.length} className="text-center py-10">No blogs found.</td></tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={row.id} className={`border-b border-gray-100 hover:bg-gray-50 ${row.original.isDraft ? 'bg-blue-50' : ''}`}>
                     {row.getVisibleCells().map(cell => (
                       <td key={cell.id} className="py-3 px-4 text-gray-800">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -261,7 +295,7 @@ const BlogsTable = () => {
 
       <div className="flex items-center justify-between gap-4 mt-4">
         <div className="text-sm text-gray-600">
-          {!loading && `Showing ${data.length > 0 ? (page - 1) * PAGE_SIZE + 1 : 0} to ${Math.min(page * PAGE_SIZE, totalBlogs)} of ${totalBlogs} entries`}
+          {!loading && `Showing ${data.length > 0 ? (page - 1) * PAGE_SIZE + 1 : 0} to ${Math.min((page - 1) * PAGE_SIZE + data.length, totalBlogs)} of ${totalBlogs} entries`}
         </div>
         {!loading && totalPages > 1 && (
           <Pagination>
@@ -282,15 +316,15 @@ const BlogsTable = () => {
         )}
       </div>
 
-      {/* ✅ RENDER THE SINGLE, CONTROLLED FORM INSTANCE */}
       <BlogForm
+        formSessionId={formSessionId} // Pass the session key as a prop
         isOpen={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         initialData={editingBlog}
         categories={categories}
         onSuccess={() => {
           setIsSheetOpen(false);
-          fetchData(); // Refresh table data on success
+          fetchData();
         }}
       />
     </div>
