@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, FormEvent, JSX, useEffect } from "react"
+import { useState, FormEvent, JSX, useEffect, ChangeEvent } from "react"
 import axios from "axios"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import { Loader2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import DOMPurify from 'dompurify'
+import countrycode from '@/data/countrycode_cleaned.json'
 
 interface RentalFormProps {
   productId: number
@@ -38,6 +39,9 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
     address: '',
   });
 
+  // selected country dial code, e.g. "+1"
+  const [selectedDialCode, setSelectedDialCode] = useState<string>('');
+
   const today = new Date().toISOString().split("T")[0]
 
   // Prefill contact info with user data if available
@@ -50,9 +54,23 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
         address: user.address?.address || '',
       });
     }
+
+    // set default dial code: prefer user's country (user.country or user.country_code),
+    // fall back to US if present, else first in list
+    const userCca2 = (user as any)?.country || (user as any)?.country_code || '';
+    const foundByUser = countrycode.find((c: any) => c.cca2 === userCca2);
+    const foundUS = countrycode.find((c: any) => c.cca2 === 'IN');
+    const defaultCountry = foundByUser || foundUS || countrycode[0];
+    const getDialFromCountry = (c: any) => {
+      if (!c || !c.idd) return '+';
+      const root = c.idd.root || '';
+      const suffix = Array.isArray(c.idd.suffixes) ? (c.idd.suffixes[0] ?? '') : '';
+      return `${root}${suffix}`.replace(/\s+/g, '');
+    };
+    setSelectedDialCode(getDialFromCountry(defaultCountry));
   }, [user]);
-  
-  const handleContactChange = (e) => {
+
+  const handleContactChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setContactInfo(prev => ({
       ...prev,
@@ -77,7 +95,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
       toast.error("End date must be after start date.")
       return
     }
-    
+
     // Validate contact info
     if (!contactInfo.fullName || !contactInfo.email || !contactInfo.phone) {
       toast.error("Please fill in your name, email, and phone number.");
@@ -88,23 +106,22 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
     try {
       setIsSubmitting(true)
 
-      // Concatenate all form data and user info into a single notes string
-      const fullNotes = `
-        **Rental Request Details**
-        - Full Name: ${contactInfo.fullName}
-        - Email: ${contactInfo.email}
-        - Phone: ${contactInfo.phone}
-        - Address: ${contactInfo.address || 'N/A'}
-        - Start Date: ${startDate}
-        - End Date: ${endDate}
-        ${notes.trim() ? `\n---\nMessage:\n${notes.trim()}` : ''}
-      `;
+      // Build full phone by concatenating selected dial code and local number.
+      // Remove spaces, dashes, parentheses and leading zeros from the local part
+      const localNumber = contactInfo.phone.replace(/[\s\-()]+/g, '').replace(/^0+/, '');
+      const dial = selectedDialCode || '';
+      const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
+      const fullPhone = `${normalizedDial}${localNumber}`;
 
       const rentalPayload: Record<string, any> = {
         product: productId,
         start_date: startDate,
         end_date: endDate,
-        notes: fullNotes
+        notes: notes,
+        full_name: contactInfo.fullName,
+        email: contactInfo.email,
+        phone: fullPhone,
+        address: contactInfo.address,
       }
 
       await api.post("/rentals/", rentalPayload)
@@ -112,6 +129,12 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
       toast.success("Rental request submitted successfully! We’ll get back to you soon.")
 
       // Reset form fields
+      setContactInfo({
+        fullName: '',
+        email: '',
+        phone: '',
+        address: '',
+      });
       setStartDate("")
       setEndDate("")
       setNotes("")

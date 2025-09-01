@@ -3,12 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useEffect } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Phone } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Product } from "@/types";
 import DOMPurify from 'dompurify';
 import { useUser } from "@/context/UserContext";
+import countrycode from '@/data/countrycode_cleaned.json'
 
 const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void }) => {
   const { user } = useUser();
@@ -22,6 +23,17 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
     message: ''
   });
 
+  // store selected country dial code (e.g. "+1")
+  const [selectedDialCode, setSelectedDialCode] = useState<string>('');
+
+  // helper to get a displayable dial for a country entry
+  const getDialFromCountry = (c: any) => {
+    if (!c || !c.idd) return '+';
+    const root = c.idd.root || '';
+    const suffix = Array.isArray(c.idd.suffixes) ? (c.idd.suffixes[0] ?? '') : '';
+    return `${root}${suffix}`.replace(/\s+/g, '');
+  };
+
   // Prefill form fields with user data if available
   useEffect(() => {
     if (user) {
@@ -34,9 +46,16 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
         // The address is also not a direct field, so we'll just log it.
       }));
     }
+    // set default dial code: prefer user's country (user.country or user.country_code),
+    // fall back to US if present, else first in list
+    const userCca2 = (user as any)?.country || (user as any)?.country_code || '';
+    const foundByUser = countrycode.find((c: any) => c.cca2 === userCca2);
+    const foundUS = countrycode.find((c: any) => c.cca2 === 'IN');
+    const defaultCountry = foundByUser || foundUS || countrycode[0];
+    setSelectedDialCode(getDialFromCountry(defaultCountry));
   }, [user]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -65,19 +84,20 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
       setSubmitting(true);
       setError(null);
 
-      // Concatenate all form data into a single message string
-      const fullMessage = `
-        **Quote Request Details**
-        - Full Name: ${formData.fullName.trim()}
-        - Company Name: ${formData.companyName.trim()}
-        - Email: ${formData.email.trim()}
-        - Phone: ${formData.phone.trim()}
-        ${user?.address?.address ? `- Address: ${user.address.address}` : ''}
-        ${formData.message.trim() ? `\n---\nMessage:\n${formData.message.trim()}` : ''}
-      `;
+      // Build full phone by concatenating selected dial code and local number.
+      // Remove leading zeros and spaces from local part to avoid double zeros.
+      const localNumber = formData.phone.replace(/[\s\-()]+/g, '').replace(/^0+/, '');
+      const dial = selectedDialCode || '';
+      const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
+      const fullPhone = `${normalizedDial}${localNumber}`;
 
       const quotePayload: Record<string, any> = {
-        message: fullMessage,
+        message: formData.message,
+        full_name: formData.fullName,
+        email: formData.email,
+        // send concatenated international number
+        phone: fullPhone,
+        company_name: formData.companyName,
         product: product?.id,
       };
 
@@ -197,14 +217,31 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                     />
                   </div>
                   <div>
-                    <Input
-                      name="phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      className="h-12 text-sm"
-                      placeholder="Phone *"
-                    />
+                    <div className="flex items-center gap-2">
+                      <select
+                        aria-label="Country code"
+                        value={selectedDialCode}
+                        onChange={(e) => setSelectedDialCode(e.target.value)}
+                        className="h-12 px-2 text-sm border border-gray-200 rounded-md bg-white"
+                      >
+                        {countrycode.map((c: any) => {
+                          const dial = getDialFromCountry(c);
+                          return (
+                            <option key={c.cca2} value={dial}>
+                              {dial} {c.cca2 ? `(${c.cca2})` : ''}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <Input
+                        name="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="h-12 text-sm flex-1"
+                        placeholder="Phone *"
+                      />
+                    </div>
                   </div>
                 </div>
 

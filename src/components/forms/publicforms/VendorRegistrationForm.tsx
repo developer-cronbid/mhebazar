@@ -1,14 +1,23 @@
 // components/publicforms/VendorRegistrationForm.tsx
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; // Correct hook for App Router
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import api from "@/lib/api";
-
-// --- IMPORTANT ---
-// Replace this with the actual path to your authentication hook.
-// This hook should provide the user's authentication status.
 import { useUser } from "@/context/UserContext";
+import countrycode from '@/data/countrycode_cleaned.json';
+
+// Add helper function for dial code
+const getDialFromCountry = (c: any) => {
+  if (!c || !c.idd) return '+';
+  const root = c.idd.root || '';
+  const suffix = Array.isArray(c.idd.suffixes) ? (c.idd.suffixes[0] ?? '') : '';
+  return `${root}${suffix}`.replace(/\s+/g, '') || '+';
+};
+
+// Default country = IN
+const defaultCountry = countrycode.find((c: any) => c.cca2 === 'IN') || countrycode[0];
+const defaultDial = getDialFromCountry(defaultCountry);
 
 interface Props {
   open: boolean;
@@ -47,6 +56,7 @@ export default function VendorRegistrationDrawer({ open, onClose }: Props) {
     gst_no: "",
   });
 
+  const [selectedDialCode, setSelectedDialCode] = useState<string>(defaultDial);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<ApiError>({});
 
@@ -138,8 +148,15 @@ export default function VendorRegistrationDrawer({ open, onClose }: Props) {
 
     setIsSubmitting(true);
 
+    // Build international phone number
+    const localNumber = formData.company_phone.replace(/[\s\-()]+/g, '').replace(/^0+/, '');
+    const dial = selectedDialCode || '';
+    const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
+    const fullPhone = `${normalizedDial}${localNumber}`;
+
     const vendorApplicationData = {
       ...formData,
+      company_phone: fullPhone, // Use the full international number
       brand: formData.brand || null,
       pcode: formData.pcode || null,
       gst_no: formData.gst_no || null,
@@ -157,7 +174,7 @@ export default function VendorRegistrationDrawer({ open, onClose }: Props) {
       // You might want to redirect the user to their dashboard or a pending page
       // router.push("/dashboard");
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.response && error.response.data) {
         // Handle specific API errors (e.g., "You already have an application")
@@ -279,16 +296,34 @@ export default function VendorRegistrationDrawer({ open, onClose }: Props) {
                 <label className="block font-medium mb-1">
                   Company Phone<span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="tel"
-                  name="company_phone"
-                  value={formData.company_phone}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="+919876543210"
-                  className="w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
-                  disabled={isSubmitting}
-                />
+                <div className="flex items-center gap-2">
+                  <select
+                    aria-label="Country code"
+                    value={selectedDialCode}
+                    onChange={(e) => setSelectedDialCode(e.target.value)}
+                    className="h-12 px-2 text-sm border border-gray-200 rounded-md bg-white"
+                    disabled={isSubmitting}
+                  >
+                    {countrycode.map((c: any) => {
+                      const dial = getDialFromCountry(c);
+                      return (
+                        <option key={c.cca2 || c.name?.common || dial} value={dial}>
+                          {dial} {c.cca2 ? `(${c.cca2})` : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <input
+                    type="tel"
+                    name="company_phone"
+                    value={formData.company_phone}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="9876543210"
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 focus:ring-green-500"
+                    disabled={isSubmitting}
+                  />
+                </div>
                 {renderError("company_phone")}
               </div>
               <div className="grid grid-cols-2 gap-4 mt-4">

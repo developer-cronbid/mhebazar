@@ -15,7 +15,7 @@ interface TeamMember {
 
 const teamMembers: TeamMember[] = [
   {
-    name: 'Ms. Asmita Ulhas Makeshwar',
+    name: 'Ms. Asmita Makeshwar',
     role: 'Co-Founder',
     description:
       '9+ Years of Business Handling Experience | 4+ Years in Material Handling Equipment (MHE)Seasoned professional with over 9 years of experience in business operations, client management, and strategic growth, including 4+ years of specialized expertise in the Material Handling Equipment (MHE) industry. Proven ability to drive sales, manage end-to-end business processes, and deliver value-driven solutions across B2B markets. Her leadership and strategic thinking have been pivotal in expanding our market presence and building strong client relationships. She is known for her exceptional problem-solving skills and her commitment to delivering outstanding results.',

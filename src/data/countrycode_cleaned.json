@@ -1,0 +1,4049 @@
+[
+  {
+    "name": {
+      "common": "South Georgia"
+    },
+    "cca2": "GS",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "00"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gs.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Grenada"
+    },
+    "cca2": "GD",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "473"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gd.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Switzerland"
+    },
+    "cca2": "CH",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "1"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ch.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Sierra Leone"
+    },
+    "cca2": "SL",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "32"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sl.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Hungary"
+    },
+    "cca2": "HU",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "6"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/hu.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Taiwan"
+    },
+    "cca2": "TW",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "86"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Wallis and Futuna"
+    },
+    "cca2": "WF",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "81"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/wf.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Barbados"
+    },
+    "cca2": "BB",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "246"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bb.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Pitcairn Islands"
+    },
+    "cca2": "PN",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Ivory Coast"
+    },
+    "cca2": "CI",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "25"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ci.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Tunisia"
+    },
+    "cca2": "TN",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "16"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Italy"
+    },
+    "cca2": "IT",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "9"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/it.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Benin"
+    },
+    "cca2": "BJ",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "29"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bj.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Indonesia"
+    },
+    "cca2": "ID",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "2"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/id.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Cape Verde"
+    },
+    "cca2": "CV",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "38"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cv.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Saint Kitts and Nevis"
+    },
+    "cca2": "KN",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "869"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/kn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Laos"
+    },
+    "cca2": "LA",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "56"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/la.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Caribbean Netherlands"
+    },
+    "cca2": "BQ",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "99"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bq.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Uganda"
+    },
+    "cca2": "UG",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "56"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ug.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Andorra"
+    },
+    "cca2": "AD",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "76"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ad.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Burundi"
+    },
+    "cca2": "BI",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "57"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bi.png"
+    }
+  },
+  {
+    "name": {
+      "common": "South Africa"
+    },
+    "cca2": "ZA",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "7"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/za.png"
+    }
+  },
+  {
+    "name": {
+      "common": "France"
+    },
+    "cca2": "FR",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "3"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/fr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Libya"
+    },
+    "cca2": "LY",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "18"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ly.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Mexico"
+    },
+    "cca2": "MX",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "2"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mx.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Gabon"
+    },
+    "cca2": "GA",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "41"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ga.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Northern Mariana Islands"
+    },
+    "cca2": "MP",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "670"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mp.png"
+    }
+  },
+  {
+    "name": {
+      "common": "North Macedonia"
+    },
+    "cca2": "MK",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "89"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mk.png"
+    }
+  },
+  {
+    "name": {
+      "common": "China"
+    },
+    "cca2": "CN",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "6"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Yemen"
+    },
+    "cca2": "YE",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "67"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ye.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Saint Barthélemy"
+    },
+    "cca2": "BL",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "90"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bl.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Guernsey"
+    },
+    "cca2": "GG",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Solomon Islands"
+    },
+    "cca2": "SB",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "77"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sb.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Svalbard and Jan Mayen"
+    },
+    "cca2": "SJ",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "779"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sj.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Faroe Islands"
+    },
+    "cca2": "FO",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "98"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/fo.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Uzbekistan"
+    },
+    "cca2": "UZ",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "98"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/uz.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Egypt"
+    },
+    "cca2": "EG",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "0"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/eg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Senegal"
+    },
+    "cca2": "SN",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "21"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Sri Lanka"
+    },
+    "cca2": "LK",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/lk.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Palestine"
+    },
+    "cca2": "PS",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "70"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ps.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Bangladesh"
+    },
+    "cca2": "BD",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "80"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bd.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Peru"
+    },
+    "cca2": "PE",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "1"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pe.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Singapore"
+    },
+    "cca2": "SG",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "5"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Turkey"
+    },
+    "cca2": "TR",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "0"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Afghanistan"
+    },
+    "cca2": "AF",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "3"
+      ]
+    },
+    "flags": {
+      "png": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Flag_of_the_Taliban.svg/320px-Flag_of_the_Taliban.svg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Aruba"
+    },
+    "cca2": "AW",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "97"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/aw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Cook Islands"
+    },
+    "cca2": "CK",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "82"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ck.png"
+    }
+  },
+  {
+    "name": {
+      "common": "United Kingdom"
+    },
+    "cca2": "GB",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gb.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Zambia"
+    },
+    "cca2": "ZM",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "60"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/zm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Finland"
+    },
+    "cca2": "FI",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "58"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/fi.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Niger"
+    },
+    "cca2": "NE",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "27"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ne.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Christmas Island"
+    },
+    "cca2": "CX",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "1"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cx.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Tokelau"
+    },
+    "cca2": "TK",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "90"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tk.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Guinea-Bissau"
+    },
+    "cca2": "GW",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "45"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Azerbaijan"
+    },
+    "cca2": "AZ",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "94"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/az.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Réunion"
+    },
+    "cca2": "RE",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "62"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/re.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Djibouti"
+    },
+    "cca2": "DJ",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "53"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/dj.png"
+    }
+  },
+  {
+    "name": {
+      "common": "North Korea"
+    },
+    "cca2": "KP",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "50"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/kp.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Mauritius"
+    },
+    "cca2": "MU",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "30"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mu.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Montserrat"
+    },
+    "cca2": "MS",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "664"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ms.png"
+    }
+  },
+  {
+    "name": {
+      "common": "United States Virgin Islands"
+    },
+    "cca2": "VI",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "340"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/vi.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Colombia"
+    },
+    "cca2": "CO",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "7"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/co.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Greece"
+    },
+    "cca2": "GR",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "0"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Croatia"
+    },
+    "cca2": "HR",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "85"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/hr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Morocco"
+    },
+    "cca2": "MA",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "12"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ma.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Algeria"
+    },
+    "cca2": "DZ",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "13"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/dz.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Netherlands"
+    },
+    "cca2": "NL",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "1"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/nl.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Sudan"
+    },
+    "cca2": "SD",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "49"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sd.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Fiji"
+    },
+    "cca2": "FJ",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "79"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/fj.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Liechtenstein"
+    },
+    "cca2": "LI",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "23"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/li.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Nepal"
+    },
+    "cca2": "NP",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "77"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/np.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Puerto Rico"
+    },
+    "cca2": "PR",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "787",
+        "939"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Georgia"
+    },
+    "cca2": "GE",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "95"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ge.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Pakistan"
+    },
+    "cca2": "PK",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "2"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pk.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Monaco"
+    },
+    "cca2": "MC",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "77"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mc.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Botswana"
+    },
+    "cca2": "BW",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "67"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Lebanon"
+    },
+    "cca2": "LB",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "61"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/lb.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Papua New Guinea"
+    },
+    "cca2": "PG",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "75"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Mayotte"
+    },
+    "cca2": "YT",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "62"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/yt.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Dominican Republic"
+    },
+    "cca2": "DO",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "809",
+        "829",
+        "849"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/do.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Norfolk Island"
+    },
+    "cca2": "NF",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "72"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/nf.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Bouvet Island"
+    },
+    "cca2": "BV",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "7"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bv.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Qatar"
+    },
+    "cca2": "QA",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "74"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/qa.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Madagascar"
+    },
+    "cca2": "MG",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "61"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "India"
+    },
+    "cca2": "IN",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "1"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/in.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Syria"
+    },
+    "cca2": "SY",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "63"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sy.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Montenegro"
+    },
+    "cca2": "ME",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "82"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/me.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Eswatini"
+    },
+    "cca2": "SZ",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "68"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sz.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Paraguay"
+    },
+    "cca2": "PY",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "95"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/py.png"
+    }
+  },
+  {
+    "name": {
+      "common": "El Salvador"
+    },
+    "cca2": "SV",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "03"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sv.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Ukraine"
+    },
+    "cca2": "UA",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "80"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ua.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Isle of Man"
+    },
+    "cca2": "IM",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/im.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Namibia"
+    },
+    "cca2": "NA",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "64"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/na.png"
+    }
+  },
+  {
+    "name": {
+      "common": "United Arab Emirates"
+    },
+    "cca2": "AE",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "71"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ae.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Bulgaria"
+    },
+    "cca2": "BG",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "59"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Greenland"
+    },
+    "cca2": "GL",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "99"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gl.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Germany"
+    },
+    "cca2": "DE",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "9"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/de.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Cambodia"
+    },
+    "cca2": "KH",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "55"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/kh.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Iraq"
+    },
+    "cca2": "IQ",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "64"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/iq.png"
+    }
+  },
+  {
+    "name": {
+      "common": "French Southern and Antarctic Lands"
+    },
+    "cca2": "TF",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "62"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tf.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Sweden"
+    },
+    "cca2": "SE",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "6"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/se.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Cuba"
+    },
+    "cca2": "CU",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "3"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cu.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Kyrgyzstan"
+    },
+    "cca2": "KG",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "96"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/kg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Russia"
+    },
+    "cca2": "RU",
+    "idd": {
+      "root": "+7",
+      "suffixes": [
+        "3",
+        "4",
+        "5",
+        "8",
+        "9"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ru.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Malaysia"
+    },
+    "cca2": "MY",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "0"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/my.png"
+    }
+  },
+  {
+    "name": {
+      "common": "São Tomé and Príncipe"
+    },
+    "cca2": "ST",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "39"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/st.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Cyprus"
+    },
+    "cca2": "CY",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "57"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cy.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Canada"
+    },
+    "cca2": "CA",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        ""
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ca.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Malawi"
+    },
+    "cca2": "MW",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "65"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Saudi Arabia"
+    },
+    "cca2": "SA",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "66"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sa.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Bosnia and Herzegovina"
+    },
+    "cca2": "BA",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "87"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ba.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Ethiopia"
+    },
+    "cca2": "ET",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "51"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/et.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Spain"
+    },
+    "cca2": "ES",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/es.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Slovenia"
+    },
+    "cca2": "SI",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "86"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/si.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Oman"
+    },
+    "cca2": "OM",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "68"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/om.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Saint Pierre and Miquelon"
+    },
+    "cca2": "PM",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "08"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Macau"
+    },
+    "cca2": "MO",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "53"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mo.png"
+    }
+  },
+  {
+    "name": {
+      "common": "San Marino"
+    },
+    "cca2": "SM",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "78"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Lesotho"
+    },
+    "cca2": "LS",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "66"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ls.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Marshall Islands"
+    },
+    "cca2": "MH",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "92"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mh.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Sint Maarten"
+    },
+    "cca2": "SX",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "721"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sx.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Iceland"
+    },
+    "cca2": "IS",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "54"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/is.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Luxembourg"
+    },
+    "cca2": "LU",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "52"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/lu.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Argentina"
+    },
+    "cca2": "AR",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ar.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Turks and Caicos Islands"
+    },
+    "cca2": "TC",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "649"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tc.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Nauru"
+    },
+    "cca2": "NR",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "74"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/nr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Cocos (Keeling) Islands"
+    },
+    "cca2": "CC",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "1"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cc.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Western Sahara"
+    },
+    "cca2": "EH",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "125288",
+        "125289"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/eh.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Dominica"
+    },
+    "cca2": "DM",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "767"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/dm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Costa Rica"
+    },
+    "cca2": "CR",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "06"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Australia"
+    },
+    "cca2": "AU",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "1"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/au.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Thailand"
+    },
+    "cca2": "TH",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "6"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/th.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Haiti"
+    },
+    "cca2": "HT",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "09"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ht.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Tuvalu"
+    },
+    "cca2": "TV",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "88"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tv.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Honduras"
+    },
+    "cca2": "HN",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "04"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/hn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Equatorial Guinea"
+    },
+    "cca2": "GQ",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "40"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gq.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Saint Lucia"
+    },
+    "cca2": "LC",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "758"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/lc.png"
+    }
+  },
+  {
+    "name": {
+      "common": "French Polynesia"
+    },
+    "cca2": "PF",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "89"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pf.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Belarus"
+    },
+    "cca2": "BY",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "75"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/by.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Latvia"
+    },
+    "cca2": "LV",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "71"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/lv.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Palau"
+    },
+    "cca2": "PW",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "80"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Guadeloupe"
+    },
+    "cca2": "GP",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "90"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gp.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Philippines"
+    },
+    "cca2": "PH",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "3"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ph.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Gibraltar"
+    },
+    "cca2": "GI",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "50"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gi.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Denmark"
+    },
+    "cca2": "DK",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "5"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/dk.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Cameroon"
+    },
+    "cca2": "CM",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "37"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Guinea"
+    },
+    "cca2": "GN",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "24"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Bahrain"
+    },
+    "cca2": "BH",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "73"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bh.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Suriname"
+    },
+    "cca2": "SR",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "97"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "DR Congo"
+    },
+    "cca2": "CD",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "43"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cd.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Somalia"
+    },
+    "cca2": "SO",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "52"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/so.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Czechia"
+    },
+    "cca2": "CZ",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "20"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cz.png"
+    }
+  },
+  {
+    "name": {
+      "common": "New Caledonia"
+    },
+    "cca2": "NC",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "87"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/nc.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Vanuatu"
+    },
+    "cca2": "VU",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "78"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/vu.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Saint Helena, Ascension and Tristan da Cunha"
+    },
+    "cca2": "SH",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "90",
+        "47"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sh.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Togo"
+    },
+    "cca2": "TG",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "28"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "British Virgin Islands"
+    },
+    "cca2": "VG",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "284"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/vg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Kenya"
+    },
+    "cca2": "KE",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "54"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ke.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Niue"
+    },
+    "cca2": "NU",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "83"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/nu.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Rwanda"
+    },
+    "cca2": "RW",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "50"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/rw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Estonia"
+    },
+    "cca2": "EE",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "72"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ee.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Romania"
+    },
+    "cca2": "RO",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "0"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ro.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Trinidad and Tobago"
+    },
+    "cca2": "TT",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "868"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tt.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Guyana"
+    },
+    "cca2": "GY",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "92"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gy.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Timor-Leste"
+    },
+    "cca2": "TL",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "70"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tl.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Vietnam"
+    },
+    "cca2": "VN",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/vn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Uruguay"
+    },
+    "cca2": "UY",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "98"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/uy.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Vatican City"
+    },
+    "cca2": "VA",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "906698",
+        "79"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/va.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Hong Kong"
+    },
+    "cca2": "HK",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "52"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/hk.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Austria"
+    },
+    "cca2": "AT",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "3"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/at.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Antigua and Barbuda"
+    },
+    "cca2": "AG",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "268"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ag.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Turkmenistan"
+    },
+    "cca2": "TM",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "93"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Mozambique"
+    },
+    "cca2": "MZ",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "58"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mz.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Panama"
+    },
+    "cca2": "PA",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "07"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pa.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Micronesia"
+    },
+    "cca2": "FM",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "91"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/fm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Ireland"
+    },
+    "cca2": "IE",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "53"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ie.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Curaçao"
+    },
+    "cca2": "CW",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "99"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "French Guiana"
+    },
+    "cca2": "GF",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "94"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gf.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Norway"
+    },
+    "cca2": "NO",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "7"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/no.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Åland Islands"
+    },
+    "cca2": "AX",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "5818"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ax.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Central African Republic"
+    },
+    "cca2": "CF",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "36"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cf.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Burkina Faso"
+    },
+    "cca2": "BF",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "26"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bf.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Eritrea"
+    },
+    "cca2": "ER",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "91"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/er.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Tanzania"
+    },
+    "cca2": "TZ",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "55"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tz.png"
+    }
+  },
+  {
+    "name": {
+      "common": "South Korea"
+    },
+    "cca2": "KR",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "2"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/kr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Jordan"
+    },
+    "cca2": "JO",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "62"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/jo.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Mauritania"
+    },
+    "cca2": "MR",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "22"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Lithuania"
+    },
+    "cca2": "LT",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "70"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/lt.png"
+    }
+  },
+  {
+    "name": {
+      "common": "United States Minor Outlying Islands"
+    },
+    "cca2": "UM",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "68"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/um.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Slovakia"
+    },
+    "cca2": "SK",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "21"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sk.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Angola"
+    },
+    "cca2": "AO",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "44"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ao.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Kazakhstan"
+    },
+    "cca2": "KZ",
+    "idd": {
+      "root": "+7",
+      "suffixes": [
+        "6",
+        "7"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/kz.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Moldova"
+    },
+    "cca2": "MD",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "73"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/md.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Mali"
+    },
+    "cca2": "ML",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "23"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ml.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Falkland Islands"
+    },
+    "cca2": "FK",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "00"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/fk.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Armenia"
+    },
+    "cca2": "AM",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "74"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/am.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Samoa"
+    },
+    "cca2": "WS",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "85"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ws.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Jersey"
+    },
+    "cca2": "JE",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/je.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Japan"
+    },
+    "cca2": "JP",
+    "idd": {
+      "root": "+8",
+      "suffixes": [
+        "1"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/jp.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Bolivia"
+    },
+    "cca2": "BO",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "91"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bo.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Chile"
+    },
+    "cca2": "CL",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "6"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cl.png"
+    }
+  },
+  {
+    "name": {
+      "common": "United States"
+    },
+    "cca2": "US",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "201",
+        "202",
+        "203",
+        "205",
+        "206",
+        "207",
+        "208",
+        "209",
+        "210",
+        "212",
+        "213",
+        "214",
+        "215",
+        "216",
+        "217",
+        "218",
+        "219",
+        "220",
+        "224",
+        "225",
+        "227",
+        "228",
+        "229",
+        "231",
+        "234",
+        "239",
+        "240",
+        "248",
+        "251",
+        "252",
+        "253",
+        "254",
+        "256",
+        "260",
+        "262",
+        "267",
+        "269",
+        "270",
+        "272",
+        "274",
+        "276",
+        "281",
+        "283",
+        "301",
+        "302",
+        "303",
+        "304",
+        "305",
+        "307",
+        "308",
+        "309",
+        "310",
+        "312",
+        "313",
+        "314",
+        "315",
+        "316",
+        "317",
+        "318",
+        "319",
+        "320",
+        "321",
+        "323",
+        "325",
+        "327",
+        "330",
+        "331",
+        "334",
+        "336",
+        "337",
+        "339",
+        "346",
+        "347",
+        "351",
+        "352",
+        "360",
+        "361",
+        "364",
+        "380",
+        "385",
+        "386",
+        "401",
+        "402",
+        "404",
+        "405",
+        "406",
+        "407",
+        "408",
+        "409",
+        "410",
+        "412",
+        "413",
+        "414",
+        "415",
+        "417",
+        "419",
+        "423",
+        "424",
+        "425",
+        "430",
+        "432",
+        "434",
+        "435",
+        "440",
+        "442",
+        "443",
+        "447",
+        "458",
+        "463",
+        "464",
+        "469",
+        "470",
+        "475",
+        "478",
+        "479",
+        "480",
+        "484",
+        "501",
+        "502",
+        "503",
+        "504",
+        "505",
+        "507",
+        "508",
+        "509",
+        "510",
+        "512",
+        "513",
+        "515",
+        "516",
+        "517",
+        "518",
+        "520",
+        "530",
+        "531",
+        "534",
+        "539",
+        "540",
+        "541",
+        "551",
+        "559",
+        "561",
+        "562",
+        "563",
+        "564",
+        "567",
+        "570",
+        "571",
+        "573",
+        "574",
+        "575",
+        "580",
+        "585",
+        "586",
+        "601",
+        "602",
+        "603",
+        "605",
+        "606",
+        "607",
+        "608",
+        "609",
+        "610",
+        "612",
+        "614",
+        "615",
+        "616",
+        "617",
+        "618",
+        "619",
+        "620",
+        "623",
+        "626",
+        "628",
+        "629",
+        "630",
+        "631",
+        "636",
+        "641",
+        "646",
+        "650",
+        "651",
+        "657",
+        "660",
+        "661",
+        "662",
+        "667",
+        "669",
+        "678",
+        "681",
+        "682",
+        "701",
+        "702",
+        "703",
+        "704",
+        "706",
+        "707",
+        "708",
+        "712",
+        "713",
+        "714",
+        "715",
+        "716",
+        "717",
+        "718",
+        "719",
+        "720",
+        "724",
+        "725",
+        "727",
+        "730",
+        "731",
+        "732",
+        "734",
+        "737",
+        "740",
+        "743",
+        "747",
+        "754",
+        "757",
+        "760",
+        "762",
+        "763",
+        "765",
+        "769",
+        "770",
+        "772",
+        "773",
+        "774",
+        "775",
+        "779",
+        "781",
+        "785",
+        "786",
+        "801",
+        "802",
+        "803",
+        "804",
+        "805",
+        "806",
+        "808",
+        "810",
+        "812",
+        "813",
+        "814",
+        "815",
+        "816",
+        "817",
+        "818",
+        "828",
+        "830",
+        "831",
+        "832",
+        "843",
+        "845",
+        "847",
+        "848",
+        "850",
+        "854",
+        "856",
+        "857",
+        "858",
+        "859",
+        "860",
+        "862",
+        "863",
+        "864",
+        "865",
+        "870",
+        "872",
+        "878",
+        "901",
+        "903",
+        "904",
+        "906",
+        "907",
+        "908",
+        "909",
+        "910",
+        "912",
+        "913",
+        "914",
+        "915",
+        "916",
+        "917",
+        "918",
+        "919",
+        "920",
+        "925",
+        "928",
+        "929",
+        "930",
+        "931",
+        "934",
+        "936",
+        "937",
+        "938",
+        "940",
+        "941",
+        "947",
+        "949",
+        "951",
+        "952",
+        "954",
+        "956",
+        "959",
+        "970",
+        "971",
+        "972",
+        "973",
+        "975",
+        "978",
+        "979",
+        "980",
+        "984",
+        "985",
+        "989"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/us.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Saint Vincent and the Grenadines"
+    },
+    "cca2": "VC",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "784"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/vc.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Bermuda"
+    },
+    "cca2": "BM",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "441"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Seychelles"
+    },
+    "cca2": "SC",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "48"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/sc.png"
+    }
+  },
+  {
+    "name": {
+      "common": "British Indian Ocean Territory"
+    },
+    "cca2": "IO",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "46"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/io.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Guatemala"
+    },
+    "cca2": "GT",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "02"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gt.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Ecuador"
+    },
+    "cca2": "EC",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "93"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ec.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Martinique"
+    },
+    "cca2": "MQ",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "96"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mq.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Tajikistan"
+    },
+    "cca2": "TJ",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "92"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/tj.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Malta"
+    },
+    "cca2": "MT",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "56"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mt.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Gambia"
+    },
+    "cca2": "GM",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "20"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Nigeria"
+    },
+    "cca2": "NG",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "34"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ng.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Bahamas"
+    },
+    "cca2": "BS",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "242"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bs.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Kosovo"
+    },
+    "cca2": "XK",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "83"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/xk.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Kuwait"
+    },
+    "cca2": "KW",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "65"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/kw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Maldives"
+    },
+    "cca2": "MV",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "60"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mv.png"
+    }
+  },
+  {
+    "name": {
+      "common": "South Sudan"
+    },
+    "cca2": "SS",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "11"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ss.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Iran"
+    },
+    "cca2": "IR",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "8"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ir.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Albania"
+    },
+    "cca2": "AL",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "55"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/al.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Brazil"
+    },
+    "cca2": "BR",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "5"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/br.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Serbia"
+    },
+    "cca2": "RS",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "81"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/rs.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Belize"
+    },
+    "cca2": "BZ",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "01"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bz.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Myanmar"
+    },
+    "cca2": "MM",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "5"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Bhutan"
+    },
+    "cca2": "BT",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "75"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bt.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Venezuela"
+    },
+    "cca2": "VE",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "8"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ve.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Liberia"
+    },
+    "cca2": "LR",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "31"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/lr.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Jamaica"
+    },
+    "cca2": "JM",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "876"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/jm.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Poland"
+    },
+    "cca2": "PL",
+    "idd": {
+      "root": "+4",
+      "suffixes": [
+        "8"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pl.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Cayman Islands"
+    },
+    "cca2": "KY",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "345"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ky.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Brunei"
+    },
+    "cca2": "BN",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "73"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/bn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Comoros"
+    },
+    "cca2": "KM",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "69"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/km.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Guam"
+    },
+    "cca2": "GU",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "671"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gu.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Tonga"
+    },
+    "cca2": "TO",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "76"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/to.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Kiribati"
+    },
+    "cca2": "KI",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "86"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ki.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Ghana"
+    },
+    "cca2": "GH",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "33"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/gh.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Chad"
+    },
+    "cca2": "TD",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "35"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/td.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Zimbabwe"
+    },
+    "cca2": "ZW",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "63"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/zw.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Saint Martin"
+    },
+    "cca2": "MF",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "90"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mf.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Mongolia"
+    },
+    "cca2": "MN",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "76"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/mn.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Portugal"
+    },
+    "cca2": "PT",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "51"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/pt.png"
+    }
+  },
+  {
+    "name": {
+      "common": "American Samoa"
+    },
+    "cca2": "AS",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "684"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/as.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Republic of the Congo"
+    },
+    "cca2": "CG",
+    "idd": {
+      "root": "+2",
+      "suffixes": [
+        "42"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/cg.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Belgium"
+    },
+    "cca2": "BE",
+    "idd": {
+      "root": "+3",
+      "suffixes": [
+        "2"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/be.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Israel"
+    },
+    "cca2": "IL",
+    "idd": {
+      "root": "+9",
+      "suffixes": [
+        "72"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/il.png"
+    }
+  },
+  {
+    "name": {
+      "common": "New Zealand"
+    },
+    "cca2": "NZ",
+    "idd": {
+      "root": "+6",
+      "suffixes": [
+        "4"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/nz.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Nicaragua"
+    },
+    "cca2": "NI",
+    "idd": {
+      "root": "+5",
+      "suffixes": [
+        "05"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ni.png"
+    }
+  },
+  {
+    "name": {
+      "common": "Anguilla"
+    },
+    "cca2": "AI",
+    "idd": {
+      "root": "+1",
+      "suffixes": [
+        "264"
+      ]
+    },
+    "flags": {
+      "png": "https://flagcdn.com/w320/ai.png"
+    }
+  }
+]

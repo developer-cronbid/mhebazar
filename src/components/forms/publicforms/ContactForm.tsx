@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import countrycode from '@/data/countrycode_cleaned.json'
 
 export default function ContactForm() {
   const [firstName, setFirstName] = useState("");
@@ -22,6 +23,21 @@ export default function ContactForm() {
   const [honeypot, setHoneypot] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // selected country dial code, e.g. "+91"
+  const [selectedDialCode, setSelectedDialCode] = useState<string>('');
+
+  // helper to compute displayable dial code from country entry
+  const getDialFromCountry = (c: any) => {
+    if (!c || !c.idd) return '+';
+    const root = c.idd.root || '';
+    const suffix = Array.isArray(c.idd.suffixes) ? (c.idd.suffixes[0] ?? '') : '';
+    return `${root}${suffix}`.replace(/\s+/g, '') || '+';
+  };
+
+  // default country = IN
+  const defaultCountry = countrycode.find((c: any) => c.cca2 === 'IN') || countrycode[0];
+  const defaultDial = getDialFromCountry(defaultCountry);
+
   const generateCaptcha = () => {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let result = "";
@@ -34,6 +50,8 @@ export default function ContactForm() {
 
   useEffect(() => {
     generateCaptcha();
+    // set default dial code on mount (IN)
+    setSelectedDialCode(defaultDial);
   }, []);
 
   const resetForm = () => {
@@ -46,6 +64,8 @@ export default function ContactForm() {
     setMessage("");
     setCaptchaInput("");
     setHoneypot("");
+    // restore default dial
+    setSelectedDialCode(defaultDial);
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -66,13 +86,22 @@ export default function ContactForm() {
     }
 
     try {
+      // build international phone if provided
+      let fullPhone = "";
+      if (phone && phone.trim()) {
+        const localNumber = phone.replace(/[\s\-()]+/g, '').replace(/^0+/, '');
+        const dial = selectedDialCode || '';
+        const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
+        fullPhone = `${normalizedDial}${localNumber}`;
+      }
+
       const response = await api.post("/contact-forms/", {
         first_name: firstName,
         last_name: lastName,
         email: email,
         company_name: companyName,
         location: location,
-        phone: phone,
+        phone: fullPhone,
         message: message,
         captcha: captchaText,
         captcha_answer: captchaInput.toUpperCase(),
@@ -154,13 +183,30 @@ export default function ContactForm() {
           onChange={(e) => setLocation(e.target.value)}
           className="rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
         />
-        <Input
-          type="text"
-          placeholder="Phone (Optional)"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
-        />
+        <div className="flex items-center gap-2">
+          <select
+            aria-label="Country code"
+            value={selectedDialCode}
+            onChange={(e) => setSelectedDialCode(e.target.value)}
+            className="h-10 px-2 text-sm border border-gray-200 rounded-md bg-white"
+          >
+            {countrycode.map((c: any) => {
+              const dial = getDialFromCountry(c);
+              return (
+                <option key={c.cca2 || c.name?.common || dial} value={dial}>
+                  {dial} {c.cca2 ? `(${c.cca2})` : ''}
+                </option>
+              );
+            })}
+          </select>
+          <Input
+            type="text"
+            placeholder="Phone (Optional)"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="flex-1 rounded-md border border-gray-300 focus:ring-green-500 focus:border-green-500"
+          />
+        </div>
         <Textarea
           placeholder="Your Message"
           value={message}
