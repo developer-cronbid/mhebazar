@@ -136,20 +136,20 @@ export default function Navbar(): JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
 
-  useEffect(() => {
-    const handleClick = (e: MouseEvent): void => {
-      if (
-        profileMenuRef.current &&
-        !profileMenuRef.current.contains(e.target as Node)
-      ) {
-        setProfileMenuOpen(false);
-      }
-    };
-    if (profileMenuOpen) {
-      document.addEventListener("mousedown", handleClick);
-    }
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [profileMenuOpen]);
+  // useEffect(() => {
+  //   const handleClick = (e: MouseEvent): void => {
+  //     if (
+  //       profileMenuRef.current &&
+  //       !profileMenuRef.current.contains(e.target as Node)
+  //     ) {
+  //       setProfileMenuOpen(false);
+  //     }
+  //   };
+  //   if (profileMenuOpen) {
+  //     document.addEventListener("mousedown", handleClick);
+  //   }
+  //   return () => document.removeEventListener("mousedown", handleClick);
+  // }, [profileMenuOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
@@ -455,13 +455,15 @@ export default function Navbar(): JSX.Element {
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="relative" ref={categoryMenuRef}>
+              <div className="relative" ref={categoryMenuRef}
+                onMouseEnter={() => setCategoriesOpen(true)}
+                onMouseLeave={() => setCategoriesOpen(false)}>
                 <button
                   className={`flex items-center gap-2 px-4 py-3 text-sm transition ${pathname.includes("categories") || categoriesOpen
                       ? "text-gray-900 font-bold"
                       : "text-gray-700 hover:text-gray-900 font-normal"
                     }`}
-                  onClick={() => setCategoriesOpen(!categoriesOpen)}
+                  // onClick={() => setCategoriesOpen(!categoriesOpen)}
                 >
                   <Menu className="w-5 h-5" />
                   All Categories
