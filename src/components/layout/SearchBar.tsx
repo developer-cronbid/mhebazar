@@ -76,7 +76,7 @@ export default function SearchBar({
     const handler = setTimeout(async () => {
       if (searchQuery.length > 0) {
         const lowerCaseQuery = searchQuery.toLowerCase();
-        let combinedSuggestions: (Category | Subcategory | Product)[] = [];
+        const combinedSuggestions: (Category | Subcategory | Product)[] = [];
 
         // Fetch products directly from the API endpoint
         let productsFromApi: Product[] = [];

@@ -1,21 +1,32 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight, Package } from "lucide-react";
+import { Package, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useCallback, useEffect, JSX, useRef } from "react";
+import { useState, useCallback, useEffect, JSX } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query"; // Helper hook for responsiveness
 import api from "@/lib/api";
-import { Skeleton } from "@/components/ui/skeleton";
 
+// Shadcn UI Components
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+// --- Type Definitions (unchanged) ---
 interface Category {
   id: number;
   subcategories: {
     id: number;
     name: string;
-    sub_image?: string;
-    product_count?: number;
-    category?: number;
   }[];
   cat_image?: string;
   name: string;
@@ -26,20 +37,43 @@ interface CategoryMenuProps {
   onClose: () => void;
 }
 
+// --- Helper Functions (unchanged) ---
 const createSlug = (name: string): string =>
   name.toLowerCase().replace(/\s+/g, "-");
 
-export default function CategoryMenu({
-  isOpen,
-  onClose,
-}: CategoryMenuProps): JSX.Element {
+// --- Image Fallback Component (unchanged) ---
+const CategoryImage = ({ category }: { category: Category }) => {
+  const [hasError, setHasError] = useState(!category.cat_image);
+  useEffect(() => { setHasError(!category.cat_image) }, [category.cat_image]);
+
+  if (hasError) {
+    return (
+      <div className="w-8 h-8 flex items-center justify-center bg-muted rounded-md shrink-0">
+        <Package className="w-4 h-4 text-muted-foreground" />
+      </div>
+    );
+  }
+  return (
+    <Image
+      src={category.cat_image!}
+      alt={category.name}
+      width={32}
+      height={32}
+      className="w-8 h-8 object-contain rounded-md shrink-0"
+      onError={() => setHasError(true)}
+      unoptimized
+    />
+  );
+};
+
+
+// --- Main Responsive Component ---
+export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [hoveredCategory, setHoveredCategory] = useState<Category | null>(null);
-  const [submenuTop, setSubmenuTop] = useState<number>(0);
-  const menuTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const menuContainerRef = useRef<HTMLDivElement>(null); // Ref for the main container
+  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const fetchCategories = useCallback(async () => {
     if (!isOpen || categories.length > 0) return;
@@ -47,7 +81,12 @@ export default function CategoryMenu({
     setError(null);
     try {
       const response = await api.get("/categories/");
-      setCategories(response.data || []);
+      const data = response.data || [];
+      setCategories(data);
+      if (data.length > 0) {
+        const firstCategoryWithSubs = data.find((cat: Category) => cat.subcategories?.length > 0);
+        setActiveCategory(firstCategoryWithSubs || data[0]);
+      }
     } catch (error) {
       console.error("Failed to fetch categories:", error);
       setError("Failed to load categories. Please try again.");
@@ -60,42 +99,127 @@ export default function CategoryMenu({
     fetchCategories();
   }, [fetchCategories]);
 
-  const handleMouseEnter = useCallback(() => {
-    if (menuTimerRef.current) {
-      clearTimeout(menuTimerRef.current);
-    }
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    menuTimerRef.current = setTimeout(() => {
-      onClose();
-      setHoveredCategory(null);
-    }, 200);
-  }, [onClose]);
-
-  const CategoryImage = ({ category }: { category: Category }) => {
-    const [hasError, setHasError] = useState(!category.cat_image);
-    useEffect(() => {
-      setHasError(!category.cat_image);
-    }, [category.cat_image]);
-
-    if (hasError) {
+  const renderContent = () => {
+    if (loading) {
       return (
-        <div className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded">
-          <Package className="w-4 h-4 text-gray-500" />
+        <div className="p-4 space-y-2">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-md" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+          ))}
         </div>
       );
     }
+
+    if (error) {
+      return (
+        <div className="p-4 text-center">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <Button
+            variant="link"
+            className="mt-2"
+            onClick={() => {
+              setCategories([]);
+              fetchCategories();
+            }}
+          >
+            Try Again
+          </Button>
+        </div>
+      );
+    }
+
+    // --- DESKTOP: Two-Pane Layout ---
+    if (isDesktop) {
+      return (
+        // ✅ 1. ADDED height constraint to the flex container
+        <div className="flex w-[640px] max-h-[calc(100vh-220px)]">
+          {/* ✅ 2. ADDED overflow-y-auto to the Left Pane */}
+          <div className="w-64 p-2 border-r overflow-y-auto">
+            {categories.map((category) => (
+              <Button
+                key={category.id}
+                variant="ghost"
+                className={`w-full justify-start gap-3 p-2.5 h-auto ${activeCategory?.id === category.id
+                  ? "bg-accent text-accent-foreground"
+                  : ""
+                  }`}
+                onClick={() => setActiveCategory(category)}
+              >
+                <CategoryImage category={category} />
+                <span className="truncate">{category.name}</span>
+              </Button>
+            ))}
+          </div>
+
+          {/* ✅ 3. ADDED overflow-y-auto to the Right Pane */}
+          <div className="flex-1 p-2 overflow-y-auto">
+            {activeCategory && activeCategory.subcategories?.length > 0 ? (
+              activeCategory.subcategories.map((sub) => (
+                <Link
+                  key={sub.id}
+                  href={`/${createSlug(activeCategory.name)}/${createSlug(sub.name)}`}
+                  onClick={onClose}
+                  className="block w-full text-left p-2.5 text-sm rounded-md text-foreground hover:bg-accent transition-colors"
+                >
+                  {sub.name}
+                </Link>
+              ))
+            ) : (
+              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                <p>No subcategories found.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // --- MOBILE: Accordion Layout (unchanged) ---
     return (
-      <Image
-        src={category.cat_image!}
-        alt={category.name}
-        width={32}
-        height={32}
-        className="w-8 h-8 object-contain rounded"
-        onError={() => setHasError(true)}
-        unoptimized
-      />
+      <div className="w-80 p-2">
+        <Accordion type="single" collapsible className="w-full">
+          {categories.map((category) =>
+            category.subcategories?.length > 0 ? (
+              <AccordionItem value={String(category.id)} key={category.id}>
+                <AccordionTrigger className="p-2.5 hover:no-underline hover:bg-accent rounded-md">
+                  <div className="flex items-center gap-3">
+                    <CategoryImage category={category} />
+                    <span className="font-medium text-sm">{category.name}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="pt-2 pb-0">
+                  {category.subcategories.map((sub) => (
+                    <Link
+                      key={sub.id}
+                      href={`/${createSlug(category.name)}/${createSlug(sub.name)}`}
+                      onClick={onClose}
+                      className="block w-full text-left py-2.5 pl-12 pr-4 text-sm rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                    >
+                      {sub.name}
+                    </Link>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            ) : (
+              <Link
+                key={category.id}
+                href={`/${createSlug(category.name)}`}
+                onClick={onClose}
+                className="flex items-center gap-3 p-2.5 text-sm font-medium rounded-md transition-colors text-foreground hover:bg-accent"
+              >
+                <CategoryImage category={category} />
+                <span>{category.name}</span>
+              </Link>
+            )
+          )}
+        </Accordion>
+      </div>
     );
   };
 
@@ -107,117 +231,14 @@ export default function CategoryMenu({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
-          className="absolute left-0 top-full z-50 mt-2"
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
+          className="absolute left-0 top-full z-50 mt-0"
         >
-          <div className="relative flex" ref={menuContainerRef}>
-            {/* Main Category List */}
-            <div className="w-80 bg-white border border-gray-200 rounded-lg shadow-lg">
-              <div className="p-2 max-h-[480px] overflow-y-auto">
-                {loading ? (
-                  <div className="space-y-1">
-                    {[...Array(8)].map((_, i) => (
-                      <div key={i} className="flex items-center gap-3 p-2.5">
-                        <Skeleton className="h-8 w-8 rounded" />
-                        <Skeleton className="h-4 w-40" />
-                        <Skeleton className="h-4 w-4 ml-auto" />
-                      </div>
-                    ))}
-                  </div>
-                ) : error ? (
-                  <div className="p-4 text-center">
-                    <p className="text-red-500 text-sm mb-3">{error}</p>
-                    <button
-                      onClick={() => {
-                        setCategories([]);
-                        fetchCategories();
-                      }}
-                      className="text-blue-600 text-sm font-medium"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                ) : (
-                  categories.map((category) => (
-                    <div
-                      key={category.id}
-                      onMouseEnter={(e) => {
-                        setHoveredCategory(category);
-                        if (menuContainerRef.current) {
-                          const itemRect = e.currentTarget.getBoundingClientRect();
-                          const containerRect = menuContainerRef.current.getBoundingClientRect();
-                          // Calculate the top position relative to the container, accounting for scroll
-                          const topPosition = itemRect.top - containerRect.top;
-                          setSubmenuTop(topPosition);
-                        }
-                      }}
-                    >
-                      <Link
-                        href={`/${createSlug(category.name)}`}
-                        onClick={onClose}
-                        className={`flex items-center gap-3 p-2.5 text-sm font-medium rounded-md transition-colors ${hoveredCategory?.id === category.id
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-800 hover:bg-gray-100"
-                          }`}
-                      >
-                        <CategoryImage category={category} />
-                        <span className="flex-1">{category.name}</span>
-                        {category.subcategories?.length > 0 && (
-                          <ChevronRight className="w-4 h-4 text-gray-400" />
-                        )}
-                      </Link>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Subcategory Fly-out Menu */}
-            <AnimatePresence>
-              {hoveredCategory?.subcategories?.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute left-full ml-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg"
-                  style={{ top: `${submenuTop}px` }}
-                >
-                  <div className="p-2 max-h-[480px] overflow-y-auto">
-                    {hoveredCategory.subcategories.map((sub) => (
-                      <Link
-                        key={sub.id}
-                        href={`/${createSlug(
-                          hoveredCategory.name
-                        )}/${createSlug(sub.name)}`}
-                        onClick={onClose}
-                        className="block w-full text-left p-2.5 text-sm text-gray-700 rounded-md hover:bg-gray-100 transition-colors"
-                      >
-                        {sub.name}
-                      </Link>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* ✅ 4. REMOVED overflow and height classes from the Card */}
+          <Card className="shadow-lg">
+            {renderContent()}
+          </Card>
         </motion.div>
       )}
-
-      <style jsx global>{`
-        div::-webkit-scrollbar {
-          width: 6px;
-        }
-        div::-webkit-scrollbar-track {
-          background: #f1f5f9;
-          border-radius: 3px;
-        }
-        div::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 3px;
-        }
-      `}</style>
     </AnimatePresence>
   );
 }
