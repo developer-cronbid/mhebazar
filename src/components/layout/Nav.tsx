@@ -42,7 +42,14 @@ import {
 
 // Import the local JSON data directly
 import categoriesData from "@/data/categories.json";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
 import ContactForm from "../forms/publicforms/ContactForm";
 
 // Define interfaces based on the local JSON structure
@@ -99,6 +106,11 @@ const shineAnimation = `
     }
   }
 
+  .shine-effect {
+    overflow: hidden;
+    position: relative;
+  }
+
   .shine-effect .shine-overlay {
     background: linear-gradient(
       120deg,
@@ -123,7 +135,6 @@ export default function Navbar(): JSX.Element {
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
   const [vendorDrawerOpen, setVendorDrawerOpen] = useState<boolean>(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState<boolean>(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const categoryMenuRef = useRef<HTMLDivElement>(null);
 
@@ -135,21 +146,6 @@ export default function Navbar(): JSX.Element {
   const { user, isLoading, setUser } = useUser();
   const router = useRouter();
   const pathname = usePathname();
-
-  // useEffect(() => {
-  //   const handleClick = (e: MouseEvent): void => {
-  //     if (
-  //       profileMenuRef.current &&
-  //       !profileMenuRef.current.contains(e.target as Node)
-  //     ) {
-  //       setProfileMenuOpen(false);
-  //     }
-  //   };
-  //   if (profileMenuOpen) {
-  //     document.addEventListener("mousedown", handleClick);
-  //   }
-  //   return () => document.removeEventListener("mousedown", handleClick);
-  // }, [profileMenuOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
@@ -168,9 +164,9 @@ export default function Navbar(): JSX.Element {
     };
   }, [categoriesOpen]);
 
-    const onLogoutClick = async () => {
-      await handleLogout(() => setUser(null), router);
-    };
+  const onLogoutClick = async () => {
+    await handleLogout(() => setUser(null), router);
+  };
 
   return (
     <header className="bg-white shadow-sm z-50 sticky top-0">
@@ -181,13 +177,11 @@ export default function Navbar(): JSX.Element {
             <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
               <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="">+91 73059 50939</span>
-              {/* <span className="xs:hidden">Call</span> */}
             </div>
             <div className="flex items-center gap-4 text-xs sm:text-sm">
               {isLoading ? (
                 <span>Loading...</span>
               ) : user ? (
-                // Added text-center for mobile view
                 <span className="font-semibold text-center sm:text-left text-xs sm:text-sm text-nowrap">
                   | Welcome,{" "}
                   {typeof user.username === "string"
@@ -223,7 +217,7 @@ export default function Navbar(): JSX.Element {
             </button>
 
             <div className="flex items-center ml-2 sm:ml-5">
-              <Link href="/" className="flex items-center">
+              <Link href="/" className="flex items-center relative shine-effect">
                 <Image
                   src="/mhe-logo.png"
                   alt="MHE BAZAR Logo"
@@ -233,17 +227,20 @@ export default function Navbar(): JSX.Element {
                   style={{ maxWidth: "120px" }}
                   priority
                 />
+                <span className="shine-overlay"></span>
               </Link>
             </div>
 
-            {/* Update search bar container */}
             <div className="hidden md:flex flex-1 max-w-5xl mx-2 sm:mx-8 items-center gap-2 sm:gap-4">
               <SearchBar
                 categories={categories}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
-              <Link href="/vendor-listing" className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect hidden sm:block">
+              <Link
+                href="/vendor-listing"
+                className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect hidden sm:block"
+              >
                 <Image
                   src="/brand-image.png"
                   alt="Brand Store"
@@ -257,7 +254,6 @@ export default function Navbar(): JSX.Element {
               </Link>
             </div>
 
-            {/* Update icons section */}
             <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/compare"
@@ -277,52 +273,41 @@ export default function Navbar(): JSX.Element {
                 </Link>
               )}
 
-              {/* Update profile button */}
               <div className="relative" ref={profileMenuRef}>
-                {/* <button
-                  onClick={() => setProfileMenuOpen((v) => !v)}
-                  className="focus:outline-none"
-                  aria-label="Open profile menu"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
-                      <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
-                    </div>
-                  ) : user ? (
-                    <>
-                      {Array.isArray(user.username) && user.username[0]?.image ? (
-                        <Image
-                          src={user.username[0].image}
-                          alt="Profile"
-                          width={40}
-                          height={40}
-                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-600 shadow-sm object-cover"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center">
-                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
-                    </div>
-                  )}
-                </button> */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    {/* The trigger button. Customize this as needed. */}
-                    <button className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                      {/* You can display a user avatar here */}
-                      <User className="w-6 h-6 text-gray-600" />
-                    </button>
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                      {isLoading ? (
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
+                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+                        </div>
+                      ) : user ? (
+                        <>
+                          {Array.isArray(user.username) &&
+                          user.username[0]?.image ? (
+                            <Image
+                              src={user.username[0].image}
+                              alt="Profile"
+                              width={40}
+                              height={40}
+                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-600 shadow-sm object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center">
+                              <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+                        </div>
+                      )}
+                    </div>
                   </DropdownMenuTrigger>
 
                   <DropdownMenuContent className="w-64" align="end">
                     {user ? (
-                      // --- LOGGED-IN USER VIEW ---
                       <>
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
                         <DropdownMenuItem asChild>
@@ -332,49 +317,69 @@ export default function Navbar(): JSX.Element {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href="/account/orders" className="cursor-pointer">
+                          <Link
+                            href="/account/orders"
+                            className="cursor-pointer"
+                          >
                             <Package className="mr-2 h-4 w-4 text-green-600" />
                             <span>My Orders</span>
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link href="/account/wishlist" className="cursor-pointer">
+                          <Link
+                            href="/account/wishlist"
+                            className="cursor-pointer"
+                          >
                             <Heart className="mr-2 h-4 w-4 text-green-600" />
                             <span>Wishlist</span>
                           </Link>
                         </DropdownMenuItem>
 
-                        {/* --- VENDOR PANEL (Conditional) --- */}
                         {user.role?.id === 2 && (
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuLabel>Vendor Panel</DropdownMenuLabel>
                             <DropdownMenuItem asChild>
-                              <Link href="/vendor/dashboard" className="cursor-pointer">
+                              <Link
+                                href="/vendor/dashboard"
+                                className="cursor-pointer"
+                              >
                                 <LayoutDashboard className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>Dashboard</span>
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href="/vendor/product-list" className="cursor-pointer">
+                              <Link
+                                href="/vendor/product-list"
+                                className="cursor-pointer"
+                              >
                                 <Tag className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>My Products</span>
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href="/vendor/profile" className="cursor-pointer">
+                              <Link
+                                href="/vendor/profile"
+                                className="cursor-pointer"
+                              >
                                 <User className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>Vendor Profile</span>
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href="/vendor/notifications" className="cursor-pointer">
+                              <Link
+                                href="/vendor/notifications"
+                                className="cursor-pointer"
+                              >
                                 <Bell className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>Notifications</span>
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href="/vendor/enquiry" className="cursor-pointer">
+                              <Link
+                                href="/vendor/enquiry"
+                                className="cursor-pointer"
+                              >
                                 <ClipboardList className="mr-2 h-4 w-4 text-blue-600" />
                                 <span>Enquiries</span>
                               </Link>
@@ -382,7 +387,6 @@ export default function Navbar(): JSX.Element {
                           </>
                         )}
 
-                        {/* --- ADMIN PANEL (Conditional) --- */}
                         {user.role?.id === 1 && (
                           <>
                             <DropdownMenuSeparator />
@@ -396,15 +400,16 @@ export default function Navbar(): JSX.Element {
                           </>
                         )}
 
-                        {/* --- LOGOUT BUTTON --- */}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={onLogoutClick} className="cursor-pointer text-red-500 focus:text-red-700">
+                        <DropdownMenuItem
+                          onClick={onLogoutClick}
+                          className="cursor-pointer text-red-500 focus:text-red-700"
+                        >
                           <LogOut className="mr-2 h-4 w-4" />
                           <span>Logout</span>
                         </DropdownMenuItem>
                       </>
                     ) : (
-                      // --- LOGGED-OUT USER VIEW ---
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/login" className="cursor-pointer">
@@ -426,7 +431,6 @@ export default function Navbar(): JSX.Element {
             </div>
           </div>
 
-          {/* 3. Update mobile search bar section */}
           <div className="md:hidden pb-2 sm:pb-3">
             <div className="flex items-center gap-2">
               <SearchBar
@@ -434,7 +438,10 @@ export default function Navbar(): JSX.Element {
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
-              <Link href="/vendor-listing" className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect">
+              <Link
+                href="/vendor-listing"
+                className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect"
+              >
                 <Image
                   src="/brand-image.png"
                   alt="Brand Store"
@@ -455,15 +462,18 @@ export default function Navbar(): JSX.Element {
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <div className="relative" ref={categoryMenuRef}
+              <div
+                className="relative"
+                ref={categoryMenuRef}
                 onMouseEnter={() => setCategoriesOpen(true)}
-                onMouseLeave={() => setCategoriesOpen(false)}>
+                onMouseLeave={() => setCategoriesOpen(false)}
+              >
                 <button
-                  className={`flex items-center gap-2 px-4 py-3 text-sm transition ${pathname.includes("categories") || categoriesOpen
+                  className={`flex items-center gap-2 px-4 py-3 text-sm transition ${
+                    pathname.includes("categories") || categoriesOpen
                       ? "text-gray-900 font-bold"
                       : "text-gray-700 hover:text-gray-900 font-normal"
-                    }`}
-                  // onClick={() => setCategoriesOpen(!categoriesOpen)}
+                  }`}
                 >
                   <Menu className="w-5 h-5" />
                   All Categories
@@ -480,10 +490,11 @@ export default function Navbar(): JSX.Element {
                   <Link
                     key={index}
                     href={link.href}
-                    className={`px-4 py-3 text-sm transition ${pathname === link.href
+                    className={`px-4 py-3 text-sm transition ${
+                      pathname === link.href
                         ? "text-gray-900 font-bold"
                         : "text-gray-700 hover:text-gray-900 font-normal"
-                      }`}
+                    }`}
                   >
                     {link.name}
                   </Link>
@@ -495,10 +506,11 @@ export default function Navbar(): JSX.Element {
               <Dialog>
                 <DialogTrigger>
                   <button
-                    className={`flex items-center gap-2 px-4 py-3 transition ${pathname === "/contact"
-                      ? "text-gray-900 font-bold"
-                      : "text-gray-600 hover:text-gray-900 font-normal"
-                      }`}
+                    className={`flex items-center gap-2 px-4 py-3 transition ${
+                      pathname === "/contact"
+                        ? "text-gray-900 font-bold"
+                        : "text-gray-600 hover:text-gray-900 font-normal"
+                    }`}
                   >
                     <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
                       {" "}
@@ -517,7 +529,6 @@ export default function Navbar(): JSX.Element {
                 </DialogContent>
               </Dialog>
 
-
               {isLoading ? (
                 <span className="px-4 py-3 text-sm text-gray-600 font-normal">
                   {" "}
@@ -527,10 +538,11 @@ export default function Navbar(): JSX.Element {
                 user.role?.id === 2 ? (
                   <Link
                     href="/vendor/dashboard"
-                    className={`flex items-center gap-2 px-4 py-3 transition ${pathname.includes("/vendor/dashboard")
+                    className={`flex items-center gap-2 px-4 py-3 transition ${
+                      pathname.includes("/vendor/dashboard")
                         ? "text-gray-900 font-bold"
                         : "text-gray-600 hover:text-gray-900 font-normal"
-                      }`}
+                    }`}
                   >
                     <User className="w-5 h-5" />
                     <span className="text-sm font-normal">
@@ -542,10 +554,11 @@ export default function Navbar(): JSX.Element {
                   <button
                     type="button"
                     onClick={() => setVendorDrawerOpen(true)}
-                    className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${pathname === "/become-a-vendor"
+                    className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
+                      pathname === "/become-a-vendor"
                         ? "text-gray-900 font-bold"
                         : "text-gray-600 hover:text-gray-900 font-normal"
-                      }`}
+                    }`}
                   >
                     <User className="w-5 h-5" />
                     <span className="text-sm font-normal">
@@ -557,10 +570,11 @@ export default function Navbar(): JSX.Element {
                 <button
                   type="button"
                   onClick={() => setVendorDrawerOpen(true)}
-                  className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${pathname === "/become-a-vendor"
+                  className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
+                    pathname === "/become-a-vendor"
                       ? "text-gray-900 font-bold"
                       : "text-gray-600 hover:text-gray-900 font-normal"
-                    }`}
+                  }`}
                 >
                   <User className="w-5 h-5" />
                   <span className="text-sm font-normal">Become a Vendor</span>
@@ -569,10 +583,11 @@ export default function Navbar(): JSX.Element {
 
               <Link
                 href="/services/subscription-plan"
-                className={`flex items-center gap-2 px-4 py-3 transition ${pathname === "/services/subscription-plan"
+                className={`flex items-center gap-2 px-4 py-3 transition ${
+                  pathname === "/services/subscription-plan"
                     ? "text-gray-900 font-bold"
                     : "text-gray-600 hover:text-gray-900 font-normal"
-                  }`}
+                }`}
               >
                 <Tag className="w-5 h-5" />
                 <span className="text-sm font-normal">Price Plan</span>{" "}
@@ -604,7 +619,7 @@ export default function Navbar(): JSX.Element {
               <div className="flex items-center justify-between p-4 border-b border-gray-200">
                 <Link
                   href="/"
-                  className="flex items-center"
+                  className="flex items-center relative shine-effect"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Image
@@ -616,6 +631,7 @@ export default function Navbar(): JSX.Element {
                     style={{ maxWidth: 120 }}
                     priority
                   />
+                  <span className="shine-overlay"></span>
                 </Link>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
@@ -638,15 +654,17 @@ export default function Navbar(): JSX.Element {
                             openCategory === category.id ? null : category.id
                           );
                         }}
-                        className={`w-full flex justify-between items-center px-6 py-3 text-left transition ${pathname.startsWith(`/${createSlug(category.name)}`)
+                        className={`w-full flex justify-between items-center px-6 py-3 text-left transition ${
+                          pathname.startsWith(`/${createSlug(category.name)}`)
                             ? "text-gray-900 font-bold"
                             : "text-gray-700 hover:bg-gray-50"
-                          }`}
+                        }`}
                       >
                         <span>{category.name}</span>
                         <ChevronDown
-                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${openCategory === category.id ? "rotate-180" : ""
-                            }`}
+                          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                            openCategory === category.id ? "rotate-180" : ""
+                          }`}
                         />
                       </button>
 
@@ -661,10 +679,11 @@ export default function Navbar(): JSX.Element {
                           >
                             <Link
                               href={`/${createSlug(category.name)}`}
-                              className={`block pl-10 pr-6 py-3 font-medium transition ${pathname === `/${createSlug(category.name)}`
+                              className={`block pl-10 pr-6 py-3 font-medium transition ${
+                                pathname === `/${createSlug(category.name)}`
                                   ? "text-gray-900 font-bold"
                                   : "text-gray-800 hover:bg-gray-50"
-                                }`}
+                              }`}
                               onClick={() => setMobileMenuOpen(false)}
                             >
                               All {category.name}
@@ -677,13 +696,14 @@ export default function Navbar(): JSX.Element {
                                   href={`/${createSlug(
                                     category.name
                                   )}/${createSlug(sub.name)}`}
-                                  className={`block pl-10 pr-6 py-3 transition ${pathname ===
-                                      `/${createSlug(category.name)}/${createSlug(
-                                        sub.name
-                                      )}`
+                                  className={`block pl-10 pr-6 py-3 transition ${
+                                    pathname ===
+                                    `/${createSlug(category.name)}/${createSlug(
+                                      sub.name
+                                    )}`
                                       ? "text-gray-900 font-bold"
                                       : "text-gray-600 hover:bg-gray-50"
-                                    }`}
+                                  }`}
                                   onClick={() => setMobileMenuOpen(false)}
                                 >
                                   {sub.name}
@@ -706,10 +726,11 @@ export default function Navbar(): JSX.Element {
                     <Link
                       key={index}
                       href={link.href}
-                      className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${pathname === link.href
+                      className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
+                        pathname === link.href
                           ? "text-gray-900 bg-gray-50 font-bold"
                           : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                      }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {link.name}
@@ -717,10 +738,11 @@ export default function Navbar(): JSX.Element {
                   ))}
                   <Link
                     href="/vendor-listing"
-                    className={`block px-4 py-3 font-semibold border-b border-gray-100 transition relative overflow-hidden shine-effect ${pathname === "/vendor-listing"
+                    className={`block px-4 py-3 font-semibold border-b border-gray-100 transition relative overflow-hidden shine-effect ${
+                      pathname === "/vendor-listing"
                         ? "text-gray-900 bg-gray-50 font-bold"
                         : "hover:bg-gray-50"
-                      }`}
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Image
@@ -736,10 +758,11 @@ export default function Navbar(): JSX.Element {
                   </Link>
                   <Link
                     href="/contact"
-                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${pathname === "/contact"
+                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
+                      pathname === "/contact"
                         ? "text-gray-900 bg-gray-50 font-bold"
                         : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Help
@@ -751,10 +774,11 @@ export default function Navbar(): JSX.Element {
                   ) : user?.role?.id === 2 ? (
                     <Link
                       href="/vendor/dashboard"
-                      className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${pathname.includes("/vendor/dashboard")
+                      className={`block px-4 py-3 font-semibold border-b border-gray-100 transition ${
+                        pathname.includes("/vendor/dashboard")
                           ? "text-gray-900 bg-gray-50 font-bold"
                           : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                      }`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       My Vendor Dashboard
@@ -773,10 +797,11 @@ export default function Navbar(): JSX.Element {
                   )}
                   <Link
                     href="/services/subscription-plan"
-                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${pathname === "/services/subscription-plan"
+                    className={`block px-4 py-3 border-b border-gray-100 font-medium transition ${
+                      pathname === "/services/subscription-plan"
                         ? "text-gray-900 bg-gray-50 font-bold"
                         : "text-gray-700 hover:bg-gray-50"
-                      }`}
+                    }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Price Plan

@@ -6,7 +6,7 @@ import { useRef, useState, useEffect, useCallback, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Category, Subcategory } from "./Nav";
 import { motion, AnimatePresence } from "framer-motion";
-
+import api from "@/lib/api"; // Assuming a centralized API utility
 
 // Assuming you have a toast library like react-hot-toast imported globally or passed as prop
 declare const toast: { error: (message: string) => void };
@@ -39,7 +39,18 @@ interface Product {
   subcategory_name: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+// Define Vendor interface based on API response
+interface Vendor {
+  id: number;
+  username: string;
+  full_name: string;
+  company_name: string;
+  brand?: string;
+}
+
+interface ApiResponse<T> {
+  results: T[];
+}
 
 // Helper function to create slugs
 const createSlug = (name: string): string =>
@@ -58,14 +69,7 @@ export default function SearchBar({
   setSearchQuery,
 }: SearchBarProps): JSX.Element {
   const [listening, setListening] = useState<boolean>(false);
-  const [suggestions, setSuggestions] = useState<
-    Array<
-      (Category | Subcategory | Product) & {
-        type: string;
-        category_name?: string;
-      }
-    >
-  >([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
@@ -76,57 +80,88 @@ export default function SearchBar({
     const handler = setTimeout(async () => {
       if (searchQuery.length > 0) {
         const lowerCaseQuery = searchQuery.toLowerCase();
-        const combinedSuggestions: (Category | Subcategory | Product)[] = [];
+        let combinedSuggestions: any[] = [];
+        const uniqueItems = new Map();
 
-        // Fetch products directly from the API endpoint
-        let productsFromApi: Product[] = [];
         try {
-          const response = await fetch(`${API_BASE_URL}/products/?search=${lowerCaseQuery}`);
-          if (response.ok) {
-            const data = await response.json();
-            productsFromApi = data.results || [];
-          } else {
-            console.error("API request failed with status:", response.status);
-          }
-        } catch (error) {
-          console.error("Error fetching products:", error);
-        }
+          // --- Parallel API Calls for Products and Vendors ---
+          const [productsResponse, vendorsResponse] = await Promise.all([
+            api.get<ApiResponse<Product>>(`/products/?search=${lowerCaseQuery}`),
+            // FIX: Use the correct `/vendor/` endpoint with the search parameter
+            api.get<ApiResponse<Vendor>>(`/vendor/?search=${lowerCaseQuery}`),
+          ]);
+          
+          const productsFromApi = productsResponse.data?.results || [];
+          const vendorsFromApi = vendorsResponse.data?.results || [];
 
-        // Add product types to suggestions
-        TYPE_CHOICES.forEach((type) => {
-          if (type.name.toLowerCase().includes(lowerCaseQuery)) {
-            combinedSuggestions.push({ ...type, id: Date.now() + Math.random(), type: "product_type" });
-          }
-        });
-
-        // Add categories to suggestions
-        categories.forEach((category) => {
-          if (category.name.toLowerCase().includes(lowerCaseQuery)) {
-            combinedSuggestions.push({ ...category, type: "category" });
-          }
-          category.subcategories.forEach((subcategory) => {
-            if (subcategory.name.toLowerCase().includes(lowerCaseQuery)) {
-              combinedSuggestions.push({
-                ...subcategory,
-                type: "subcategory",
-                category_name: category.name,
-              });
+          // Add fetched vendors to suggestions
+          vendorsFromApi.forEach((vendor) => {
+            // IMPROVEMENT: Prefer company_name for display
+            const vendorName = vendor.company_name || vendor.brand || vendor.full_name || vendor.username;
+            if (vendorName) {
+              const uniqueKey = `vendor-${vendor.id}`;
+              if (!uniqueItems.has(uniqueKey)) {
+                combinedSuggestions.push({
+                  id: vendor.id,
+                  name: vendorName,
+                  type: "vendor",
+                  slug: createSlug(vendorName)
+                });
+                uniqueItems.set(uniqueKey, true);
+              }
             }
           });
-        });
 
-        // Add fetched products to suggestions
-        productsFromApi.forEach((product) => {
-          combinedSuggestions.push({ ...product, type: "product" });
-        });
+          // Add product types to suggestions
+          TYPE_CHOICES.forEach((type) => {
+            if (type.name.toLowerCase().includes(lowerCaseQuery)) {
+              const uniqueKey = `product_type-${type.slug}`;
+              if (!uniqueItems.has(uniqueKey)) {
+                combinedSuggestions.push({ ...type, type: "product_type" });
+                uniqueItems.set(uniqueKey, true);
+              }
+            }
+          });
 
-        const uniqueSuggestions = Array.from(
-          new Map(
-            combinedSuggestions.map((item) => [`${item.type}-${item.name}`, item])
-          ).values()
-        );
+          // Add categories to suggestions
+          categories.forEach((category) => {
+            if (category.name.toLowerCase().includes(lowerCaseQuery)) {
+              const uniqueKey = `category-${category.id}`;
+              if (!uniqueItems.has(uniqueKey)) {
+                combinedSuggestions.push({ ...category, type: "category" });
+                uniqueItems.set(uniqueKey, true);
+              }
+            }
+            category.subcategories.forEach((subcategory) => {
+              if (subcategory.name.toLowerCase().includes(lowerCaseQuery)) {
+                const uniqueKey = `subcategory-${subcategory.id}`;
+                if (!uniqueItems.has(uniqueKey)) {
+                  combinedSuggestions.push({
+                    ...subcategory,
+                    type: "subcategory",
+                    category_name: category.name,
+                  });
+                  uniqueItems.set(uniqueKey, true);
+                }
+              }
+            });
+          });
 
-        setSuggestions(uniqueSuggestions.slice(0, 10) as Array<(Category | Subcategory | Product) & { type: string; category_name?: string }>);
+          // Add fetched products to suggestions
+          productsFromApi.forEach((product) => {
+            const uniqueKey = `product-${product.id}`;
+            if (!uniqueItems.has(uniqueKey)) {
+              combinedSuggestions.push({ ...product, type: "product" });
+              uniqueItems.set(uniqueKey, true);
+            }
+          });
+
+        } catch (error) {
+          console.error("Error fetching search results:", error);
+          // Optionally show a toast error
+        }
+
+        setSuggestions(combinedSuggestions);
         setShowSuggestions(true);
       } else {
         setSuggestions([]);
@@ -196,31 +231,31 @@ export default function SearchBar({
   }, [listening, setSearchQuery]);
 
   const handleSuggestionClick = useCallback(
-    (item: (Category | Subcategory | Product) & { type: string; category_name?: string }) => {
+    (item: any) => {
       setShowSuggestions(false);
       setSearchQuery("");
 
-      if (item.type === "category") {
+      if (item.type === "vendor") {
+        router.push(`/vendor-listing/${item.slug}`);
+      } else if (item.type === "category") {
         router.push(`/${createSlug(item.name)}`);
       } else if (item.type === "subcategory") {
-        const subCategoryItem = item as Subcategory & { category_name: string };
-        const categorySlug = createSlug(subCategoryItem.category_name);
-        router.push(`/${categorySlug}/${createSlug(subCategoryItem.name)}`);
+        const categorySlug = createSlug(item.category_name);
+        router.push(`/${categorySlug}/${createSlug(item.name)}`);
       } else if (item.type === "product_type") {
-        router.push(`/${createSlug(item.name)}`);
+        router.push(`/products?type=${item.slug}`);
       } else if (item.type === "product") {
-        const productItem = item as Product;
-        router.push(`/product/${createSlug(productItem.name)}?id=${productItem.id}`);
+        router.push(`/product/${createSlug(item.name)}?id=${item.id}`);
       }
     },
     [router, setSearchQuery]
   );
-
+  
   return (
     <div className="relative w-full" ref={searchBarRef}>
       <input
         type="text"
-        placeholder="Search by Products, Categories, Types..."
+        placeholder="Search by Products, Categories, Vendors..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         onFocus={() => searchQuery.length > 0 && setShowSuggestions(true)}
@@ -248,36 +283,51 @@ export default function SearchBar({
       )}
 
       <AnimatePresence>
-        {showSuggestions && suggestions.length > 0 && (
+        {showSuggestions && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto"
+            className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto no-scrollbar"
           >
-            {suggestions.map((item, index) => (
-              <div
-                key={index}
-                className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex justify-between items-center transition border-b border-gray-100 last:border-b-0"
-                onClick={() => handleSuggestionClick(item)}
-              >
-                <div className="flex flex-col">
-                  <span className="font-medium text-gray-800">
-                    {item.name}
+            {suggestions.length > 0 ? (
+              suggestions.map((item, index) => (
+                <div
+                  key={index}
+                  className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex justify-between items-center transition border-b border-gray-100 last:border-b-0"
+                  onClick={() => handleSuggestionClick(item)}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-800">
+                      {item.name}
+                    </span>
+                    {item.type === 'subcategory' && item.category_name && (
+                      <span className="text-gray-500 text-xs"> (Category: {item.category_name})</span>
+                    )}
+                  </div>
+                  <span className="text-xs text-green-600 capitalize font-semibold bg-green-50 px-2 py-1 rounded-full">
+                    {item.type.replace('_', ' ')}
                   </span>
-                  {'category_name' in item && item.category_name && (
-                    <span className="text-gray-500 text-xs"> (Category: {item.category_name})</span>
-                  )}
                 </div>
-                <span className="text-xs text-green-600 capitalize font-semibold bg-green-50 px-2 py-1 rounded-full">
-                  {item.type.replace('_', ' ')}
-                </span>
+              ))
+            ) : (
+              <div className="p-4 text-center text-gray-500">
+                No results found. Try a different search.
               </div>
-            ))}
+            )}
           </motion.div>
         )}
       </AnimatePresence>
+      <style jsx>{`
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .no-scrollbar {
+          -ms-overflow-style: none; /* IE and Edge */
+          scrollbar-width: none; /* Firefox */
+        }
+      `}</style>
     </div>
   );
 }
