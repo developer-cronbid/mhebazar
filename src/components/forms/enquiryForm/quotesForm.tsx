@@ -7,7 +7,6 @@ import { Loader2, AlertCircle, Phone } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Product } from "@/types";
-import DOMPurify from 'dompurify';
 import { useUser } from "@/context/UserContext";
 import countrycode from '@/data/countrycode_cleaned.json'
 
@@ -170,11 +169,11 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
             </div>
 
             {/* Product Description */}
-            <div className="mb-8">
+            {/* <div className="mb-8">
               <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                 <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product?.subtitle || product?.description || "No description available.") }} />
               </p>
-            </div>
+            </div> */}
 
             {/* Quote Form */}
             <div className="space-y-6">
