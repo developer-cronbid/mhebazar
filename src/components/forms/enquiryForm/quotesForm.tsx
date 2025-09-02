@@ -146,9 +146,9 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
     <div className="max-h-[90vh] overflow-auto">
       <div className="w-full mx-auto">
         <Card className="border-none">
-          <CardContent className="p-4 sm:p-6 lg:p-8 bg-white">
+          <CardContent className=" bg-white">
             {/* Product Information */}
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
+            <div className="flex flex-col-reverse justify-center items-center gap-6 lg:gap-8 mb-8">
               <div className="w-full lg:w-1/2 xl:w-2/5">
                 <img
                   src={product?.image || product?.images[0].image || "/no-product.png"}

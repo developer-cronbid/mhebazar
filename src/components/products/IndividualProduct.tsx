@@ -974,7 +974,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 ) : (
                   // Logic for non-direct sale (rental/quote)
                   <div className="mt-4 flex flex-col gap-2">
-                    {data.type === "rental" || data.type === "used" ? (
+                    {data.type.includes("rental") ? (
                       <>
                         <Dialog>
                           <DialogTrigger asChild>

@@ -158,9 +158,9 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
     <div className="max-h-[90vh] overflow-auto custom-scrollbar">
       <div className="w-full mx-auto">
         <Card className="border-none shadow-none">
-          <CardContent className="p-4 sm:p-6 lg:p-8 bg-white">
+          <CardContent className=" bg-white">
             {/* Product Information */}
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 mb-8">
+            <div className="flex flex-col-reverse items-center justify-center gap-6 lg:gap-8 mb-8">
               <div className="w-full lg:w-1/2 xl:w-2/5">
                 <div className="relative w-full h-48 sm:h-64 lg:h-72 rounded-lg shadow-sm overflow-hidden">
                   <Image
