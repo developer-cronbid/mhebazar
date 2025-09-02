@@ -6,12 +6,11 @@ import { useRef, useState, useEffect, useCallback, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { Category, Subcategory } from "./Nav";
 import { motion, AnimatePresence } from "framer-motion";
-import api from "@/lib/api"; // Assuming a centralized API utility
+import api from "@/lib/api";
 
-// Assuming you have a toast library like react-hot-toast imported globally or passed as prop
 declare const toast: { error: (message: string) => void };
 
-// TypeScript support for SpeechRecognition without 'any'
+// TypeScript support for SpeechRecognition
 declare global {
   interface Window {
     SpeechRecognition: {
@@ -54,7 +53,7 @@ interface ApiResponse<T> {
 
 // Helper function to create slugs
 const createSlug = (name: string): string =>
-  name.toLowerCase().replace(/\s+/g, "-");
+  name?.toLowerCase().replace(/\s+/g, "-");
 
 const TYPE_CHOICES = [
   { name: "New", slug: "new" },
@@ -75,7 +74,7 @@ export default function SearchBar({
   const searchBarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Filter suggestions based on search query and fetch from API
+  // Optimized search logic: Fetch from all relevant endpoints
   useEffect(() => {
     const handler = setTimeout(async () => {
       if (searchQuery.length > 0) {
@@ -84,20 +83,34 @@ export default function SearchBar({
         const uniqueItems = new Map();
 
         try {
-          // --- Parallel API Calls for Products and Vendors ---
+          // Parallel API Calls for Products and Vendors with search queries
           const [productsResponse, vendorsResponse] = await Promise.all([
             api.get<ApiResponse<Product>>(`/products/?search=${lowerCaseQuery}`),
-            // FIX: Use the correct `/vendor/` endpoint with the search parameter
             api.get<ApiResponse<Vendor>>(`/vendor/?search=${lowerCaseQuery}`),
           ]);
           
-          const productsFromApi = productsResponse.data?.results || [];
-          const vendorsFromApi = vendorsResponse.data?.results || [];
+          // Filter results client-side to ensure exact matches
+          const productsFromApi = productsResponse.data?.results.filter(p => p.name.toLowerCase().includes(lowerCaseQuery)) || [];
+          const vendorsFromApi = vendorsResponse.data?.results.filter(v => 
+            v.brand?.toLowerCase().includes(lowerCaseQuery) || 
+            v.company_name?.toLowerCase().includes(lowerCaseQuery) ||
+            v.full_name?.toLowerCase().includes(lowerCaseQuery) ||
+            v.username?.toLowerCase().includes(lowerCaseQuery)
+          ) || [];
+
+          // Add fetched products to suggestions
+          productsFromApi.forEach((product) => {
+            const uniqueKey = `product-${product.id}`;
+            if (!uniqueItems.has(uniqueKey)) {
+              combinedSuggestions.push({ ...product, type: "product" });
+              uniqueItems.set(uniqueKey, true);
+            }
+          });
 
           // Add fetched vendors to suggestions
           vendorsFromApi.forEach((vendor) => {
-            // IMPROVEMENT: Prefer company_name for display
-            const vendorName = vendor.company_name || vendor.brand || vendor.full_name || vendor.username;
+            // Prefer brand for display and slug
+            const vendorName = vendor.brand || vendor.company_name || vendor.full_name || vendor.username;
             if (vendorName) {
               const uniqueKey = `vendor-${vendor.id}`;
               if (!uniqueItems.has(uniqueKey)) {
@@ -105,25 +118,14 @@ export default function SearchBar({
                   id: vendor.id,
                   name: vendorName,
                   type: "vendor",
-                  slug: createSlug(vendorName)
+                  slug: createSlug(vendor.brand)
                 });
                 uniqueItems.set(uniqueKey, true);
               }
             }
           });
 
-          // Add product types to suggestions
-          TYPE_CHOICES.forEach((type) => {
-            if (type.name.toLowerCase().includes(lowerCaseQuery)) {
-              const uniqueKey = `product_type-${type.slug}`;
-              if (!uniqueItems.has(uniqueKey)) {
-                combinedSuggestions.push({ ...type, type: "product_type" });
-                uniqueItems.set(uniqueKey, true);
-              }
-            }
-          });
-
-          // Add categories to suggestions
+          // Add matching categories to suggestions
           categories.forEach((category) => {
             if (category.name.toLowerCase().includes(lowerCaseQuery)) {
               const uniqueKey = `category-${category.id}`;
@@ -147,12 +149,14 @@ export default function SearchBar({
             });
           });
 
-          // Add fetched products to suggestions
-          productsFromApi.forEach((product) => {
-            const uniqueKey = `product-${product.id}`;
-            if (!uniqueItems.has(uniqueKey)) {
-              combinedSuggestions.push({ ...product, type: "product" });
-              uniqueItems.set(uniqueKey, true);
+          // Add product types to suggestions
+          TYPE_CHOICES.forEach((type) => {
+            if (type.name.toLowerCase().includes(lowerCaseQuery)) {
+              const uniqueKey = `product_type-${type.slug}`;
+              if (!uniqueItems.has(uniqueKey)) {
+                combinedSuggestions.push({ ...type, type: "product_type" });
+                uniqueItems.set(uniqueKey, true);
+              }
             }
           });
 
@@ -167,7 +171,7 @@ export default function SearchBar({
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 300); // Debounce time of 300ms
+    }, 300); // Debounce time
 
     return () => {
       clearTimeout(handler);
@@ -236,6 +240,7 @@ export default function SearchBar({
       setSearchQuery("");
 
       if (item.type === "vendor") {
+        // Use the slug created from the vendor's brand
         router.push(`/vendor-listing/${item.slug}`);
       } else if (item.type === "category") {
         router.push(`/${createSlug(item.name)}`);
@@ -243,7 +248,7 @@ export default function SearchBar({
         const categorySlug = createSlug(item.category_name);
         router.push(`/${categorySlug}/${createSlug(item.name)}`);
       } else if (item.type === "product_type") {
-        router.push(`/products?type=${item.slug}`);
+        router.push(`/${item.slug}`);
       } else if (item.type === "product") {
         router.push(`/product/${createSlug(item.name)}?id=${item.id}`);
       }
