@@ -11,7 +11,6 @@ import { useUser } from "@/context/UserContext"
 import { Loader2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
-import DOMPurify from 'dompurify'
 import countrycode from '@/data/countrycode_cleaned.json'
 
 interface RentalFormProps {
