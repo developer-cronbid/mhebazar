@@ -118,7 +118,7 @@ export default function SearchBar({
                   id: vendor.id,
                   name: vendorName,
                   type: "vendor",
-                  slug: createSlug(vendor.brand)
+                  slug: createSlug(vendor.brand || vendor.company_name || vendor.full_name || vendor.username)
                 });
                 uniqueItems.set(uniqueKey, true);
               }
