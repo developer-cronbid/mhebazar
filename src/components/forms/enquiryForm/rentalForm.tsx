@@ -193,7 +193,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
             </div>
 
             {/* Product Description */}
-            <div className="mb-8 prose prose-sm sm:prose-base max-w-none text-gray-600 leading-relaxed">
+            {/* <div className="mb-8 prose prose-sm sm:prose-base max-w-none text-gray-600 leading-relaxed">
               <div
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(
@@ -201,7 +201,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                   )
                 }}
               />
-            </div>
+            </div> */}
 
             {/* Rental Form */}
             <div className="space-y-6">
