@@ -118,7 +118,7 @@ export default function SearchBar({
                   id: vendor.id,
                   name: vendorName,
                   type: "vendor",
-                  slug: createSlug(vendor.brand || vendor.company_name || vendor.full_name || vendor.username)
+                  slug: vendor.brand
                 });
                 uniqueItems.set(uniqueKey, true);
               }
@@ -248,7 +248,7 @@ export default function SearchBar({
         const categorySlug = createSlug(item.category_name);
         router.push(`/${categorySlug}/${createSlug(item.name)}`);
       } else if (item.type === "product_type") {
-        router.push(`/${item.slug}`);
+        router.push(`/${item}`);
       } else if (item.type === "product") {
         router.push(`/product/${createSlug(item.name)}?id=${item.id}`);
       }
