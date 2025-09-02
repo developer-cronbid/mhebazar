@@ -74,13 +74,17 @@ export default function SearchBar({
   const searchBarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Optimized search logic: Fetch from all relevant endpoints
+  // Optimized search logic: Fetch from all relevant endpoints and sort
   useEffect(() => {
     const handler = setTimeout(async () => {
       if (searchQuery.length > 0) {
         const lowerCaseQuery = searchQuery.toLowerCase();
-        let combinedSuggestions: any[] = [];
-        const uniqueItems = new Map();
+        
+        let vendorSuggestions: any[] = [];
+        let productSuggestions: any[] = [];
+        let categorySuggestions: any[] = [];
+        let subcategorySuggestions: any[] = [];
+        let productTypeSuggestions: any[] = [];
 
         try {
           // Parallel API Calls for Products and Vendors with search queries
@@ -89,62 +93,37 @@ export default function SearchBar({
             api.get<ApiResponse<Vendor>>(`/vendor/?search=${lowerCaseQuery}`),
           ]);
           
-          // Filter results client-side to ensure exact matches
-          const productsFromApi = productsResponse.data?.results.filter(p => p.name.toLowerCase().includes(lowerCaseQuery)) || [];
-          const vendorsFromApi = vendorsResponse.data?.results.filter(v => 
-            v.brand?.toLowerCase().includes(lowerCaseQuery) || 
-            v.company_name?.toLowerCase().includes(lowerCaseQuery) ||
-            v.full_name?.toLowerCase().includes(lowerCaseQuery) ||
-            v.username?.toLowerCase().includes(lowerCaseQuery)
-          ) || [];
-
-          // Add fetched products to suggestions
-          productsFromApi.forEach((product) => {
-            const uniqueKey = `product-${product.id}`;
-            if (!uniqueItems.has(uniqueKey)) {
-              combinedSuggestions.push({ ...product, type: "product" });
-              uniqueItems.set(uniqueKey, true);
+          // Filter results client-side to ensure exact matches and populate respective lists
+          productsResponse.data?.results.forEach(product => {
+            if (product.name.toLowerCase().includes(lowerCaseQuery)) {
+              productSuggestions.push({ ...product, type: "product" });
             }
           });
 
-          // Add fetched vendors to suggestions
-          vendorsFromApi.forEach((vendor) => {
-            // Prefer brand for display and slug
+          vendorsResponse.data?.results.forEach(vendor => {
             const vendorName = vendor.brand || vendor.company_name || vendor.full_name || vendor.username;
-            if (vendorName) {
-              const uniqueKey = `vendor-${vendor.id}`;
-              if (!uniqueItems.has(uniqueKey)) {
-                combinedSuggestions.push({
-                  id: vendor.id,
-                  name: vendorName,
-                  type: "vendor",
-                  slug: vendor.brand
-                });
-                uniqueItems.set(uniqueKey, true);
-              }
+            if (vendorName?.toLowerCase().includes(lowerCaseQuery)) {
+              vendorSuggestions.push({
+                id: vendor.id,
+                name: vendorName,
+                type: "vendor",
+                slug: vendor.brand
+              });
             }
           });
 
-          // Add matching categories to suggestions
+          // Add matching categories and subcategories to suggestions
           categories.forEach((category) => {
             if (category.name.toLowerCase().includes(lowerCaseQuery)) {
-              const uniqueKey = `category-${category.id}`;
-              if (!uniqueItems.has(uniqueKey)) {
-                combinedSuggestions.push({ ...category, type: "category" });
-                uniqueItems.set(uniqueKey, true);
-              }
+              categorySuggestions.push({ ...category, type: "category" });
             }
             category.subcategories.forEach((subcategory) => {
               if (subcategory.name.toLowerCase().includes(lowerCaseQuery)) {
-                const uniqueKey = `subcategory-${subcategory.id}`;
-                if (!uniqueItems.has(uniqueKey)) {
-                  combinedSuggestions.push({
-                    ...subcategory,
-                    type: "subcategory",
-                    category_name: category.name,
-                  });
-                  uniqueItems.set(uniqueKey, true);
-                }
+                subcategorySuggestions.push({
+                  ...subcategory,
+                  type: "subcategory",
+                  category_name: category.name,
+                });
               }
             });
           });
@@ -152,20 +131,32 @@ export default function SearchBar({
           // Add product types to suggestions
           TYPE_CHOICES.forEach((type) => {
             if (type.name.toLowerCase().includes(lowerCaseQuery)) {
-              const uniqueKey = `product_type-${type.slug}`;
-              if (!uniqueItems.has(uniqueKey)) {
-                combinedSuggestions.push({ ...type, type: "product_type" });
-                uniqueItems.set(uniqueKey, true);
-              }
+              productTypeSuggestions.push({ ...type, type: "product_type" });
             }
           });
 
         } catch (error) {
           console.error("Error fetching search results:", error);
-          // Optionally show a toast error
         }
 
-        setSuggestions(combinedSuggestions);
+        // Combine all suggestions in the desired order of priority
+        const combinedSuggestions = [
+          ...vendorSuggestions,
+          ...productTypeSuggestions,
+          ...categorySuggestions,
+          ...subcategorySuggestions,
+          ...productSuggestions,
+
+        ];
+
+        // Remove duplicates based on ID and type
+        const uniqueSuggestions = combinedSuggestions.filter((item, index, self) =>
+          index === self.findIndex((t) => (
+            t.id === item.id && t.type === item.type
+          ))
+        );
+
+        setSuggestions(uniqueSuggestions);
         setShowSuggestions(true);
       } else {
         setSuggestions([]);
@@ -240,7 +231,6 @@ export default function SearchBar({
       setSearchQuery("");
 
       if (item.type === "vendor") {
-        // Use the slug created from the vendor's brand
         router.push(`/vendor-listing/${item.slug}`);
       } else if (item.type === "category") {
         router.push(`/${createSlug(item.name)}`);
@@ -248,7 +238,7 @@ export default function SearchBar({
         const categorySlug = createSlug(item.category_name);
         router.push(`/${categorySlug}/${createSlug(item.name)}`);
       } else if (item.type === "product_type") {
-        router.push(`/${item}`);
+        router.push(`/products?type=${item.slug}`);
       } else if (item.type === "product") {
         router.push(`/product/${createSlug(item.name)}?id=${item.id}`);
       }
