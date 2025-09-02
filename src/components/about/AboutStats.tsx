@@ -6,29 +6,29 @@ import { useInView } from "react-intersection-observer";
 import Image from "next/image";
 
 const stats = [
-  {
-    value: 150,
-    label: "Countries Reached",
-    color: "#3B82F6",
-    suffix: "+",
-  },
-  {
+    {
     value: 25,
     label: "No. of Categories",
     color: "#F59E0B",
     suffix: "+",
   },
   {
-    value: 25000,
-    label: "Customers Served",
-    color: "#22C55E",
+    value: 150,
+    label: "Countries Reached",
+    color: "#3B82F6",
     suffix: "+",
   },
-  {
+    {
     value: 99.9,
     label: "Solutions Delivered",
     color: "#10B981",
     suffix: "%",
+  },
+  {
+    value: 25000,
+    label: "Customers Served",
+    color: "#22C55E",
+    suffix: "+",
   },
   {
     value: 1,
