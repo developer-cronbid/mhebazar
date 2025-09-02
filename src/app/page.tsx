@@ -7,12 +7,11 @@ import SpareParts from "@/components/home/SparepartsFeatured";
 import VendorProductsFeatured from "@/components/home/VendorFeatured";
 import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
 import TestimonialsCarousel from "@/components/elements/Testimonials";
-import Marquee from "react-fast-marquee";
 import { BlogCarousel } from "@/components/home/BlogCarousal";
-import Image from "next/image";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import Link from "next/link";
+import VendorMarquee from "@/components/home/Marquee";
 
 const SectionWrapper = ({ children, className }: { children: React.ReactNode; className?: string }) => {
   const ref = useRef(null);
@@ -97,32 +96,11 @@ export default function HomePage() {
               View All Brands
             </Link>
           </div>
-          <Marquee className="my-8">
-            <Image src={"/logos/AEPL.png"} alt="AEP Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Asmita.png"} alt="Asmita Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Bolzoni1.png"} alt="Bolzoni Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/BYD Forklift.png"} alt="BYD Forklift Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Cascade.png"} alt="Cascade Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Godrej.png"} alt="Godrej Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Greentech India.png"} alt="Greentech India Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Logisnext.png"} alt="Logisnext Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Logisnext-1.png"} alt="Logisnext-1 Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Logisnext-2.png"} alt="Logisnext-2 Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Logisnext-3.png"} alt="Logisnext-3 Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            {/* <Image src={"/logos/Manasi Engineering.png"} alt="Manasi Engineering Logo" width={100} height={64} className="h-16 w-auto mx-4" /> */}
-            <Image src={"/logos/manasi-engineering.png"} alt="Manasi Engineering Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/MHE Bazar.png"} alt="MHE Bazar Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/PHL.png"} alt="PHL Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Speciality Urethanes Pvt Ltd.png"} alt="Speciality Urethanes Pvt Ltd Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Stackon.png"} alt="Stackon Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/STW.png"} alt="STW Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Tallboy.png"} alt="Tallboy Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Troax.png"} alt="Troax Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/Unik.png"} alt="Unik Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-            <Image src={"/logos/metalkraft.png"} alt="MetalkraftIndustries Logo" width={100} height={64} className="h-16 w-auto mx-4" />
-
-            
-          </Marquee>
+          <div className="max-w-[93vw] mx-auto">
+            <SectionWrapper className="my-4 md:my-6">
+              <VendorMarquee />
+            </SectionWrapper>
+          </div>
         </SectionWrapper>
       </div>
 
