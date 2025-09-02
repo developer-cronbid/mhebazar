@@ -73,7 +73,7 @@ export default function VendorBanner({
 
         {/* --- Logo and Product Count (Desktop) --- */}
         <div className="hidden sm:flex absolute -bottom-12 lg:-bottom-16 xl:-bottom-18 items-start gap-4 lg:gap-6 px-4 sm:px-6 md:px-8 z-30">
-          <div className="bg-white rounded-full border-4 border-white shadow-xl flex items-center justify-center overflow-hidden w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 flex-shrink-0">
+          <div className="bg-white rounded-3xl border-4 border-white shadow-xl flex items-center justify-center overflow-hidden w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 flex-shrink-0">
             <Image
               src={profile_photo} // Corrected: Use profile_photo prop
               alt={`${company_name} Logo`}

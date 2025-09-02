@@ -303,7 +303,7 @@ export default function DashboardStats() {
     - p-6 sm:p-8: Reduced padding on small screens.
     - flex-wrap: Allows items to wrap if needed on very small screens.
   */}
-          <div className="p-6 sm:p-8 bg-gradient-to-r from-white to-[#DDF2D0] rounded-xl shadow-sm flex items-center justify-between flex-wrap">
+          <div className="p-6 sm:p-8 bg-gradient-to-r from-white to-[#DDF2D0] rounded-xl shadow-sm flex items-center justify-between">
             <div>
               {/*
         - text-2xl sm:text-3xl: Smaller number font size on small screens.

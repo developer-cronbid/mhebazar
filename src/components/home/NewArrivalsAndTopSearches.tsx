@@ -2,9 +2,10 @@
 
 "use client";
 
-import { useState, useEffect, JSX, useRef, useCallback } from "react";
+import { useState, useEffect, JSX } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import Marquee from "react-fast-marquee";
 
 // --- Type Definitions (Refined) ---
 interface ProductApiResponse {
@@ -57,7 +58,6 @@ function TopRatedItem({ item }: { item: DisplayItem }): JSX.Element | null {
               alt={alt || label}
               fill
               className="object-contain p-2 transform hover:scale-105 transition-transform duration-200"
-              sizes="80px"
               onError={() => setShowInitials(true)}
             />
           ) : (
@@ -79,15 +79,14 @@ function NewArrivalItem({ item }: { item: DisplayItem }): JSX.Element | null {
   }
 
   return (
-    <div className="w-44 flex-shrink-0 mr-4">
+    <div className="w-32 flex-shrink-0 mr-4">
       <Link href={`/product/${item.slug}/?id=${item.id}`} className="block">
-        <div className="relative w-44 h-44 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 hover:shadow-md transition-all duration-200 p-4">
+        <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 hover:shadow-md transition-all duration-200 p-4">
           <Image
             src={item.image}
             alt={item.alt}
             fill
             className="object-contain hover:scale-105 transition-transform duration-200"
-            sizes="176px"
             onError={() => setImageError(true)}
           />
         </div>
@@ -103,11 +102,6 @@ export default function NewArrivalsAndTopSearches() {
   const [newArrivalsCount, setNewArrivalsCount] = useState<number>(0);
   const [isLoadingNewArrivals, setIsLoadingNewArrivals] = useState<boolean>(true);
   const [isLoadingTopRated, setIsLoadingTopRated] = useState<boolean>(true);
-
-  // Carousel state and refs
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [activePage, setActivePage] = useState(0);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -170,42 +164,6 @@ export default function NewArrivalsAndTopSearches() {
     fetchData();
   }, [API_BASE_URL]);
 
-  // --- Automatic Carousel Logic ---
-  const itemsPerPage = 3;
-  const itemWidth = 192; // 176px width + 16px margin-right
-  const totalPages = Math.ceil(newArrivals.length / itemsPerPage);
-
-  const startAutoScroll = useCallback(() => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      setActivePage(prev => (prev + 1) % totalPages);
-    }, 2000); // 2-second interval
-  }, [totalPages]);
-
-  useEffect(() => {
-    if (totalPages > 1) {
-      startAutoScroll();
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [totalPages, startAutoScroll]);
-
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        left: activePage * itemsPerPage * itemWidth,
-        behavior: 'smooth',
-      });
-    }
-  }, [activePage, itemsPerPage, itemWidth]);
-
-  const handleDotClick = (pageIndex: number) => {
-    setActivePage(pageIndex);
-    startAutoScroll(); // Reset interval on user interaction
-  };
-  // --- End Carousel Logic ---
-
   const LoadingBoxSkeleton = () => <div className="w-44 h-44 bg-gray-200 rounded-lg animate-pulse flex-shrink-0 mr-4"></div>;
 
   const LoadingListItemSkeleton = () => (
@@ -230,36 +188,20 @@ export default function NewArrivalsAndTopSearches() {
             </p>
           </div>
           <div className="relative">
-            <div
-              ref={scrollContainerRef}
-              className="flex overflow-x-auto pb-4"
-              style={{
-                msOverflowStyle: 'none',
-                scrollbarWidth: 'none',
-              }}
-            >
-              {isLoadingNewArrivals ? (
-                [...Array(4)].map((_, i) => <LoadingBoxSkeleton key={i} />)
-              ) : (
-                newArrivals.map((item) => (
-                  <NewArrivalItem key={item.id} item={item} />
-                ))
-              )}
-            </div>
-            {/* Dots Navigation */}
-            {totalPages > 1 && (
-              <div className="flex justify-center space-x-2 mt-4">
-                {[...Array(totalPages-1)].map((_, dotIndex) => (
-                  <button
-                    key={dotIndex}
-                    onClick={() => handleDotClick(dotIndex)}
-                    className={`w-3 h-3 rounded-full transition-colors duration-300 ${activePage === dotIndex
-                        ? "bg-green-600"
-                        : "bg-gray-300 hover:bg-gray-400"
-                      }`}
-                  />
-                ))}
+            {isLoadingNewArrivals ? (
+              <div className="flex">
+                {[...Array(4)].map((_, i) => <LoadingBoxSkeleton key={i} />)}
               </div>
+            ) : (
+              <Marquee
+                pauseOnHover={true}
+                speed={40}
+                className="pb-4"
+              >
+                {newArrivals.map((item) => (
+                  <NewArrivalItem key={item.id} item={item} />
+                ))}
+              </Marquee>
             )}
           </div>
         </div>

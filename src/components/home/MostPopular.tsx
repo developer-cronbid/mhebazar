@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import Marquee from "react-fast-marquee";
 
 // ====================
 // Types (Unchanged)
@@ -224,37 +225,17 @@ export default function MostPopular() {
           </div>
         </div>
 
-        {/* Bottom Products Carousel */}
+        {/* Bottom Products Marquee - MODIFIED */}
         <div className="relative">
-          <div
-            ref={scrollContainerRef}
-            className="flex overflow-x-auto gap-4 pb-4 scrollbar-hide"
-            // REMOVED: onScroll handler is no longer needed
-            style={{
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-            }}
+          <Marquee
+            pauseOnHover={true}
+            speed={40}
+            className="pb-4"
           >
             {visibleProducts.map((product, idx) => (
               <CarouselProductItem key={idx} product={product} idx={idx} />
             ))}
-          </div>
-
-          {/* Dots Navigation - MODIFIED */}
-          {totalPages > 1 && (
-            <div className="flex justify-center space-x-2 mt-4">
-              {[...Array(totalPages)].map((_, dotIndex) => (
-                <button
-                  key={dotIndex}
-                  onClick={() => handleDotClick(dotIndex)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${activePage === dotIndex
-                      ? "bg-green-600"
-                      : "bg-gray-300 hover:bg-gray-400"
-                    }`}
-                />
-              ))}
-            </div>
-          )}
+          </Marquee>
         </div>
 
         {error && (
