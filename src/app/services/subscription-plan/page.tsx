@@ -51,7 +51,7 @@ const SubscriptionPlanPage = () => {
 
       {/* Subscription Plan Cards */}
      
-        <SubscriptionPlans />
+        {/* <SubscriptionPlans /> */}
    
 
       {/* Vendor Registration Card Section */}
