@@ -4,7 +4,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
 import Marquee from "react-fast-marquee";
 
 interface ApiProduct {
