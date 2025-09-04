@@ -36,11 +36,13 @@ interface Product {
   name: string;
   category_name: string;
   subcategory_name: string;
+  user: number;
 }
 
 // Define Vendor interface based on API response
 interface Vendor {
   id: number;
+  user_id: number;
   username: string;
   full_name: string;
   company_name: string;
@@ -79,12 +81,14 @@ export default function SearchBar({
     const handler = setTimeout(async () => {
       if (searchQuery.length > 0) {
         const lowerCaseQuery = searchQuery.toLowerCase();
-        
+
         let vendorSuggestions: any[] = [];
         let productSuggestions: any[] = [];
         let categorySuggestions: any[] = [];
         let subcategorySuggestions: any[] = [];
         let productTypeSuggestions: any[] = [];
+        // New array for vendor-category suggestions
+        let vendorCategorySuggestions: any[] = [];
 
         try {
           // Parallel API Calls for Products and Vendors with search queries
@@ -92,7 +96,7 @@ export default function SearchBar({
             api.get<ApiResponse<Product>>(`/products/?search=${lowerCaseQuery}`),
             api.get<ApiResponse<Vendor>>(`/vendor/?search=${lowerCaseQuery}`),
           ]);
-          
+
           // Filter results client-side to ensure exact matches and populate respective lists
           productsResponse.data?.results.forEach(product => {
             if (product.name.toLowerCase().includes(lowerCaseQuery)) {
@@ -100,7 +104,8 @@ export default function SearchBar({
             }
           });
 
-          vendorsResponse.data?.results.forEach(vendor => {
+          // Process vendor suggestions and fetch their categories
+          const vendorPromises = vendorsResponse.data?.results.map(async (vendor) => {
             const vendorName = vendor.brand || vendor.company_name || vendor.full_name || vendor.username;
             if (vendorName?.toLowerCase().includes(lowerCaseQuery)) {
               vendorSuggestions.push({
@@ -109,8 +114,30 @@ export default function SearchBar({
                 type: "vendor",
                 slug: vendor.brand
               });
+
+              // Fetch products for the matched vendor to get their categories
+              const vendorProductsResponse = await api.get<ApiResponse<Product>>(`/products/?user=${vendor.user_id}`);
+              const vendorCategories = new Set<string>();
+              vendorProductsResponse.data?.results.forEach(product => {
+                if (product.category_name) {
+                  vendorCategories.add(product.category_name);
+                }
+              });
+
+              // Create new suggestions for vendor categories
+              vendorCategories.forEach(categoryName => {
+                vendorCategorySuggestions.push({
+                  id: `${vendor.id}-${createSlug(categoryName)}`, // Ensure unique key
+                  name: `${vendorName} ${categoryName}`,
+                  type: "vendor_category",
+                  vendorSlug: vendor.brand,
+                  categorySlug: createSlug(categoryName),
+                });
+              });
             }
-          });
+          }) || [];
+
+          await Promise.all(vendorPromises);
 
           // Add matching categories and subcategories to suggestions
           categories.forEach((category) => {
@@ -142,11 +169,11 @@ export default function SearchBar({
         // Combine all suggestions in the desired order of priority
         const combinedSuggestions = [
           ...vendorSuggestions,
+          ...vendorCategorySuggestions,
           ...productTypeSuggestions,
           ...categorySuggestions,
           ...subcategorySuggestions,
           // ...productSuggestions,
-
         ];
 
         // Remove duplicates based on ID and type
@@ -232,6 +259,9 @@ export default function SearchBar({
 
       if (item.type === "vendor") {
         router.push(`/vendor-listing/${item.slug}`);
+      } else if (item.type === "vendor_category") {
+        // Handle new vendor-category links
+        router.push(`/vendor-listing/${item.vendorSlug}?page=1&category=${item.categorySlug}`);
       } else if (item.type === "category") {
         router.push(`/${createSlug(item.name)}`);
       } else if (item.type === "subcategory") {
@@ -245,7 +275,7 @@ export default function SearchBar({
     },
     [router, setSearchQuery]
   );
-  
+
   return (
     <div className="relative w-full" ref={searchBarRef}>
       <input
