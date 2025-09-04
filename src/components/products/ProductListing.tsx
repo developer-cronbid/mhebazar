@@ -8,7 +8,7 @@ import SideFilter from "./SideFilter";
 import Image from "next/image";
 import { Toaster } from "sonner";
 import QuoteForm from "../forms/enquiryForm/quotesForm";
-import { Product } from "@/types";
+// import { Product } from "@/types";
 import DOMPurify from 'dompurify';
 import { IoGrid } from "react-icons/io5";
 import { useRouter } from "next/navigation";
@@ -400,7 +400,7 @@ export default function ProductListing({
                     <option value="relevance">Sort by</option>
                     <option value="price_asc">Price: Low to High</option>
                     <option value="price_desc">Price: High to Low</option>
-                    <option value="newest">Newest First</option>
+                    {/* <option value="newest">Newest First</option> */}
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
                 </div>
