@@ -1,3 +1,4 @@
+// src/components/elements/Footer.tsx
 "use client";
 
 import {
@@ -137,7 +138,7 @@ export default function Footer() {
                 <div>
                   <h3 className="font-bold text-gray-800 mb-1">E-mail:</h3>
                   <div className="flex flex-col md:flex-row">
-                    <span className="text-sm text-gray-600 pr-2 border-r-2">sales.1@mhebazar.com</span>
+                    <span className="text-sm text-gray-600 pr-2 md:border-r-2">sales.1@mhebazar.com</span>
                   <span className="text-sm text-gray-600 pl-2">sales.2@mhebazar.com</span>
                   </div>
                 </div>
@@ -146,22 +147,22 @@ export default function Footer() {
               {/* Social Media Links */}
               <div className="flex items-center gap-4 mt-8">
                 <Link href="https://www.linkedin.com/company/mhe-bazar/" target="_blank" aria-label="LinkedIn">
-                  <Image src="/linkedinlogo.png" alt="LinkedIn Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
+                  <Image src="/linkedinlogo.png" alt="LinkedIn Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://www.instagram.com/mhebazar.in/" target="_blank" aria-label="Instagram">
-                  <Image src="/instagram.png" alt="Instagram Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
+                  <Image src="/instagram.png" alt="Instagram Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://www.facebook.com/mhebazar.in/" target="_blank" aria-label="Facebook">
-                  <Image src="/facebook.png" alt="Facebook Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
+                  <Image src="/facebook.png" alt="Facebook Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://twitter.com/Greentech_MH" target="_blank" aria-label="Twitter (X)">
-                  <Image src="/x.png" alt="X Logo" width={30} height={30} className="filter hover:grayscale-0 hover:scale-105 transition-all duration-300" />
+                  <Image src="/x.png" alt="X Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://www.youtube.com/@mhebazar" target="_blank" aria-label="YouTube">
-                  <Image src="/youtube.png" alt="YouTube Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
+                  <Image src="/youtube.png" alt="YouTube Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
                 <Link href="https://in.pinterest.com/greentechindiamh/" target="_blank" aria-label="Pinterest">
-                  <Image src="/pinterest.png" alt="Pinterest Logo" width={30} height={30} className="filter  hover:grayscale-0 hover:scale-105 transition-all duration-300" />
+                  <Image src="/pinterest.png" alt="Pinterest Logo" width={30} height={30} className="filter grayscale hover:grayscale-0 hover:scale-105 transition-all duration-300" />
                 </Link>
               </div>
             </div>

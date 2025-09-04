@@ -194,7 +194,9 @@ const BlogListPage: React.FC = () => {
     return temp.textContent || temp.innerText || "";
   };
 
-  const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
+const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
+    const baseUrl = "https://api.mhebazar.in/media/";
+
     if (!imagePath) {
       return "/mhe-logo.png";
     }
@@ -206,7 +208,14 @@ const BlogListPage: React.FC = () => {
       }
       return "/mhe-logo.png";
     }
+    
+    // Check if the imagePath is a full URL. A simple way is to check if it starts with "http".
+    // If it's not a full URL, prepend the base URL.
+    if (!imagePath.startsWith("http")) {
+      return baseUrl + imagePath;
+    }
 
+    // If it is already a full URL, return it as is.
     return imagePath;
   };
 
