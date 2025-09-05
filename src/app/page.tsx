@@ -41,9 +41,9 @@ export default function HomePage() {
 
   return (
     <>
-      <motion.div ref={bannerRef} style={{ y, opacity }}>
+      <div ref={bannerRef} style={{ y, opacity }}>
         <HomeBanner />
-      </motion.div>
+      </div>
 
       <SectionWrapper className="max-w-[97vw] mx-auto">
         <CategoryButtons />

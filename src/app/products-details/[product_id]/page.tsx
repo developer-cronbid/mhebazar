@@ -73,12 +73,16 @@ export default function ProductDetails() {
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 {product.name}
               </h1>
-              <div className="flex items-center gap-3">
-                <Badge
-                  className={`${TYPE_COLORS[product.type as keyof typeof TYPE_COLORS]} text-white`}
-                >
-                  {product.type.toUpperCase()}
-                </Badge>
+              {/* ✅ FIXED: Mapped over the type array to render badges correctly */}
+              <div className="flex items-center gap-3 flex-wrap">
+                {Array.isArray(product.type) && product.type.map((t) => (
+                  <Badge
+                    key={t}
+                    className={`${TYPE_COLORS[t as keyof typeof TYPE_COLORS] || 'bg-gray-400'} text-white`}
+                  >
+                    {t.toUpperCase()}
+                  </Badge>
+                ))}
                 <Badge
                   variant="secondary"
                   className={product.is_active ? "bg-green-500 text-white" : "bg-yellow-400 text-white"}
