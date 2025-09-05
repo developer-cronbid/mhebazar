@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback, JSX } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight, Funnel, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp, Funnel, Search } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
 
@@ -175,7 +175,7 @@ const SideFilter = ({
             aria-label="search"
             tabIndex={0}
           >
-            <Funnel className="w-4 h-4"/>
+            <Funnel className="w-4 h-4" />
           </button>)}
         </div>
 
@@ -184,30 +184,30 @@ const SideFilter = ({
         <div className="space-y-0 mb-4">
           {filteredCategories.map((category: Category) => (
             <div key={category.id} className="border-b border-gray-200 last:border-b-0">
-              <button
-                onClick={() => {
-                  if (category.subcategories.length > 0) {
-                    setExpandedCategory(
-                      expandedCategory === category.id ? null : category.id
-                    );
-                  }
-                  onFilterChange(category.name, "category", category.name);
-                }}
-                className={`w-full flex items-center justify-between py-2 px-0 transition-colors duration-200 ${isFilterActive(category.name)
-                  ? "bg-green-50 text-green-700 font-medium"
-                  : "hover:bg-gray-50 text-black"
-                  }`}
-                aria-expanded={expandedCategory === category.id}
-              >
-                <span className="text-sm font-sans text-black truncate line-clamp-1">{category.name}</span>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => onFilterChange(category.name, "category", category.name)}
+                  className={`flex-1 text-left py-2 px-0 transition-colors duration-200 ${isFilterActive(category.name)
+                    ? "bg-green-50 text-green-700 font-medium"
+                    : "hover:bg-gray-50 text-black"
+                    }`}
+                >
+                  <span className="text-sm font-sans text-black truncate line-clamp-1">{category.name}</span>
+                </button>
                 {category.subcategories.length > 0 && (
-                  expandedCategory === category.id ? (
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-                  ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-500" />
-                  )
+                  <button
+                    onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
+                    className="p-2 -mr-2 rounded-full hover:bg-gray-100"
+                    aria-expanded={expandedCategory === category.id}
+                  >
+                    {expandedCategory === category.id ? (
+                      <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                    )}
+                  </button>
                 )}
-              </button>
+              </div>
               <AnimatePresence>
                 {expandedCategory === category.id && (
                   <motion.div

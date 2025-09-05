@@ -5,11 +5,13 @@ import * as React from 'react';
 import api from '@/lib/api';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
 import {
   Carousel,
 } from '@/components/ui/carousel';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Calendar, User } from 'lucide-react';
 import Autoplay from "embla-carousel-autoplay";
 
 // Define the structure of a blog post based on your API response
@@ -18,6 +20,11 @@ interface BlogPost {
   blog_title: string;
   image1: string;
   blog_url: string;
+  blog_category_name: string;
+  author_name: string;
+  created_at: string;
+  description: string;
+  description1: string;
 }
 
 // Define the structure of the API response
@@ -28,26 +35,85 @@ interface ApiResponse {
   results: BlogPost[];
 }
 
+// Animation variants from page.tsx
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  },
+  hover: {
+    y: -4,
+    scale: 1.01,
+    borderColor: "#5ca131",
+    transition: {
+      duration: 0.3,
+      ease: "easeOut",
+    },
+  },
+};
+
 export function BlogCarousel() {
   const [blogs, setBlogs] = React.useState<BlogPost[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [scrollIndex, setScrollIndex] = React.useState(0);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const [imageError, setImageError] = React.useState<{ [key: number]: boolean }>({});
 
-  const getImageUrl = (imagePath: string | null) => {
+
+  const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
+    const baseUrl = "https://api.mhebazar.in/media/";
+
     if (!imagePath) {
-      return "/mhe-logo.png"; // Fallback image
+      return "/mhe-logo.png";
     }
-    
-    const filename = imagePath.split('/').pop();
-    return `/css/asset/blogimg/${filename}`;
+
+    if (hasError) {
+      const filename = imagePath.split('/').pop();
+      if (filename) {
+        return `/css/asset/blogimg/${filename}`;
+      }
+      return "/mhe-logo.png";
+    }
+
+    // Check if the imagePath is a full URL. A simple way is to check if it starts with "http".
+    // If it's not a full URL, prepend the base URL.
+    if (!imagePath.startsWith("http")) {
+      return baseUrl + imagePath;
+    }
+
+    // If it is already a full URL, return it as is.
+    return imagePath;
   };
+
+  const handleImageError = (id: number) => {
+    setImageError(prev => ({ ...prev, [id]: true }));
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const stripHtml = (html: string) => {
+    const temp = document.createElement("div");
+    temp.innerHTML = html;
+    return temp.textContent || temp.innerText || "";
+  };
+
 
   React.useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await api.get<ApiResponse>('/blogs/');
+        const response = await api.get<ApiResponse>('/blogs/?limit=10');
 
         if (response.data && response.data.results) {
           setBlogs(response.data.results);
@@ -137,42 +203,69 @@ export function BlogCarousel() {
             setScrollIndex(newIndex);
           }}
         >
-          {blogs.map((blog) => (
-            <div
-              key={blog.id}
-              className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3"
-            >
-              <Card className="bg-white border-0 rounded-2xl overflow-hidden h-full flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 mx-2">
-                <CardContent className="flex flex-col p-0 flex-grow">
-                  <div className="relative w-full aspect-video overflow-hidden rounded-t-2xl">
-                    <Image
-                      src={getImageUrl(blog.image1)}
-                      alt={blog.blog_title}
-                      fill
-                      className="object-cover transition-transform duration-300 hover:scale-105"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/mhe-logo.png";
-                      }}
-                    />
-                  </div>
-                  <div className="p-6 flex flex-col flex-grow justify-between">
-                    <h3 className="font-semibold text-lg leading-6 text-gray-900 mb-4 line-clamp-3">
-                      {blog.blog_title}
-                    </h3>
-                    <Link
-                      href={`/blog/${blog.blog_url}`}
-                      className="inline-flex items-center gap-2 text-green-600 font-semibold text-base group hover:text-green-700 transition-colors duration-200"
-                    >
-                      Read More
-                      <ArrowUpRight className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+          {blogs.map((blog) => {
+            const imageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
+            return (
+              <div
+                key={blog.id}
+                className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3"
+              >
+                <motion.div
+                  variants={cardVariants}
+                  whileHover="hover"
+                >
+                  <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg h-full transition-all duration-300 pt-0">
+                    <Link href={`/blog/${blog.blog_url}`} className="block h-full">
+                      <div className="relative overflow-hidden rounded-t-lg">
+                        <div className="w-full h-auto aspect-[155/96] relative">
+                          <motion.img
+                            src={imageUrl}
+                            alt={blog.blog_title}
+                            className="w-full h-full object-contain bg-gray-50"
+                            onError={() => handleImageError(blog.id)}
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.6 }}
+                          />
+                        </div>
+                        <div className="absolute top-3 right-3">
+                          <Badge className="bg-[#5ca131] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">
+                            {blog.blog_category_name}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <CardHeader className="p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            {formatDate(blog.created_at)}
+                          </div>
+                          {blog.author_name && (
+                            <div className="flex items-center text-xs text-gray-500">
+                              <User className="h-3 w-3 mr-1" />
+                              <span className="truncate max-w-[100px] font-medium">{blog.author_name}</span>
+                            </div>
+                          )}
+                        </div>
+                        <h2 className="text-lg font-bold text-gray-900 hover:text-[#5ca131] transition-colors line-clamp-2 leading-tight">
+                          {blog.blog_title}
+                        </h2>
+                      </CardHeader>
+                      <CardContent className="pt-0 p-4">
+                        <p className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed">
+                          {blog.description1 || stripHtml(blog.description).substring(0, 100) + "..."}
+                        </p>
+                        <div className="flex items-center text-[#5ca131] text-sm font-semibold hover:text-[#4a8429]">
+                          Read More
+                          <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        </div>
+                      </CardContent>
                     </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+                  </Card>
+                </motion.div>
+              </div>
+            );
+          })}
         </div>
       </Carousel>
       <div className="flex justify-center space-x-2 mt-2">

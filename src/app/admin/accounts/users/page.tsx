@@ -4,7 +4,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import api from '@/lib/api';
 import { Trash2, Download, MoreHorizontal } from 'lucide-react';
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationLink, PaginationNext, PaginationEllipsis } from '@/components/ui/pagination';
-// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   useReactTable,
   getCoreRowModel,
@@ -26,7 +25,6 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 
-// User type remains the same
 interface User {
   id: number;
   full_name: string;
@@ -42,12 +40,12 @@ const UsersTable = () => {
   const [totalUsers, setTotalUsers] = useState(0);
 
   // States for filtering
-  const [statusFilter, setStatusFilter] = useState('all'); // Default to 'all'
-  const [roleFilter, setRoleFilter] = useState('all'); // Default to 'all'
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('all');
 
   // States for server-side operations
   const [page, setPage] = useState(1);
-  // const [pageSize, setPageSize] = useState(10);
+  const pageSize = 20; // Hardcoded page size
   const [globalFilter, setGlobalFilter] = useState('');
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
   const [sortBy, setSortBy] = useState<SortingState>([
@@ -58,12 +56,10 @@ const UsersTable = () => {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedGlobalFilter(globalFilter);
-      setPage(1); // Reset page on new search
     }, 500);
 
     return () => clearTimeout(handler);
   }, [globalFilter]);
-
 
   // API Request Logic
   useEffect(() => {
@@ -72,11 +68,7 @@ const UsersTable = () => {
       try {
         const params = new URLSearchParams();
         params.append('page', String(page));
-        // params.append('page_size', String(pageSize));
-
-        if (debouncedGlobalFilter) {
-          params.append('search', debouncedGlobalFilter);
-        }
+        params.append('page_size', String(pageSize));
 
         if (sortBy.length > 0) {
           const sortField = sortBy[0];
@@ -84,8 +76,7 @@ const UsersTable = () => {
           params.append('ordering', ordering);
         }
 
-        // --- FIX: Correctly handle 'all' filter option ---
-        if (statusFilter && statusFilter !== 'all') {
+        if (statusFilter !== 'all') {
           if (statusFilter === 'verified') {
             params.append('is_email_verified', 'true');
           } else if (statusFilter === 'not_verified') {
@@ -93,7 +84,7 @@ const UsersTable = () => {
           }
         }
 
-        if (roleFilter && roleFilter !== 'all') {
+        if (roleFilter !== 'all') {
           params.append('role__name', roleFilter);
         }
 
@@ -109,17 +100,30 @@ const UsersTable = () => {
     };
 
     fetchData();
-    // --- FIX: Added roleFilter to dependency array ---
-  }, [page, debouncedGlobalFilter, sortBy, statusFilter, roleFilter]);
+  }, [page, sortBy, statusFilter, roleFilter]);
 
-  const totalPages = Math.ceil(totalUsers / 20);
+
+  // Apply client-side search filtering
+  const filteredData = useMemo(() => {
+    if (!debouncedGlobalFilter) {
+      return data;
+    }
+    const filterValue = debouncedGlobalFilter.toLowerCase();
+    return data.filter(user =>
+      user.full_name.toLowerCase().includes(filterValue) ||
+      user.email.toLowerCase().includes(filterValue) ||
+      user.username.toLowerCase().includes(filterValue)
+    );
+  }, [data, debouncedGlobalFilter]);
+
+  const totalPages = Math.ceil(totalUsers / pageSize);
 
   // Table columns definition
   const columns = useMemo<ColumnDef<User>[]>(
     () => [
       {
         header: 'Sr. No.',
-        cell: info => info.row.index + 1 + (page - 1) * 20,
+        cell: info => info.row.index + 1 + (page - 1) * pageSize,
         size: 64,
       },
       {
@@ -173,13 +177,13 @@ const UsersTable = () => {
 
   // Configure TanStack Table
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: { sorting: sortBy },
     onSortingChange: setSortBy,
-    getCoreRowModel: getCoreRowModel(), // ✅ correct
+    getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
-    manualFiltering: true,
+    manualFiltering: false, // Changed to false for client-side filtering
     manualSorting: true,
     pageCount: totalPages,
   });
@@ -194,12 +198,7 @@ const UsersTable = () => {
   const handleExportToExcel = async () => {
     setLoading(true);
     try {
-      // Fetch all users based on current filters
       const params = new URLSearchParams();
-
-      if (debouncedGlobalFilter) {
-        params.append('search', debouncedGlobalFilter);
-      }
 
       if (sortBy.length > 0) {
         const sortField = sortBy[0];
@@ -207,7 +206,7 @@ const UsersTable = () => {
         params.append('ordering', ordering);
       }
 
-      if (statusFilter && statusFilter !== 'all') {
+      if (statusFilter !== 'all') {
         if (statusFilter === 'verified') {
           params.append('is_email_verified', 'true');
         } else if (statusFilter === 'not_verified') {
@@ -215,22 +214,19 @@ const UsersTable = () => {
         }
       }
 
-      if (roleFilter && roleFilter !== 'all') {
+      if (roleFilter !== 'all') {
         params.append('role__name', roleFilter);
       }
       
-      // Request all data, not just a single page
-      // Assuming the API returns all data if page size is not specified or set to a large number
       const response = await api.get(`/users/`, { params });
       const usersToExport: User[] = response.data.results;
       
-      // Generate CSV content
       const headers = ['Full Name', 'Email', 'Mobile No.', 'Username', 'Date Joined'];
-      const csvRows = [headers.join(',')]; // Add headers to the first row
+      const csvRows = [headers.join(',')];
       
       usersToExport.forEach(user => {
         const row = [
-          `"${user.full_name}"`, // Use quotes to handle names with commas
+          `"${user.full_name}"`,
           `"${user.email}"`,
           `"${user.phone || 'N/A'}"`,
           `"${user.username}"`,
@@ -241,7 +237,6 @@ const UsersTable = () => {
       
       const csvString = csvRows.join('\n');
       
-      // Create a Blob and download it
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -262,7 +257,6 @@ const UsersTable = () => {
     }
   };
 
-  // --- IMPROVEMENT: Simplified pagination logic ---
   const generatePagination = () => {
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -336,7 +330,6 @@ const UsersTable = () => {
                 }}
               >
                 <SelectTrigger className="w-[140px]">
-                  {/* --- FIX: Corrected placeholder text --- */}
                   <SelectValue placeholder="Filter by role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -425,7 +418,7 @@ const UsersTable = () => {
                       Loading...
                     </td>
                   </tr>
-                ) : table.getRowModel().rows.length === 0 ? (
+                ) : filteredData.length === 0 ? (
                   <tr>
                     <td colSpan={columns.length} className="text-center py-8">
                       No data found.
@@ -453,7 +446,7 @@ const UsersTable = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between gap-4 mt-6">
           <div className="text-sm text-gray-600">
-            {!loading && `Showing ${data.length > 0 ? (page - 1) * 20 + 1 : 0} to ${Math.min(page * 20, totalUsers)} of ${totalUsers} entries`}
+            {!loading && `Showing ${filteredData.length > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalUsers)} of ${totalUsers} entries`}
           </div>
           <div className="cursor-default">
             <Pagination>
