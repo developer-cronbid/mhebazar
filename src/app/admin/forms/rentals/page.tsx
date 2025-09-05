@@ -268,8 +268,8 @@ const RentalsTable = () => {
         header: 'Status',
         cell: ({ row }) => {
           const status = row.original.status;
-          const variant: "default" | "secondary" | "destructive" | "outline" =
-            status === 'approved' ? 'default' :
+          const variant: "default" | "secondary" | "destructive" | "outline" | "success" =
+            status === 'approved' ? 'success' :
               status === 'rejected' ? 'destructive' :
                 status === 'returned' ? 'outline' : 'secondary';
           return <Badge variant={variant} className="capitalize">{status}</Badge>;
@@ -307,7 +307,7 @@ const RentalsTable = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
+    <div className="bg-white p-6 rounded-lg shadow-sm overflow-auto">
       <RentalDetailsSheet
         rental={selectedRental}
         isOpen={isSheetOpen}
@@ -428,7 +428,7 @@ const RentalsTable = () => {
           {!loading && `Showing ${totalRentals > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalRentals)} of ${totalRentals} entries`}
         </div>
         {!loading && totalPages > 1 && (
-          <Pagination>
+          <Pagination className='justify-end'>
             <PaginationContent>
               <PaginationItem><PaginationPrevious onClick={() => handlePageChange(page - 1)} aria-disabled={page === 1} className={page === 1 ? "pointer-events-none opacity-50" : ""} /></PaginationItem>
               {generatePagination().map((p, index) => (

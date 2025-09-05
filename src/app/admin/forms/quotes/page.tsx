@@ -296,8 +296,8 @@ const QuotesTable = () => {
         header: 'Status',
         cell: ({ row }) => {
           const status = row.original.status;
-          const variant: "default" | "secondary" | "destructive" =
-            status === 'approved' ? 'default' :
+          const variant: "success" | "secondary" | "destructive" =
+            status === 'approved' ? 'success' :
               status === 'rejected' ? 'destructive' : 'secondary';
           return <Badge variant={variant} className="capitalize">{status}</Badge>;
         },
@@ -339,7 +339,7 @@ const QuotesTable = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
+    <div className="bg-white p-6 rounded-lg shadow-sm overflow-auto">
       <QuoteDetailsSheet
         quote={selectedQuote}
         isOpen={isSheetOpen}
@@ -460,7 +460,7 @@ const QuotesTable = () => {
           {!loading && `Showing ${totalQuotes > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalQuotes)} of ${totalQuotes} entries`}
         </div>
         {!loading && totalPages > 1 && (
-          <Pagination>
+          <Pagination className='justify-end'>
             <PaginationContent>
               <PaginationItem><PaginationPrevious onClick={() => handlePageChange(page - 1)} aria-disabled={page === 1} className={page === 1 ? "pointer-events-none opacity-50" : ""} /></PaginationItem>
               {generatePagination().map((p, index) => (
