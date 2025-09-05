@@ -11,6 +11,7 @@ import { RentalDetailsSheet } from './rentalDetails';
 import { ImageIcon, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import rentData from '@/data/rentData.json';
+import { toast } from 'sonner';
 
 // Define TypeScript interfaces based on your API response
 interface Image {
@@ -192,14 +193,14 @@ const RentalsTable = () => {
         return;
       }
     }
-
     setAllRentals(prevData =>
       prevData.map(rental =>
         rental.id === rentalId ? { ...rental, status: newStatus } : rental
       )
     );
-    setSelectedRental(prev => prev ? { ...prev, status: newStatus } : null);
 
+    toast.success(`Rental ${action === 'mark_returned' ? 'marked as returned' : action + 'd'} successfully.`);
+    setSelectedRental(prev => prev ? { ...prev, status: newStatus } : null);
     setIsUpdating(false);
     setTimeout(() => setIsSheetOpen(false), 500);
   };

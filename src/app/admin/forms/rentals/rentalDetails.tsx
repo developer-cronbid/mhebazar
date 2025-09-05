@@ -46,7 +46,7 @@ interface RentalDetailsSheetProps {
 
 // --- UI Helpers ---
 const Section = ({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode; }) => (
-  <div className="mb-8">
+  <div className="mb-4">
     <div className="flex items-center gap-2 mb-4">
       {icon}
       <h3 className="text-base font-semibold text-gray-800">{title}</h3>
@@ -77,7 +77,7 @@ export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, o
           </SheetTitle>
         </SheetHeader>
 
-        <div className="flex-grow p-6">
+        <div className="p-6 pb-0">
           {/* Product Section */}
           <Section title="Product Information" icon={<Package className="h-5 w-5 text-gray-600" />}>
             {rental.product_details.images?.length > 0 && (
@@ -145,7 +145,7 @@ export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, o
         </div>
 
         {/* Footer Actions */}
-        <SheetFooter className="mt-auto pt-4 border-t border-gray-100 bg-white flex gap-3 flex-col sm:flex-row">
+        <SheetFooter className="mt-auto border-t border-gray-100 bg-white flex gap-3 flex-col sm:flex-row">
           {rental.status === "pending" && (
             <>
               <Button
