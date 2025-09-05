@@ -719,8 +719,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   key={img.id}
                   onClick={() => setSelectedImage(index)}
                   className={`rounded border-2 overflow-hidden flex-shrink-0 w-fit ${selectedImage === index
-                      ? "border-orange-500"
-                      : "border-gray-200"
+                    ? "border-orange-500"
+                    : "border-gray-200"
                     } hover:border-orange-300 transition-colors`}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -781,8 +781,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               {/* Product Title */}
               <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
                 {`${data.manufacturer
-                    ? data.manufacturer
-                    : data.user_name.replace("_", " ")
+                  ? data.manufacturer
+                  : data.user_name.replace("_", " ")
                   } ${data.name} ${data.model} `
                   .replace(/[^a-zA-Z0-9 \-]/g, "") // 🧹 Collapse all whitespace into a single space
                   .replace(/\s+/g, " ")
@@ -796,8 +796,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     <Star
                       key={star}
                       className={`w-4 h-4 transition-colors ${data.average_rating !== null && star <= data.average_rating
-                          ? "fill-orange-400 text-orange-400"
-                          : "text-gray-300"
+                        ? "fill-orange-400 text-orange-400"
+                        : "text-gray-300"
                         }`}
                     />
                   ))}
@@ -837,15 +837,15 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     ₹ *******
                   </span>
                 ) : (
-                    <>
-                      <div className="flex gap-4">
-                        <p className="text-3xl font-semibold text-red-400">
-                          -10%
-                        </p>
-                        <p className="text-3xl font-semibold text-[#5CA131]">
-                          ₹{displayPrice} excl. GST
-                        </p>
-                      </div>
+                  <>
+                    <div className="flex gap-4">
+                      <p className="text-3xl font-semibold text-red-400">
+                        -10%
+                      </p>
+                      <p className="text-3xl font-semibold text-[#5CA131]">
+                        ₹{displayPrice} excl. GST
+                      </p>
+                    </div>
                     <div className="flex gap-2">
                       <p className="text-base text-gray-500">
                         M.R.P:
@@ -1101,12 +1101,27 @@ export default function ProductSection({ productId }: ProductSectionProps) {
 
           <div className="pt-6 border-t border-gray-200">
             <p className="text-lg md:text-2xl font-bold">Product Details</p>
-            <div
-              className="line-clamp-4 text-sm md:text-base"
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(data.description),
-              }}
-            ></div>
+            <div className="relative">
+              <div
+                className="line-clamp-4 text-sm md:text-base"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(data.description),
+                }}
+              ></div>
+              <button
+                onClick={() => {
+                  setOpenAccordion('desc');
+                  document.querySelector('#description-accordion')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                  });
+                }}
+                className="mt-2 text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1 group"
+              >
+                Read More
+                <ChevronDown className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
             <Dialog>
               <DialogTrigger asChild>
                 <motion.p
@@ -1157,7 +1172,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
       {/* Accordion Section */}
       <div className="mt-8">
         {/* Description */}
-        <div className="border rounded-lg mb-4 overflow-hidden">
+        <div id="description-accordion" className="border rounded-lg mb-4 overflow-hidden">
           <button
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition-colors"
             onClick={() =>
@@ -1247,8 +1262,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                                     <tr
                                       key={`${key}-${specIndex}`}
                                       className={`hover:bg-gray-50 transition-colors duration-150 ${specIndex % 2 === 0
-                                          ? "bg-white"
-                                          : "bg-gray-25"
+                                        ? "bg-white"
+                                        : "bg-gray-25"
                                         }`}
                                     >
                                       <td className="px-6 py-4 whitespace-nowrap">
