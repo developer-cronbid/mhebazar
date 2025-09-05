@@ -46,7 +46,7 @@ const formatProductName = (productData: ProductDetails) => {
   const model = productData.model || '';
 
   return `${manufacturer} ${title} ${model}`
-    .replace(/[^a-zA-Z0-9 \-]/g, "")
+    .replace(/[^a-zA-Z0-9 \-\.]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 };

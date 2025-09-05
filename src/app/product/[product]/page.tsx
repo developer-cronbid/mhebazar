@@ -72,7 +72,7 @@ export default async function IndividualProductPage({
   }
 
   const { category_name, subcategory_name, name: productName } = productData;
-  const product = productName.replace(/[^a-zA-Z0-9 \-]/g, "")
+  const product = productName.replace(/[^a-zA-Z0-9 \-\.]/g, "")
     .replace(/\s+/g, " ")
     .trim()
   const cat_slug = category_name.toLowerCase().replace(/\s+/g, '-');

@@ -788,7 +788,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   ? data.manufacturer
                   : data.user_name.replace("_", " ")
                   } ${data.name} ${data.model} `
-                  .replace(/[^a-zA-Z0-9 \-]/g, "") // 🧹 Collapse all whitespace into a single space
+                  .replace(/[^a-zA-Z0-9 \-\.]/g, "") // 🧹 Collapse all whitespace into a single space
                   .replace(/\s+/g, " ")
                   .trim() // ✨ Remove any space from the beginning or end
                 }

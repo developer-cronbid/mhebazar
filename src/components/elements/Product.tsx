@@ -294,7 +294,7 @@ const ProductCard = ({
                 ? `${productData.manufacturer}`
                 : `${productData.user_name}`
                 } ${title} ${productData.model} `
-                .replace(/[^a-zA-Z0-9 \-]/g, "")
+                .replace(/[^a-zA-Z0-9 \-\.]/g, "")
                 .replace(/\s+/g, " ")
                 .trim()}
             </h3>
