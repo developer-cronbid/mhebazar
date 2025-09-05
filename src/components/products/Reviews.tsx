@@ -71,9 +71,13 @@ const fallbackData: ReviewData = {
       stars: 4,
       created_at: "2024-10-13T00:00:00Z",
       title: "Great Product!",
-      review: "This product is versatile and efficient material handling solution designed for warehouses and distribution centres. With its electric power and precise control.",
+      review:
+        "This product is versatile and efficient material handling solution designed for warehouses and distribution centres. With its electric power and precise control.",
       product: 1, // Dummy product ID
-      review_images: [{ id: 1, image: "/rev1.png" }, { id: 2, image: "/rev2.png" }],
+      review_images: [
+        { id: 1, image: "/rev1.png" },
+        { id: 2, image: "/rev2.png" },
+      ],
       updated_at: "2024-10-13T00:00:00Z",
     },
     {
@@ -83,9 +87,13 @@ const fallbackData: ReviewData = {
       stars: 5,
       created_at: "2024-10-13T00:00:00Z",
       title: "Highly Recommend!",
-      review: "This product is versatile and efficient material handling solution designed for warehouses and distribution centres. With its electric power and precise control.",
+      review:
+        "This product is versatile and efficient material handling solution designed for warehouses and distribution centres. With its electric power and precise control.",
       product: 1, // Dummy product ID
-      review_images: [{ id: 3, image: "/rev3.png" }, { id: 4, image: "/rev4.png" }],
+      review_images: [
+        { id: 3, image: "/rev3.png" },
+        { id: 4, image: "/rev4.png" },
+      ],
       updated_at: "2024-10-13T00:00:00Z",
     },
     {
@@ -95,7 +103,8 @@ const fallbackData: ReviewData = {
       stars: 3,
       created_at: "2024-10-13T00:00:00Z",
       title: "Good Value",
-      review: "This product is versatile and efficient material handling solution designed for warehouses and distribution centres. With its electric power and precise control.",
+      review:
+        "This product is versatile and efficient material handling solution designed for warehouses and distribution centres. With its electric power and precise control.",
       product: 1, // Dummy product ID
       review_images: [],
       updated_at: "2024-10-13T00:00:00Z",
@@ -108,7 +117,10 @@ interface ReviewSectionProps {
   registerRefresher?: (refresher: () => void) => void; // Optional prop for parent to register a refresher
 }
 
-export default function ReviewSection({ productId, registerRefresher }: ReviewSectionProps) {
+export default function ReviewSection({
+  productId,
+  registerRefresher,
+}: ReviewSectionProps) {
   const [data, setData] = useState<ReviewData | null>(null);
   const [imgScroll, setImgScroll] = useState(0);
 
@@ -118,20 +130,36 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
       return;
     }
     try {
-      const res = await api.get<ReviewsApiResponse>(`/reviews/?product=${productId}`); //
+      const res = await api.get<ReviewsApiResponse>(
+        `/reviews/?product=${productId}`
+      ); //
       const fetchedReviews = res.data.results;
 
       // Calculate summary statistics from fetched reviews
-      const totalStars = fetchedReviews.reduce((sum, review) => sum + review.stars, 0); //
-      const avgRating = fetchedReviews.length > 0 ? totalStars / fetchedReviews.length : 0;
+      const totalStars = fetchedReviews.reduce(
+        (sum, review) => sum + review.stars,
+        0
+      ); //
+      const avgRating =
+        fetchedReviews.length > 0 ? totalStars / fetchedReviews.length : 0;
 
-      const breakdown = Array(5).fill(0).map((_, i) => {
-        const starCount = fetchedReviews.filter(review => review.stars === (i + 1)).length; //
-        const percent = fetchedReviews.length > 0 ? (starCount / fetchedReviews.length) * 100 : 0;
-        return { star: i + 1, percent: parseFloat(percent.toFixed(0)) };
-      }).reverse();
+      const breakdown = Array(5)
+        .fill(0)
+        .map((_, i) => {
+          const starCount = fetchedReviews.filter(
+            (review) => review.stars === i + 1
+          ).length; //
+          const percent =
+            fetchedReviews.length > 0
+              ? (starCount / fetchedReviews.length) * 100
+              : 0;
+          return { star: i + 1, percent: parseFloat(percent.toFixed(0)) };
+        })
+        .reverse();
 
-      const allReviewImages = fetchedReviews.flatMap(review => review.review_images.map(img => img.image)); //
+      const allReviewImages = fetchedReviews.flatMap((review) =>
+        review.review_images.map((img) => img.image)
+      ); //
 
       console.log("Fetched reviews:", fetchedReviews);
       setData({
@@ -144,7 +172,6 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
         reviewImages: allReviewImages,
         reviews: fetchedReviews,
       });
-
     } catch (error) {
       console.error("Failed to fetch reviews:", error);
       // Fallback to dummy data if API fails or no reviews
@@ -162,7 +189,6 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
       registerRefresher(fetchReviews);
     }
   }, [registerRefresher, fetchReviews]);
-
 
   if (!data) {
     return (
@@ -204,10 +230,11 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                 {[1, 2, 3, 4, 5].map((i) => (
                   <Star
                     key={i}
-                    className={`w-5 h-5 ${i < data.summary.avg
-                      ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-300"
-                      }`}
+                    className={`w-5 h-5 ${
+                      i < data.summary.avg
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
+                    }`}
                   />
                 ))}
               </div>
@@ -221,10 +248,13 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
             <div className="space-y-2 mb-4">
               {data.summary.breakdown.map((item) => (
                 <div key={item.star} className="flex items-center gap-2">
-                  <span className="w-8 text-xs">{item.star} star</span>
+                  <span className="flex items-center gap-1 w-8 text-xs">
+                    {item.star}
+                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                  </span>
                   <div className="flex-1 bg-gray-200 h-2 rounded-full">
                     <div
-                      className="bg-yellow-400 h-2 rounded-full"
+                      className="bg-yellow-400 h-2 rounded-full "
                       style={{ width: `${item.percent}%` }}
                     ></div>
                   </div>
@@ -334,7 +364,9 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                   <div className="flex items-center gap-3 mb-1 flex-wrap">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
-                        {review.review_images && review.review_images.length > 0 && review.review_images[0].image ? (
+                        {review.review_images &&
+                        review.review_images.length > 0 &&
+                        review.review_images[0].image ? (
                           <Image
                             src={review.review_images[0].image}
                             alt={review.user_name || "User"}
@@ -344,7 +376,9 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                           />
                         ) : (
                           <span className="text-lg font-bold text-gray-500">
-                            {review.user_name ? review.user_name[0].toUpperCase() : "A"}
+                            {review.user_name
+                              ? review.user_name[0].toUpperCase()
+                              : "A"}
                           </span>
                         )}
                       </div>
@@ -354,10 +388,11 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                       {[1, 2, 3, 4, 5].map((j) => (
                         <Star
                           key={j}
-                          className={`w-4 h-4 ${review.stars >= j
-                            ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
-                            }`}
+                          className={`w-4 h-4 ${
+                            review.stars >= j
+                              ? "fill-yellow-400 text-yellow-400"
+                              : "text-gray-300"
+                          }`}
                         />
                       ))}
                     </div>
@@ -371,7 +406,9 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                     })}
                   </div>
                   <h5 className="font-semibold text-md mb-1">{review.title}</h5>
-                  <div className="text-sm text-gray-700 mb-3">{review.review}</div>
+                  <div className="text-sm text-gray-700 mb-3">
+                    {review.review}
+                  </div>
                   <div className="flex gap-2 mt-2">
                     {review.review_images &&
                       review.review_images.map((img) => (
@@ -389,12 +426,20 @@ export default function ReviewSection({ productId, registerRefresher }: ReviewSe
                       ))}
                   </div>
                   <div className="flex gap-4 text-xs text-gray-500 mt-3 items-center">
-                    <span className="font-medium">Was this review helpful?</span>
-                    <button className="text-green-600 font-semibold hover:underline">Yes</button>
+                    <span className="font-medium">
+                      Was this review helpful?
+                    </span>
+                    <button className="text-green-600 font-semibold hover:underline">
+                      Yes
+                    </button>
                     <span>·</span>
-                    <button className="text-green-600 font-semibold hover:underline">No</button>
+                    <button className="text-green-600 font-semibold hover:underline">
+                      No
+                    </button>
                     <span>·</span>
-                    <button className="text-red-500 font-semibold hover:underline">Report</button>
+                    <button className="text-red-500 font-semibold hover:underline">
+                      Report
+                    </button>
                   </div>
                 </div>
               ))

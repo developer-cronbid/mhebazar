@@ -41,7 +41,9 @@ const createSlug = (name: string): string =>
 
 const CategoryImage = ({ category }: { category: Category }) => {
   const [hasError, setHasError] = useState(!category.cat_image);
-  useEffect(() => { setHasError(!category.cat_image) }, [category.cat_image]);
+  useEffect(() => {
+    setHasError(!category.cat_image);
+  }, [category.cat_image]);
 
   if (hasError) {
     return (
@@ -63,7 +65,6 @@ const CategoryImage = ({ category }: { category: Category }) => {
   );
 };
 
-
 // --- Main Responsive Component ---
 export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -82,7 +83,9 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
       const data = response.data || [];
       setCategories(data);
       if (data.length > 0) {
-        const firstCategoryWithSubs = data.find((cat: Category) => cat.subcategories?.length > 0);
+        const firstCategoryWithSubs = data.find(
+          (cat: Category) => cat.subcategories?.length > 0
+        );
         setActiveCategory(firstCategoryWithSubs || data[0]);
       }
     } catch (error) {
@@ -149,10 +152,11 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
                 // ✨ CHANGE 3: Use onMouseEnter to update the active category on hover.
                 onMouseEnter={() => setActiveCategory(category)}
                 // ✨ CHANGE 4: Replicated button styles directly on the Link component.
-                className={`inline-flex items-center w-full justify-start gap-3 p-2.5 h-auto rounded-md text-sm font-medium transition-colors ${activeCategory?.id === category.id
+                className={`inline-flex items-center w-full justify-start gap-3 p-2.5 h-auto rounded-md text-sm font-medium transition-colors ${
+                  activeCategory?.id === category.id
                     ? "bg-accent text-accent-foreground"
                     : "hover:bg-accent"
-                  }`}
+                }`}
               >
                 <CategoryImage category={category} />
                 <span className="truncate">{category.name}</span>
@@ -166,7 +170,9 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
               activeCategory.subcategories.map((sub) => (
                 <Link
                   key={sub.id}
-                  href={`/${createSlug(activeCategory.name)}/${createSlug(sub.name)}`}
+                  href={`/${createSlug(activeCategory.name)}/${createSlug(
+                    sub.name
+                  )}`}
                   onClick={onClose}
                   className="block w-full text-left p-2.5 text-sm rounded-md text-foreground hover:bg-accent transition-colors"
                 >
@@ -174,8 +180,17 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
                 </Link>
               ))
             ) : (
-              <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                <p>No subcategories found.</p>
+              <div className="flex flex-col items-center justify-center h-full text-sm text-center p-4">
+                <p className="text-muted-foreground mb-4">
+                  Explore all products in this category.
+                </p>
+                {activeCategory && (
+                  <Button asChild onClick={onClose}>
+                    <Link href={`/${createSlug(activeCategory.name)}`}>
+                      Explore {activeCategory.name}
+                    </Link>
+                  </Button>
+                )}
               </div>
             )}
           </div>
@@ -200,7 +215,9 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
                   {category.subcategories.map((sub) => (
                     <Link
                       key={sub.id}
-                      href={`/${createSlug(category.name)}/${createSlug(sub.name)}`}
+                      href={`/${createSlug(category.name)}/${createSlug(
+                        sub.name
+                      )}`}
                       onClick={onClose}
                       className="block w-full text-left py-2.5 pl-12 pr-4 text-sm rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
                     >
@@ -237,9 +254,7 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
           transition={{ duration: 0.2, ease: "easeOut" }}
           className="absolute left-0 top-full z-50 mt-0"
         >
-          <Card className="shadow-lg">
-            {renderContent()}
-          </Card>
+          <Card className="shadow-lg">{renderContent()}</Card>
         </motion.div>
       )}
     </AnimatePresence>
