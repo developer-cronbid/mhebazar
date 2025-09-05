@@ -65,7 +65,9 @@ interface ApiProduct {
 
 interface Quote {
   id: number;
-  product_details: { user: number; name: string; images: { image: string }[] };
+  product_details: {
+    id: any; user: number; name: string; images: { image: string }[] 
+};
   user_name: string;
   message: string;
   status: 'pending' | 'approved' | 'rejected';
@@ -74,7 +76,9 @@ interface Quote {
 
 interface Rental {
   id: number;
-  product_details: { user: number; name: string; images: { image: string }[] };
+  product_details: {
+    [x: string]: any; user: number; name: string; images: { image: string }[] 
+};
   user_name: string;
   start_date: string;
   end_date: string;
@@ -128,7 +132,7 @@ const formatDate = (dateString: string) => {
 const QuoteCard = ({ quote }: { quote: Quote }) => {
   const router = useRouter();
   const handleViewProduct = () => {
-    router.push(`/product-details/${quote.product_details.id}`);
+    router.push(`/products-details/${quote.product_details.id}`);
   };
 
   return (
@@ -188,7 +192,7 @@ const QuoteCard = ({ quote }: { quote: Quote }) => {
 const RentalCard = ({ rental }: { rental: Rental }) => {
   const router = useRouter();
   const handleViewProduct = () => {
-    router.push(`/product-details/${rental.product_details.id}`);
+    router.push(`/products-details/${rental.product_details.id}`);
   };
   return (
     <motion.div
@@ -331,7 +335,7 @@ export default function VendorQuotesPage() {
         );
 
         const productUserMap: { [productId: string]: number } =
-          productMapResponse.data.reduce((acc, product) => {
+          productMapResponse.data.reduce((acc: { [x: string]: any; }, product: { id: string | number; user: any; }) => {
             acc[product.id] = product.user;
             return acc;
           }, {} as { [productId: string]: number });
