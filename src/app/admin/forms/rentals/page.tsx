@@ -1,4 +1,4 @@
-//src/app/admin/forms/rentals/page.tsx
+// src/app/admin/forms/rentals/page.tsx
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { RentalDetailsSheet } from './rentalDetails';
 import { ImageIcon, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import rentData from '@/data/rentData.json';
 
 // Define TypeScript interfaces based on your API response
 interface Image {
@@ -28,7 +29,7 @@ interface ProductDetails {
 }
 
 interface Rental {
-  id: number;
+  id: number | string;
   product_details: ProductDetails;
   user_name: string;
   start_date: string;
@@ -44,22 +45,19 @@ const formatProductName = (productData: ProductDetails) => {
   const model = productData.model || '';
 
   return `${manufacturer} ${title} ${model}`
-    .replace(/[^a-zA-Z0-9 \-]/g, "") // Remove special characters
-    .replace(/\s+/g, " ") // Collapse multiple spaces
+    .replace(/[^a-zA-Z0-9 \-]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 };
 
 const RentalsTable = () => {
-  const [data, setData] = useState<Rental[]>([]);
+  const [allRentals, setAllRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalRentals, setTotalRentals] = useState(0);
 
-  // States for sheet and actions
   const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  // States for filtering, sorting, pagination
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -67,8 +65,8 @@ const RentalsTable = () => {
   const [sortBy, setSortBy] = useState<SortingState>([
     { id: 'created_at', desc: true }
   ]);
+  const pageSize = 20;
 
-  // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedGlobalFilter(globalFilter);
@@ -77,143 +75,169 @@ const RentalsTable = () => {
     return () => clearTimeout(handler);
   }, [globalFilter]);
 
-  // API Request Logic
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAndCombineData = async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams();
-        params.append('page', String(page));
+        const apiResponse = await api.get(`/rentals/`);
+        const liveRentals: Rental[] = apiResponse.data.results || [];
 
-        if (debouncedGlobalFilter) {
-          params.append('search', debouncedGlobalFilter);
-        }
+        const archivedRentals: Rental[] = rentData.map((rental, index) => {
+          const createdDate = new Date(rental.created_at);
+          return {
+            id: `archive-${rental.id}`,
+            user_name: rental.name,
+            notes: rental.meg,
+            status: (['pending', 'approved', 'rejected', 'returned'] as const)[index % 4],
+            created_at: rental.created_at,
+            start_date: createdDate.toISOString(),
+            end_date: new Date(createdDate.setDate(createdDate.getDate() + 30)).toISOString(),
+            product_details: {
+              name: rental.pname,
+              user_name: rental.cname,
+              price: 'N/A',
+              description: '',
+              manufacturer: '',
+              model: '',
+              images: [],
+            },
+          };
+        });
 
-        if (sortBy.length > 0) {
-          const sortField = sortBy[0];
-          const orderingKey = sortField.id === 'product_name' ? 'product__name' : sortField.id;
-          const ordering = sortField.desc ? `-${orderingKey}` : orderingKey;
-          params.append('ordering', ordering);
-        }
-
-        if (statusFilter && statusFilter !== 'all') {
-          params.append('status', statusFilter);
-        }
-
-        const response = await api.get(`/rentals/`, { params });
-        setData(response.data.results);
-        setTotalRentals(response.data.count);
+        setAllRentals([...liveRentals, ...archivedRentals]);
 
       } catch (error) {
-        console.error("Failed to fetch rental data:", error);
+        console.error("Failed to fetch or process rental data:", error);
+        const archivedRentals: Rental[] = rentData.map((rental, index) => {
+          const createdDate = new Date(rental.created_at);
+          return {
+            id: `archive-${rental.id}`, user_name: rental.name, notes: rental.meg,
+            status: (['pending', 'approved', 'rejected', 'returned'] as const)[index % 4],
+            created_at: rental.created_at, start_date: createdDate.toISOString(),
+            end_date: new Date(createdDate.setDate(createdDate.getDate() + 30)).toISOString(),
+            product_details: {
+              name: rental.pname, user_name: rental.cname, price: 'N/A', description: '',
+              manufacturer: '', model: '', images: [],
+            },
+          };
+        });
+        setAllRentals(archivedRentals);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [page, debouncedGlobalFilter, sortBy, statusFilter]);
+    fetchAndCombineData();
+  }, []);
 
-  const handleUpdateRentalStatus = async (rentalId: number, action: 'approve' | 'reject' | 'mark_returned') => {
-    setIsUpdating(true);
-    try {
-      const response = await api.post(`/rentals/${rentalId}/${action}/`);
-      const updatedRental = response.data;
+  const processedData = useMemo(() => {
+    let filteredData = [...allRentals];
 
-      setData(prevData =>
-        prevData.map(rental =>
-          rental.id === rentalId ? updatedRental : rental
-        )
-      );
-
-      setSelectedRental(updatedRental); // Update sheet data
-
-      setTimeout(() => setIsSheetOpen(false), 500);
-    } catch (error) {
-      console.error(`Failed to ${action} rental:`, error);
-      alert(`Error: Could not update the rental. You may not have permission.`);
-    } finally {
-      setIsUpdating(false);
+    if (statusFilter !== 'all') {
+      filteredData = filteredData.filter(rental => rental.status === statusFilter);
     }
+
+    if (debouncedGlobalFilter) {
+      const lowercasedFilter = debouncedGlobalFilter.toLowerCase();
+      filteredData = filteredData.filter(rental =>
+        formatProductName(rental.product_details).toLowerCase().includes(lowercasedFilter) ||
+        rental.user_name?.toLowerCase().includes(lowercasedFilter) ||
+        rental.product_details.user_name?.toLowerCase().includes(lowercasedFilter)
+      );
+    }
+
+    if (sortBy.length > 0) {
+      const sort = sortBy[0];
+      const key = sort.id as keyof Rental | 'product_name';
+
+      filteredData.sort((a, b) => {
+        let valA, valB;
+        if (key === 'product_name') {
+          valA = formatProductName(a.product_details);
+          valB = formatProductName(b.product_details);
+        } else {
+          valA = a[key as keyof Rental];
+          valB = b[key as keyof Rental];
+        }
+
+        if (valA < valB) return sort.desc ? 1 : -1;
+        if (valA > valB) return sort.desc ? -1 : 1;
+        return 0;
+      });
+    }
+
+    return filteredData;
+  }, [allRentals, statusFilter, debouncedGlobalFilter, sortBy]);
+
+  const totalRentals = processedData.length;
+  const totalPages = Math.ceil(totalRentals / pageSize);
+
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return processedData.slice(start, end);
+  }, [processedData, page, pageSize]);
+
+  const handleUpdateRentalStatus = async (rentalId: number | string, action: 'approve' | 'reject' | 'mark_returned') => {
+    setIsUpdating(true);
+    const newStatus = action === 'mark_returned' ? 'returned' : action;
+
+    if (typeof rentalId === 'number') {
+      try {
+        await api.post(`/rentals/${rentalId}/${action}/`);
+      } catch (error) {
+        console.error(`Failed to ${action} rental:`, error);
+        alert(`Error: Could not update the rental. You may not have permission.`);
+        setIsUpdating(false);
+        return;
+      }
+    }
+
+    setAllRentals(prevData =>
+      prevData.map(rental =>
+        rental.id === rentalId ? { ...rental, status: newStatus } : rental
+      )
+    );
+    setSelectedRental(prev => prev ? { ...prev, status: newStatus } : null);
+
+    setIsUpdating(false);
+    setTimeout(() => setIsSheetOpen(false), 500);
   };
 
+  const handleExportToExcel = () => {
+    const headers = [
+      'Rental ID', 'Status', 'Date Requested', 'Requester Name', 'Product Name', 'Vendor Name', 'Start Date', 'End Date', 'Notes'
+    ];
+    const csvRows = [headers.join(',')];
 
-  const totalPages = Math.ceil(totalRentals / 20); // Assuming page size is 20
-
-  const handleExportToExcel = async () => {
-    setLoading(true);
-    try {
-      // Fetch all data for export, applying current filters and sorting
-      const params = new URLSearchParams();
-      if (debouncedGlobalFilter) params.append('search', debouncedGlobalFilter);
-      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
-      if (sortBy.length > 0) {
-        const sortField = sortBy[0];
-        const orderingKey = sortField.id === 'product_name' ? 'product__name' : sortField.id;
-        const ordering = sortField.desc ? `-${orderingKey}` : orderingKey;
-        params.append('ordering', ordering);
-      }
-      
-      const response = await api.get(`/rentals/`, { params });
-      const rentalsToExport: Rental[] = response.data.results;
-      
-      // Define CSV headers
-      const headers = [
-        'Rental ID', 'Status', 'Date Requested', 'Requester Name',
-        'Product Name', 'Vendor Name', 'Product Model', 'Product Manufacturer',
-        'Start Date', 'End Date', 'Notes'
+    processedData.forEach(rental => {
+      const row = [
+        `"${rental.id}"`, `"${rental.status}"`, `"${new Date(rental.created_at).toLocaleString()}"`,
+        `"${rental.user_name.replace(/"/g, '""')}"`, `"${formatProductName(rental.product_details).replace(/"/g, '""')}"`,
+        `"${rental.product_details.user_name.replace(/"/g, '""')}"`, `"${new Date(rental.start_date).toLocaleDateString()}"`,
+        `"${new Date(rental.end_date).toLocaleDateString()}"`, `"${rental.notes.replace(/"/g, '""').replace(/\r\n|\n/g, ' ')}"`
       ];
-      const csvRows = [headers.join(',')];
-      
-      // Map data to CSV rows
-      rentalsToExport.forEach(rental => {
-        const row = [
-          `"${rental.id}"`,
-          `"${rental.status}"`,
-          `"${new Date(rental.created_at).toLocaleString()}"`,
-          `"${rental.user_name}"`,
-          `"${rental.product_details.name}"`,
-          `"${rental.product_details.user_name}"`,
-          `"${rental.product_details.model || 'N/A'}"`,
-          `"${rental.product_details.manufacturer || 'N/A'}"`,
-          `"${new Date(rental.start_date).toLocaleDateString()}"`,
-          `"${new Date(rental.end_date).toLocaleDateString()}"`,
-          `"${rental.notes.replace(/"/g, '""')}"` // Handle quotes in notes
-        ];
-        csvRows.push(row.join(','));
-      });
-      
-      const csvString = csvRows.join('\n');
-      
-      // Create a Blob and trigger download
-      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'rental_requests.csv');
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-    } catch (error) {
-      console.error("Failed to export rentals:", error);
-      alert("Failed to export data. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      csvRows.push(row.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'all_rental_requests.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const columns = useMemo<ColumnDef<Rental>[]>(
     () => [
-      {
-        header: 'Sr. No.',
-        cell: info => info.row.index + 1 + (page - 1) * 20,
-      },
+      { header: 'Sr. No.', cell: info => info.row.index + 1 + (page - 1) * pageSize },
       {
         id: 'product',
         header: 'Product',
+        // MODIFICATION: Reverted to original logic to show image or fallback
         cell: ({ row }) => {
           const product = row.original.product_details;
           const firstImage = product.images?.[0]?.image;
@@ -234,28 +258,10 @@ const RentalsTable = () => {
           );
         },
       },
-      {
-        id: 'product_name',
-        accessorFn: row => formatProductName(row.product_details),
-        header: 'Product Name',
-      },
-      {
-        accessorKey: 'user_name',
-        header: 'Requester',
-        enableSorting: false,
-      },
-      {
-        accessorKey: 'start_date',
-        header: 'Start Date',
-        cell: info => new Date(info.getValue() as string).toLocaleDateString(),
-        enableSorting: false,
-      },
-      {
-        accessorKey: 'end_date',
-        header: 'End Date',
-        cell: info => new Date(info.getValue() as string).toLocaleDateString(),
-        enableSorting: false,
-      },
+      { id: 'product_name', accessorFn: row => formatProductName(row.product_details), header: 'Product Name' },
+      { accessorKey: 'user_name', header: 'Requester', enableSorting: false },
+      { accessorKey: 'start_date', header: 'Start Date', cell: info => new Date(info.getValue() as string).toLocaleDateString(), enableSorting: false },
+      { accessorKey: 'end_date', header: 'End Date', cell: info => new Date(info.getValue() as string).toLocaleDateString(), enableSorting: false },
       {
         accessorKey: 'status',
         header: 'Status',
@@ -269,17 +275,13 @@ const RentalsTable = () => {
         },
         enableSorting: false,
       },
-      {
-        accessorKey: 'created_at',
-        header: 'Date Requested',
-        cell: info => new Date(info.getValue() as string).toLocaleDateString(),
-      },
+      { accessorKey: 'created_at', header: 'Date Requested', cell: info => new Date(info.getValue() as string).toLocaleDateString() },
     ],
     [page]
   );
 
   const table = useReactTable({
-    data,
+    data: paginatedData,
     columns,
     state: { sorting: sortBy },
     onSortingChange: setSortBy,
@@ -315,10 +317,10 @@ const RentalsTable = () => {
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Rental Requests</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">All Rental Requests (Live & Archived)</h1>
           <p className="text-sm text-gray-500 mt-1">Browse and manage all rental requests from users.</p>
         </div>
-        <Button onClick={handleExportToExcel} disabled={loading || data.length === 0} className="flex items-center gap-2">
+        <Button onClick={handleExportToExcel} disabled={loading || paginatedData.length === 0} className="flex items-center gap-2">
           <Download size={16} />
           Export as Excel
         </Button>
@@ -327,7 +329,6 @@ const RentalsTable = () => {
       {/* Controls */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
         <div className='flex items-center gap-4 flex-wrap'>
-          {/* Status Filter */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Status</span>
             <Select value={statusFilter} onValueChange={value => { setStatusFilter(value); setPage(1); }}>
@@ -341,8 +342,6 @@ const RentalsTable = () => {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Sort Dropdown */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Sort by</span>
             <Select
@@ -361,8 +360,6 @@ const RentalsTable = () => {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Search Input */}
           <div className="flex items-center">
             <input
               type="text"
@@ -427,7 +424,7 @@ const RentalsTable = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between gap-4 mt-4">
         <div className="text-sm text-gray-600">
-          {!loading && `Showing ${data.length > 0 ? (page - 1) * 20 + 1 : 0} to ${Math.min(page * 20, totalRentals)} of ${totalRentals} entries`}
+          {!loading && `Showing ${totalRentals > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalRentals)} of ${totalRentals} entries`}
         </div>
         {!loading && totalPages > 1 && (
           <Pagination>

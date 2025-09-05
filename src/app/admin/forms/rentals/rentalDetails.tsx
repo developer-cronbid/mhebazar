@@ -3,9 +3,9 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Package, User, ClipboardList, Undo2 } from "lucide-react";
+import { Loader2, Package, User, ClipboardList, Undo2, Mail, Phone } from "lucide-react";
 
-// --- Types ---
+// --- Types (Updated) ---
 interface Image {
   id: number;
   image: string;
@@ -13,22 +13,26 @@ interface Image {
 
 interface ProductDetails {
   name: string;
-  user_name: string;
-  price: string;
+  user_name: string; // Vendor name
+  price?: string | null;
   images: Image[];
-  model: string;
-  manufacturer: string;
+  model?: string | null;
+  manufacturer?: string | null;
 }
 
+// MODIFICATION: Expanded the Rental interface to include all fields from rentData.json
 interface Rental {
-  id: number;
+  id: number | string;
   product_details: ProductDetails;
-  user_name: string;
+  user_name: string; // Requester's name
+  email?: string | null;
+  no?: string | null; // Phone number
   start_date: string;
   end_date: string;
   notes: string;
   status: 'pending' | 'approved' | 'rejected' | 'returned';
   created_at: string;
+  rentbuy?: string | null; // Added rent/buy preference
 }
 
 interface RentalDetailsSheetProps {
@@ -36,7 +40,8 @@ interface RentalDetailsSheetProps {
   isOpen: boolean;
   isUpdating: boolean;
   onOpenChange: (isOpen: boolean) => void;
-  onUpdateStatus: (rentalId: number, action: 'approve' | 'reject' | 'mark_returned') => void;
+  // MODIFICATION: Updated rentalId to accept string for archived items
+  onUpdateStatus: (rentalId: number | string, action: 'approve' | 'reject' | 'mark_returned') => void;
 }
 
 // --- UI Helpers ---
@@ -53,13 +58,13 @@ const Section = ({ title, icon, children }: { title: string; icon: React.ReactNo
 );
 
 const DetailRow = ({ label, value }: { label: string; value: React.ReactNode; }) => (
-  <div className="grid grid-cols-3 gap-4">
+  <div className="grid grid-cols-3 gap-4 items-start">
     <dt className="text-sm font-medium text-gray-500">{label}</dt>
-    <dd className="col-span-2 text-sm text-gray-900">{value}</dd>
+    <dd className="col-span-2 text-sm text-gray-900 break-words">{value}</dd>
   </div>
 );
 
-// --- Main Component ---
+// --- Main Component (Updated) ---
 export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, onUpdateStatus }: RentalDetailsSheetProps) => {
   if (!rental) return null;
 
@@ -88,11 +93,14 @@ export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, o
                 ))}
               </div>
             )}
-            <DetailRow label="Product Name" value={<span className="font-medium">{rental.product_details.name}</span>} />
+            <DetailRow label="Product Name" value={<span className="font-medium">{rental.product_details.name || "Not Specified"}</span>} />
             <DetailRow label="Vendor" value={rental.product_details.user_name} />
-            <DetailRow label="Model" value={rental.product_details.model || "N/A"} />
-            <DetailRow label="Manufacturer" value={rental.product_details.manufacturer || "N/A"} />
-            <DetailRow label="Price" value={`₹${Number(rental.product_details.price).toLocaleString()} / day`} />
+            {/* MODIFICATION: Conditionally render fields to avoid showing "N/A" */}
+            {rental.product_details.model && <DetailRow label="Model" value={rental.product_details.model} />}
+            {rental.product_details.manufacturer && <DetailRow label="Manufacturer" value={rental.product_details.manufacturer} />}
+            {rental.product_details.price && rental.product_details.price !== 'N/A' && (
+              <DetailRow label="Price" value={`₹${Number(rental.product_details.price).toLocaleString()} / day`} />
+            )}
           </Section>
 
           {/* Rental Section */}
@@ -112,6 +120,8 @@ export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, o
                 </Badge>
               }
             />
+            {/* MODIFICATION: Display Request Type (Rent/Buy) if available */}
+            {rental.rentbuy && <DetailRow label="Request Type" value={rental.rentbuy} />}
             <DetailRow label="Requested At" value={new Date(rental.created_at).toLocaleString()} />
             <DetailRow label="Start Date" value={new Date(rental.start_date).toLocaleDateString()} />
             <DetailRow label="End Date" value={new Date(rental.end_date).toLocaleDateString()} />
@@ -128,6 +138,9 @@ export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, o
           {/* Requester Section */}
           <Section title="Requester Information" icon={<User className="h-5 w-5 text-gray-600" />}>
             <DetailRow label="Name" value={rental.user_name} />
+            {/* MODIFICATION: Added Email and Phone Number fields */}
+            {rental.email && <DetailRow label="Email" value={<a href={`mailto:${rental.email}`} className="text-blue-600 hover:underline">{rental.email}</a>} />}
+            {rental.no && <DetailRow label="Phone" value={<a href={`tel:${rental.no}`} className="text-blue-600 hover:underline">{rental.no}</a>} />}
           </Section>
         </div>
 

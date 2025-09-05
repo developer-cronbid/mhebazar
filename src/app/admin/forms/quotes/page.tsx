@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { QuoteDetailsSheet } from './quotesDetails';
 import { ImageIcon, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
+import quoteData from '@/data/quoteData.json';
 
-// Define TypeScript interfaces (can be shared in a types file)
+// Interfaces for data structure
 interface Image {
   id: number;
   image: string;
@@ -20,7 +21,7 @@ interface Image {
 
 interface ProductDetails {
   name: string;
-  user_name: string;
+  user_name: string; // Vendor
   price: string;
   description: string;
   manufacturer: string;
@@ -29,36 +30,37 @@ interface ProductDetails {
 }
 
 interface Quote {
-  id: number;
+  id: number | string; // ID can be number (from API) or string (from JSON)
   product_details: ProductDetails;
-  user_name: string;
+  user_name: string; // Requester
   message: string;
   status: 'pending' | 'approved' | 'rejected';
   created_at: string;
 }
 
+// Helper to format product names consistently
 const formatProductName = (productData: ProductDetails) => {
   const title = productData.name || '';
   const manufacturer = productData.manufacturer || productData.user_name || '';
   const model = productData.model || '';
 
   return `${manufacturer} ${title} ${model}`
-    .replace(/[^a-zA-Z0-9 \-]/g, "") // Remove special characters
-    .replace(/\s+/g, " ") // Collapse multiple spaces
+    .replace(/[^a-zA-Z0-9 \-]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 };
 
+
 const QuotesTable = () => {
-  const [data, setData] = useState<Quote[]>([]);
+  const [allQuotes, setAllQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalQuotes, setTotalQuotes] = useState(0);
 
   // States for sheet and actions
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false); // New state for approve/reject loading
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  // ... (other states for filtering, sorting, pagination remain the same) ...
+  // States for client-side filtering, sorting, pagination
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -66,177 +68,190 @@ const QuotesTable = () => {
   const [sortBy, setSortBy] = useState<SortingState>([
     { id: 'created_at', desc: true }
   ]);
+  const pageSize = 20;
 
-  // Debounce search input
+  // Debounce search input for performance
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedGlobalFilter(globalFilter);
-      setPage(1);
+      setPage(1); // Reset to first page on new search
     }, 500);
     return () => clearTimeout(handler);
   }, [globalFilter]);
 
-  // API Request Logic
+  // Fetch and combine data from API and local JSON on component mount
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchAndCombineData = async () => {
       setLoading(true);
       try {
-        const params = new URLSearchParams();
-        params.append('page', String(page));
+        // Fetch live data from the API
+        const apiResponse = await api.get(`/quotes/`);
+        const liveQuotes: Quote[] = apiResponse.data.results || [];
 
-        if (debouncedGlobalFilter) {
-          params.append('search', debouncedGlobalFilter);
-        }
+        // Load and normalize archived data from JSON
+        const archivedQuotes: Quote[] = quoteData.map((quote, index) => ({
+          id: `archive-${quote.id}`, // Ensure unique ID
+          user_name: quote.name,
+          message: quote.meg,
+          status: (['pending', 'approved', 'rejected'] as const)[index % 3], // Assign a mock status
+          created_at: quote.created_at,
+          product_details: {
+            name: quote.pname,
+            user_name: quote.cname,
+            price: 'N/A',
+            description: '',
+            manufacturer: quote.brand || '',
+            model: quote.model || '',
+            images: [],
+          },
+        }));
 
-        if (sortBy.length > 0) {
-          const sortField = sortBy[0];
-          // Map frontend ID to backend field name
-          const orderingKey = sortField.id === 'product_name' ? 'product__name' : sortField.id;
-          const ordering = sortField.desc ? `-${orderingKey}` : orderingKey;
-          params.append('ordering', ordering);
-        }
-
-        if (statusFilter && statusFilter !== 'all') {
-          params.append('status', statusFilter);
-        }
-
-        const response = await api.get(`/quotes/`, { params });
-        setData(response.data.results);
-        setTotalQuotes(response.data.count);
+        setAllQuotes([...liveQuotes, ...archivedQuotes]);
 
       } catch (error) {
-        console.error("Failed to fetch quote data:", error);
+        console.error("Failed to fetch or process quote data:", error);
+        // Fallback to only archived data if API fails
+        const archivedQuotes: Quote[] = quoteData.map((quote, index) => ({
+          id: `archive-${quote.id}`,
+          user_name: quote.name,
+          message: quote.meg,
+          status: (['pending', 'approved', 'rejected'] as const)[index % 3],
+          created_at: quote.created_at,
+          product_details: {
+            name: quote.pname, user_name: quote.cname, price: 'N/A',
+            description: '', manufacturer: quote.brand || '', model: quote.model || '', images: [],
+          },
+        }));
+        setAllQuotes(archivedQuotes);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [page, debouncedGlobalFilter, sortBy, statusFilter]);
+    fetchAndCombineData();
+  }, []); // Empty dependency array ensures this runs only once
 
-  const handleApproveQuote = async (quoteId: number) => {
-    setIsUpdating(true);
-    try {
-      const response = await api.post(`/quotes/${quoteId}/approve/`);
-      const updatedQuote = response.data;
+  // Memoized function to process data based on filters, search, and sort
+  const processedData = useMemo(() => {
+    let filteredData = [...allQuotes];
 
-      // Update the table data without a full refetch
-      setData(prevData =>
-        prevData.map(quote =>
-          quote.id === quoteId ? updatedQuote : quote
-        )
-      );
-
-      // Also update the quote in the sheet if it's open
-      setSelectedQuote(updatedQuote);
-
-      // alert("Quote approved successfully!"); // Or use a toast notification
-      setTimeout(() => setIsSheetOpen(false), 500); // Close sheet after a short delay
-
-    } catch (error) {
-      console.error("Failed to approve quote:", error);
-      alert("Error: Could not approve the quote. You may not have permission.");
-    } finally {
-      setIsUpdating(false);
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filteredData = filteredData.filter(quote => quote.status === statusFilter);
     }
-  };
 
-  const handleRejectQuote = async (quoteId: number) => {
-    setIsUpdating(true);
-    try {
-      const response = await api.post(`/quotes/${quoteId}/reject/`);
-      const updatedQuote = response.data;
-
-      setData(prevData =>
-        prevData.map(quote =>
-          quote.id === quoteId ? updatedQuote : quote
-        )
+    // Apply global search filter
+    if (debouncedGlobalFilter) {
+      const lowercasedFilter = debouncedGlobalFilter.toLowerCase();
+      filteredData = filteredData.filter(quote =>
+        formatProductName(quote.product_details).toLowerCase().includes(lowercasedFilter) ||
+        quote.user_name?.toLowerCase().includes(lowercasedFilter) ||
+        quote.product_details.user_name?.toLowerCase().includes(lowercasedFilter)
       );
-
-      setSelectedQuote(updatedQuote);
-
-      // alert("Quote rejected successfully!");
-      setTimeout(() => setIsSheetOpen(false), 500);
-
-    } catch (error) {
-      console.error("Failed to reject quote:", error);
-      alert("Error: Could not reject the quote. You may not have permission.");
-    } finally {
-      setIsUpdating(false);
     }
-  };
 
-  const handleExportToExcel = async () => {
-    setLoading(true);
-    try {
-      // Fetch all data for export, applying current filters and sorting
-      const params = new URLSearchParams();
-      if (debouncedGlobalFilter) params.append('search', debouncedGlobalFilter);
-      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
-      if (sortBy.length > 0) {
-        const sortField = sortBy[0];
-        const orderingKey = sortField.id === 'product_name' ? 'product__name' : sortField.id;
-        const ordering = sortField.desc ? `-${orderingKey}` : orderingKey;
-        params.append('ordering', ordering);
-      }
-      
-      const response = await api.get(`/quotes/`, { params });
-      const quotesToExport: Quote[] = response.data.results;
-      
-      // Define CSV headers
-      const headers = [
-        'Quote ID', 'Status', 'Date Requested', 'Requester Name',
-        'Product Name', 'Vendor Name', 'Product Model', 'Product Manufacturer',
-        'Product Price', 'Message'
-      ];
-      const csvRows = [headers.join(',')];
-      
-      // Map data to CSV rows
-      quotesToExport.forEach(quote => {
-        const row = [
-          `"${quote.id}"`,
-          `"${quote.status}"`,
-          `"${new Date(quote.created_at).toLocaleString()}"`,
-          `"${quote.user_name}"`,
-          `"${quote.product_details.name}"`,
-          `"${quote.product_details.user_name}"`,
-          `"${quote.product_details.model || 'N/A'}"`,
-          `"${quote.product_details.manufacturer || 'N/A'}"`,
-          `"${quote.product_details.price}"`,
-          `"${quote.message.replace(/"/g, '""')}"`
-        ];
-        csvRows.push(row.join(','));
+    // Apply sorting
+    if (sortBy.length > 0) {
+      const sort = sortBy[0];
+      const key = sort.id as keyof Quote | 'product_name';
+
+      filteredData.sort((a, b) => {
+        let valA, valB;
+        if (key === 'product_name') {
+          valA = formatProductName(a.product_details);
+          valB = formatProductName(b.product_details);
+        } else {
+          valA = a[key as keyof Quote];
+          valB = b[key as keyof Quote];
+        }
+
+        if (valA < valB) return sort.desc ? 1 : -1;
+        if (valA > valB) return sort.desc ? -1 : 1;
+        return 0;
       });
-      
-      const csvString = csvRows.join('\n');
-      
-      // Create a Blob and trigger download
-      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', 'quote_requests.csv');
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-    } catch (error) {
-      console.error("Failed to export quotes:", error);
-      alert("Failed to export data. Please try again.");
-    } finally {
-      setLoading(false);
     }
+
+    return filteredData;
+  }, [allQuotes, statusFilter, debouncedGlobalFilter, sortBy]);
+
+  const totalQuotes = processedData.length;
+  const totalPages = Math.ceil(totalQuotes / pageSize);
+
+  // Memoized function to get the current page's data
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return processedData.slice(start, end);
+  }, [processedData, page, pageSize]);
+
+  /**
+   * Handles the approve and reject actions for a quote.
+   * If the quote ID is a number, it's treated as a live API quote and a POST request is made.
+   * For all quotes (live and archived), the local state is updated for an immediate UI response.
+   */
+  const handleApproveReject = async (quoteId: number | string, action: 'approve' | 'reject') => {
+    setIsUpdating(true);
+    // If the ID is a number, it's from the API, so we make a real API call
+    if (typeof quoteId === 'number') {
+      try {
+        await api.post(`/quotes/${quoteId}/${action}/`);
+      } catch (error) {
+        console.error(`Failed to ${action} quote:`, error);
+        alert(`Error: Could not ${action} the quote. You may not have permission.`);
+        setIsUpdating(false);
+        return;
+      }
+    }
+
+    // For both API and local data, we update the client state for immediate feedback
+    setAllQuotes(prevData =>
+      prevData.map(quote =>
+        quote.id === quoteId ? { ...quote, status: action === 'approve' ? 'approved' : 'rejected' } : quote
+      )
+    );
+    setSelectedQuote(prev => prev ? { ...prev, status: action === 'approve' ? 'approved' : 'rejected' } : null);
+
+    setIsUpdating(false);
+    setTimeout(() => setIsSheetOpen(false), 500);
   };
 
-  const totalPages = Math.ceil(totalQuotes / 20); // Assuming page size is 20
+  const handleExportToExcel = () => {
+    const headers = [
+      'Quote ID', 'Status', 'Date Requested', 'Requester Name',
+      'Product Name', 'Vendor Name', 'Message'
+    ];
+    const csvRows = [headers.join(',')];
 
+    processedData.forEach(quote => {
+      const row = [
+        `"${quote.id}"`,
+        `"${quote.status}"`,
+        `"${new Date(quote.created_at).toLocaleString()}"`,
+        `"${quote.user_name.replace(/"/g, '""')}"`,
+        `"${formatProductName(quote.product_details).replace(/"/g, '""')}"`,
+        `"${quote.product_details.user_name.replace(/"/g, '""')}"`,
+        `"${quote.message.replace(/"/g, '""').replace(/\r\n|\n/g, ' ')}"`
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'all_quotes.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Define table columns
   const columns = useMemo<ColumnDef<Quote>[]>(
     () => [
       {
         header: 'Sr. No.',
-        cell: info => info.row.index + 1 + (page - 1) * 20,
+        cell: info => info.row.index + 1 + (page - 1) * pageSize,
       },
       {
         id: 'product',
@@ -257,7 +272,6 @@ const QuotesTable = () => {
                   <ImageIcon className="w-6 h-6 text-gray-400" />
                 </div>
               )}
-              {/* <span className="font-medium text-gray-800">{product.name}</span> */}
             </div>
           );
         },
@@ -299,7 +313,7 @@ const QuotesTable = () => {
   );
 
   const table = useReactTable({
-    data,
+    data: paginatedData,
     columns,
     state: { sorting: sortBy },
     onSortingChange: setSortBy,
@@ -316,8 +330,8 @@ const QuotesTable = () => {
     }
   };
 
+  // Helper to generate pagination links
   const generatePagination = () => {
-    // ... (Your existing pagination logic remains unchanged)
     if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
     if (page <= 3) return [1, 2, 3, 4, '...', totalPages];
     if (page >= totalPages - 2) return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
@@ -331,16 +345,16 @@ const QuotesTable = () => {
         isOpen={isSheetOpen}
         isUpdating={isUpdating}
         onOpenChange={setIsSheetOpen}
-        onApprove={handleApproveQuote}
-        onReject={handleRejectQuote}
+        onApprove={() => selectedQuote && handleApproveReject(selectedQuote.id, 'approve')}
+        onReject={() => selectedQuote && handleApproveReject(selectedQuote.id, 'reject')}
       />
       {/* Header */}
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Quote Requests</h1>
+          <h1 className="text-2xl font-semibold text-gray-900">All Quote Requests (Live & Archived)</h1>
           <p className="text-sm text-gray-500 mt-1">Browse and manage all quote requests from users.</p>
         </div>
-        <Button onClick={handleExportToExcel} disabled={loading || data.length === 0} className="flex items-center gap-2">
+        <Button onClick={handleExportToExcel} disabled={loading || paginatedData.length === 0} className="flex items-center gap-2">
           <Download size={16} />
           Export as Excel
         </Button>
@@ -349,7 +363,6 @@ const QuotesTable = () => {
       {/* Controls */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
         <div className='flex items-center gap-4 flex-wrap'>
-          {/* Status Filter */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Status</span>
             <Select value={statusFilter} onValueChange={value => { setStatusFilter(value); setPage(1); }}>
@@ -362,8 +375,6 @@ const QuotesTable = () => {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Sort Dropdown */}
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Sort by</span>
             <Select
@@ -382,8 +393,6 @@ const QuotesTable = () => {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Search Input */}
           <div className="flex items-center">
             <input
               type="text"
@@ -448,7 +457,7 @@ const QuotesTable = () => {
       {/* Pagination */}
       <div className="flex items-center justify-between gap-4 mt-4">
         <div className="text-sm text-gray-600">
-          {!loading && `Showing ${data.length > 0 ? (page - 1) * 20 + 1 : 0} to ${Math.min(page * 20, totalQuotes)} of ${totalQuotes} entries`}
+          {!loading && `Showing ${totalQuotes > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalQuotes)} of ${totalQuotes} entries`}
         </div>
         {!loading && totalPages > 1 && (
           <Pagination>
