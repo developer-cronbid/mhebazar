@@ -635,6 +635,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
     data.type === "rental" || data.type === "used" ? "Rent Now" : "Get a Quote";
   const validSpecs = getValidSpecs(data.product_details);
 
+  const isRentalOrUsed =
+    Array.isArray(data.type) &&
+    (data.type.includes("rental") || data.type.includes("used"));
+
   return (
     <motion.div
       className="px-4 mx-auto p-2 sm:p-10 bg-white w-full"
@@ -1123,18 +1127,20 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               </button>
             </div>
             <Dialog>
-              <DialogTrigger asChild>
-                <motion.p
-                  whileHover={{ x: 5 }}
-                  className=" underline cursor-pointer font-semibold"
+              <DialogTrigger asChild disabled={!data.is_active}>
+                {/* ✅ Changed to a button for accessibility and to allow disabling */}
+                <motion.button
+                  whileHover={{ x: data.is_active ? 5 : 0 }}
+                  className="underline cursor-pointer font-semibold text-left disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline text-xl mt-4"
                   aria-label={formButtonText}
                   disabled={!data.is_active}
                 >
                   {formButtonText}
-                </motion.p>
+                </motion.button>
               </DialogTrigger>
               <DialogContent className="w-full max-w-2xl">
-                {data.type === "rental" || data.type === "used" ? (
+                {/* ✅ Corrected logic using the helper variable */}
+                {isRentalOrUsed ? (
                   <RentalForm
                     productId={data.id}
                     productDetails={{
