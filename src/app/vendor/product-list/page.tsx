@@ -40,20 +40,12 @@ const sortOptions = [
   { label: "Z-A", value: "za" },
 ];
 
-const TYPE_OPTIONS = [
-  { value: 'new', label: 'New' },
-  { value: 'used', label: 'Used' },
-  { value: 'rental', label: 'Rental' },
-  { value: 'attachments', label: 'Attachments' },
-];
+const TYPE_OPTIONS = ["new", "used", "rental", "attachments"] as const;
+type TabType = (typeof TYPE_OPTIONS)[number]; // Define TabType
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000';
-
+// const imgUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000';
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
-
-// Update the getImageUrl function
-
 
 export default function ProductList() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -62,62 +54,46 @@ export default function ProductList() {
   const [error, setError] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [tab, setTab] = useState<'new' | 'used' | 'rental' | 'attachments'>('new');
+  const [tab, setTab] = useState<TabType>("new");
   const [showFilter, setShowFilter] = useState(false);
   const [showSort, setShowSort] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState(sortOptions[0].value);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
-  const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-    // Create a lookup map for category images for fast access
-    const categoryImageMap = useMemo(() => {
-      const map: { [key: number]: string } = {};
-  
-      const processCategory = (category: any) => {
-        if (category.id && category.image_url) {
-          map[category.id] = category.image_url;
-        }
-        if (category.subcategories && category.subcategories.length > 0) {
-          category.subcategories.forEach(processCategory);
-        }
-      };
-  
-      categories_id.forEach(processCategory);
-      return map;
-    }, [categories_id]);
-  
-  
-  function getImageSrc(images?: { image: string }[] | string,): string {
-    if (typeof images === 'string' && images) return `${API_BASE_URL}${images}`;
+  const categoryImageMap = useMemo(() => {
+    const map: { [key: number]: string } = {};
+    const processCategory = (category: any) => {
+      if (category.id && category.image_url) {
+        map[category.id] = category.image_url;
+      }
+      if (category.subcategories && category.subcategories.length > 0) {
+        category.subcategories.forEach(processCategory);
+      }
+    };
+    categories_id.forEach(processCategory);
+    return map;
+  }, []);
+
+  function getImageSrc(images?: { image: string }[] | string): string {
+    if (typeof images === 'string' && images) return `${imgUrl}${images}`;
     if (Array.isArray(images) && images.length > 0 && images[0].image) {
-      return `${API_BASE_URL}${images[0].image}`;
+      return `${imgUrl}${images[0].image}`;
     }
-    // if (category_id) {
-    //   console.log(category_id)
-    //   return categoryImageMap[category_id] || "/no-product.png";
-    // }
     return "/no-product.png";
   }
 
-  // Improved body scroll lock effect
   useEffect(() => {
     if (showFilter) {
-      // Store original styles
       const originalStyle = window.getComputedStyle(document.body);
       const originalOverflow = originalStyle.overflow;
       const originalPaddingRight = originalStyle.paddingRight;
-
-      // Calculate scrollbar width
       const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-
-      // Apply styles to prevent layout shift
       Object.assign(document.body.style, {
         overflow: 'hidden',
         paddingRight: `calc(${originalPaddingRight} + ${scrollBarWidth}px)`
       });
-
-      // Cleanup function
       return () => {
         Object.assign(document.body.style, {
           overflow: originalOverflow,
@@ -127,7 +103,6 @@ export default function ProductList() {
     }
   }, [showFilter]);
 
-  // Close sort dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showSort) {
@@ -137,12 +112,10 @@ export default function ProductList() {
         }
       }
     };
-
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showSort]);
 
-  // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -150,8 +123,6 @@ export default function ProductList() {
         const response = await api.get("/vendor/dashboard/");
         const productsData = response.data?.products || [];
         setProducts(productsData);
-
-        // Extract unique categories
         const uniqueCategories = Array.from(
           new Set(productsData.map((p: Product) => p.category_name))
         ) as string[];
@@ -164,14 +135,15 @@ export default function ProductList() {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
   const productsPerPage = 4;
 
-  // Filtering logic
-  let filteredProducts = products.filter((p) => p.type === tab);
+  // ✅ FIXED: Filtering logic now checks if the product's type array includes the current tab
+  let filteredProducts = products.filter((p) =>
+    Array.isArray(p.type) && p.type.includes(tab)
+  );
 
   if (selectedCategories.length > 0) {
     filteredProducts = filteredProducts.filter((p) =>
@@ -179,7 +151,6 @@ export default function ProductList() {
     );
   }
 
-  // Sorting logic
   filteredProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case "az":
@@ -202,19 +173,17 @@ export default function ProductList() {
   );
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / productsPerPage));
 
-  // Filter modal handlers
   const handleCategoryChange = (cat: string) => {
     setSelectedCategories((prev) =>
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     );
   };
 
-  // Handle edit click
   const handleEditClick = async (productId: number) => {
     try {
       const response = await api.get(`/products/${productId}/`);
       setSelectedProduct(response.data);
-      setIsSheetOpen(true)
+      setIsSheetOpen(true);
     } catch (error) {
       console.error('Error fetching product details:', error);
     }
@@ -260,7 +229,7 @@ export default function ProductList() {
           <Tabs
             value={tab}
             onValueChange={(v) => {
-              setTab(v as 'new' | 'used' | 'rental' | 'attachments');
+              setTab(v as TabType);
               setCurrentPage(1);
             }}
             className="w-full lg:w-auto"
@@ -268,11 +237,11 @@ export default function ProductList() {
             <TabsList className="bg-white w-full grid grid-cols-2 sm:grid-cols-4 lg:flex h-auto p-1 rounded-lg shadow-sm border">
               {TYPE_OPTIONS.map((type) => (
                 <TabsTrigger
-                  key={type.value}
-                  value={type.value}
+                  key={type}
+                  value={type}
                   className="data-[state=active]:bg-green-50 data-[state=active]:border-green-500 data-[state=active]:text-green-600 px-3 py-2 font-medium text-sm rounded-md transition-all duration-200"
                 >
-                  {type.label}
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -334,7 +303,6 @@ export default function ProductList() {
                     <img
                       src={getImageSrc(product.images)}
                       alt={product.name}
-                      // fill
                       className="object-contain rounded"
                       sizes="80px"
                       onError={(e) => {
@@ -342,9 +310,10 @@ export default function ProductList() {
                         target.src = `${imgUrl}${categoryImageMap[product.category]}`;
                       }}
                     />
+                    {/* ✅ FIXED: Badge now uses the 'tab' state for color and text */}
                     <span
                       className={`absolute top-1 left-1 sm:top-2 sm:left-2 ${(() => {
-                        switch (product.type) {
+                        switch (tab) {
                           case 'new': return 'bg-blue-500';
                           case 'used': return 'bg-orange-500';
                           case 'rental': return 'bg-purple-500';
@@ -353,7 +322,7 @@ export default function ProductList() {
                         }
                       })()} text-white px-2 py-1 rounded-md text-xs font-medium shadow-sm`}
                     >
-                      {TYPE_OPTIONS.find(t => t.value === product.type)?.label || product.type}
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </span>
                   </div>
 
@@ -363,8 +332,8 @@ export default function ProductList() {
                       <div className="flex flex-wrap items-center gap-2">
                         <span
                           className={`text-xs px-3 py-1 rounded-full font-medium ${product.is_active
-                              ? "text-green-800 bg-green-100"
-                              : "text-yellow-800 bg-yellow-100"
+                            ? "text-green-800 bg-green-100"
+                            : "text-yellow-800 bg-yellow-100"
                             }`}
                         >
                           {product.is_active ? "Approved" : "Pending"}
@@ -431,30 +400,59 @@ export default function ProductList() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="mt-8 flex justify-center">
+          <div className="mt-8 cursor-default">
             <Pagination>
-              <PaginationContent className="flex-wrap gap-1">
+              <PaginationContent>
                 <PaginationItem>
                   <PaginationPrevious
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    className={`${currentPage === 1 ? "pointer-events-none opacity-50" : "hover:bg-green-50"} transition-colors duration-200`}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                   />
                 </PaginationItem>
-                {[...Array(totalPages)].map((_, index) => (
-                  <PaginationItem key={index}>
-                    <PaginationLink
-                      onClick={() => setCurrentPage(index + 1)}
-                      isActive={currentPage === index + 1}
-                      className={`${currentPage === index + 1 ? "bg-[#5CA131] text-white" : "hover:bg-green-50"} transition-colors duration-200`}
-                    >
-                      {index + 1}
-                    </PaginationLink>
-                  </PaginationItem>
-                ))}
+
+                {[...Array(totalPages)].map((_, i) => {
+                  // Show first page, last page, current page, and pages around current
+                  const pageNumber = i + 1;
+                  if (
+                    pageNumber === 1 ||
+                    pageNumber === totalPages ||
+                    (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                  ) {
+                    return (
+                      <PaginationItem key={i}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(pageNumber)}
+                          isActive={currentPage === pageNumber}
+                          className={`${currentPage === pageNumber
+                              ? "bg-[#5CA131] text-white hover:bg-[#4A8127]"
+                              : "hover:bg-green-50"
+                            }`}
+                        >
+                          {pageNumber}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  }
+
+                  // Show ellipsis for skipped pages
+                  if (
+                    pageNumber === currentPage - 2 ||
+                    pageNumber === currentPage + 2
+                  ) {
+                    return (
+                      <PaginationItem key={i}>
+                        <span className="px-4 py-2">...</span>
+                      </PaginationItem>
+                    );
+                  }
+
+                  return null;
+                })}
+
                 <PaginationItem>
                   <PaginationNext
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                    className={`${currentPage === totalPages ? "pointer-events-none opacity-50" : "hover:bg-green-50"} transition-colors duration-200`}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
                   />
                 </PaginationItem>
               </PaginationContent>
@@ -465,15 +463,11 @@ export default function ProductList() {
         {/* Filter Modal */}
         {showFilter && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
             <div
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setShowFilter(false)}
             />
-
-            {/* Modal */}
             <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden">
-              {/* Header */}
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h3 className="text-xl font-bold text-gray-900">Filter Products</h3>
                 <button
@@ -484,8 +478,6 @@ export default function ProductList() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-
-              {/* Content */}
               <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
                 <div className="mb-6">
                   <div className="font-semibold text-gray-900 mb-4">Category</div>
@@ -504,8 +496,6 @@ export default function ProductList() {
                   </div>
                 </div>
               </div>
-
-              {/* Footer */}
               <div className="flex gap-3 p-6 border-t border-gray-200 bg-gray-50">
                 <Button
                   variant="outline"

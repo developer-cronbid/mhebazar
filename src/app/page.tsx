@@ -41,7 +41,7 @@ export default function HomePage() {
 
   return (
     <>
-      <div ref={bannerRef} >
+      <div ref={bannerRef} style={{ y, opacity }}>
         <HomeBanner />
       </div>
 
