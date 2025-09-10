@@ -323,7 +323,7 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className=" mx-auto px-4 py-8">
+      <div className=" mx-auto px-4 py-2">
         <Breadcrumb
           items={[
             { label: "Home", href: "/" },

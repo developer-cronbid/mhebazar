@@ -8,7 +8,6 @@ import SideFilter from "./SideFilter";
 import Image from "next/image";
 import { Toaster } from "sonner";
 import QuoteForm from "../forms/enquiryForm/quotesForm";
-// import { Product } from "@/types";
 import DOMPurify from 'dompurify';
 import { IoGrid } from "react-icons/io5";
 import { useRouter } from "next/navigation";
