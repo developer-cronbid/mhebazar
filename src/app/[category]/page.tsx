@@ -229,7 +229,7 @@ export default function CategoryOrTypePage({
 
         setProducts(transformedProducts);
         setTotalProducts(response.data.count);
-        setTotalPages(Math.ceil(response.data.count / 20)); // Assuming 20 items per page
+        setTotalPages(Math.ceil(response.data.count / 12)); // Assuming 20 items per page
       } else {
         setNoProductsFoundMessage(`Failed to load products. Unexpected API response structure.`);
         setProducts([]);

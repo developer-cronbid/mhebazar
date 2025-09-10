@@ -231,7 +231,7 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
 
         setProducts(transformedProducts);
         setTotalProducts(response.data.count);
-        setTotalPages(Math.ceil(response.data.count / 20));
+        setTotalPages(Math.ceil(response.data.count / 12));
 
         if (response.data.count === 0) {
           setNoProductsFoundMessage("No products found for this vendor with the selected filters.");

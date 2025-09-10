@@ -202,7 +202,7 @@ export default function SubCategoryPage({
 
       setProducts(transformedProducts);
       setTotalProducts(response.data.count);
-      setTotalPages(Math.ceil(response.data.count / 20));
+      setTotalPages(Math.ceil(response.data.count / 12));
 
     } catch (err: unknown) {
       console.error("[Subcategory Page] Failed to fetch products:", err);

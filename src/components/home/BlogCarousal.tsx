@@ -113,7 +113,7 @@ export function BlogCarousel() {
   React.useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const response = await api.get<ApiResponse>('/blogs/?limit=10');
+        const response = await api.get<ApiResponse>('/blogs/?limit=3');
 
         if (response.data && response.data.results) {
           setBlogs(response.data.results);
@@ -269,15 +269,17 @@ export function BlogCarousel() {
         </div>
       </Carousel>
       <div className="flex justify-center space-x-2 mt-2">
-        {blogs.map((_, idx) => (
-          <span
-            key={idx}
-            onClick={() => handleDotClick(idx)}
-            className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
-              idx === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"
-            }`}
-          ></span>
-        ))}
+        {blogs.map((_, idx) => {
+          const id = Math.floor(idx / 3);
+          return (
+            <span
+              key={id}
+              onClick={() => handleDotClick(id)}
+              className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${id === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"
+                }`}
+            ></span>
+          );
+        })}
       </div>
     </div>
   );
