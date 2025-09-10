@@ -45,8 +45,10 @@ const VendorProductsFeatured: React.FC = () => {
         const productPromises = PRODUCT_IDS.map((id) =>
           api.get(`/products/${id}/`)
         );
-        const responses = await Promise.all(productPromises);
-        const allProducts = responses.map((response) => response.data);
+        const responses = await Promise.allSettled(productPromises);
+        const allProducts = responses
+          .filter((response) => response.status === "fulfilled")
+          .map((response) => response.value.data);
         setProducts(allProducts);
       } catch (err) {
         if (axios.isAxiosError(err)) {

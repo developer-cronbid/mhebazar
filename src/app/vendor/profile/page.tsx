@@ -116,7 +116,7 @@ const VendorProfilePage: React.FC = () => {
               <div className="flex-shrink-0 mb-8 lg:mb-0">
                 <div className="flex items-center space-x-4 mb-6">
                   {/* 3. Replaced text logo with Profile Photo Image */}
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-gray-200 rounded-full border-2 border-[#01A63F] overflow-hidden">
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 bg-gray-200 rounded-2xl border-2 border-[#01A63F] overflow-hidden">
                     {vendor.user_info?.profile_photo ? (
                       <Image
                         src={`${API_BASE_URL}${vendor.user_info.profile_photo}`}
