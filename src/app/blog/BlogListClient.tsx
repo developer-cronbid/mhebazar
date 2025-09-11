@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Calendar, User, ArrowRight, Loader2, Filter, SortDesc, SortAsc, Grid3X3, List } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as m } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
@@ -269,12 +270,12 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
 
   if (error) {
     return (
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="min-h-screen bg-white flex items-center justify-center p-6"
       >
-        <motion.div
+        <m.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -302,15 +303,15 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
               </Button>
             </CardContent>
           </Card>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     );
   }
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -327,7 +328,7 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
           </div>
 
           {/* Search Bar */}
-          <motion.form
+          <m.form
             onSubmit={handleSearch}
             className="max-w-xl mx-auto"
             initial={{ y: 20, opacity: 0 }}
@@ -357,12 +358,12 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                 )}
               </Button>
             </div>
-          </motion.form>
+          </m.form>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Filter and Sort Section */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
@@ -432,13 +433,13 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
             </div>
           </div>
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Main Content */}
       <div className=" mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <AnimatePresence mode="wait">
           {loading ? (
-            <motion.div
+            <m.div
               key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -447,9 +448,9 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
             >
               <Loader2 className="h-16 w-16 text-[#5ca131] animate-spin mb-4" />
               <p className="mt-4 text-lg text-gray-600 font-medium">Loading...</p>
-            </motion.div>
+            </m.div>
           ) : blogs.length === 0 ? (
-            <motion.div
+            <m.div
               key="no-blogs"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -471,9 +472,9 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
               >
                 Clear All Filters
               </Button>
-            </motion.div>
+            </m.div>
           ) : (
-            <motion.div
+            <m.div
               key="blogs"
               initial="hidden"
               animate="visible"
@@ -481,7 +482,7 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                   className="px-5"
             >
               {/* Results Info */}
-              <motion.div
+              <m.div
                 variants={itemVariants}
                 className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4"
               >
@@ -492,7 +493,7 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                   </p>
                 </div>
                 {searchTerm && (
-                  <motion.div
+                  <m.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     className="flex items-center gap-2"
@@ -501,20 +502,20 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                     <Badge className="bg-gray-100 text-gray-700 border border-gray-300 px-3 py-1 font-medium rounded-full">
                       {searchTerm}
                     </Badge>
-                  </motion.div>
+                  </m.div>
                 )}
-              </motion.div>
+              </m.div>
 
               {/* Blog Content */}
               {viewMode === 'grid' ? (
-                <motion.div
+                <m.div
                   variants={containerVariants}
                   className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8"
                 >
                   {blogs.map((blog, index) => {
                     const imageUrl = getOptimizedImageUrl(blog.image1, imageError[blog.id] || false);
                     return (
-                      <motion.div
+                      <m.div
                         key={blog.id}
                         variants={cardVariants}
                         whileHover="hover"
@@ -568,20 +569,20 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                             </CardContent>
                           </Link>
                         </Card>
-                      </motion.div>
+                      </m.div>
                     );
                   })}
-                </motion.div>
+                </m.div>
               ) : (
                 /* List View */
-                <motion.div
+                <m.div
                   variants={containerVariants}
                   className="space-y-6"
                 >
                   {blogs.map((blog, index) => {
                     const imageUrl = getOptimizedImageUrl(blog.image1, imageError[blog.id] || false);
                     return (
-                      <motion.div
+                      <m.div
                         key={blog.id}
                         variants={cardVariants}
                         whileHover="hover"
@@ -634,15 +635,15 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                             </div>
                           </Link>
                         </Card>
-                      </motion.div>
+                      </m.div>
                     );
                   })}
-                </motion.div>
+                </m.div>
               )}
 
               {/* Pagination */}
               {(nextPage || previousPage) && (
-                <motion.div
+                <m.div
                   variants={itemVariants}
                   className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-8 mt-12"
                 >
@@ -665,9 +666,9 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                     Next
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
-                </motion.div>
+                </m.div>
               )}
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

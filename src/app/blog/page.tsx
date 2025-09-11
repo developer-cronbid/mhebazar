@@ -1,7 +1,6 @@
 import React, { Suspense } from "react";
 import BlogListClient from "./BlogListClient";
 import { Loader2 } from "lucide-react";
-// Replace the import with specific motion component import
 import { motion as m } from "framer-motion";
 
 const BlogListPage = async ({
