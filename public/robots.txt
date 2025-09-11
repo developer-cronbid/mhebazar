@@ -1,0 +1,7 @@
+User-agent: *
+Disallow:/register
+Disallow:/wishlist
+Disallow:/compare
+
+sitemap: https://www.mhebazar.in/sitemap.xml
+sitemap: https://www.mhebazar.in/blog.xml
