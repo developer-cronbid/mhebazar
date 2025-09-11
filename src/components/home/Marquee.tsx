@@ -1,7 +1,7 @@
 "use client";
 
 import api from '@/lib/api';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Marquee from "react-fast-marquee";
 import Link from 'next/link';
 import Image from 'next/image';
@@ -52,40 +52,33 @@ const VendorMarquee = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchVendorWithUserData = async () => {
-      try {
-        // Fetch vendors
-        const vendorsResponse = await api.get('/vendor/');
-        const vendorsData = vendorsResponse.data.results;
+  const fetchVendors = useCallback(async () => {
+    try {
+      const vendorsResponse = await api.get('/vendor/');
+      const vendorsData = vendorsResponse.data.results;
 
-        // Fetch user data for each vendor
-        const vendorsWithUserData = await Promise.all(
-          vendorsData.map(async (vendor: Vendor) => {
-            try {
-              const userResponse = await api.get(`/users/${vendor.user_id}/`);
-              return {
-                ...vendor,
-                user: userResponse.data
-              };
-            } catch (err) {
-              console.error(`Failed to fetch user data for vendor ${vendor.id}:`, err);
-              return vendor;
-            }
-          })
-        );
+      // Use Promise.all to fetch all user data concurrently
+      const vendorPromises = vendorsData.map((vendor: Vendor) =>
+        api.get(`/users/${vendor.user_id}/`)
+          .then(userResponse => ({
+            ...vendor,
+            user: userResponse.data
+          }))
+          .catch(() => vendor) // Return the original vendor if user data fetch fails
+      );
 
-        setVendors(vendorsWithUserData);
-      } catch (err) {
-        setError('Failed to fetch vendors');
-        console.error('Error fetching vendors:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchVendorWithUserData();
+      const vendorsWithUserData = await Promise.all(vendorPromises);
+      setVendors(vendorsWithUserData);
+    } catch (err) {
+      setError('Failed to fetch vendors');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchVendors();
+  }, [fetchVendors]);
 
   if (isLoading) return <div>Loading vendors...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -100,11 +93,12 @@ const VendorMarquee = () => {
             className=" hover:scale-105 transition-transform"
           >
             <Image
-              src={vendor.user?.profile_photo || '/default-profile.png'} // Add a default image path
+              src={vendor.user?.profile_photo || '/default-profile.png'}
               alt={`${vendor.company_name} logo`}
               width={150}
               height={150}
               className="object-cover mx-6"
+              unoptimized
             />
           </Link>
         ))}

@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import ProductCardContainer from "@/components/elements/Product";
 import Image from "next/image";
 import axios from "axios";
 import categoriesData from "@/data/categories.json";
 import { motion, useInView } from "framer-motion";
 import Link from "next/link";
+import api from "@/lib/api";
 
 const NEXT_PUBLIC_BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -18,7 +19,9 @@ const getCategoryImageUrl = (categoryId: number | string | null): string => {
 
   const category = categoriesData.find(cat => cat.id === Number(categoryId));
   if (category?.image_url) {
-    return `${NEXT_PUBLIC_BACKEND_BASE_URL}${category.image_url}`;
+    const baseUrl = NEXT_PUBLIC_BACKEND_BASE_URL?.endsWith("/") ? NEXT_PUBLIC_BACKEND_BASE_URL : `${NEXT_PUBLIC_BACKEND_BASE_URL}/`;
+    const path = category.image_url.startsWith("/") ? category.image_url.substring(1) : category.image_url;
+    return `${baseUrl}${path}`;
   }
 
   return "/placeholder-image.jpg";
@@ -71,8 +74,9 @@ export default function ExportProductsFeatured() {
 
   useEffect(() => {
     const fetchPopularProducts = async () => {
+      setLoading(true);
       try {
-        const response = await axios.get(`${NEXT_PUBLIC_API_BASE_URL}/products/?category=&subcategory=&type=used&user=`);
+        const response = await api.get(`${NEXT_PUBLIC_API_BASE_URL}/products/?type=used&limit=10`);
 
         const rawData = Array.isArray(response.data)
           ? response.data
@@ -90,16 +94,15 @@ export default function ExportProductsFeatured() {
           hide_price: item.hide_price,
           stock_quantity: item.stock_quantity,
           type: item.type,
-          category: item.category,
           category_id: item.category,
           model: item.model,
+          manufacturer: item.manufacturer,
           user_name: item.user_name,
           created_at: item.created_at
         }));
 
         setExportProducts(formattedProducts);
       } catch (error) {
-        console.error("Failed to fetch export products:", error);
         setExportProducts([]);
       } finally {
         setLoading(false);
@@ -109,49 +112,35 @@ export default function ExportProductsFeatured() {
     fetchPopularProducts();
   }, []);
 
-  const handleDotClick = (index: number) => {
+  const handleDotClick = useCallback((index: number) => {
     if (scrollContainerRef.current && exportProducts.length > 0) {
       const container = scrollContainerRef.current;
-      const itemsPerView = Math.floor(container.clientWidth / 280); // Approximate card width
+      const itemsPerView = Math.floor(container.clientWidth / 280);
       const targetIndex = index * itemsPerView;
-      const itemWidth = container.children[0]?.clientWidth + 16 || 280;
+      const itemWidth = (container.children[0] as HTMLElement)?.clientWidth + 16 || 280;
       container.scrollTo({
         left: targetIndex * itemWidth,
         behavior: 'smooth',
       });
       setScrollIndex(index);
     }
-  };
+  }, [exportProducts]);
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (scrollContainerRef.current && exportProducts.length > 0) {
       const container = scrollContainerRef.current;
       const itemsPerView = Math.floor(container.clientWidth / 280);
-      const itemWidth = container.children[0]?.clientWidth + 16 || 280;
+      const itemWidth = (container.children[0] as HTMLElement)?.clientWidth + 16 || 280;
       const newIndex = Math.floor(container.scrollLeft / (itemWidth * itemsPerView));
       setScrollIndex(newIndex);
     }
-  };
+  }, [exportProducts]);
 
-  // Safe calculation for totalDots with proper validation
-  const calculateTotalDots = () => {
-    if (!exportProducts.length || exportProducts.length <= 0) return 0;
-
-    const containerWidth = scrollContainerRef.current?.clientWidth;
-    if (!containerWidth || containerWidth <= 0) return 0; // Handle invalid container width
-
-    const itemsPerView = Math.floor(containerWidth / 280);
-    const safeItemsPerView = Math.max(1, itemsPerView); // Ensure at least 1
-
-    const calculated = Math.ceil(exportProducts.length / safeItemsPerView);
-
-    // Validate the result before returning
-    if (!Number.isFinite(calculated) || calculated <= 0) return 0;
-
-    return calculated;
-  };
-
-  const totalDots = calculateTotalDots();
+  const totalDots = useMemo(() => {
+    if (exportProducts.length === 0) return 0;
+    const itemsPerView = Math.floor(((scrollContainerRef.current?.clientWidth || 280) + 16) / 296); // 280px width + 16px gap
+    return Math.ceil(exportProducts.length / Math.max(1, itemsPerView));
+  }, [exportProducts, scrollContainerRef.current?.clientWidth]);
 
   return (
     <motion.section
@@ -190,7 +179,6 @@ export default function ExportProductsFeatured() {
                 key={export_product.id}
                 className="flex-shrink-0 snap-start w-72"
               >
-                {/* <div className="bg-white rounded-lg shadow-sm border border-gray-100 h-full"> */}
                 <ProductCardContainer
                   id={Number(export_product.id)}
                   image={export_product.image}
@@ -203,31 +191,27 @@ export default function ExportProductsFeatured() {
                   hide_price={export_product.hide_price}
                   stock_quantity={export_product.stock_quantity}
                   type={export_product.type}
-                  category_id={export_product.category}
+                  category_id={export_product.category_id}
                   model={export_product.model}
                   manufacturer={export_product.manufacturer}
                   user_name={export_product.user_name}
                   created_at={export_product.created_at}
                 />
-                {/* </div> */}
               </motion.div>
             ))}
           </div>
 
           {totalDots > 1 && (
             <div className="flex justify-center space-x-2 mt-4">
-              {/* Safe array creation with additional validation */}
-              {totalDots > 0 && Number.isFinite(totalDots) &&
-                Array.from({ length: totalDots }, (_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleDotClick(idx)}
-                    className={`w-3 h-3 rounded-full transition-colors duration-300 ${idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
-                      }`}
-                    aria-label={`Go to slide ${idx + 1}`}
-                  />
-                ))
-              }
+              {Array.from({ length: totalDots }, (_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleDotClick(idx)}
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
+                    }`}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
             </div>
           )}
         </div>

@@ -1,11 +1,12 @@
-// /components/NewArrivalsAndTopSearches.tsx
+// /components/home/NewArrivalsAndTopSearches.tsx
 
 "use client";
 
-import { useState, useEffect, JSX } from "react";
+import { useState, useEffect, JSX, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Marquee from "react-fast-marquee";
+import api from "@/lib/api";
 
 // --- Type Definitions (Refined) ---
 interface ProductApiResponse {
@@ -58,7 +59,9 @@ function TopRatedItem({ item }: { item: DisplayItem }): JSX.Element | null {
               alt={alt || label}
               fill
               className="object-contain p-2 transform hover:scale-105 transition-transform duration-200"
+              onLoad={() => setShowInitials(false)} // Corrected: use onLoad
               onError={() => setShowInitials(true)}
+              sizes="80px"
             />
           ) : (
             <span className="text-green-500 text-lg font-bold">{initials}</span>
@@ -88,6 +91,7 @@ function NewArrivalItem({ item }: { item: DisplayItem }): JSX.Element | null {
             fill
             className="object-contain hover:scale-105 transition-transform duration-200"
             onError={() => setImageError(true)}
+            sizes="128px"
           />
         </div>
       </Link>
@@ -105,7 +109,7 @@ export default function NewArrivalsAndTopSearches() {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const createSlug = (text: string | undefined) => text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#";
+  const createSlug = useCallback((text: string | undefined) => text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#", []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,8 +122,8 @@ export default function NewArrivalsAndTopSearches() {
       // Fetch New Arrivals
       try {
         setIsLoadingNewArrivals(true);
-        const response = await fetch(`${API_BASE_URL}/products/new-arrival/`);
-        const res = await response.json();
+        const response = await api.get(`${API_BASE_URL}/products/new-arrival/`);
+        const res = response.data;
 
         const products = res?.products || [];
         const transformed = products.map((p: ProductApiResponse) => ({
@@ -133,7 +137,7 @@ export default function NewArrivalsAndTopSearches() {
         setNewArrivals(transformed.slice(0, 10));
         setNewArrivalsCount(res?.count || transformed.length);
       } catch (error) {
-        console.error('Error fetching new arrivals:', error);
+        // Silent error for fallback data
       } finally {
         setIsLoadingNewArrivals(false);
       }
@@ -141,8 +145,8 @@ export default function NewArrivalsAndTopSearches() {
       // Fetch Top Rated
       try {
         setIsLoadingTopRated(true);
-        const response = await fetch(`${API_BASE_URL}/products/top-rated/`);
-        const res = await response.json();
+        const response = await api.get(`${API_BASE_URL}/products/top-rated/`);
+        const res = response.data;
 
         const products = res?.products || [];
         const transformed = products.map((p: ProductApiResponse) => ({
@@ -155,14 +159,14 @@ export default function NewArrivalsAndTopSearches() {
 
         setTopRated(transformed.slice(0, 10));
       } catch (error) {
-        console.error('Error fetching top rated:', error);
+        // Silent error for fallback data
       } finally {
         setIsLoadingTopRated(false);
       }
     };
 
     fetchData();
-  }, [API_BASE_URL]);
+  }, [API_BASE_URL, createSlug]);
 
   const LoadingBoxSkeleton = () => <div className="w-44 h-44 bg-gray-200 rounded-lg animate-pulse flex-shrink-0 mr-4"></div>;
 
@@ -198,8 +202,8 @@ export default function NewArrivalsAndTopSearches() {
                 speed={40}
                 className="pb-4"
               >
-                {newArrivals.map((item) => (
-                  <NewArrivalItem key={item.id} item={item} />
+                {newArrivals.map((item, index) => (
+                  <NewArrivalItem key={item.id || `na-item-${index}`} item={item} />
                 ))}
               </Marquee>
             )}
@@ -219,7 +223,7 @@ export default function NewArrivalsAndTopSearches() {
             </div>
           ) : (
             <div className="space-y-4">
-              {topRated.map((item) => <TopRatedItem key={item.id} item={item} />)}
+              {topRated.map((item, index) => <TopRatedItem key={item.id || `tr-item-${index}`} item={item} />)}
             </div>
           )}
         </div>

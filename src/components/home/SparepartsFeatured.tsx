@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import api from "@/lib/api";
 import ProductCard from "@/components/elements/Product";
 import { motion, useInView } from "framer-motion";
-import Link from "next/link"; // Import Link for navigation
+import Link from "next/link";
 
 interface SparePart {
   type: string;
@@ -16,7 +16,7 @@ interface SparePart {
   stock_quantity: number;
   name: string;
   id: string | number;
-  title?: string; // Optional field for compatibility
+  title?: string;
   subtitle: string;
   price: number;
   currency: string;
@@ -47,58 +47,65 @@ const itemVariants = {
 export default function SparePartsFeatured() {
   const [spareParts, setSpareParts] = useState<SparePart[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [scrollIndex, setScrollIndex] = useState(0);
 
   const sectionRef = useRef(null);
   const inView = useInView(sectionRef, { once: true, amount: 0.3 });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchSpareParts = async () => {
-      try {
-        const res = await api.get(`/products/`, {
-          params: {
-            category: 18,
-          },
-        });
-
-        console.log("Fetched spare parts:", res.data);
-        setSpareParts(res.data?.results || []);
-      } catch (error) {
-        console.error("Failed to fetch spare parts:", error);
-        setSpareParts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSpareParts();
+  const fetchSpareParts = useCallback(async () => {
+    try {
+      const res = await api.get(`/products/`, {
+        params: {
+          category: 18,
+          limit: 10,
+        },
+      });
+      // The API response for `results` is an array of objects.
+      setSpareParts(res.data?.results || []);
+    } catch (error) {
+      setError('Failed to fetch spare parts.');
+      setSpareParts([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const handleDotClick = (index: number) => {
+  useEffect(() => {
+    fetchSpareParts();
+  }, [fetchSpareParts]);
+
+  const handleDotClick = useCallback((index: number) => {
     if (scrollContainerRef.current && spareParts.length > 0) {
       const container = scrollContainerRef.current;
-      const itemsPerView = Math.floor(container.clientWidth / 240); // Approximate card width
+      const itemsPerView = Math.floor(container.clientWidth / 240);
       const targetIndex = index * itemsPerView;
-      const itemWidth = container.children[0]?.clientWidth + 16 || 240;
+      const itemWidth = (container.children[0] as HTMLElement)?.clientWidth + 16 || 240;
       container.scrollTo({
         left: targetIndex * itemWidth,
         behavior: 'smooth',
       });
       setScrollIndex(index);
     }
-  };
+  }, [spareParts]);
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (scrollContainerRef.current && spareParts.length > 0) {
       const container = scrollContainerRef.current;
       const itemsPerView = Math.floor(container.clientWidth / 240);
-      const itemWidth = container.children[0]?.clientWidth + 16 || 240;
+      const itemWidth = (container.children[0] as HTMLElement)?.clientWidth + 16 || 240;
       const newIndex = Math.floor(container.scrollLeft / (itemWidth * itemsPerView));
       setScrollIndex(newIndex);
     }
-  };
+  }, [spareParts]);
 
-  const totalDots = spareParts.length > 0 ? Math.ceil(spareParts.length / Math.floor((scrollContainerRef.current?.clientWidth || 1200) / 240)) : 0;
+  const totalDots = useMemo(() => {
+    if (spareParts.length === 0) return 0;
+    const itemsPerView = Math.floor(((scrollContainerRef.current?.clientWidth || 240) + 16) / 256); // 240px width + 16px gap
+    return Math.ceil(spareParts.length / Math.max(1, itemsPerView));
+  }, [spareParts, scrollContainerRef.current?.clientWidth]);
+
 
   return (
     <motion.section
@@ -110,8 +117,8 @@ export default function SparePartsFeatured() {
     >
       <motion.div variants={itemVariants} className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Spare Parts</h2>
-        <Link 
-          href="/spare-parts" 
+        <Link
+          href="/spare-parts"
           className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200"
         >
           View More
@@ -122,12 +129,16 @@ export default function SparePartsFeatured() {
         <div className="w-full flex justify-center items-center py-16 text-gray-500 text-lg">
           Loading...
         </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm border border-gray-100">
+          <p className="text-red-500 text-center">{error}</p>
+        </div>
       ) : spareParts.length > 0 ? (
         <div className="relative">
           <div
             ref={scrollContainerRef}
             className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide snap-x snap-mandatory"
-            style={{ 
+            style={{
               scrollbarWidth: 'none',
               msOverflowStyle: 'none',
               WebkitOverflowScrolling: 'touch'
@@ -135,12 +146,11 @@ export default function SparePartsFeatured() {
             onScroll={handleScroll}
           >
             {spareParts.map((spare) => (
-              <motion.div 
+              <motion.div
                 variants={itemVariants}
                 key={spare.id}
                 className="flex-shrink-0 snap-start w-72"
               >
-                {/* The ProductCard component is used to render the item */}
                 <ProductCard
                   id={Number(spare.id)}
                   image={spare.images[0]?.image || "/placeholder-image.png"}
@@ -151,8 +161,8 @@ export default function SparePartsFeatured() {
                   directSale={spare.direct_sale}
                   is_active={spare.is_active}
                   hide_price={spare.hide_price}
-                  stock_quantity={spare.stock_quantity} 
-                  type={spare.type} 
+                  stock_quantity={spare.stock_quantity}
+                  type={spare.type}
                   category_id={spare.category}
                   model={spare.model}
                   manufacturer={spare.manufacturer}
@@ -162,7 +172,7 @@ export default function SparePartsFeatured() {
               </motion.div>
             ))}
           </div>
-          
+
           {totalDots > 1 && (
             <div className="flex justify-center space-x-2 mt-4">
               {Array.from({ length: totalDots }, (_, idx) => (
@@ -179,7 +189,10 @@ export default function SparePartsFeatured() {
           )}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm border border-gray-100">
+        <motion.div
+          variants={itemVariants}
+          className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm border border-gray-100"
+        >
           <Image
             src="/no-product.png"
             alt="No product"
@@ -193,7 +206,7 @@ export default function SparePartsFeatured() {
           <div className="text-gray-500 text-center">
             There are no spare parts in this category at the moment.
           </div>
-        </div>
+        </motion.div>
       )}
     </motion.section>
   );

@@ -5,12 +5,22 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Marquee from "react-fast-marquee";
+import api from "@/lib/api";
+import categoriesData from "@/data/categories.json";
 
 interface ApiProduct {
   id: number;
   name: string;
   images: { image: string }[];
-  slug?: string;
+  description: string;
+  category: number;
+}
+
+interface TransformedProduct {
+  id: string | number;
+  image: string;
+  label: string;
+  slug: string;
 }
 
 interface Category {
@@ -21,18 +31,23 @@ interface Category {
   mainLabel: string;
   note: string;
   slug: string;
-  products: {
-    id: string | number;
-    image: string;
-    label: string;
-    slug: string;
-  }[];
+  products: TransformedProduct[];
 }
 
-// ====================
-// Data Transformation (Unchanged)
-// ====================
-const createSlug = (text: string | undefined) => text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#";
+const createSlug = (text: string | undefined): string => text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#";
+
+const getCategoryImageUrl = (categoryId: number | string | null): string => {
+  if (!categoryId) {
+    return "/placeholder-image.jpg";
+  }
+  const category = categoriesData.find(cat => cat.id === Number(categoryId));
+  if (category?.image_url) {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.endsWith("/") ? process.env.NEXT_PUBLIC_API_BASE_URL : `${process.env.NEXT_PUBLIC_API_BASE_URL}/`;
+    const path = category.image_url.startsWith("/") ? category.image_url.substring(1) : category.image_url;
+    return `${baseUrl}${path}`;
+  }
+  return "/placeholder-image.jpg";
+};
 
 const transformApiData = (apiProducts: ApiProduct[]): Category[] => {
   if (!apiProducts || apiProducts.length === 0) {
@@ -43,7 +58,7 @@ const transformApiData = (apiProducts: ApiProduct[]): Category[] => {
   const otherProducts = apiProducts.slice(1);
 
   const getPrimaryImageUrl = (product: ApiProduct): string =>
-    product.images?.[0]?.image || "/images/placeholder.png";
+    product.images?.[0]?.image || getCategoryImageUrl(product.category);
 
   const transformedCategory: Category = {
     id: mainProduct.id,
@@ -64,19 +79,11 @@ const transformApiData = (apiProducts: ApiProduct[]): Category[] => {
   return [transformedCategory];
 };
 
-// ====================
-// Main Component
-// ====================
 export default function MostPopular() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mainImageError, setMainImageError] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // NEW: State and ref for automatic carousel
-  const [activePage, setActivePage] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchData = useCallback(async () => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -85,17 +92,14 @@ export default function MostPopular() {
       return;
     }
     try {
-      const response = await fetch(`${baseUrl}/products/most_popular/`);
-      const apiProducts = await response.json();
-
+      const response = await api.get(`${baseUrl}/products/most_popular/`);
+      const apiProducts = response.data?.results || response.data;
       if (Array.isArray(apiProducts) && apiProducts.length > 0) {
         const formattedData = transformApiData(apiProducts);
         setCategories(formattedData);
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unknown error while fetching"
-      );
+      setError("Failed to fetch popular products.");
     } finally {
       setIsLoading(false);
     }
@@ -106,67 +110,11 @@ export default function MostPopular() {
   }, [fetchData]);
 
   const popularData = categories[0];
-  const visibleProducts = popularData?.products.slice(0, 9) || [];
-  const itemsPerPage = 3;
-  const itemWidth = 180; // Approximate width of each item + gap
-  const totalPages = Math.ceil(visibleProducts.length / itemsPerPage);
+  const visibleProducts = popularData?.products || [];
 
-  // NEW: Function to start the auto-scroll interval
-  const startAutoScroll = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    intervalRef.current = setInterval(() => {
-      setActivePage(prevPage => (prevPage + 1) % totalPages);
-    }, 2000); // 2-second interval
-  }, [totalPages]);
-
-  // NEW: Effect to manage the lifecycle of the auto-scroll
-  useEffect(() => {
-    if (totalPages > 1) {
-      startAutoScroll();
-    }
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [totalPages, startAutoScroll]);
-
-  // NEW: Effect to perform the actual scroll when activePage changes
-  useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        left: activePage * itemsPerPage * itemWidth,
-        behavior: 'smooth',
-      });
-    }
-  }, [activePage, itemsPerPage]);
-
-  // MODIFIED: Dot click handler now sets the page and resets the timer
-  const handleDotClick = (pageIndex: number) => {
-    setActivePage(pageIndex);
-    startAutoScroll(); // Reset interval on user interaction
-  };
-
-  if (isLoading) return <LoadingSkeleton />;
-
-  if (!popularData || mainImageError) {
-    return (
-      <section className="w-full">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Top Selling Products
-          </h2>
-        </div>
-        <p className="text-center text-gray-500 p-8 border rounded-lg">No popular products to display.</p>
-      </section>
-    );
-  }
-
-  const CarouselProductItem = ({ product, idx }: { product: { image: string; label: string; slug: string; id: string | number; }; idx: number }) => {
+  const CarouselProductItem = ({ product, idx }: { product: TransformedProduct; idx: number }) => {
     const [itemImageError, setItemImageError] = useState(false);
-    if (itemImageError) return null;
+    if (itemImageError || !product.image) return null;
     return (
       <div key={idx} className="w-44 flex-shrink-0 mr-4">
         <Link href={`/product/${product.slug}/?id=${product.id}`} className="block">
@@ -178,6 +126,7 @@ export default function MostPopular() {
                 fill
                 className="object-contain"
                 onError={() => setItemImageError(true)}
+                sizes="128px"
               />
             </div>
           </div>
@@ -186,18 +135,30 @@ export default function MostPopular() {
     );
   };
 
+  if (isLoading) return <LoadingSkeleton />;
+
+  if (error || !popularData || mainImageError) {
+    return (
+      <section className="w-full">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            Top Selling Products
+          </h2>
+        </div>
+        <p className="text-center text-gray-500 p-8 border rounded-lg">No popular products to display. {error}</p>
+      </section>
+    );
+  }
+
   return (
     <section className="w-full">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">
           Top Selling Products
         </h2>
       </div>
 
-      {/* Main Container */}
       <div className="bg-white border rounded-lg p-6">
-        {/* Top Section with Main Product */}
         <div className="flex flex-col items-center gap-8 mb-10">
           <div className="w-full">
             <h2 className="text-3xl font-semibold text-black leading-tight mb-1">
@@ -216,12 +177,12 @@ export default function MostPopular() {
                 fill
                 className="object-contain"
                 onError={() => setMainImageError(true)}
+                sizes="(max-width: 640px) 256px, 320px"
               />
             </Link>
           </div>
         </div>
 
-        {/* Bottom Products Marquee - MODIFIED */}
         <div className="relative">
           <Marquee
             pauseOnHover={true}
@@ -229,24 +190,15 @@ export default function MostPopular() {
             className="pb-4"
           >
             {visibleProducts.map((product, idx) => (
-              <CarouselProductItem key={idx} product={product} idx={idx} />
+              <CarouselProductItem key={product.id || idx} product={product} idx={idx} />
             ))}
           </Marquee>
         </div>
-
-        {error && (
-          <p className="mt-4 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
-            Error: {error}. Could not load latest data.
-          </p>
-        )}
       </div>
     </section>
   );
 }
 
-// ====================
-// Skeleton Loader (Unchanged)
-// ====================
 function LoadingSkeleton() {
   return (
     <div className="w-full">
