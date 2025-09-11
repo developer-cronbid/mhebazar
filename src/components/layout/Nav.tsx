@@ -397,10 +397,11 @@ export default function Navbar(): JSX.Element {
                 <Image
                   src="/brand-image.png"
                   alt="Brand Store"
-                  width={100}
-                  height={35}
-                  className="w-auto h-auto object-contain"
+                  width={120}
+                  height={40}
                   priority
+                  className="object-contain"
+                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                 />
                 <span className="shine-overlay"></span>
               </Link>
@@ -697,14 +698,15 @@ export default function Navbar(): JSX.Element {
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Image
-                      src="/brand-image.png"
-                      alt="Brand Store"
-                      width={120} 
-                      height={40}
-                      className="w-auto h-auto object-contain"
-                      priority
-                    />
+                     <Image
+                  src="/brand-image.png"
+                  alt="Brand Store"
+                  width={120}
+                  height={40}
+                  priority
+                  className="object-contain"
+                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
+                />
                     <span className="shine-overlay"></span>
                   </Link>
                   <Link
