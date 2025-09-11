@@ -1,10 +1,9 @@
-// src/app/blog/page.tsx
 import React, { Suspense } from "react";
 import BlogListClient from "./BlogListClient";
 import { Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+// Replace the import with specific motion component import
+import { motion as m } from "framer-motion";
 
-// Server component to fetch and render initial data
 const BlogListPage = async ({
   searchParams,
 }: {
@@ -17,13 +16,13 @@ const BlogListPage = async ({
   return (
     <Suspense
       fallback={
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="min-h-screen bg-white flex items-center justify-center p-6"
         >
           <Loader2 className="h-16 w-16 text-[#5ca131] animate-spin" />
-        </motion.div>
+        </m.div>
       }
     >
       <BlogListClient 
