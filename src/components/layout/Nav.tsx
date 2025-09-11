@@ -1,6 +1,7 @@
-// src/components/layout/Nav.tsx
 "use client";
 
+// Import statements
+import '@/styles/animations.css';
 import {
   Menu,
   ShoppingCart,
@@ -81,49 +82,6 @@ export interface User {
   user_banner?: { url: string }[];
 }
 
-const tingAnimation = `
-  @keyframes ting {
-    0%, 100% {
-      transform: rotate(0deg);
-    }
-    50% {
-      transform: rotate(3deg);
-    }
-  }
-`;
-
-const shineAnimation = `
-  @keyframes shine {
-    0% {
-      left: -150%;
-    }
-    100% {
-      left: 150%;
-    }
-  }
-
-  .shine-effect {
-    overflow: hidden;
-    position: relative;
-  }
-
-  .shine-effect .shine-overlay {
-    background: linear-gradient(
-      120deg,
-      rgba(255, 255, 255, 0.4) 0%,
-      rgba(255, 255, 255, 0.1) 60%,
-      transparent 100%
-    );
-    transform: skewX(-20deg);
-    position: absolute;
-    top: 0;
-    left: -150%;
-    width: 50%;
-    height: 100%;
-    animation: shine 2s infinite;
-  }
-`;
-
 export default function Navbar(): JSX.Element {
   // Use the imported JSON data directly
   const categories: Category[] = categoriesData;
@@ -166,7 +124,6 @@ export default function Navbar(): JSX.Element {
 
   return (
     <header className="bg-white shadow-sm z-50 sticky top-0">
-      <style>{tingAnimation}{shineAnimation}</style>
       <div className="bg-[#5CA131] text-white">
         <div className="max-w-full mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-1 sm:gap-2 py-2">
@@ -220,7 +177,6 @@ export default function Navbar(): JSX.Element {
                   width={120}
                   height={35}
                   className="h-8 sm:h-10 w-auto object-contain"
-                  style={{ maxWidth: "120px" }}
                   priority
                 />
                 <span className="shine-overlay"></span>
@@ -237,7 +193,7 @@ export default function Navbar(): JSX.Element {
                 href="/vendor-listing"
                 className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect hidden sm:block"
               >
-                <Image
+                  <Image
                   src="/brand-image.png"
                   alt="Brand Store"
                   width={120}
@@ -443,9 +399,8 @@ export default function Navbar(): JSX.Element {
                   alt="Brand Store"
                   width={100}
                   height={35}
+                  className="w-auto h-auto object-contain"
                   priority
-                  className="object-contain"
-                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                 />
                 <span className="shine-overlay"></span>
               </Link>
@@ -745,11 +700,10 @@ export default function Navbar(): JSX.Element {
                     <Image
                       src="/brand-image.png"
                       alt="Brand Store"
-                      width={120}
+                      width={120} 
                       height={40}
+                      className="w-auto h-auto object-contain"
                       priority
-                      className="object-contain"
-                      style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                     />
                     <span className="shine-overlay"></span>
                   </Link>

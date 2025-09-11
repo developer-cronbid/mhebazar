@@ -207,7 +207,7 @@ export function BlogCarousel() {
             const imageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
             return (
               <div
-                key={blog.id}
+                key={`blog-${blog.id}`}
                 className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3"
               >
                 <motion.div
@@ -269,17 +269,15 @@ export function BlogCarousel() {
         </div>
       </Carousel>
       <div className="flex justify-center space-x-2 mt-2">
-        {blogs.map((_, idx) => {
-          const id = Math.floor(idx / 3);
-          return (
-            <span
-              key={id}
-              onClick={() => handleDotClick(id)}
-              className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${id === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"
-                }`}
-            ></span>
-          );
-        })}
+        {blogs.map((blog) => (
+          <span
+            key={`dot-${blog.id}`}
+            onClick={() => handleDotClick(blog.id)} 
+            className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
+              blog.id === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"
+            }`}
+          />
+        ))}
       </div>
     </div>
   );

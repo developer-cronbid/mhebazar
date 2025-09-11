@@ -24,20 +24,12 @@ export const metadata: Metadata = {
     "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
   icons: {
     icon: [
-      { url: `/favicon.ico?v=${FAVICON_VERSION}` },
-      {
-        url: `/favicon-16x16.png?v=${FAVICON_VERSION}`,
-        sizes: "16x16",
-        type: "image/png",
-      },
-      {
-        url: `/favicon-32x32.png?v=${FAVICON_VERSION}`,
-        sizes: "32x32",
-        type: "image/png",
-      },
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
     apple: [
-      { url: `/apple-touch-icon.png?v=${FAVICON_VERSION}`, sizes: "180x180" },
+      { url: "/apple-touch-icon.png", sizes: "180x180" },
     ],
   },
 };
@@ -50,11 +42,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        <link
-          rel="icon"
-          href={`/favicon.ico?v=${FAVICON_VERSION}`}
-          sizes="any"
-        />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <meta
           httpEquiv="Cache-Control"
           content="no-cache, no-store, must-revalidate"
