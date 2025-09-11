@@ -1,4 +1,3 @@
-"use client";
 import HomeBanner from "@/components/layout/HomeBanner";
 import CategoryButtons from "@/components/home/CategoryButtons";
 import MostPopular from "@/components/home/MostPopular";
@@ -8,42 +7,14 @@ import VendorProductsFeatured from "@/components/home/VendorFeatured";
 import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
 import TestimonialsCarousel from "@/components/elements/Testimonials";
 import { BlogCarousel } from "@/components/home/BlogCarousal";
-import { motion, useInView, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
 import Link from "next/link";
 import VendorMarquee from "@/components/home/Marquee";
+import SectionWrapper from "@/components/common/SectionWrapper"; // New component for animations
 
-const SectionWrapper = ({ children, className }: { children: React.ReactNode; className?: string }) => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, amount: 0.2 });
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 1, y: 50 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-export default function HomePage() {
-  const bannerRef = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: bannerRef,
-    offset: ["start start", "end start"],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const opacity = useTransform(scrollYProgress, [0, 1], [1, 0.5]);
-
+export default async function HomePage() {
   return (
     <>
-      <div ref={bannerRef} style={{ y, opacity }}>
-        <HomeBanner />
-      </div>
+      <HomeBanner />
 
       <SectionWrapper className="max-w-[97vw] mx-auto">
         <CategoryButtons />
@@ -114,3 +85,4 @@ export default function HomePage() {
     </>
   );
 }
+

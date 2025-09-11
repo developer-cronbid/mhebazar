@@ -1,4 +1,4 @@
-// SearchBar.tsx
+// src/components/layout/SearchBar.tsx
 "use client";
 
 import { Search, Mic } from "lucide-react";
@@ -7,8 +7,9 @@ import { useRouter } from "next/navigation";
 import { Category, Subcategory } from "./Nav";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
+import categoriesData from "@/data/categories.json";
+import { toast } from "sonner";
 
-declare const toast: { error: (message: string) => void };
 
 // TypeScript support for SpeechRecognition
 declare global {
@@ -25,7 +26,6 @@ type SpeechRecognition = any;
 type SpeechRecognitionEvent = any;
 
 type SearchBarProps = {
-  categories: Category[];
   searchQuery: string;
   setSearchQuery: (value: string) => void;
 };
@@ -65,10 +65,10 @@ const TYPE_CHOICES = [
 ];
 
 export default function SearchBar({
-  categories,
   searchQuery,
   setSearchQuery,
 }: SearchBarProps): JSX.Element {
+  const categories: Category[] = categoriesData;
   const [listening, setListening] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
@@ -76,111 +76,76 @@ export default function SearchBar({
   const searchBarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Optimized search logic: Fetch from all relevant endpoints and sort
   useEffect(() => {
     const handler = setTimeout(async () => {
       if (searchQuery.length > 0) {
         const lowerCaseQuery = searchQuery.toLowerCase();
 
-        let vendorSuggestions: any[] = [];
-        let productSuggestions: any[] = [];
+        // 1. Prioritize static data from local JSON
         let categorySuggestions: any[] = [];
         let subcategorySuggestions: any[] = [];
         let productTypeSuggestions: any[] = [];
-        // New array for vendor-category suggestions
-        let vendorCategorySuggestions: any[] = [];
+        
+        categories.forEach((category) => {
+          if (category.name.toLowerCase().includes(lowerCaseQuery)) {
+            categorySuggestions.push({ ...category, type: "category" });
+          }
+          category.subcategories.forEach((subcategory) => {
+            if (subcategory.name.toLowerCase().includes(lowerCaseQuery)) {
+              subcategorySuggestions.push({
+                ...subcategory,
+                type: "subcategory",
+                category_name: category.name,
+              });
+            }
+          });
+        });
+
+        TYPE_CHOICES.forEach((type) => {
+          if (type.name.toLowerCase().includes(lowerCaseQuery)) {
+            productTypeSuggestions.push({ ...type, type: "product_type" });
+          }
+        });
+
+        // 2. Fetch dynamic data from the API in parallel
+        let vendorSuggestions: any[] = [];
+        let productSuggestions: any[] = [];
 
         try {
-          // Parallel API Calls for Products and Vendors with search queries
           const [productsResponse, vendorsResponse] = await Promise.all([
             api.get<ApiResponse<Product>>(`/products/?search=${lowerCaseQuery}`),
             api.get<ApiResponse<Vendor>>(`/vendor/?search=${lowerCaseQuery}`),
           ]);
+          
+          vendorSuggestions = vendorsResponse.data?.results.map(vendor => ({
+            id: vendor.id,
+            name: vendor.brand || vendor.company_name || vendor.full_name || vendor.username,
+            type: "vendor",
+            slug: vendor.brand || vendor.company_name, // Use brand for slug
+          })).filter(item => item.name.toLowerCase().includes(lowerCaseQuery));
 
-          // Filter results client-side to ensure exact matches and populate respective lists
-          productsResponse.data?.results.forEach(product => {
-            if (product.name.toLowerCase().includes(lowerCaseQuery)) {
-              productSuggestions.push({ ...product, type: "product" });
-            }
-          });
-
-          // Process vendor suggestions and fetch their categories
-          const vendorPromises = vendorsResponse.data?.results.map(async (vendor) => {
-            const vendorName = vendor.brand || vendor.company_name || vendor.full_name || vendor.username;
-            if (vendorName?.toLowerCase().includes(lowerCaseQuery)) {
-              vendorSuggestions.push({
-                id: vendor.id,
-                name: vendorName,
-                type: "vendor",
-                slug: vendor.brand
-              });
-
-              // Fetch products for the matched vendor to get their categories
-              const vendorProductsResponse = await api.get<ApiResponse<Product>>(`/products/?user=${vendor.user_id}`);
-              const vendorCategories = new Set<string>();
-              vendorProductsResponse.data?.results.forEach(product => {
-                if (product.category_name) {
-                  vendorCategories.add(product.category_name);
-                }
-              });
-
-              // Create new suggestions for vendor categories
-              vendorCategories.forEach(categoryName => {
-                vendorCategorySuggestions.push({
-                  id: `${vendor.id}-${createSlug(categoryName)}`, // Ensure unique key
-                  name: `${vendorName} ${categoryName}`,
-                  type: "vendor_category",
-                  vendorSlug: vendor.brand,
-                  categorySlug: createSlug(categoryName),
-                });
-              });
-            }
-          }) || [];
-
-          await Promise.all(vendorPromises);
-
-          // Add matching categories and subcategories to suggestions
-          categories.forEach((category) => {
-            if (category.name.toLowerCase().includes(lowerCaseQuery)) {
-              categorySuggestions.push({ ...category, type: "category" });
-            }
-            category.subcategories.forEach((subcategory) => {
-              if (subcategory.name.toLowerCase().includes(lowerCaseQuery)) {
-                subcategorySuggestions.push({
-                  ...subcategory,
-                  type: "subcategory",
-                  category_name: category.name,
-                });
-              }
-            });
-          });
-
-          // Add product types to suggestions
-          TYPE_CHOICES.forEach((type) => {
-            if (type.name.toLowerCase().includes(lowerCaseQuery)) {
-              productTypeSuggestions.push({ ...type, type: "product_type" });
-            }
-          });
+          productSuggestions = productsResponse.data?.results.map(product => ({
+            ...product,
+            type: "product",
+            slug: createSlug(product.name),
+          })).filter(item => item.name.toLowerCase().includes(lowerCaseQuery));
 
         } catch (error) {
           console.error("Error fetching search results:", error);
         }
 
-        // Combine all suggestions in the desired order of priority
+        // 3. Combine all suggestions with a defined priority
         const combinedSuggestions = [
           ...vendorSuggestions,
-          ...vendorCategorySuggestions,
           ...productTypeSuggestions,
           ...categorySuggestions,
           ...subcategorySuggestions,
-          // ...productSuggestions,
+          ...productSuggestions,
         ];
-
-        // Remove duplicates based on ID and type
+        
+        // Remove duplicates
         const uniqueSuggestions = combinedSuggestions.filter((item, index, self) =>
-          index === self.findIndex((t) => (
-            t.id === item.id && t.type === item.type
-          ))
+          index === self.findIndex((t) => (t.id === item.id && t.type === item.type))
         );
 
         setSuggestions(uniqueSuggestions);
@@ -189,14 +154,13 @@ export default function SearchBar({
         setSuggestions([]);
         setShowSuggestions(false);
       }
-    }, 300); // Debounce time
+    }, 300);
 
     return () => {
       clearTimeout(handler);
     };
-  }, [searchQuery, categories]);
+  }, [searchQuery]);
 
-  // Handle click outside to close suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
@@ -209,14 +173,9 @@ export default function SearchBar({
     };
   }, []);
 
-  // Start/stop voice recognition
   const handleMicClick = useCallback((): void => {
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-      if (typeof toast !== 'undefined' && toast.error) {
-        toast.error("Voice search is not supported in this browser.");
-      } else {
-        console.error("Voice search is not supported in this browser.");
-      }
+      toast.error("Voice search is not supported in this browser.");
       return;
     }
 
@@ -258,10 +217,9 @@ export default function SearchBar({
       setSearchQuery("");
 
       if (item.type === "vendor") {
-        router.push(`/vendor-listing/${item.slug}`);
+        router.push(`/vendor-listing/${createSlug(item.slug)}`);
       } else if (item.type === "vendor_category") {
-        // Handle new vendor-category links
-        router.push(`/vendor-listing/${item.vendorSlug}?page=1&category=${item.categorySlug}`);
+        // This case is not handled in the new logic to simplify, but it can be added if needed.
       } else if (item.type === "category") {
         router.push(`/${createSlug(item.name)}`);
       } else if (item.type === "subcategory") {
@@ -301,12 +259,6 @@ export default function SearchBar({
           <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
         )}
       </button>
-      {listening && (
-        <div className="absolute right-12 top-1/2 -translate-y-1/2 bg-white border border-green-200 rounded px-2 py-1 text-xs text-green-700 shadow animate-fade-in">
-          Listening...
-        </div>
-      )}
-
       <AnimatePresence>
         {showSuggestions && (
           <motion.div

@@ -50,13 +50,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        {/* Manual favicon link */}
         <link
           rel="icon"
           href={`/favicon.ico?v=${FAVICON_VERSION}`}
           sizes="any"
         />
-        {/* Cache-control to prevent caching */}
         <meta
           httpEquiv="Cache-Control"
           content="no-cache, no-store, must-revalidate"

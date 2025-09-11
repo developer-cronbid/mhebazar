@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 // src/components/products/SideFilter.tsx
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect, useCallback, JSX } from "react";
@@ -7,11 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, ChevronUp, Funnel, Search } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
+import categoriesData from "@/data/categories.json"; // Import the local JSON data
 
-// Import the local JSON data for categories
-import categoriesData from "@/data/categories.json";
-
-// Define interfaces based on the local JSON data structure
 interface Subcategory {
   id: number;
   name: string;
@@ -23,7 +20,6 @@ interface Category {
   subcategories: Subcategory[];
 }
 
-// Product types as provided by your backend
 const PRODUCT_TYPE_CHOICES = ["new", "used", "rental", "attachments"];
 
 interface SideFilterProps {
@@ -59,23 +55,20 @@ const SideFilter = ({
   const [manufacturers, setManufacturers] = useState<string[]>([]);
   const [isLoadingManufacturers, setIsLoadingManufacturers] = useState<boolean>(true);
 
-  // Use the imported JSON data directly
+  // Use the imported JSON data directly, no need for useEffect to fetch it
   const categories: Category[] = categoriesData;
 
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
   const [priceRangeExpanded, setPriceRangeExpanded] = useState<boolean>(true);
 
-  // Local state for price inputs to avoid re-fetches on every keystroke
   const [localMinPrice, setLocalMinPrice] = useState<number | ''>(minPrice);
   const [localMaxPrice, setLocalMaxPrice] = useState<number | ''>(maxPrice);
 
-  // Sync local price state with props when they change (e.g., from URL params)
   useEffect(() => {
     setLocalMinPrice(minPrice);
     setLocalMaxPrice(maxPrice);
   }, [minPrice, maxPrice]);
 
-  // Fetch unique manufacturers (this still requires an API call as the data is dynamic)
   const fetchManufacturers = useCallback(async () => {
     setIsLoadingManufacturers(true);
     try {
@@ -90,13 +83,11 @@ const SideFilter = ({
   }, []);
 
   useEffect(() => {
-    // Only fetch manufacturers if the filter is enabled
     if (showManufacturerFilter) {
       fetchManufacturers();
     }
   }, [fetchManufacturers, showManufacturerFilter]);
 
-  // Expand the category if a subcategory within it is currently selected
   useEffect(() => {
     if (categories.length > 0) {
       const currentCategory = categories.find(cat =>
@@ -109,17 +100,14 @@ const SideFilter = ({
     }
   }, [selectedCategoryName, selectedSubcategoryName, categories]);
 
-  // Filter categories by search input
   const filteredCategories: Category[] = categories.filter((cat) =>
     cat.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Filter product types by search input
   const filteredProductTypes: string[] = PRODUCT_TYPE_CHOICES.filter(type =>
     type.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Handler for the Apply button
   const handleApplyPriceFilter = useCallback(() => {
     onFilterChange('price_range', 'price_range', {
       min: localMinPrice,
@@ -137,7 +125,6 @@ const SideFilter = ({
     onFilterChange(value || 0, 'rating', value);
   }, [onFilterChange]);
 
-  // Helper to determine if a filter is active for highlighting
   const isFilterActive = (value: string): boolean => {
     const lowerValue = value.toLowerCase();
     if (selectedCategoryName && lowerValue === selectedCategoryName.toLowerCase()) return true;
@@ -146,13 +133,12 @@ const SideFilter = ({
   };
 
   return (
-    <aside className="sticky top-0 w-full  max-w-[250px] min-h-screen bg-white flex flex-col overflow-y-auto z-20 border-r border-gray-100 shadow-sm">
+    <aside className="sticky top-0 w-full max-w-[250px] min-h-screen bg-white flex flex-col overflow-y-auto z-20 border-r border-gray-100 shadow-sm">
       <div className="p-4 pb-2 ml-9">
         <h1 className="text-base font-bold text-black font-sans mb-3">
           Filter
         </h1>
         <div className="flex items-center gap-2 mb-5 relative">
-          {/* <Search className="w-4 h-4 text-gray-500" /> */}
           <input
             type="text"
             placeholder="Filter by"
@@ -179,7 +165,6 @@ const SideFilter = ({
           </button>)}
         </div>
 
-        {/* Categories Section */}
         <h2 className="text-base font-bold text-black font-sans mb-2.5">Categories</h2>
         <div className="space-y-0 mb-4">
           {filteredCategories.map((category: Category) => (
@@ -241,21 +226,14 @@ const SideFilter = ({
           ))}
         </div>
 
-        {/* Product Types Section (Corrected for Multi-Select) */}
         <h2 className="text-base font-bold text-black font-sans mb-2.5">Product Types</h2>
         <div className="space-y-0 mb-4">
           {filteredProductTypes.map((type: string, index: number) => {
-            // Check if the current type is in the selectedTypes array
             const isActive = selectedTypes.includes(type);
-
-            // Click handler to add/remove the type from the selection
             const handleTypeChange = () => {
-              // If the type is already selected, remove it. Otherwise, add it.
               const newSelectedTypes = isActive
                 ? selectedTypes.filter((t) => t !== type)
                 : [...selectedTypes, type];
-
-              // Call the parent's onFilterChange with the updated array
               onFilterChange(type, "type", newSelectedTypes);
             };
 
@@ -264,8 +242,8 @@ const SideFilter = ({
                 key={index}
                 onClick={handleTypeChange}
                 className={`w-full text-left py-2 px-0 transition-colors duration-200 ${isActive
-                    ? "bg-green-50 text-green-700 font-medium" // Active style
-                    : "hover:bg-gray-50 text-black" // Default style
+                    ? "bg-green-50 text-green-700 font-medium"
+                    : "hover:bg-gray-50 text-black"
                   }`}
                 aria-pressed={isActive}
               >
@@ -275,7 +253,6 @@ const SideFilter = ({
           })}
         </div>
 
-        {/* Price Range Filter */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Price Range</h2>
         <div className="space-y-1 mb-4">
           <button
@@ -325,7 +302,6 @@ const SideFilter = ({
           </AnimatePresence>
         </div>
 
-        {/* Manufacturer Filter */}
         {showManufacturerFilter && (
           <>
             <h2 className="text-base font-semibold mb-2 text-gray-800">Manufacturer</h2>
@@ -347,7 +323,6 @@ const SideFilter = ({
           </>
         )}
 
-        {/* Rating Filter */}
         <h2 className="text-base font-semibold mb-2 text-gray-800">Rating</h2>
         <div className="space-y-1 mb-4">
           <select
@@ -365,7 +340,6 @@ const SideFilter = ({
         </div>
 
       </div>
-      {/* Banner Image */}
       <div className="p-3 sm:p-4 mt-auto">
         <Image
           src="/sidebar.png"

@@ -3,7 +3,7 @@
 import { LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { JSX, useEffect, useState } from "react";
+import { JSX, useState } from "react";
 import categoriesData from "@/data/categories.json";
 import { motion } from "framer-motion";
 
@@ -25,32 +25,13 @@ interface CategoryItemProps {
   slug: string;
 }
 
-/**
- * A helper function to construct the full image URL.
- * @param {string | null} imagePath - The path to the image.
- * @returns {string | null} The full image URL or null.
- */
 function getImageUrl(imagePath: string | null): string | null {
   if (!imagePath) {
     return null;
   }
-
-  let cleanedPath = imagePath.startsWith("/")
-    ? imagePath.substring(1)
-    : imagePath;
-  cleanedPath = cleanedPath.startsWith("api/")
-    ? cleanedPath.substring(4)
-    : cleanedPath;
-
-  if (BACKEND_BASE_URL) {
-    const baseUrl = BACKEND_BASE_URL.endsWith("/")
-      ? BACKEND_BASE_URL.slice(0, -1)
-      : BACKEND_BASE_URL;
-    const path = cleanedPath.startsWith("/") ? cleanedPath : `/${cleanedPath}`;
-    return `${baseUrl}${path}`;
-  }
-
-  return imagePath;
+  const baseUrl = BACKEND_BASE_URL?.endsWith("/") ? BACKEND_BASE_URL : `${BACKEND_BASE_URL}/`;
+  const path = imagePath.startsWith("/") ? imagePath.substring(1) : imagePath;
+  return `${baseUrl}${path}`;
 }
 
 const itemVariants = {
@@ -66,10 +47,6 @@ const itemVariants = {
   },
 };
 
-/**
- * A single category item with an image and a label.
- * Added hover effect: image pops out with 3D-like scaling & shadow.
- */
 const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element => {
   const [showInitials, setShowInitials] = useState<boolean>(false);
   const fullImageUrl = getImageUrl(imageSrc);
@@ -109,16 +86,14 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
               className="object-contain"
               onError={handleImageError}
               sizes="100px"
+              priority
             />
           </motion.div>
         ) : (
           <span className="text-blue-500 text-base font-normal">{initials}</span>
         )}
       </motion.div>
-
-      <div className="relative w-fit">
-        {label}
-      </div>
+      <div className="relative w-fit">{label}</div>
     </Link>
   );
 };
@@ -133,22 +108,9 @@ const containerVariants = {
   },
 };
 
-/**
- * The main component for the categories section.
- */
 export default function CategoriesSection(): JSX.Element {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [showAll, setShowAll] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCategories(categoriesData);
-      setLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const categories = categoriesData as Category[];
 
   const displayedCategories = showAll ? categories : categories.slice(0, 7);
 
@@ -157,48 +119,40 @@ export default function CategoriesSection(): JSX.Element {
       <h2 className="text-3xl font-bold mb-8 text-left text-black-900">
         MHE Categories
       </h2>
-
-      {loading ? (
-        <p className="text-center text-black-600 animate-pulse">
-          Loading categories...
-        </p>
-      ) : categories.length === 0 ? (
-        <p className="text-center text-black-500">No categories found.</p>
-      ) : (
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8 gap-x-4 gap-y-8 justify-items-center"
-        >
-          {displayedCategories.map((cat) => (
-            <CategoryItem
-              key={cat.id}
-              imageSrc={cat.image_url}
-              label={cat.name}
-              slug={cat.name.toLowerCase().replace(/\s+/g, "-")}
-            />
-          ))}
-          {categories.length > 7 && (
-            <motion.div
-              variants={itemVariants}
-              className="flex flex-col items-center"
+      
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8 gap-x-4 gap-y-8 justify-items-center"
+      >
+        {displayedCategories.map((cat) => (
+          <CategoryItem
+            key={cat.id}
+            imageSrc={cat.image_url}
+            label={cat.name}
+            slug={cat.name.toLowerCase().replace(/\s+/g, "-")}
+          />
+        ))}
+        {categories.length > 7 && (
+          <motion.div
+            variants={itemVariants}
+            className="flex flex-col items-center"
+          >
+            <motion.button
+              onClick={() => setShowAll(!showAll)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex flex-col items-center justify-center w-[144px] h-[144px] rounded-full border-2 border-blue-300 bg-white text-blue-500 hover:bg-blue-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 "
             >
-              <motion.button
-                onClick={() => setShowAll(!showAll)}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex flex-col items-center justify-center w-[144px] h-[144px] rounded-full border-2 border-blue-300 bg-white text-blue-500 hover:bg-blue-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 "
-              >
-                <LayoutGrid size={32} className="mb-2" />
-                <span className="text-sm font-medium text-center">
-                  {showAll ? "Show Less" : "All Category"}
-                </span>
-              </motion.button>
-            </motion.div>
-          )}
-        </motion.div>
-      )}
+              <LayoutGrid size={32} className="mb-2" />
+              <span className="text-sm font-medium text-center">
+                {showAll ? "Show Less" : "All Category"}
+              </span>
+            </motion.button>
+          </motion.div>
+        )}
+      </motion.div>
     </section>
   );
 }

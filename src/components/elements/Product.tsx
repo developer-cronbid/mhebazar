@@ -2,7 +2,15 @@
 "use client";
 
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { Heart, Repeat, Share2, ShoppingCart, Minus, Plus, Trash2 } from "lucide-react";
+import {
+  Heart,
+  Repeat,
+  Share2,
+  ShoppingCart,
+  Minus,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useUser } from "@/context/UserContext"; // Make sure useUser is imported
@@ -10,29 +18,27 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import QuoteForm from "../forms/enquiryForm/quotesForm";
 import RentalForm from "../forms/enquiryForm/rentalForm";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import DOMPurify from 'dompurify';
-import categories from '@/data/categories.json';
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import DOMPurify from "dompurify";
+import categories from "@/data/categories.json";
 import ProductDetails from "@/app/products-details/[product_id]/page";
 import { Badge } from "../ui/badge";
 import { prototype } from "events";
 
-const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
+const imgUrl =
+  process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
-  return (text || '')
+  return (text || "")
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
-    .replace(/--+/g, '-')
-    .replace(/-+$/, '');
+    .replace(/\s+/g, "-")
+    .replace(/[^\w-]+/g, "")
+    .replace(/--+/g, "-")
+    .replace(/-+$/, "");
 };
 
 // Interface for ProductCard display props
@@ -115,12 +121,13 @@ const FallbackImage = ({
       className={className}
       quality={quality}
       sizes={sizes}
-      unoptimized={imgSrc.startsWith("/placeholder-image.png") || imgSrc === fallbackSrc}
+      unoptimized={
+        imgSrc.startsWith("/placeholder-image.png") || imgSrc === fallbackSrc
+      }
       onError={handleError}
     />
   );
 };
-
 
 const ProductCard = ({
   id,
@@ -153,26 +160,30 @@ const ProductCard = ({
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
-  const productSlug = slugify(title || '');
+  const productSlug = slugify(title || "");
   const productDetailUrl = `/product/${productSlug}/?id=${id}`;
 
   // Determine button text and form based on page URL type
-  const isRentalPage = pageUrlType === 'rental';
-  const isUsedPage = pageUrlType === 'used';
+  const isRentalPage = pageUrlType === "rental";
+  const isUsedPage = pageUrlType === "used";
   const formButtonText = isRentalPage ? "Rent Now" : "Get a Quote";
 
-  console.log(productType)
+  console.log(productType);
 
   // Format price with Rupee symbol and handle hidden/zero price
-  const displayPrice = (hide_price || parseFloat(price.toString()) <= 0) ? (
-    <span className="text-xl font-bold text-gray-400 tracking-wider">
-      ₹ *******
-    </span>
-  ) : (
-    <span className="text-xl font-bold text-green-600 tracking-wide">
-      ₹ {typeof price === "number" ? price.toLocaleString("en-IN") : parseFloat(price.toString()).toLocaleString("en-IN")}
-    </span>
-  );
+  const displayPrice =
+    hide_price || parseFloat(price.toString()) <= 0 ? (
+      <span className="text-xl font-bold text-gray-400 tracking-wider">
+        ₹ *******
+      </span>
+    ) : (
+      <span className="text-xl font-bold text-green-600 tracking-wide">
+        ₹{" "}
+        {typeof price === "number"
+          ? price.toLocaleString("en-IN")
+          : parseFloat(price.toString()).toLocaleString("en-IN")}
+      </span>
+    );
 
   // Create a lookup map for category images for fast access
   const categoryImageMap = useMemo(() => {
@@ -191,15 +202,16 @@ const ProductCard = ({
     return map;
   }, []);
 
-
   // CHANGE 2: Look up the image URL from the map using the category_id.
-  const categoryFallbackImage = category_id ? categoryImageMap[category_id] : null;
+  const categoryFallbackImage = category_id
+    ? categoryImageMap[category_id]
+    : null;
 
   const badgeStyles = {
-    new: 'border-green-400 bg-green-100 text-green-800',
-    used: 'border-yellow-400 bg-yellow-100 text-yellow-800',
-    rental: 'border-blue-400 bg-blue-100 text-blue-800',
-    attachments: 'border-slate-400 bg-slate-100 text-slate-800',
+    new: "border-green-400 bg-green-100 text-green-800",
+    used: "border-yellow-400 bg-yellow-100 text-yellow-800",
+    rental: "border-blue-400 bg-blue-100 text-blue-800",
+    attachments: "border-slate-400 bg-slate-100 text-slate-800",
   };
 
   const showNewBadge = () => {
@@ -216,8 +228,9 @@ const ProductCard = ({
 
   return (
     <div
-      className={`bg-white group rounded-2xl shadow-md border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col w-full h-full ${!isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
-        }`}
+      className={`bg-white group rounded-2xl shadow-md border border-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col w-full h-full ${
+        !isAvailable && directSale ? "opacity-50 pointer-events-none" : ""
+      }`}
     >
       {/* Image Container */}
       <div className="relative w-full h-48 sm:h-56 flex-shrink-0 bg-gray-100 overflow-hidden ">
@@ -238,11 +251,17 @@ const ProductCard = ({
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           <button
             onClick={() => onWishlistClick(id)}
-            className={`bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8 opacity-0 group-hover:opacity-100 duration-300 ${isWishlisted ? "opacity-100" : "opacity-0"}`}
+            className={`bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8 opacity-0 group-hover:opacity-100 duration-300 ${
+              isWishlisted ? "opacity-100" : "opacity-0"
+            }`}
             aria-label="Add to wishlist"
             disabled={!is_active}
           >
-            <Heart className={`w-4 h-4 ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"}`} />
+            <Heart
+              className={`w-4 h-4 ${
+                isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
+              }`}
+            />
           </button>
           <button
             onClick={() => onCompareClick(productData)}
@@ -253,7 +272,9 @@ const ProductCard = ({
             <Repeat className="w-4 h-4 text-gray-600" />
           </button>
           <button
-            onClick={() => onShareClick(window.location.origin + productDetailUrl, title)}
+            onClick={() =>
+              onShareClick(window.location.origin + productDetailUrl, title)
+            }
             className="bg-white p-2 rounded-full border border-gray-200 shadow-sm transition hover:bg-gray-100 flex items-center justify-center w-8 h-8 opacity-0 group-hover:opacity-100 duration-300"
             aria-label="Share"
           >
@@ -261,27 +282,35 @@ const ProductCard = ({
           </button>
         </div>
         <div className="absolute top-3 right-3">
-          {Array.isArray(productType) && productType.map((type, index) => {
+          {Array.isArray(productType) &&
+            productType.map((type, index) => {
+              // CASE 1: Handle the special logic for the 'new' badge.
+              // It only renders if the type is 'new' AND showNewBadge() is true.
+              if (type === "new") {
+                return (
+                  showNewBadge() && (
+                    <Badge
+                      key={index}
+                      className={badgeStyles.new || "default-new-badge"}
+                    >
+                      New
+                    </Badge>
+                  )
+                );
+              }
 
-            // CASE 1: Handle the special logic for the 'new' badge.
-            // It only renders if the type is 'new' AND showNewBadge() is true.
-            if (type === 'new') {
-              return showNewBadge() && (
-                <Badge key={index} className={badgeStyles.new || 'default-new-badge'}>
-                  New
+              // CASE 2: Handle all other badge types.
+              // This renders a badge for any other type in the array.
+              return (
+                <Badge
+                  key={index}
+                  className={badgeStyles[type] || "default-badge-style"}
+                >
+                  {/* Capitalize the first letter for better display */}
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
                 </Badge>
               );
-            }
-
-            // CASE 2: Handle all other badge types.
-            // This renders a badge for any other type in the array.
-            return (
-              <Badge key={index} className={badgeStyles[type] || 'default-badge-style'}>
-                {/* Capitalize the first letter for better display */}
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </Badge>
-            );
-          })}
+            })}
         </div>
       </div>
 
@@ -290,24 +319,39 @@ const ProductCard = ({
         <div className="flex-1">
           <Link href={productDetailUrl}>
             <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors">
-              {`${productData.user_name.replace('_', ' ')
-                } ${title} ${productData.model} `
+              {`${(productData.user_name || "").replace("_", " ")} ${
+                title || ""
+              } ${productData.model || ""}`
                 .replace(/[^a-zA-Z0-9 \-\.]/g, "")
                 .replace(/\s+/g, " ")
                 .trim()}
             </h3>
           </Link>
           <p className="text-sm text-gray-500 mb-2 line-clamp-1">
-            <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(subtitle || '') }} />
+            <span
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(subtitle || ""),
+              }}
+            />
           </p>
           {/* Price */}
           <div className="flex justify-between mb-4">
-            <div className="mb-3">
-              {displayPrice}
-            </div>
-            {category_id == 18 && (<Badge className={stock_quantity > 0 ? 'border-green-400 bg-green-100 text-green-800' : 'border-red-400 bg-red-100 text-red-800'}>
-              {is_active ? (stock_quantity > 0 ? `Available` : 'Unavailable') : 'Inactive'}
-            </Badge>)}
+            <div className="mb-3">{displayPrice}</div>
+            {category_id == 18 && (
+              <Badge
+                className={
+                  stock_quantity > 0
+                    ? "border-green-400 bg-green-100 text-green-800"
+                    : "border-red-400 bg-red-100 text-red-800"
+                }
+              >
+                {is_active
+                  ? stock_quantity > 0
+                    ? `Available`
+                    : "Unavailable"
+                  : "Inactive"}
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -375,7 +419,13 @@ const ProductCard = ({
                   </button>
                 </DialogTrigger>
                 <DialogContent className="w-[95vw] max-w-2xl mx-auto">
-                  <QuoteForm product={productData} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                  <QuoteForm
+                    product={productData}
+                    onClose={() =>
+                      document
+                        .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                        ?.click()
+                    }
                   />
                 </DialogContent>
               </Dialog>
@@ -399,14 +449,24 @@ const ProductCard = ({
                   productDetails={{
                     image: image,
                     title: title,
-                    description: subtitle || '',
+                    description: subtitle || "",
                     price: price,
-                    stock_quantity: stock_quantity
+                    stock_quantity: stock_quantity,
                   }}
-                  onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                  onClose={() =>
+                    document
+                      .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                      ?.click()
+                  }
                 />
               ) : (
-                <QuoteForm product={productData} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                <QuoteForm
+                  product={productData}
+                  onClose={() =>
+                    document
+                      .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                      ?.click()
+                  }
                 />
               )}
             </DialogContent>
@@ -416,7 +476,6 @@ const ProductCard = ({
     </div>
   );
 };
-
 
 // Interface for props passed to ProductCardContainer (from ProductListing)
 interface ProductCardContainerProps {
@@ -471,7 +530,6 @@ interface WishlistItemApi {
   product_details: ApiProductData;
 }
 
-
 export const ProductCardContainer = ({
   id,
   image,
@@ -513,156 +571,221 @@ export const ProductCardContainer = ({
   const cartItemId = getCartItemId(id); // Context provides this if needed
 
   const productFullData: ProductCardContainerProps = {
-    id, image, title, subtitle, price, currency, directSale, is_active, hide_price, stock_quantity, type, category_id, pageUrlType, model, manufacturer, user_name, created_at,
+    id,
+    image,
+    title,
+    subtitle,
+    price,
+    currency,
+    directSale,
+    is_active,
+    hide_price,
+    stock_quantity,
+    type,
+    category_id,
+    pageUrlType,
+    model,
+    manufacturer,
+    user_name,
+    created_at,
   };
 
-  const handleAddToCart = useCallback(async (productId: number) => {
-    if (!user) {
-      toast.error("Please log in to add products to your cart.");
-      router.push('/login');
-      return;
-    }
-    if (isInCart) {
-      toast.info("This product is already in your cart.");
-      return;
-    }
-
-    const success = await addToCart(productId);
-    if (success) {
-      toast.success("Product added to cart!", {
-        action: {
-          label: 'View Cart',
-          onClick: () => router.push('/cart'),
-        },
-      });
-    } else {
-      toast.error("Failed to add product to cart.");
-    }
-  }, [user, router, isInCart, addToCart]);
-
-
-  const handleRemoveFromCart = useCallback(async (productId: number) => {
-    if (!user) return;
-    const success = await removeFromCart(productId);
-    if (success) {
-      toast.success("Product removed from cart.");
-    } else {
-      toast.error("Failed to remove product from cart.");
-    }
-  }, [user, removeFromCart]);
-
-
-  const handleIncreaseQuantity = useCallback(async (productId: number) => {
-    if (!user) return;
-    const newQuantity = currentCartQuantity + 1;
-    const success = await updateCartQuantity(productId, newQuantity);
-    // No toast needed here as the UI update is instant feedback.
-    if (!success) {
-      toast.error("Failed to update quantity.");
-    }
-  }, [user, currentCartQuantity, updateCartQuantity]);
-
-  const handleDecreaseQuantity = useCallback(async (productId: number) => {
-    if (!user) return;
-    if (currentCartQuantity <= 1) {
-      toast.info("Use the remove button to take it out of cart.");
-      return;
-    }
-    const newQuantity = currentCartQuantity - 1;
-    const success = await updateCartQuantity(productId, newQuantity);
-    if (!success) {
-      toast.error("Failed to update quantity.");
-    }
-  }, [user, currentCartQuantity, updateCartQuantity]);
-
-  const handleWishlist = useCallback(async (productId: number) => {
-    if (!user) {
-      toast.error("Please log in to manage your wishlist.");
-      router.push('/login');
-      return;
-    }
-
-    let success;
-    if (isWishlisted) {
-      success = await removeFromWishlist(productId);
-      if (success) toast.success("Product removed from wishlist!");
-    } else {
-      success = await addToWishlist(productId);
-      if (success) toast.success("Product added to wishlist!");
-    }
-
-    if (!success) {
-      toast.error("Could not update wishlist. Please try again.");
-    }
-  }, [user, isWishlisted, router, addToWishlist, removeFromWishlist]);
-
-  const handleCompare = useCallback((data: Record<string, unknown>) => {
-    console.log(`[handleCompare] Attempting to add Product ID: ${id} to comparison.`);
-    const COMPARE_KEY = 'mhe_compare_products';
-    if (typeof window !== 'undefined') {
-      const currentCompare: ProductCardContainerProps[] = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
-      const existingProduct = currentCompare.find((p: ProductCardContainerProps) => p.id === id);
-      if (!existingProduct) {
-        const dataToStore = { ...data };
-        if (hide_price) {
-          const { price: _, ...restOfData } = dataToStore;
-          currentCompare.push(restOfData as unknown as ProductCardContainerProps);
-        } else {
-          currentCompare.push(dataToStore as unknown as ProductCardContainerProps);
-        }
-        localStorage.setItem(COMPARE_KEY, JSON.stringify(currentCompare));
-        console.log(`[handleCompare SUCCESS] Product ID ${id} added to comparison.`);
-        toast.success("Product added to comparison!");
-      } else {
-        console.log(`[handleCompare] Product ID ${id} is already in comparison.`);
-        toast.info("Product is already in comparison.");
+  const handleAddToCart = useCallback(
+    async (productId: number) => {
+      if (!user) {
+        toast.error("Please log in to add products to your cart.");
+        router.push("/login");
+        return;
       }
-    }
-  }, [id, hide_price]);
+      if (isInCart) {
+        toast.info("This product is already in your cart.");
+        return;
+      }
 
-  const handleBuyNow = useCallback(async (productId: number) => {
-    if (!user) {
-      toast.error("Please log in to proceed with purchase.");
-      router.push('/login');
-      return;
-    }
-    if (!directSale || stock_quantity === 0 || !is_active) {
-      toast.error("This product is not available for direct purchase.");
-      return;
-    }
+      const success = await addToCart(productId);
+      if (success) {
+        toast.success("Product added to cart!", {
+          action: {
+            label: "View Cart",
+            onClick: () => router.push("/cart"),
+          },
+        });
+      } else {
+        toast.error("Failed to add product to cart.");
+      }
+    },
+    [user, router, isInCart, addToCart]
+  );
 
-    if (!isInCart) {
-      await addToCart(productId);
-    }
-    router.push('/cart');
-  }, [user, router, directSale, stock_quantity, is_active, isInCart, addToCart]);
+  const handleRemoveFromCart = useCallback(
+    async (productId: number) => {
+      if (!user) return;
+      const success = await removeFromCart(productId);
+      if (success) {
+        toast.success("Product removed from cart.");
+      } else {
+        toast.error("Failed to remove product from cart.");
+      }
+    },
+    [user, removeFromCart]
+  );
+
+  const handleIncreaseQuantity = useCallback(
+    async (productId: number) => {
+      if (!user) return;
+      const newQuantity = currentCartQuantity + 1;
+      const success = await updateCartQuantity(productId, newQuantity);
+      // No toast needed here as the UI update is instant feedback.
+      if (!success) {
+        toast.error("Failed to update quantity.");
+      }
+    },
+    [user, currentCartQuantity, updateCartQuantity]
+  );
+
+  const handleDecreaseQuantity = useCallback(
+    async (productId: number) => {
+      if (!user) return;
+      if (currentCartQuantity <= 1) {
+        toast.info("Use the remove button to take it out of cart.");
+        return;
+      }
+      const newQuantity = currentCartQuantity - 1;
+      const success = await updateCartQuantity(productId, newQuantity);
+      if (!success) {
+        toast.error("Failed to update quantity.");
+      }
+    },
+    [user, currentCartQuantity, updateCartQuantity]
+  );
+
+  const handleWishlist = useCallback(
+    async (productId: number) => {
+      if (!user) {
+        toast.error("Please log in to manage your wishlist.");
+        router.push("/login");
+        return;
+      }
+
+      let success;
+      if (isWishlisted) {
+        success = await removeFromWishlist(productId);
+        if (success) toast.success("Product removed from wishlist!");
+      } else {
+        success = await addToWishlist(productId);
+        if (success) toast.success("Product added to wishlist!");
+      }
+
+      if (!success) {
+        toast.error("Could not update wishlist. Please try again.");
+      }
+    },
+    [user, isWishlisted, router, addToWishlist, removeFromWishlist]
+  );
+
+  const handleCompare = useCallback(
+    (data: Record<string, unknown>) => {
+      console.log(
+        `[handleCompare] Attempting to add Product ID: ${id} to comparison.`
+      );
+      const COMPARE_KEY = "mhe_compare_products";
+      if (typeof window !== "undefined") {
+        const currentCompare: ProductCardContainerProps[] = JSON.parse(
+          localStorage.getItem(COMPARE_KEY) || "[]"
+        );
+        const existingProduct = currentCompare.find(
+          (p: ProductCardContainerProps) => p.id === id
+        );
+        if (!existingProduct) {
+          const dataToStore = { ...data };
+          if (hide_price) {
+            const { price: _, ...restOfData } = dataToStore;
+            currentCompare.push(
+              restOfData as unknown as ProductCardContainerProps
+            );
+          } else {
+            currentCompare.push(
+              dataToStore as unknown as ProductCardContainerProps
+            );
+          }
+          localStorage.setItem(COMPARE_KEY, JSON.stringify(currentCompare));
+          console.log(
+            `[handleCompare SUCCESS] Product ID ${id} added to comparison.`
+          );
+          toast.success("Product added to comparison!");
+        } else {
+          console.log(
+            `[handleCompare] Product ID ${id} is already in comparison.`
+          );
+          toast.info("Product is already in comparison.");
+        }
+      }
+    },
+    [id, hide_price]
+  );
+
+  const handleBuyNow = useCallback(
+    async (productId: number) => {
+      if (!user) {
+        toast.error("Please log in to proceed with purchase.");
+        router.push("/login");
+        return;
+      }
+      if (!directSale || stock_quantity === 0 || !is_active) {
+        toast.error("This product is not available for direct purchase.");
+        return;
+      }
+
+      if (!isInCart) {
+        await addToCart(productId);
+      }
+      router.push("/cart");
+    },
+    [user, router, directSale, stock_quantity, is_active, isInCart, addToCart]
+  );
 
   const handleShare = useCallback((url: string, title: string) => {
     console.log(`[handleShare] Sharing URL: ${url} with title: ${title}`);
     if (navigator.share) {
-      navigator.share({
-        title: title,
-        url: url,
-      }).then(() => {
-        console.log('[handleShare SUCCESS] Product link shared successfully!');
-        toast.success('Product link shared successfully!');
-      }).catch((error) => {
-        if (error.name === 'AbortError') {
-          console.log('[handleShare INFO] Sharing cancelled.');
-          toast.info('Sharing cancelled.');
-        } else {
-          console.error('[handleShare ERROR] Failed to share product link:', error);
-          toast.error('Failed to share product link.');
-        }
-      });
+      navigator
+        .share({
+          title: title,
+          url: url,
+        })
+        .then(() => {
+          console.log(
+            "[handleShare SUCCESS] Product link shared successfully!"
+          );
+          toast.success("Product link shared successfully!");
+        })
+        .catch((error) => {
+          if (error.name === "AbortError") {
+            console.log("[handleShare INFO] Sharing cancelled.");
+            toast.info("Sharing cancelled.");
+          } else {
+            console.error(
+              "[handleShare ERROR] Failed to share product link:",
+              error
+            );
+            toast.error("Failed to share product link.");
+          }
+        });
     } else {
-      navigator.clipboard.writeText(url).then(() => {
-        console.log('[handleShare SUCCESS] Product link copied to clipboard!');
-        toast.success('Product link copied to clipboard!');
-      }).catch((err) => {
-        console.error('[handleShare ERROR] Failed to copy link to clipboard:', err);
-        toast.error('Failed to copy link to clipboard.');
-      });
+      navigator.clipboard
+        .writeText(url)
+        .then(() => {
+          console.log(
+            "[handleShare SUCCESS] Product link copied to clipboard!"
+          );
+          toast.success("Product link copied to clipboard!");
+        })
+        .catch((err) => {
+          console.error(
+            "[handleShare ERROR] Failed to copy link to clipboard:",
+            err
+          );
+          toast.error("Failed to copy link to clipboard.");
+        });
     }
   }, []);
 

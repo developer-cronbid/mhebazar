@@ -1,445 +1,508 @@
 [
-  {
-    "id": 1,
-    "name": "Battery",
-    "image_url": "/media/category/1/battery1.webp",
-    "subcategories": [
-      {
-        "id": 53,
-        "name": "Lithium-Ion Battery"
-      },
-      {
-        "id": 61,
-        "name": "Lead-Acid Traction Battery"
-      }
-    ]
-  },
-  {
-    "id": 19,
-    "name": "Pallet",
-    "image_url": "/media/category/19/download_11.webp",
-    "subcategories": [
-      {
-        "id": 109,
-        "name": "Wooden Pallet"
-      },
-      {
-        "id": 110,
-        "name": "Plastic Pallet"
-      },
-      {
-        "id": 111,
-        "name": "Metal Pallet"
-      },
-      {
-        "id": 112,
-        "name": "Other"
-      }
-    ]
-  },
-  {
-    "id": 2,
-    "name": "Pallet Truck",
-    "image_url": "/media/category/2/hand-pallet-truck1_s3ceCaW.webp",
-    "subcategories": [
-      {
-        "id": 1,
-        "name": "Hand Pallet Truck"
-      },
-      {
-        "id": 2,
-        "name": "Stainless Steel Hand Pallet Truck"
-      },
-      {
-        "id": 3,
-        "name": "Weighing Scale Hand Pallet Truck"
-      },
-      {
-        "id": 4,
-        "name": "Electric Hand Pallet Truck"
-      },
-      {
-        "id": 5,
-        "name": "Scissors Hand Pallet Truck"
-      }
-    ]
-  },
-
     {
-    "id": 8,
-    "name": "Scissors Lift",
-    "image_url": "/media/category/8/scissors-lift1.webp",
-    "subcategories": [
-      {
-        "id": 24,
-        "name": "Manual Mobile Scissors Lift"
-      },
-      {
-        "id": 25,
-        "name": "Semi-Electric Scissors Lift"
-      },
-      {
-        "id": 26,
-        "name": "Self-Propelled Scissors Lift"
-      },
-      {
-        "id": 27,
-        "name": "Pit Mounted Scissors Lift"
-      },
-      {
-        "id": 28,
-        "name": "Surface Mounted Scissors Lift"
-      },
-      {
-        "id": 29,
-        "name": "Goods Lift"
-      },
-      {
-        "id": 30,
-        "name": "Tandem Scissors Lift"
-      },
-      {
-        "id": 31,
-        "name": "Twin Scissors Lift"
-      },
-      {
-        "id": 32,
-        "name": "Low Profile Scissors Lift"
-      },
-      {
-        "id": 33,
-        "name": "Stainless Steel Scissors Lift"
-      }
-    ]
-  },
-
-  {
-    "id": 3,
-    "name": "Stacker",
-    "image_url": "/media/category/3/stacker1_8P5moJF.webp",
-    "subcategories": [
-      {
+        "id": 1,
+        "name": "Battery",
+        "image_url": "/media/category/1/battery1.webp",
+        "subcategories": [
+            {
+                "id": 53,
+                "name": "Lithium-Ion Battery"
+            },
+            {
+                "id": 61,
+                "name": "Lead-Acid Traction Battery"
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "name": "Pallet Truck",
+        "image_url": "/media/category/2/hand-pallet-truck1_s3ceCaW.webp",
+        "subcategories": [
+            {
+                "id": 1,
+                "name": "Hand Pallet Truck"
+            },
+            {
+                "id": 2,
+                "name": "Stainless Steel Hand Pallet Truck"
+            },
+            {
+                "id": 3,
+                "name": "Weighing Scale Hand Pallet Truck"
+            },
+            {
+                "id": 4,
+                "name": "Electric Hand Pallet Truck"
+            },
+            {
+                "id": 5,
+                "name": "Scissors Hand Pallet Truck"
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "name": "Stacker",
+        "image_url": "/media/category/3/stacker1_8P5moJF.webp",
+        "subcategories": [
+            {
+                "id": 6,
+                "name": "Manual Stacker"
+            },
+            {
+                "id": 7,
+                "name": "Manual Platform Stacker"
+            },
+            {
+                "id": 8,
+                "name": "Manual Staddle Leg Stacker"
+            },
+            {
+                "id": 9,
+                "name": "Self-Lifting Stacker"
+            },
+            {
+                "id": 10,
+                "name": "Semi-Electric Stacker"
+            },
+            {
+                "id": 11,
+                "name": "Semi-Electric Staddle Leg Stacker"
+            },
+            {
+                "id": 12,
+                "name": "Manual Drum Stacker"
+            },
+            {
+                "id": 13,
+                "name": "Electric Stacker"
+            },
+            {
+                "id": 14,
+                "name": "Electric Staddle Leg Stacker"
+            },
+            {
+                "id": 15,
+                "name": "Fork Reach Electric Stacker"
+            },
+            {
+                "id": 16,
+                "name": "Counter Balance Stacker"
+            }
+        ]
+    },
+    {
+        "id": 4,
+        "name": "Manual Platform Trolly",
+        "image_url": "/media/category/4/Manual-PLatform-Trolley1_hdngQDc.webp",
+        "subcategories": []
+    },
+    {
+        "id": 5,
+        "name": "Platform Truck",
+        "image_url": "/media/category/5/4-wheeler-platform-truck-electric1.webp",
+        "subcategories": [
+            {
+                "id": 18,
+                "name": "4-Wheeler Platform Truck (Electric)"
+            },
+            {
+                "id": 19,
+                "name": "3-Wheeler Platform Truck"
+            }
+        ]
+    },
+    {
         "id": 6,
-        "name": "Manual Stacker"
-      },
-      {
+        "name": "Tow Truck",
+        "image_url": "/media/category/6/tow-truck1.webp",
+        "subcategories": [
+            {
+                "id": 20,
+                "name": "4-Wheeler Tow Truck (Electric)"
+            },
+            {
+                "id": 21,
+                "name": "3-Wheeler Tow Truck (Electric)"
+            }
+        ]
+    },
+    {
         "id": 7,
-        "name": "Manual Platform Stacker"
-      },
-      {
+        "name": "Dock Leveller",
+        "image_url": "/media/category/7/dock-leveler1.webp",
+        "subcategories": [
+            {
+                "id": 22,
+                "name": "Dock Leveller (Fixed Type)"
+            },
+            {
+                "id": 23,
+                "name": "Mobile Dock Ramp"
+            }
+        ]
+    },
+    {
         "id": 8,
-        "name": "Manual Staddle Leg Stacker"
-      },
-      {
+        "name": "Scissors Lift",
+        "image_url": "/media/category/8/scissors-lift1.webp",
+        "subcategories": [
+            {
+                "id": 24,
+                "name": "Manual Mobile Scissors Lift"
+            },
+            {
+                "id": 25,
+                "name": "Semi-Electric Scissors Lift"
+            },
+            {
+                "id": 26,
+                "name": "Self-Propelled Scissors Lift"
+            },
+            {
+                "id": 27,
+                "name": "Pit Mounted Scissors Lift"
+            },
+            {
+                "id": 28,
+                "name": "Surface Mounted Scissors Lift"
+            },
+            {
+                "id": 29,
+                "name": "Goods Lift"
+            },
+            {
+                "id": 30,
+                "name": "Tandem Scissors Lift"
+            },
+            {
+                "id": 31,
+                "name": "Twin Scissors Lift"
+            },
+            {
+                "id": 32,
+                "name": "Low Profile Scissors Lift"
+            },
+            {
+                "id": 33,
+                "name": "Stainless Steel Scissors Lift"
+            }
+        ]
+    },
+    {
         "id": 9,
-        "name": "Self-Lifting Stacker"
-      },
-      {
+        "name": "Electric Pallet Truck (BOPT)",
+        "image_url": "/media/category/9/download_3.webp",
+        "subcategories": [
+            {
+                "id": 34,
+                "name": "Electric Pallet Truck"
+            }
+        ]
+    },
+    {
         "id": 10,
-        "name": "Semi-Electric Stacker"
-      },
-      {
+        "name": "Reach Truck",
+        "image_url": "/media/category/10/download_10.webp",
+        "subcategories": [
+            {
+                "id": 35,
+                "name": "Double Deep Reach Truck"
+            },
+            {
+                "id": 36,
+                "name": "Sit Down Reach Truck"
+            },
+            {
+                "id": 37,
+                "name": "Stand On Reach Truck"
+            }
+        ]
+    },
+    {
         "id": 11,
-        "name": "Semi-Electric Staddle Leg Stacker"
-      },
-      {
+        "name": "Racking System",
+        "image_url": "/media/category/11/download_9.webp",
+        "subcategories": [
+            {
+                "id": 38,
+                "name": "Light Duty Rack"
+            },
+            {
+                "id": 39,
+                "name": "Medium Duty Rack"
+            },
+            {
+                "id": 40,
+                "name": "Heavy Duty Rack"
+            },
+            {
+                "id": 41,
+                "name": "Mezzanine Floors"
+            },
+            {
+                "id": 42,
+                "name": "Multi-Tier Rack"
+            },
+            {
+                "id": 43,
+                "name": "Cantilever Rack"
+            },
+            {
+                "id": 44,
+                "name": "Drive-in Rack"
+            },
+            {
+                "id": 45,
+                "name": "VNA Rack"
+            }
+        ]
+    },
+    {
         "id": 12,
-        "name": "Manual Drum Stacker"
-      },
-      {
+        "name": "Forklift",
+        "image_url": "/media/category/12/form1.webp",
+        "subcategories": [
+            {
+                "id": 47,
+                "name": "Electric (Lead-Acid) Forklift"
+            },
+            {
+                "id": 48,
+                "name": "Electric (Li-Ion) Forklift"
+            },
+            {
+                "id": 49,
+                "name": "Articulated Forklift"
+            },
+            {
+                "id": 50,
+                "name": "Heavy Forklift"
+            },
+            {
+                "id": 51,
+                "name": "Diesel Forklift"
+            },
+            {
+                "id": 52,
+                "name": "LPG forklifts"
+            }
+        ]
+    },
+    {
         "id": 13,
-        "name": "Electric Stacker"
-      },
-      {
+        "name": "Container Handler",
+        "image_url": "/media/category/13/download_8.webp",
+        "subcategories": [
+            {
+                "id": 54,
+                "name": "Empty Container Handler"
+            },
+            {
+                "id": 55,
+                "name": "Loaded Container Handler"
+            }
+        ]
+    },
+    {
         "id": 14,
-        "name": "Electric Staddle Leg Stacker"
-      },
-      {
+        "name": "Explosionproof MHE Solution",
+        "image_url": "/media/category/14/download.webp",
+        "subcategories": []
+    },
+    {
         "id": 15,
-        "name": "Fork Reach Electric Stacker"
-      },
-      {
+        "name": "Order Picker",
+        "image_url": "/media/category/15/download_7.webp",
+        "subcategories": []
+    },
+    {
         "id": 16,
-        "name": "Counter Balance Stacker"
-      }
-    ]
-  },
-  {
-    "id": 12,
-    "name": "Forklift",
-    "image_url": "/media/category/12/form1.webp",
-    "subcategories": [
-      {
-        "id": 47,
-        "name": "Electric (Lead-Acid) Forklift"
-      },
-      {
-        "id": 48,
-        "name": "Electric (Li-Ion) Forklift"
-      },
-      {
-        "id": 49,
-        "name": "Articulated Forklift"
-      },
-      {
-        "id": 50,
-        "name": "Heavy Forklift"
-      },
-      {
-        "id": 51,
-        "name": "Diesel Forklift"
-      },
-      {
-        "id": 52,
-        "name": "LPG forklifts"
-      }
-    ]
-  },
-   {
-    "id": 9,
-    "name": "Electric Pallet Truck (BOPT)",
-    "image_url": "/media/category/9/download_3.webp",
-    "subcategories": [
-      {
-        "id": 34,
-        "name": "Electric Pallet Truck"
-      }
-    ]
-  },
-  {
-    "id": 21,
-    "name": "Forklift Attachments",
-    "image_url": "/media/category/21/download_2.webp",
-    "subcategories": [
-      {
-        "id": 115,
-        "name": "Sliding Clamp"
-      },
-      {
-        "id": 113,
-        "name": "Paper Roll Clamp"
-      },
-      {
-        "id": 114,
-        "name": "Tissue Roll Clamp"
-      },
-      {
-        "id": 116,
-        "name": "Hinged attachment"
-      },
-      {
-        "id": 117,
-        "name": "Rotators"
-      },
-      {
-        "id": 118,
-        "name": "Slip sheet Handling"
-      },
-      {
-        "id": 119,
-        "name": "Forks & Fork Extension"
-      },
-      {
-        "id": 120,
-        "name": "Forks Plus"
-      },
-      {
-        "id": 121,
-        "name": "Double Deep"
-      },
-      {
-        "id": 122,
-        "name": "Fork Positioner with sideshifting"
-      },
-      {
-        "id": 123,
-        "name": "Hose Reel"
-      },
-      {
-        "id": 124,
-        "name": "Single Double Pallet Handler"
-      },
-      {
-        "id": 125,
-        "name": "Special Attchment"
-      },
-      {
-        "id": 126,
-        "name": "Mechanical Attchment"
-      }
-    ]
-  },
-  {
-    "id": 10,
-    "name": "Reach Truck",
-    "image_url": "/media/category/10/download_10.webp",
-    "subcategories": [
-      {
-        "id": 36,
-        "name": "Sit Down Reach Truck"
-      },
-      {
-        "id": 37,
-        "name": "Stand On Reach Truck"
-      },
-      {
-        "id": 35,
-        "name": "Double Deep Reach Truck"
-      }
-    ]
-  },
-  {
-    "id": 5,
-    "name": "Platform Truck",
-    "image_url": "/media/category/5/4-wheeler-platform-truck-electric1.webp",
-    "subcategories": [
-      {
+        "name": "Very Narrow Aisle Truck",
+        "image_url": "/media/category/16/download_6.webp",
+        "subcategories": []
+    },
+    {
+        "id": 17,
+        "name": "Automated Guided Vehicle",
+        "image_url": "/media/category/17/download_5.webp",
+        "subcategories": []
+    },
+    {
         "id": 18,
-        "name": "4-Wheeler Platform Truck (Electric)"
-      },
-      {
+        "name": "Spare Parts",
+        "image_url": "/media/category/18/spare.png",
+        "subcategories": []
+    },
+    {
         "id": 19,
-        "name": "3-Wheeler Platform Truck"
-      }
-    ]
-  },
-  {
-    "id": 6,
-    "name": "Tow Truck",
-    "image_url": "/media/category/6/tow-truck1.webp",
-    "subcategories": [
-      {
+        "name": "Pallet",
+        "image_url": "/media/category/19/download_11.webp",
+        "subcategories": [
+            {
+                "id": 109,
+                "name": "Wooden Pallet"
+            },
+            {
+                "id": 110,
+                "name": "Plastic Pallet"
+            },
+            {
+                "id": 111,
+                "name": "Metal Pallet"
+            },
+            {
+                "id": 112,
+                "name": "Other"
+            }
+        ]
+    },
+    {
         "id": 20,
-        "name": "4-Wheeler Tow Truck (Electric)"
-      },
-      {
+        "name": "Safety Solutions",
+        "image_url": "/media/category/20/image_2.webp",
+        "subcategories": []
+    },
+    {
         "id": 21,
-        "name": "3-Wheeler Tow Truck (Electric)"
-      }
-    ]
-  },
-  {
-    "id": 7,
-    "name": "Dock Leveller",
-    "image_url": "/media/category/7/dock-leveler1.webp",
-    "subcategories": [
-      {
+        "name": "Forklift Attachments",
+        "image_url": "/media/category/21/download_2_jipBLOU.webp",
+        "subcategories": [
+            {
+                "id": 113,
+                "name": "Paper Roll Clamp"
+            },
+            {
+                "id": 114,
+                "name": "Tissue Roll Clamp"
+            },
+            {
+                "id": 115,
+                "name": "Sliding Clamp"
+            },
+            {
+                "id": 116,
+                "name": "Hinged attachment"
+            },
+            {
+                "id": 117,
+                "name": "Rotators"
+            },
+            {
+                "id": 118,
+                "name": "Slip sheet Handling"
+            },
+            {
+                "id": 119,
+                "name": "Forks & Fork Extension"
+            },
+            {
+                "id": 120,
+                "name": "Forks Plus"
+            },
+            {
+                "id": 121,
+                "name": "Double Deep"
+            },
+            {
+                "id": 122,
+                "name": "Fork Positioner with sideshifting"
+            },
+            {
+                "id": 123,
+                "name": "Hose Reel"
+            },
+            {
+                "id": 124,
+                "name": "Single Double Pallet Handler"
+            },
+            {
+                "id": 125,
+                "name": "Special Attchment"
+            },
+            {
+                "id": 126,
+                "name": "Mechanical Attchment"
+            }
+        ]
+    },
+    {
         "id": 22,
-        "name": "Dock Leveller (Fixed Type)"
-      },
-      {
+        "name": "Conveyor",
+        "image_url": "/media/category/22/download_1.webp",
+        "subcategories": [
+            {
+                "id": 127,
+                "name": "Truckloading Conveyor"
+            },
+            {
+                "id": 128,
+                "name": "Belt conveyor"
+            },
+            {
+                "id": 129,
+                "name": "Modular Belt conveyor"
+            },
+            {
+                "id": 130,
+                "name": "Slat Belt conveyor"
+            },
+            {
+                "id": 131,
+                "name": "Telescopic Conveyor"
+            },
+            {
+                "id": 132,
+                "name": "Roller Conveyor"
+            },
+            {
+                "id": 133,
+                "name": "Flexible Roller Conveyor"
+            },
+            {
+                "id": 134,
+                "name": "Skate Wheel Conveyor"
+            },
+            {
+                "id": 135,
+                "name": "Gravity Spiral roller Conveyor"
+            }
+        ]
+    },
+    {
         "id": 23,
-        "name": "Mobile Dock Ramp"
-      }
-    ]
-  },
-  {
-    "id": 4,
-    "name": "Manual Platform Trolly",
-    "image_url": "/media/category/4/Manual-PLatform-Trolley1_hdngQDc.webp",
-    "subcategories": []
-  },
- 
-  {
-    "id": 11,
-    "name": "Racking System",
-    "image_url": "/media/category/11/download_9.webp",
-    "subcategories": [
-      {
-        "id": 38,
-        "name": "Light Duty Rack"
-      },
-      {
-        "id": 39,
-        "name": "Medium Duty Rack"
-      },
-      {
-        "id": 40,
-        "name": "Heavy Duty Rack"
-      },
-      {
-        "id": 41,
-        "name": "Mezzanine Floors"
-      },
-      {
-        "id": 42,
-        "name": "Multi-Tier Rack"
-      },
-      {
-        "id": 43,
-        "name": "Cantilever Rack"
-      },
-      {
-        "id": 44,
-        "name": "Drive-in Rack"
-      },
-      {
-        "id": 45,
-        "name": "VNA Rack"
-      }
-    ]
-  },
-  {
-    "id": 15,
-    "name": "Order Picker",
-    "image_url": "/media/category/15/download_7.webp",
-    "subcategories": []
-  },
-  {
-    "id": 16,
-    "name": "Very Narrow Aisle Truck",
-    "image_url": "/media/category/16/download_6.webp",
-    "subcategories": []
-  },
-  {
-    "id": 17,
-    "name": "AGV (Automated Guided Vehicle)",
-    "image_url": "/media/category/17/download_5.webp",
-    "subcategories": []
-  },
-  {
-    "id": 13,
-    "name": "Container Handler",
-    "image_url": "/media/category/13/download_8.webp",
-    "subcategories": [
-      {
-        "id": 54,
-        "name": "Empty Container Handler"
-      },
-      {
-        "id": 55,
-        "name": "Loaded Container Handler"
-      }
-    ]
-  },
-  {
-    "id": 20,
-    "name": "Safety Solutions",
-    "image_url": "/media/category/20/image_2.webp",
-    "subcategories": []
-  },
-  {
-    "id": 18,
-    "name": "Spare Parts",
-    "image_url": "/media/category/18/spare.png",
-    "subcategories": []
-  },
-  {
-    "id": 24,
-    "name": "Cleaning Equipment",
-    "image_url": "/media/category/24/image_5.webp",
-    "subcategories": []
-  },
-  {
-    "id": 25,
-    "name": "Charger",
-    "image_url": "/media/category/25/image_8.webp",
-    "subcategories": []
-  },
-  {
-    "id": 14,
-    "name": "Explosionproof MHE Solution",
-    "image_url": "/media/category/14/download.webp",
-    "subcategories": []
-  }
+        "name": "Wrapping Machine",
+        "image_url": "/media/category/23/download.webp",
+        "subcategories": [
+            {
+                "id": 136,
+                "name": "Stretch Wrapping Machine"
+            },
+            {
+                "id": 137,
+                "name": "Paper Roll Stretch Wrapping Machine"
+            },
+            {
+                "id": 138,
+                "name": "Top Pressure Pallet Stretch Wrapping Machine"
+            },
+            {
+                "id": 139,
+                "name": "Box Stretch Wrapping Machine"
+            }
+        ]
+    },
+    {
+        "id": 24,
+        "name": "Cleaning Equipment",
+        "image_url": "/media/category/24/image_5.webp",
+        "subcategories": []
+    },
+    {
+        "id": 25,
+        "name": "Charger",
+        "image_url": "/media/category/25/image_8.webp",
+        "subcategories": []
+    }
 ]

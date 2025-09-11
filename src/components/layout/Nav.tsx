@@ -1,4 +1,4 @@
-// src/components/layout/Navbar.tsx
+// src/components/layout/Nav.tsx
 "use client";
 
 import {
@@ -30,7 +30,6 @@ import SearchBar from "./SearchBar";
 import { useUser } from "@/context/UserContext";
 import { useRouter, usePathname } from "next/navigation";
 import { handleLogout } from "@/lib/auth/logout";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,8 +38,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// Import the local JSON data directly
 import categoriesData from "@/data/categories.json";
 import {
   Dialog,
@@ -52,7 +49,6 @@ import {
 } from "../ui/dialog";
 import ContactForm from "../forms/publicforms/ContactForm";
 
-// Define interfaces based on the local JSON structure
 export interface Subcategory {
   id: number;
   name: string;
@@ -129,8 +125,8 @@ const shineAnimation = `
 `;
 
 export default function Navbar(): JSX.Element {
+  // Use the imported JSON data directly
   const categories: Category[] = categoriesData;
-
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
@@ -233,7 +229,7 @@ export default function Navbar(): JSX.Element {
 
             <div className="hidden md:flex flex-1 max-w-5xl mx-2 sm:mx-8 items-center gap-2 sm:gap-4">
               <SearchBar
-                categories={categories}
+       
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
@@ -434,7 +430,7 @@ export default function Navbar(): JSX.Element {
           <div className="md:hidden pb-2 sm:pb-3">
             <div className="flex items-center gap-2">
               <SearchBar
-                categories={categories}
+             
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
@@ -504,20 +500,21 @@ export default function Navbar(): JSX.Element {
 
             <div className="flex items-center">
               <Dialog>
-                <DialogTrigger>
-                  <button
-                    className={`flex items-center gap-2 px-4 py-3 transition ${
+                <DialogTrigger asChild>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    className={`flex items-center gap-2 px-4 py-3 transition cursor-pointer ${
                       pathname === "/contact"
                         ? "text-gray-900 font-bold"
                         : "text-gray-600 hover:text-gray-900 font-normal"
                     }`}
                   >
                     <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
-                      {" "}
                       ?
                     </div>
-                    <span className="text-sm font-normal">Help</span>{" "}
-                  </button>
+                    <span className="text-sm font-normal">Help</span>
+                  </div>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>

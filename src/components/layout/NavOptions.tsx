@@ -1,3 +1,4 @@
+// src/components/layout/NavOptions.tsx
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -6,9 +7,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useCallback, useEffect, JSX } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import api from "@/lib/api";
-
-// --- Shadcn UI & Type Definitions (unchanged) ---
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,14 +18,19 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
+// Import the local JSON data for categories
+import categoriesData from "@/data/categories.json";
+
+interface Subcategory {
+  id: number;
+  name: string;
+}
+
 interface Category {
   id: number;
-  subcategories: {
-    id: number;
-    name: string;
-  }[];
-  cat_image?: string;
   name: string;
+  image_url: string;
+  subcategories: Subcategory[];
 }
 
 interface CategoryMenuProps {
@@ -35,15 +38,15 @@ interface CategoryMenuProps {
   onClose: () => void;
 }
 
-// --- Helper Functions & Image Fallback (unchanged) ---
 const createSlug = (name: string): string =>
   name.toLowerCase().replace(/\s+/g, "-");
 
 const CategoryImage = ({ category }: { category: Category }) => {
-  const [hasError, setHasError] = useState(!category.cat_image);
+  const [hasError, setHasError] = useState(!category.image_url);
+
   useEffect(() => {
-    setHasError(!category.cat_image);
-  }, [category.cat_image]);
+    setHasError(!category.image_url);
+  }, [category.image_url]);
 
   if (hasError) {
     return (
@@ -54,7 +57,7 @@ const CategoryImage = ({ category }: { category: Category }) => {
   }
   return (
     <Image
-      src={category.cat_image!}
+      src={category.image_url!}
       alt={category.name}
       width={32}
       height={32}
@@ -65,93 +68,30 @@ const CategoryImage = ({ category }: { category: Category }) => {
   );
 };
 
-// --- Main Responsive Component ---
 export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  // Use the imported JSON data directly
+  const categories: Category[] = categoriesData;
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  // --- Data Fetching Logic (unchanged) ---
-  const fetchCategories = useCallback(async () => {
-    if (!isOpen || categories.length > 0) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await api.get("/categories/");
-      const data = response.data || [];
-      setCategories(data);
-      if (data.length > 0) {
-        const firstCategoryWithSubs = data.find(
-          (cat: Category) => cat.subcategories?.length > 0
-        );
-        setActiveCategory(firstCategoryWithSubs || data[0]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
-      setError("Failed to load categories. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [isOpen, categories.length]);
-
+  // Set the first category as active on initial render
   useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
+    if (categories.length > 0 && !activeCategory) {
+      setActiveCategory(categories[0]);
+    }
+  }, [categories, activeCategory]);
 
-  // --- renderContent function with modifications ---
   const renderContent = () => {
-    // --- Loading and Error States (unchanged) ---
-    if (loading) {
-      return (
-        <div className="p-4 space-y-2">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-8 w-8 rounded-md" />
-              <Skeleton className="h-4 w-48" />
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div className="p-4 text-center">
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-          <Button
-            variant="link"
-            className="mt-2"
-            onClick={() => {
-              setCategories([]);
-              fetchCategories();
-            }}
-          >
-            Try Again
-          </Button>
-        </div>
-      );
-    }
-
-    // --- DESKTOP: Two-Pane Layout (MODIFIED) ---
     if (isDesktop) {
       return (
         <div className="flex w-[640px] max-h-[calc(100vh-220px)]">
           <div className="w-64 p-2 border-r overflow-y-auto">
             {categories.map((category) => (
-              // ✨ CHANGE 1: Replaced <Button> with <Link> for navigation on click.
               <Link
                 key={category.id}
                 href={`/${createSlug(category.name)}`}
-                // ✨ CHANGE 2: Added onClick to close the menu after navigation.
                 onClick={onClose}
-                // ✨ CHANGE 3: Use onMouseEnter to update the active category on hover.
                 onMouseEnter={() => setActiveCategory(category)}
-                // ✨ CHANGE 4: Replicated button styles directly on the Link component.
                 className={`inline-flex items-center w-full justify-start gap-3 p-2.5 h-auto rounded-md text-sm font-medium transition-colors ${
                   activeCategory?.id === category.id
                     ? "bg-accent text-accent-foreground"
@@ -164,7 +104,6 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
             ))}
           </div>
 
-          {/* Right Pane (unchanged) */}
           <div className="flex-1 p-2 overflow-y-auto">
             {activeCategory && activeCategory.subcategories?.length > 0 ? (
               activeCategory.subcategories.map((sub) => (
@@ -198,7 +137,6 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
       );
     }
 
-    // --- MOBILE: Accordion Layout (unchanged) ---
     return (
       <div className="w-80 p-2">
         <Accordion type="single" collapsible className="w-full">
@@ -212,6 +150,13 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pt-2 pb-0">
+                  <Link
+                    href={`/${createSlug(category.name)}`}
+                    className="block w-full text-left py-2.5 pl-12 pr-4 text-sm font-semibold rounded-md text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                    onClick={onClose}
+                  >
+                    All {category.name}
+                  </Link>
                   {category.subcategories.map((sub) => (
                     <Link
                       key={sub.id}
@@ -243,7 +188,6 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
     );
   };
 
-  // --- Main Return JSX (unchanged) ---
   return (
     <AnimatePresence>
       {isOpen && (
