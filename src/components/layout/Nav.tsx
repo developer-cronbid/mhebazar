@@ -39,7 +39,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import categoriesData from "@/data/categories.json";
+// import categoriesData from "@/data/categories.json";
 import {
   Dialog,
   DialogContent,
@@ -84,7 +84,7 @@ export interface User {
 
 export default function Navbar(): JSX.Element {
   // Use the imported JSON data directly
-  const categories: Category[] = categoriesData;
+  // const categories: Category[] = categoriesData;
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);

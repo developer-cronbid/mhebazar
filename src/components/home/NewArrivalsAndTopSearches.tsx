@@ -184,7 +184,7 @@ export default function NewArrivalsAndTopSearches() {
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
           <div className="mb-6">
             <p className="text-xl font-semibold text-gray-900">
-              {newArrivalsCount > 0 ? `${newArrivalsCount}+ products added today` : "50+ products added today"}
+              {newArrivalsCount > 0 ? `${newArrivalsCount}+ products added today` : "10+ products added today"}
             </p>
           </div>
           <div className="relative">

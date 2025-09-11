@@ -5,12 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Package, AlertTriangle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useCallback, useEffect, JSX } from "react";
+import { useState, useCallback, useEffect, useMemo, JSX } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Accordion,
   AccordionContent,
@@ -20,6 +18,25 @@ import {
 
 // Import the local JSON data for categories
 import categoriesData from "@/data/categories.json";
+
+// --- START: Corrected function and image handling logic ---
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
+
+// Correct way to define a utility function outside of a component.
+const createSlug = (name: string): string => {
+  return name.toLowerCase().replace(/\s+/g, "-");
+};
+
+function getFullImageUrl(imagePath: string | null): string | null {
+  if (!imagePath) {
+    return null;
+  }
+  const baseUrl = BACKEND_BASE_URL?.endsWith("/") ? BACKEND_BASE_URL : `${BACKEND_BASE_URL}/`;
+  const path = imagePath.startsWith("/") ? imagePath.substring(1) : imagePath;
+  return `${baseUrl}${path}`;
+}
+// --- END: Corrected logic ---
+
 
 interface Subcategory {
   id: number;
@@ -38,48 +55,54 @@ interface CategoryMenuProps {
   onClose: () => void;
 }
 
-const createSlug = (name: string): string =>
-  name.toLowerCase().replace(/\s+/g, "-");
 
-const CategoryImage = ({ category }: { category: Category }) => {
-  const [hasError, setHasError] = useState(!category.image_url);
+const CategoryIcon = ({ category }: { category: Category }) => {
+  const [hasError, setHasError] = useState(false);
+  const fullImageUrl = useMemo(() => getFullImageUrl(category.image_url), [category.image_url]);
 
   useEffect(() => {
-    setHasError(!category.image_url);
+    setHasError(false);
   }, [category.image_url]);
 
-  if (hasError) {
+  if (!fullImageUrl || hasError) {
     return (
       <div className="w-8 h-8 flex items-center justify-center bg-muted rounded-md shrink-0">
         <Package className="w-4 h-4 text-muted-foreground" />
       </div>
     );
   }
+
   return (
     <Image
-      src={category.image_url!}
+      src={fullImageUrl}
       alt={category.name}
       width={32}
       height={32}
       className="w-8 h-8 object-contain rounded-md shrink-0"
       onError={() => setHasError(true)}
       unoptimized
+      priority
     />
   );
 };
 
 export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
-  // Use the imported JSON data directly
   const categories: Category[] = categoriesData;
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
-  // Set the first category as active on initial render
   useEffect(() => {
-    if (categories.length > 0 && !activeCategory) {
+    if (isDesktop && categories.length > 0 && !activeCategory) {
       setActiveCategory(categories[0]);
     }
-  }, [categories, activeCategory]);
+  }, [isDesktop, categories, activeCategory]);
+
+  const handleMouseEnter = useCallback(
+    (category: Category) => {
+      setActiveCategory(category);
+    },
+    []
+  );
 
   const renderContent = () => {
     if (isDesktop) {
@@ -91,14 +114,14 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
                 key={category.id}
                 href={`/${createSlug(category.name)}`}
                 onClick={onClose}
-                onMouseEnter={() => setActiveCategory(category)}
+                onMouseEnter={() => handleMouseEnter(category)}
                 className={`inline-flex items-center w-full justify-start gap-3 p-2.5 h-auto rounded-md text-sm font-medium transition-colors ${
                   activeCategory?.id === category.id
                     ? "bg-accent text-accent-foreground"
                     : "hover:bg-accent"
                 }`}
               >
-                <CategoryImage category={category} />
+                <CategoryIcon category={category} />
                 <span className="truncate">{category.name}</span>
               </Link>
             ))}
@@ -145,7 +168,7 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
               <AccordionItem value={String(category.id)} key={category.id}>
                 <AccordionTrigger className="p-2.5 hover:no-underline hover:bg-accent rounded-md">
                   <div className="flex items-center gap-3">
-                    <CategoryImage category={category} />
+                    <CategoryIcon category={category} />
                     <span className="font-medium text-sm">{category.name}</span>
                   </div>
                 </AccordionTrigger>
@@ -178,7 +201,7 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
                 onClick={onClose}
                 className="flex items-center gap-3 p-2.5 text-sm font-medium rounded-md transition-colors text-foreground hover:bg-accent"
               >
-                <CategoryImage category={category} />
+                <CategoryIcon category={category} />
                 <span>{category.name}</span>
               </Link>
             )
