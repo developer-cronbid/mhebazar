@@ -94,7 +94,8 @@ interface ProductSectionProps {
 }
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
-// Custom Image component with an error handler to show a fallback
+
+// Custom Image component with an error handler to show a fallback and hide the parent element
 const FallbackImage = ({
   src,
   alt,
@@ -104,6 +105,8 @@ const FallbackImage = ({
   fallbackSrc,
   style,
   priority,
+  onImageError,
+  id,
 }: {
   src: string;
   alt: string;
@@ -113,6 +116,8 @@ const FallbackImage = ({
   fallbackSrc?: string | null;
   style?: React.CSSProperties;
   priority?: boolean;
+  onImageError: (id: number) => void;
+  id: number;
 }) => {
   const [imgSrc, setImgSrc] = useState(src);
   const [error, setError] = useState(false);
@@ -130,6 +135,7 @@ const FallbackImage = ({
         setImgSrc("/placeholder-image.png");
       }
       setError(true);
+      onImageError(id); // Call the parent handler to hide the thumbnail box
     }
   };
 
@@ -163,8 +169,6 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   const [data, setData] = useState<ProductData | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  // const [isZoomed, setIsZoomed] = useState(false);
-  // const [position, setPosition] = useState({ x: 0, y: 0 });
   const [openAccordion, setOpenAccordion] = useState<
     "desc" | "spec" | "vendor" | null
   >("desc");
@@ -173,6 +177,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   const [cartItemId, setCartItemId] = useState<number | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [erroredImageIds, setErroredImageIds] = useState<Set<number>>(new Set());
 
   // State for the media gallery modal
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -186,6 +191,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   useEffect(() => {
     latestCartState.current = { currentCartQuantity, cartItemId, isInCart };
   }, [currentCartQuantity, cartItemId, isInCart]);
+  
+  // In-memory cache for product data
+  const productCache = useRef(new Map<string, ProductData>());
+
 
   const formatKey = (key: string) => {
     return key
@@ -205,6 +214,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
         String(value).trim() !== ""
     );
   };
+
+  const handleImageError = useCallback((id: number) => {
+    setErroredImageIds(prev => new Set(prev).add(id));
+  }, []);
 
   const fetchInitialStatus = useCallback(async () => {
     if (user && data?.id) {
@@ -245,6 +258,18 @@ export default function ProductSection({ productId }: ProductSectionProps) {
         router.push("/404");
         return;
       }
+      
+      const cacheKey = String(productId);
+      if (productCache.current.has(cacheKey)) {
+        const cachedData = productCache.current.get(cacheKey)!;
+        setData(cachedData);
+        if (cachedData.images.length > 0) {
+          setSelectedImage(0);
+        }
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const productRes = await api.get<ProductData>(
           `/products/${productId}/`
@@ -260,6 +285,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
 
         if (categoryWithImage) {
           setData(categoryWithImage);
+          productCache.current.set(cacheKey, categoryWithImage);
           if (categoryWithImage.images.length > 0) {
             setSelectedImage(0);
           }
@@ -663,6 +689,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               height={700}
               fallbackSrc={data.category_details?.cat_image}
               priority
+              onImageError={handleImageError}
+              id={data.images[selectedImage]?.id || 0}
             />
             {/* Top right icons */}
             <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
@@ -718,7 +746,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               animate={{ y: `-${scrollOffset * 112}px` }} // This animation is for the vertical desktop view
               transition={{ duration: 0.3 }}
             >
-              {data.images.map((img, index) => (
+              {data.images.filter(img => !erroredImageIds.has(img.id)).map((img, index) => (
                 <motion.button
                   key={img.id}
                   onClick={() => setSelectedImage(index)}
@@ -730,12 +758,14 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   whileTap={{ scale: 0.95 }}
                   aria-label={`Select image ${index + 1}`}
                 >
-                  <Image
+                  <FallbackImage
                     src={img.image}
                     alt={`${data.name} thumbnail ${index + 1}`}
                     className="w-full h-full object-contain"
                     width={104}
                     height={104}
+                    id={img.id}
+                    onImageError={handleImageError}
                   />
                 </motion.button>
               ))}
@@ -891,7 +921,6 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 {/* Conditional rendering for direct sale */}
                 {data.direct_sale ? (
                   isPurchasable ? (
-                    // This is the added conditional block
                     isInCart ? (
                       <div className="mt-4 flex items-center justify-between bg-green-50 text-green-700 font-medium py-1 px-1 rounded-lg">
                         <motion.button
@@ -946,7 +975,6 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                       </div>
                     )
                   ) : (
-                    // Logic for out-of-stock direct sale
                     <div className="mt-4 flex flex-col gap-2">
                       <Dialog>
                         <DialogTrigger asChild>
@@ -974,7 +1002,6 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     </div>
                   )
                 ) : (
-                  // Logic for non-direct sale (rental/quote)
                   <div className="mt-4 flex flex-col gap-2">
                     {data.type.includes("rental") ? (
                       <>
@@ -1126,7 +1153,6 @@ export default function ProductSection({ productId }: ProductSectionProps) {
             </div>
             <Dialog>
               <DialogTrigger asChild disabled={!data.is_active}>
-                {/* ✅ Changed to a button for accessibility and to allow disabling */}
                 <motion.button
                   whileHover={{ x: data.is_active ? 5 : 0 }}
                   className="underline cursor-pointer font-semibold text-left disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline text-xl mt-4"
@@ -1137,7 +1163,6 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 </motion.button>
               </DialogTrigger>
               <DialogContent className="w-full max-w-2xl">
-                {/* ✅ Corrected logic using the helper variable */}
                 {isRentalOrUsed ? (
                   <RentalForm
                     productId={data.id}
@@ -1439,6 +1464,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   height={1000}
                   fallbackSrc={data.category_details?.cat_image}
                   priority
+                  onImageError={() => {}} // No-op handler since this image is critical
+                  id={data.images[currentMediaIndex]?.id || 0}
                 />
 
                 {/* Navigation arrows */}

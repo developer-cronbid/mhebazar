@@ -2,8 +2,8 @@
 // src/app/[category]/[subcategory]/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter, useSearchParams, notFound } from "next/navigation";
 import ProductListing, { Product } from "@/components/products/ProductListing";
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import api from "@/lib/api";
@@ -88,7 +88,9 @@ export default function SubCategoryPage({
 
   const [validCategoryName, setValidCategoryName] = useState<string | null>(null);
   const [validSubcategoryName, setValidSubcategoryName] = useState<string | null>(null);
-  const [isRouteValid, setIsRouteValid] = useState<boolean>(true);
+  
+  // Use a ref for a simple in-memory cache to avoid re-fetching data
+  const productCache = useRef(new Map());
 
   // Validate category and subcategory existence and hierarchy
   const validateRouteAndGetIds = useCallback(async (
@@ -103,7 +105,6 @@ export default function SubCategoryPage({
       const category = categoryResponse.data[0];
 
       if (!category) {
-        setIsRouteValid(false);
         setErrorMessage(`Category "${formattedCatName}" not found.`);
         return { category: null, subcategory: null, categoryId: null, subcategoryId: null };
       }
@@ -113,7 +114,6 @@ export default function SubCategoryPage({
       );
 
       if (!subcategory) {
-        setIsRouteValid(false);
         setErrorMessage(`Subcategory "${formattedSubcatName}" not found under category "${formattedCatName}".`);
         return { category: null, subcategory: null, categoryId: null, subcategoryId: null };
       }
@@ -131,7 +131,6 @@ export default function SubCategoryPage({
 
     } catch (err: unknown) {
       console.error("[Subcategory Page] Error validating route:", err);
-      setIsRouteValid(false);
       setErrorMessage("An error occurred while validating the path.");
       return { category: null, subcategory: null, categoryId: null, subcategoryId: null };
     }
@@ -146,7 +145,8 @@ export default function SubCategoryPage({
     maxPriceFilter: number | '',
     manufacturerFilter: string | null,
     ratingFilter: number | null,
-    sortByFilter: string
+    sortByFilter: string,
+    categoryName: string // Pass the name to apply special sorting
   ) => {
     setIsLoading(true);
     setNoProductsFoundMessage(null);
@@ -161,7 +161,6 @@ export default function SubCategoryPage({
       if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
       if (ratingFilter !== null) queryParams.append("average_rating", ratingFilter.toString());
 
-      // --- CORRECTED: Use the 'search' parameter for manufacturer lookup ---
       if (manufacturerFilter) queryParams.append("search", manufacturerFilter);
 
       if (sortByFilter && sortByFilter !== 'relevance') {
@@ -172,38 +171,109 @@ export default function SubCategoryPage({
         if (sortParam) queryParams.append("ordering", sortParam);
       }
 
-      const response = await api.get<ApiResponse<ApiProduct>>(`/products/?${queryParams.toString()}`);
+      // 1. Caching Check: Create a cache key from the query params
+      const cacheKey = queryParams.toString();
+      if (productCache.current.has(cacheKey)) {
+          const cachedData = productCache.current.get(cacheKey);
+          
+          let transformedProducts = cachedData.results.map((p: ApiProduct) => ({
+              id: p.id.toString(),
+              image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
+              title: p.name,
+              subtitle: p.description,
+              price: parseFloat(p.price),
+              currency: "₹",
+              category_name: p.category_name,
+              subcategory_name: p.subcategory_name,
+              direct_sale: p.direct_sale,
+              is_active: p.is_active,
+              hide_price: p.hide_price,
+              stock_quantity: p.stock_quantity,
+              manufacturer: p.manufacturer,
+              average_rating: p.average_rating,
+              type: p.type,
+              category_id: p.category,
+              model: p.model,
+              user_name: p.user_name,
+              created_at: p.created_at
+          }));
+          
+          // 2. Conditional Sorting: Give priority to MHE products if the category is 'Spare Parts'
+          if (categoryName.toLowerCase().includes('spare parts')) {
+              transformedProducts = transformedProducts.sort((a, b) => {
+                  const aIsMHE = a.manufacturer?.toLowerCase().includes("mhe");
+                  const bIsMHE = b.manufacturer?.toLowerCase().includes("mhe");
+                  
+                  if (aIsMHE && !bIsMHE) return -1;
+                  if (!aIsMHE && bIsMHE) return 1;
+                  return 0; // Keep the original order for other products
+              });
+          }
 
-      const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
-        id: p.id.toString(),
-        image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
-        title: p.name,
-        subtitle: p.description,
-        price: parseFloat(p.price),
-        currency: "₹",
-        category_name: p.category_name,
-        subcategory_name: p.subcategory_name,
-        direct_sale: p.direct_sale,
-        is_active: p.is_active,
-        hide_price: p.hide_price,
-        stock_quantity: p.stock_quantity,
-        manufacturer: p.manufacturer,
-        average_rating: p.average_rating,
-        type: p.type,
-        category_id: p.category,
-        model: p.model,
-        user_name: p.user_name,
-        created_at: p.created_at
-      }));
+          if (transformedProducts.length === 0) {
+              setNoProductsFoundMessage(`No products found with the selected filters.`);
+          }
 
-      if (transformedProducts.length === 0) {
-        setNoProductsFoundMessage(`No products found with the selected filters.`);
+          setProducts(transformedProducts);
+          setTotalProducts(cachedData.count);
+          setTotalPages(Math.ceil(cachedData.count / 12));
+          setIsLoading(false);
+          return;
       }
 
-      setProducts(transformedProducts);
-      setTotalProducts(response.data.count);
-      setTotalPages(Math.ceil(response.data.count / 12));
+      // 3. API Request: If not in cache, fetch from the API
+      const response = await api.get<ApiResponse<ApiProduct>>(`/products/?${queryParams.toString()}`);
 
+      if (response.data && response.data.results) {
+        if (response.data.results.length === 0) {
+          setNoProductsFoundMessage(`No products found with the selected filters.`);
+        }
+
+        let transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
+          id: p.id.toString(),
+          image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
+          title: p.name,
+          subtitle: p.description,
+          price: parseFloat(p.price),
+          currency: "₹",
+          category_name: p.category_name,
+          subcategory_name: p.subcategory_name,
+          direct_sale: p.direct_sale,
+          is_active: p.is_active,
+          hide_price: p.hide_price,
+          stock_quantity: p.stock_quantity,
+          manufacturer: p.manufacturer,
+          average_rating: p.average_rating,
+          type: p.type,
+          category_id: p.category,
+          model: p.model,
+          user_name: p.user_name,
+          created_at: p.created_at
+        }));
+        
+        // 4. Conditional Sorting: Apply special sorting to MHE products if the category is 'Spare Parts'
+        if (categoryName.toLowerCase().includes('spare parts')) {
+             transformedProducts = transformedProducts.sort((a, b) => {
+                const aIsMHE = a.manufacturer?.toLowerCase().includes("mhe");
+                const bIsMHE = b.manufacturer?.toLowerCase().includes("mhe");
+                
+                if (aIsMHE && !bIsMHE) return -1;
+                if (!aIsMHE && bIsMHE) return 1;
+                return 0;
+            });
+        }
+        
+        // 5. Caching: Store the new data in the cache
+        productCache.current.set(cacheKey, response.data);
+        
+        setProducts(transformedProducts);
+        setTotalProducts(response.data.count);
+        setTotalPages(Math.ceil(response.data.count / 12));
+
+      } else {
+        setNoProductsFoundMessage(`Failed to load products. Unexpected API response structure.`);
+        setProducts([]);
+      }
     } catch (err: unknown) {
       console.error("[Subcategory Page] Failed to fetch products:", err);
       setErrorMessage("Failed to load products. An API error occurred.");
@@ -217,7 +287,6 @@ export default function SubCategoryPage({
   useEffect(() => {
     const minP = searchParams.get('min_price');
     const maxP = searchParams.get('max_price');
-    // --- CORRECTED: Read 'search' param for manufacturer ---
     const manufacturer = searchParams.get('search');
     const rating = searchParams.get('average_rating');
     const sort = searchParams.get('sort_by');
@@ -249,10 +318,17 @@ export default function SubCategoryPage({
           maxPrice,
           selectedManufacturer,
           selectedRating,
-          sortBy
+          sortBy,
+          category // Pass the category name to fetch function
         );
       } else {
         setIsLoading(false);
+        if (errorMessage) {
+          // Render error message from state
+          return;
+        }
+        // If no error message set, it's a 404
+        notFound();
       }
     };
     loadData();
@@ -267,6 +343,7 @@ export default function SubCategoryPage({
     selectedManufacturer,
     selectedRating,
     sortBy,
+    errorMessage
   ]);
 
   const handleFilterChange = useCallback((
@@ -283,7 +360,6 @@ export default function SubCategoryPage({
 
       newSearchParams.delete('min_price');
       newSearchParams.delete('max_price');
-      // --- CORRECTED: Delete 'search' when navigating ---
       newSearchParams.delete('search');
       newSearchParams.delete('average_rating');
       newSearchParams.delete('sort_by');
@@ -304,7 +380,6 @@ export default function SubCategoryPage({
         min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
         max === '' ? newSearchParams.delete('max_price') : newSearchParams.set('max_price', String(max));
       } else if (filterType === "manufacturer") {
-        // --- CORRECTED: Set the 'search' parameter for manufacturer ---
         newValue ? newSearchParams.set('search', String(newValue)) : newSearchParams.delete('search');
       } else if (filterType === "rating") {
         newValue ? newSearchParams.set('average_rating', String(newValue)) : newSearchParams.delete('average_rating');
@@ -349,7 +424,7 @@ export default function SubCategoryPage({
     );
   }
 
-  if (!isRouteValid) {
+  if (errorMessage) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] text-center">
         <h2 className="text-2xl font-bold text-red-600 mb-4">Page Not Found</h2>
@@ -379,6 +454,7 @@ export default function SubCategoryPage({
         selectedManufacturer={selectedManufacturer}
         sortBy={sortBy}
         onSortChange={handleSortChange}
+        showManufacturerFilter={true}
       />
     </>
   );

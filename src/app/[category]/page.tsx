@@ -2,7 +2,7 @@
 // src/app/[category]/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
 import ProductListing, { Product } from "@/components/products/ProductListing";
 import Breadcrumb from "@/components/elements/Breadcrumb";
@@ -91,6 +91,9 @@ export default function CategoryOrTypePage({
   const [activeCategoryName, setActiveCategoryName] = useState<string | null>(null);
   const [activeSubcategoryName, setActiveSubcategoryName] = useState<string | null>(null);
   const [activeTypeName, setActiveTypeName] = useState<string | null>(null);
+  
+  // Use a ref for a simple in-memory cache to avoid re-fetching data
+  const productCache = useRef(new Map());
 
   // Validate the URL parameter against categories and product types
   const validateRouteContext = useCallback(async (paramSlug: string, subParamSlug?: string): Promise<RouteContext> => {
@@ -172,7 +175,6 @@ export default function CategoryOrTypePage({
         queryParams.append("category", categoryId.toString());
       } else if (contextType === 'type') {
         if (contextName.toLowerCase() === 'rental') {
-          // New Logic: When on the rental page, fetch both 'rental' and 'used' products
           queryParams.append("type", "rental");
           queryParams.append("type", "used");
         } else {
@@ -188,6 +190,7 @@ export default function CategoryOrTypePage({
 
       if (manufacturerFilter) queryParams.append("search", manufacturerFilter);
 
+      // Revert to original sorting if not on 'spare-parts' page
       if (sortByFilter && sortByFilter !== 'relevance') {
         let sortParam = '';
         if (sortByFilter === 'price_asc') sortParam = 'price';
@@ -196,16 +199,60 @@ export default function CategoryOrTypePage({
         if (sortParam) queryParams.append("ordering", sortParam);
       }
 
+      // 1. Caching Check: Create a cache key from the query params
+      const cacheKey = queryParams.toString();
+      if (productCache.current.has(cacheKey)) {
+          const cachedData = productCache.current.get(cacheKey);
+          
+          let transformedProducts = cachedData.results.map((p: ApiProduct) => ({
+              id: p.id.toString(),
+              image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
+              title: p.name,
+              subtitle: p.description,
+              price: parseFloat(p.price),
+              currency: "₹",
+              category_name: p.category_name,
+              subcategory_name: p.subcategory_name,
+              direct_sale: p.direct_sale,
+              is_active: p.is_active,
+              hide_price: p.hide_price,
+              stock_quantity: p.stock_quantity,
+              manufacturer: p.manufacturer,
+              average_rating: p.average_rating,
+              type: p.type,
+              category_id: p.category,
+              model: p.model,
+              user_name: p.user_name,
+              created_at: p.created_at
+          }));
+          
+          // --- NEW: Client-side reversal of products for 'Spare Parts' category ---
+          // This reverses the order of the products received from the API, regardless of the default sort.
+          if (contextName === 'Spare Parts') {
+              transformedProducts = transformedProducts.reverse();
+          }
+
+          setProducts(transformedProducts);
+          setTotalProducts(cachedData.count);
+          setTotalPages(Math.ceil(cachedData.count / 12));
+          setIsLoading(false);
+          return;
+      }
+
+      // 3. API Request: If not in cache, fetch from the API
       const response = await api.get<ApiResponse<ApiProduct>>(
         `/products/?${queryParams.toString()}`
       );
+      
+      // 4. Caching: Store the new data in the cache
+      productCache.current.set(cacheKey, response.data);
 
       if (response.data && response.data.results) {
         if (response.data.results.length === 0) {
           setNoProductsFoundMessage(`No products found for "${contextSubName || contextName}" with the selected filters.`);
         }
 
-        const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
+        let transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
           id: p.id.toString(),
           image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
           title: p.name,
@@ -226,10 +273,15 @@ export default function CategoryOrTypePage({
           user_name: p.user_name,
           created_at: p.created_at
         }));
-
+        
+        // --- NEW: Client-side reversal of products for 'Spare Parts' category ---
+        if (contextName === 'Spare Parts') {
+            transformedProducts = transformedProducts.reverse();
+        }
+        
         setProducts(transformedProducts);
         setTotalProducts(response.data.count);
-        setTotalPages(Math.ceil(response.data.count / 12)); // Assuming 20 items per page
+        setTotalPages(Math.ceil(response.data.count / 12)); // Assuming 12 items per page
       } else {
         setNoProductsFoundMessage(`Failed to load products. Unexpected API response structure.`);
         setProducts([]);
@@ -250,7 +302,6 @@ export default function CategoryOrTypePage({
   useEffect(() => {
     const minP = searchParams.get('min_price');
     const maxP = searchParams.get('max_price');
-    // --- CORRECTED: Read 'search' param for manufacturer ---
     const manufacturer = searchParams.get('search');
     const rating = searchParams.get('average_rating');
     const sort = searchParams.get('sort_by');
@@ -316,7 +367,6 @@ export default function CategoryOrTypePage({
       let newPath = "";
       const formattedFilterSlug = String(filterValue).toLowerCase().replace(/\s+/g, '-');
 
-      // --- CORRECTED: Delete 'search' when navigating ---
       ['min_price', 'max_price', 'search', 'average_rating', 'sort_by'].forEach(p => newSearchParams.delete(p));
       newSearchParams.set('page', '1');
 
@@ -343,12 +393,11 @@ export default function CategoryOrTypePage({
         min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
         max === '' ? newSearchParams.delete('max_price') : newSearchParams.set('max_price', String(max));
       } else if (filterType === "manufacturer") {
-        // --- CORRECTED: Set the 'search' parameter for manufacturer ---
         newValue ? newSearchParams.set('search', String(newValue)) : newSearchParams.delete('search');
       } else if (filterType === "rating") {
         newValue ? newSearchParams.set('average_rating', String(newValue)) : newSearchParams.delete('average_rating');
       } else if (filterType === "sort_by" && typeof filterValue === 'string') {
-        filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', value);
+        filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', value as string);
       }
 
       newSearchParams.set('page', '1');
