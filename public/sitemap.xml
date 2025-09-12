@@ -1260,7 +1260,7 @@
         <loc>https://www.mhebazar.in/goods-lift/manasi-engineering-goods-lift-15-ton-single-mast-cantilever-cabin-1500-kg-mgl157000-106</loc>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
-    </url>
+       </url>
     <url>
         <loc>https://www.mhebazar.in/goods-lift/manasi-engineering-goods-lift-15-ton-single-mast-cantilever-cabin-15ton-mgl1511000-107</loc>
         <changefreq>daily</changefreq>
@@ -2542,17 +2542,17 @@
 <priority>0.9</priority>
 </url>
 <url>
-<loc>https://www.mhebazar.in/forklift-attachments/forks-&-fork-extension</loc>
+<loc>https://www.mhebazar.in/forklift-attachments/forks-&amp;-fork-extension</loc>
 <changefreq>daily</changefreq>
 <priority>1.0</priority>
 </url>
 <url>
-<loc>https://www.mhebazar.in/forks-&-fork-extension/bolzoni-reach-fork-rs-rd-model-2000kg4500kg-reach-fork-rsrd-model-390</loc>
+<loc>https://www.mhebazar.in/forks-&amp;-fork-extension/bolzoni-reach-fork-rs-rd-model-2000kg4500kg-reach-fork-rsrd-model-390</loc>
 <changefreq>daily</changefreq>
 <priority>0.9</priority>
 </url>
 <url>
-<loc>https://www.mhebazar.in/forks-&-fork-extension/bolzoni-reach-fork-rs35eob1350-3500kg-rs35eob1350-411</loc>
+<loc>https://www.mhebazar.in/forks-&amp;-fork-extension/bolzoni-reach-fork-rs35eob1350-3500kg-rs35eob1350-411</loc>
 <changefreq>daily</changefreq>
 <priority>0.9</priority>
 </url>
