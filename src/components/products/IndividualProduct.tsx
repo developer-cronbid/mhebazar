@@ -880,14 +880,14 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     </div>
                     <div className="flex gap-2">
                       <p className="text-base text-gray-500">
-                        M.R.P:
+                        Price:
                       </p>
                       <p className="text-base text-gray-500 line-through">
                         ₹{fakePrice}
                       </p>
                     </div>
                     <p className="text-sm mt-1">
-                      You Save: ₹{youSaveAmount} incl. of all taxes
+                      You Save: ₹{youSaveAmount} excl. of all taxes
                     </p>
                   </>
                 )}

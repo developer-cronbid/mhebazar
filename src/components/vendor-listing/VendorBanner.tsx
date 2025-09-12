@@ -1,7 +1,7 @@
+// src/components/vendor-listing/VendorBanner.tsx
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import Image from "next/image";
-// import { Card, CardContent } from "@/components/ui/card"; // Used for Carousel items
 import {
   Carousel,
   CarouselContent,
@@ -9,7 +9,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay"; 
+import Autoplay from "embla-carousel-autoplay";
 
 // Define the component's props
 interface VendorBannerProps {
@@ -21,6 +21,19 @@ interface VendorBannerProps {
   productCount: number; // Added productCount to props
 }
 
+// A simple utility function to truncate the HTML string without JSDOM
+// Note: This method is fast and dependency-free, but may cut off HTML tags.
+// For most use cases, this is an acceptable trade-off for performance.
+const truncateHtmlString = (html: string, maxLength: number) => {
+  if (html.length <= maxLength) {
+    return { truncatedHtml: html, isTruncated: false };
+  }
+  return {
+    truncatedHtml: html.substring(0, maxLength) + '...',
+    isTruncated: true
+  };
+};
+
 export default function VendorBanner({
   company_name,
   brand,
@@ -30,7 +43,11 @@ export default function VendorBanner({
   productCount,
 }: VendorBannerProps) {
   const [descExpanded, setDescExpanded] = useState(false);
-  const isLongDesc = description.length > 200;
+
+  // Use the memoized truncated description to avoid re-calculating on every render
+  const { truncatedHtml, isTruncated: isLongDesc } = useMemo(() => {
+    return truncateHtmlString(description, 200);
+  }, [description]);
 
   // Ref for the autoplay plugin
   const plugin = useRef(
@@ -118,12 +135,13 @@ export default function VendorBanner({
 
       {/* --- Description --- */}
       <div className="mt-8 sm:mt-20 lg:mt-24 mx-4 sm:mx-8 md:mx-12">
-        <p
-          className={`text-gray-700 text-sm sm:text-base leading-relaxed text-center sm:text-left ${!descExpanded && isLongDesc ? "line-clamp-3" : ""
-            }`}
+        <div
+          className={`text-gray-700 text-sm sm:text-base leading-relaxed text-center sm:text-left`}
         >
-          {description} {/* Corrected: Use description prop */}
-        </p>
+          <div
+            dangerouslySetInnerHTML={{ __html: descExpanded ? description : truncatedHtml }}
+          />
+        </div>
         {isLongDesc && (
           <div className="text-center sm:text-left">
             <button
