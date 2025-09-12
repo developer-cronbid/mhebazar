@@ -1,58 +1,55 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/app/account/page.tsx
-"use client"; // This component runs on the client-side
+"use client";
 
 import { useEffect, useState, ChangeEvent, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   User, Mail, MapPin, Edit2, Plus, Trash2, LogOut, ShoppingBag, Phone,
-  Calendar, Building2, Home, Briefcase, Navigation, Save, Menu, X
+  Calendar, Building2, Home, Briefcase, Navigation, Save, Menu, X,
 } from "lucide-react";
-import { toast } from "sonner"; // For professional-looking toast notifications
-import api from "@/lib/api"; // Your Axios instance for API calls
-import { useUser } from "@/context/UserContext"; // Custom hook to access user data and global setUser
+import { toast } from "sonner";
+import api from "@/lib/api";
+import { useUser } from "@/context/UserContext";
 import { AnimatePresence, motion } from "framer-motion";
-import axios from "axios"; // For error handling with Axios
+import axios from "axios";
+import AddressForm from "@/components/account/AddressForm";
 
 // --- Type Definitions ---
-// Define the structure for an Address object, as stored in the User's 'address' JSONField
 interface Address {
-  id: string; // Client-side unique ID for managing array items
-  name: string; // e.g., "Home", "Office"
-  address: string; // Full street address
-  phone: string; // Contact phone for this address
-  landmark: string; // Nearby landmark (optional)
-  type: 'Home' | 'Office' | 'Other'; // Type of address
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  landmark: string;
+  type: 'Home' | 'Office' | 'Other';
   city: string;
   state: string;
   pincode: string;
 }
 
-// Define the structure for the User profile data fetched from API
 interface UserProfileData {
   id: number;
   username: string;
   email: string;
   first_name: string;
   last_name: string;
-  full_name: string; // Derived field from backend
+  full_name: string;
   phone: string | null;
-  address: Address[] | null; // JSONField can be null or an array of Address
+  address: Address[] | null;
   date_joined: string;
   profile_photo: string | null;
 }
 
-// Define the structure for the profile/contact form state
 interface ProfileFormState {
   first_name: string;
   last_name: string;
   phone: string;
-  email: string; // Assuming email is also part of profile/contact editable fields
+  email: string;
 }
 
 // --- Constants ---
-const MAX_ADDRESSES = 5; // Maximum number of addresses a user can save
+const MAX_ADDRESSES = 5;
 
 const TABS = [
   { key: "profile", label: "Personal Info", icon: User },
@@ -62,55 +59,45 @@ const TABS = [
 
 // --- Main Account Page Component ---
 export default function AccountPage() {
-  // --- Global State from Context ---
   const { user: currentUser, logout, setUser: setGlobalUser } = useUser();
 
-  // --- Local Component States ---
   const [activeTab, setActiveTab] = useState("profile");
-  const [userLoading, setUserLoading] = useState(true); // Tracks initial user data loading
-  const [userData, setUserData] = useState<UserProfileData | null>(null); // Stores fetched user data
+  const [userLoading, setUserLoading] = useState(true);
+  const [userData, setUserData] = useState<UserProfileData | null>(null);
 
-  // States for Profile Info tab
-  const [editProfile, setEditProfile] = useState(false); // Controls edit mode for personal info
+  const [editProfile, setEditProfile] = useState(false);
   const [profileForm, setProfileForm] = useState<ProfileFormState>({
     first_name: '', last_name: '', phone: '', email: '',
   });
 
-  // States for Address tab
-  const [addresses, setAddresses] = useState<Address[]>([]); // Array of user's saved addresses
-  const [showAddressForm, setShowAddressForm] = useState(false); // Controls visibility of add/edit address form
-  const [isEditingAddress, setIsEditingAddress] = useState(false); // True if editing existing address, false if adding new
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [currentAddressForm, setCurrentAddressForm] = useState<Omit<Address, "id">>({
     name: "", address: "", phone: "", landmark: "", type: "Home", city: "", state: "", pincode: "",
   });
 
-  // States for Contact tab
-  const [editContact, setEditContact] = useState(false); // Controls edit mode for contact info
-
-  // State for mobile sidebar navigation
+  const [editContact, setEditContact] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // --- Data Fetching Logic ---
-  // Fetches the current user's profile and addresses from the backend
   const fetchCurrentUserProfile = useCallback(async () => {
-    if (!currentUser?.id) { // Only fetch if a user is logged in
+    if (!currentUser?.id) {
       setUserLoading(false);
       return;
     }
-    setUserLoading(true); // Indicate loading starts
+    setUserLoading(true);
     try {
-      const response = await api.get<UserProfileData>(`/users/me/`); // API call to get user's own profile
+      const response = await api.get<UserProfileData>(`/users/me/`);
       const fetchedUser = response.data;
-      setUserData(fetchedUser); // Store fetched data
+      setUserData(fetchedUser);
 
-      // Initialize addresses state from fetched user data's JSONField
       if (Array.isArray(fetchedUser.address)) {
         setAddresses(fetchedUser.address);
       } else {
-        setAddresses([]); // Ensure it's an empty array if null/not array
+        setAddresses([]);
       }
 
-      // Initialize profile and contact forms with fetched data
       setProfileForm({
         first_name: fetchedUser.first_name || '',
         last_name: fetchedUser.last_name || '',
@@ -124,19 +111,18 @@ export default function AccountPage() {
       setUserData(null);
       setAddresses([]);
     } finally {
-      setUserLoading(false); // Indicate loading ends
+      setUserLoading(false);
     }
-  }, [currentUser]); // Dependency: re-fetch if currentUser object changes (e.g., after login/logout)
+  }, [currentUser]);
 
-  // Trigger data fetching on component mount or when dependencies change
   useEffect(() => {
     fetchCurrentUserProfile();
-  }, [fetchCurrentUserProfile]); // fetchCurrentUserProfile is a useCallback, so its dependencies are stable
+  }, [fetchCurrentUserProfile]);
 
   // --- Profile Info Handlers ---
-  const handleProfileFormChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
-  };
+  const handleProfileFormChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setProfileForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  }, []);
 
   const handleProfileSave = async () => {
     if (!currentUser?.id) {
@@ -145,28 +131,23 @@ export default function AccountPage() {
     }
 
     try {
-      // Create FormData to send data, as backend expects multipart/form-data
       const formData = new FormData();
       formData.append('first_name', profileForm.first_name);
       formData.append('last_name', profileForm.last_name);
-      formData.append('phone', profileForm.phone || ''); // Send empty string for null phone
+      formData.append('phone', profileForm.phone || '');
+      formData.append('email', profileForm.email);
 
-      // If email is directly editable on the User model
-      formData.append('email', profileForm.email); 
-
-      // Send PATCH request to update user profile
       const response = await api.patch<UserProfileData>(`/users/${currentUser.id}/`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data', // Essential header for FormData
+          'Content-Type': 'multipart/form-data',
         },
       });
-      setGlobalUser(response.data); // Update global user context with the latest user data
+      setGlobalUser(response.data);
       toast.success("Profile updated successfully!");
-      setEditProfile(false); // Exit edit mode
-    } catch (error: any) { // Use 'any' here for AxiosError if structure is unpredictable
+      setEditProfile(false);
+    } catch (error: any) {
       console.error("Failed to save profile:", error);
       if (axios.isAxiosError(error) && error.response?.data) {
-        // Concatenate all error messages from backend response
         const errorMessages = Object.values(error.response.data).flat().join(' ');
         toast.error(`Failed to save profile: ${errorMessages}`);
       } else {
@@ -176,70 +157,31 @@ export default function AccountPage() {
   };
 
   // --- Address Management Handlers ---
-
-  // Resets the address form to its initial empty state and hides it
-  const resetAddressFormState = useCallback(() => { // Renamed for clarity
+  const resetAddressFormState = useCallback(() => {
     setCurrentAddressForm({ name: "", address: "", phone: "", landmark: "", type: "Home", city: "", state: "", pincode: "" });
     setShowAddressForm(false);
     setIsEditingAddress(false);
   }, []);
 
-  // Handles changes in the add/edit address form fields
-  const handleAddressFormChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setCurrentAddressForm({ ...currentAddressForm, [e.target.name]: e.target.value });
+  const handleEditAddress = useCallback((addr: Address) => {
+    setCurrentAddressForm({ ...addr });
+    setShowAddressForm(true);
+    setIsEditingAddress(true);
+    setActiveTab('addresses');
+  }, []);
+
+  const handleDeleteAddress = async (id: string) => {
+    if (!currentUser?.id) return;
+    const updatedAddresses = addresses.filter(addr => addr.id !== id);
+    setAddresses(updatedAddresses);
+    await updateUserAddressesInDb(updatedAddresses);
+    toast.success("Address deleted successfully!");
   };
 
-  // Handles adding a new address or updating an existing one
-  const handleAddOrUpdateAddress = async () => {
-    if (!currentUser?.id) {
-      toast.error("User not logged in. Cannot save addresses.");
-      return;
-    }
-    // Form validation
-    if (!currentAddressForm.name || !currentAddressForm.address || !currentAddressForm.phone || !currentAddressForm.city || !currentAddressForm.state || !currentAddressForm.pincode) {
-      toast.error("Please fill in all required fields for the address.");
-      return;
-    }
-    if (!/^\d{10}$/.test(currentAddressForm.phone)) {
-      toast.error("Please enter a valid 10-digit phone number.");
-      return;
-    }
-    if (!/^\d{6}$/.test(currentAddressForm.pincode)) {
-      toast.error("Please enter a valid 6-digit pincode.");
-      return;
-    }
-
-    let updatedAddresses: Address[];
-    if (isEditingAddress) {
-      // If editing, map through existing addresses and update the one that matches
-      updatedAddresses = addresses.map(addr =>
-        addr.id === currentAddressForm.id // currentAddressForm will have the ID if loaded from an existing address
-          ? { ...addr, ...currentAddressForm } // Update the matched address
-          : addr // Keep others as they are
-      );
-      toast.success("Address updated successfully!");
-    } else {
-      // If adding new, first check limit
-      if (addresses.length >= MAX_ADDRESSES) {
-        toast.error(`You can save a maximum of ${MAX_ADDRESSES} addresses.`);
-        return;
-      }
-      const newId = String(Date.now()); // Generate a unique client-side ID for the new address
-      updatedAddresses = [...addresses, { ...currentAddressForm, id: newId }]; // Add new address
-      toast.success("New address added successfully!");
-    }
-
-    setAddresses(updatedAddresses); // Optimistically update UI
-    await updateUserAddressesInDb(updatedAddresses); // Sync changes to backend
-    resetAddressFormState(); // Reset form state and hide form
-  };
-
-  // Syncs the client-side addresses array with the backend's JSONField
   const updateUserAddressesInDb = async (currentAddresses: Address[]) => {
     if (!currentUser?.id) return;
     try {
       const formData = new FormData();
-      // Stringify the entire addresses array as it's a JSONField in Django
       formData.append('address', JSON.stringify(currentAddresses));
 
       const response = await api.patch<UserProfileData>(`/users/${currentUser.id}/`, formData, {
@@ -247,34 +189,17 @@ export default function AccountPage() {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setGlobalUser(response.data); // Update global user context with latest user data (including addresses)
+      setGlobalUser(response.data);
     } catch (error) {
       console.error("Failed to update user addresses in DB:", error);
       toast.error("Failed to sync addresses with your account (DB error).");
     }
   };
 
-  // Populates the form with data of an existing address for editing
-  const handleEditAddress = useCallback((addr: Address) => {
-    setCurrentAddressForm({ ...addr }); // Load address data into form
-    setShowAddressForm(true); // Show the form
-    setIsEditingAddress(true); // Set to edit mode
-  }, []);
-
-  // Deletes an address from the list and syncs with backend
-  const handleDeleteAddress = async (id: string) => {
-    if (!currentUser?.id) return;
-    // Filter out the address to be deleted
-    const updatedAddresses = addresses.filter(addr => addr.id !== id);
-    setAddresses(updatedAddresses); // Optimistically update UI
-    await updateUserAddressesInDb(updatedAddresses); // Sync with backend
-    toast.success("Address deleted successfully!");
-  };
-
   // --- Contact Info Handlers ---
-  const handleContactFormChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setProfileForm({ ...profileForm, [e.target.name]: e.target.value });
-  };
+  const handleContactFormChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setProfileForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  }, []);
 
   const handleContactSave = async () => {
     if (!currentUser?.id) return;
@@ -288,9 +213,9 @@ export default function AccountPage() {
           'Content-Type': 'multipart/form-data',
         },
       });
-      setGlobalUser(response.data); // Update global user context
+      setGlobalUser(response.data);
       toast.success("Contact details updated successfully!");
-      setEditContact(false); // Exit edit mode
+      setEditContact(false);
     } catch (error: any) {
       console.error("Failed to save contact details:", error);
       if (axios.isAxiosError(error) && error.response?.data) {
@@ -303,16 +228,14 @@ export default function AccountPage() {
   };
 
   // --- Helper Functions for UI ---
-  // Returns an icon based on address type
   const getAddressIcon = (type: string) => {
     switch (type) {
       case "Home": return <Home size={16} />;
       case "Office": return <Briefcase size={16} />;
-      default: return <Navigation size={16} />; // Generic icon for 'Other'
+      default: return <Navigation size={16} />;
     }
   };
 
-  // --- Loading State Display ---
   if (userLoading || !userData) {
     return (
       <div className="min-h-screen bg-gray-50 flex justify-center items-center">
@@ -322,7 +245,6 @@ export default function AccountPage() {
     );
   }
 
-  // --- Main Component Render ---
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
@@ -338,7 +260,16 @@ export default function AccountPage() {
               <h1 className="text-xl font-semibold text-gray-900">Account Settings</h1>
             </div>
             <div className="hidden sm:flex items-center gap-3 pl-3 border-l border-gray-200">
-              <Image src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`} alt="Avatar" width={32} height={32} className="w-8 h-8 rounded-full" />
+              {/* Profile Picture in Header */}
+              <div className="w-10 h-10 relative rounded-xl overflow-hidden flex-shrink-0 bg-white">
+                <Image
+                  src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`}
+                  alt="Avatar"
+                  layout="fill"
+                  objectFit="contain"
+                  className="p-1"
+                />
+              </div>
               <span className="text-sm font-medium text-gray-700">{userData.full_name}</span>
             </div>
           </div>
@@ -348,10 +279,16 @@ export default function AccountPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar (Desktop) */}
-          <aside className="hidden lg:block w-80 bg-white rounded-xl border border-gray-200 h-fit p-6">
+          <aside className="hidden lg:block w-80 bg-white rounded-xl border border-gray-200 h-fit p-6 shadow-sm">
             <div className="flex items-center gap-4 mb-8 pb-6 border-b border-gray-100">
-              <div className="relative">
-                <Image src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`} alt="Avatar" width={64} height={64} className="w-16 h-16 rounded-full border-2 border-blue-100" />
+              {/* Profile Picture in Sidebar */}
+              <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-blue-100 flex-shrink-0 bg-white p-2">
+                <Image
+                  src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`}
+                  alt="Avatar"
+                  layout="fill"
+                  objectFit="contain"
+                />
                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
               <div className="flex-1 min-w-0">
@@ -394,52 +331,73 @@ export default function AccountPage() {
           </aside>
 
           {/* Mobile Sidebar (Drawer) */}
-          {sidebarOpen && (
-            <div className="fixed inset-0 z-50 lg:hidden">
-              <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} /> {/* Overlay */}
-              <div className="fixed left-0 top-0 h-full w-80 bg-white border-r border-gray-200 animate-slide-in-left"> {/* Drawer panel */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold">Menu</h2>
-                  <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100">
-                    <X size={20} />
-                  </button>
-                </div>
-                <div className="p-4">
-                  <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
-                    <Image src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`} alt="Avatar" width={48} height={48} className="w-12 h-12 rounded-full border-2 border-blue-100" />
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{userData.full_name}</h3>
-                      <p className="text-sm text-gray-500">{userData.email}</p>
-                    </div>
+          <AnimatePresence>
+            {sidebarOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 lg:hidden bg-black bg-opacity-50"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <motion.div
+                  initial={{ x: "-100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "-100%" }}
+                  transition={{ type: "tween", duration: 0.3 }}
+                  className="fixed left-0 top-0 h-full w-80 bg-white border-r border-gray-200"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold">Menu</h2>
+                    <button onClick={() => setSidebarOpen(false)} className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+                      <X size={20} />
+                    </button>
                   </div>
-                  <nav className="space-y-2">
-                    {TABS.map(tab => (
-                      <button
-                        key={tab.key}
-                        onClick={() => {
-                          setActiveTab(tab.key);
-                          setSidebarOpen(false); // Close sidebar on tab click
-                        }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
-                          activeTab === tab.key ? "bg-blue-50 text-blue-700 border border-blue-200" : "text-gray-700 hover:bg-gray-50"
-                        }`}
-                      >
-                        <tab.icon size={20} />
-                        <span className="font-medium">{tab.label}</span>
-                      </button>
-                    ))}
-                  </nav>
-                </div>
-              </div>
-            </div>
-          )}
+                  <div className="p-4">
+                    <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+                      {/* Profile Picture in Mobile Drawer */}
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-blue-100 flex-shrink-0 bg-white p-1">
+                        <Image
+                          src={userData.profile_photo || `https://ui-avatars.com/api/?name=${userData.first_name}+${userData.last_name}&background=3b82f6&color=fff&size=128`}
+                          alt="Avatar"
+                          layout="fill"
+                          objectFit="contain"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{userData.full_name}</h3>
+                        <p className="text-sm text-gray-500">{userData.email}</p>
+                      </div>
+                    </div>
+                    <nav className="space-y-2">
+                      {TABS.map(tab => (
+                        <button
+                          key={tab.key}
+                          onClick={() => {
+                            setActiveTab(tab.key);
+                            setSidebarOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+                            activeTab === tab.key ? "bg-blue-50 text-blue-700 border border-blue-200" : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          <tab.icon size={20} />
+                          <span className="font-medium">{tab.label}</span>
+                        </button>
+                      ))}
+                    </nav>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Main Content Area */}
           <main className="flex-1">
-            {/* Personal Info Tab Content */}
             {activeTab === "profile" && (
               <section className="space-y-6">
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
                     {!editProfile && (
@@ -452,7 +410,7 @@ export default function AccountPage() {
                       </button>
                     )}
                   </div>
-                  {editProfile ? ( // Render edit form if editProfile is true
+                  {editProfile ? (
                     <div className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -500,7 +458,7 @@ export default function AccountPage() {
                         <button
                           onClick={() => {
                             setEditProfile(false);
-                            if (userData) { // Reset form to original data if cancelled
+                            if (userData) {
                               setProfileForm({
                                 first_name: userData.first_name || '',
                                 last_name: userData.last_name || '',
@@ -515,7 +473,7 @@ export default function AccountPage() {
                         </button>
                       </div>
                     </div>
-                  ) : ( // Render view mode if editProfile is false
+                  ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
                         <div className="flex items-center gap-3">
@@ -568,18 +526,17 @@ export default function AccountPage() {
               </section>
             )}
 
-            {/* Addresses Tab Content */}
             {activeTab === "addresses" && (
               <section className="space-y-6">
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Delivery Addresses</h2>
-                    {/* Show "Add Address" button only if form is not open and max addresses limit not reached */}
                     {!showAddressForm && addresses.length < MAX_ADDRESSES && (
                       <button
                         onClick={() => {
-                          resetAddressFormState(); // Reset form state before showing for new add
-                          setShowAddressForm(true); // Show the form
+                          setCurrentAddressForm({ name: "", address: "", phone: "", landmark: "", type: "Home", city: "", state: "", pincode: "" });
+                          setShowAddressForm(true);
+                          setIsEditingAddress(false);
                         }}
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                       >
@@ -589,7 +546,6 @@ export default function AccountPage() {
                     )}
                   </div>
                   <div className="space-y-4">
-                    {/* Display existing addresses if any, otherwise a message */}
                     {addresses.length === 0 && !showAddressForm ? (
                       <p className="text-gray-500 text-center py-4">No saved addresses. Click Add Address to add one.</p>
                     ) : (
@@ -622,139 +578,31 @@ export default function AccountPage() {
                         </div>
                       ))
                     )}
-                    
-                    {/* Add/Edit Address Form (conditionally rendered with AnimatePresence) */}
                     <AnimatePresence>
                       {showAddressForm && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
                           exit={{ opacity: 0, height: 0 }}
-                          className="mb-6 border-2 border-dashed border-blue-200 rounded-lg p-6 bg-blue-50"
+                          transition={{ duration: 0.3 }}
+                          className="overflow-hidden"
                         >
-                          <h3 className="text-lg font-medium text-gray-900 mb-4">{isEditingAddress ? "Edit Address" : "Add New Address"}</h3>
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label htmlFor="addressName" className="block text-sm font-medium text-gray-700 mb-1">Label</label>
-                                <input
-                                  type="text"
-                                  id="addressName"
-                                  name="name"
-                                  value={currentAddressForm.name}
-                                  onChange={handleAddressFormChange}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Home, Office, etc."
-                                />
-                              </div>
-                              <div>
-                                <label htmlFor="addressType" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                                <select
-                                  id="addressType"
-                                  name="type"
-                                  value={currentAddressForm.type}
-                                  onChange={handleAddressFormChange}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                >
-                                  <option value="Home">Home</option>
-                                  <option value="Office">Office</option>
-                                  <option value="Other">Other</option>
-                                </select>
-                              </div>
-                            </div>
-                            <div>
-                              <label htmlFor="fullAddress" className="block text-sm font-medium text-gray-700 mb-1">Full Address</label>
-                              <textarea
-                                id="fullAddress"
-                                name="address"
-                                value={currentAddressForm.address}
-                                onChange={handleAddressFormChange}
-                                rows={2}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Enter complete address (House no, Building name, Road name, Area)"
-                              />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label htmlFor="addressPhone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                <input
-                                  type="tel"
-                                  id="addressPhone"
-                                  name="phone"
-                                  value={currentAddressForm.phone}
-                                  onChange={handleAddressFormChange}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Contact number"
-                                />
-                              </div>
-                              <div>
-                                <label htmlFor="addressLandmark" className="block text-sm font-medium text-gray-700 mb-1">Landmark</label>
-                                <input
-                                  type="text"
-                                  id="addressLandmark"
-                                  name="landmark"
-                                  value={currentAddressForm.landmark}
-                                  onChange={handleAddressFormChange}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                  placeholder="Nearby landmark (optional)"
-                                />
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> {/* Adjusted to 3 columns for city, state, pincode */}
-                                <div>
-                                    <label htmlFor="addressCity" className="block text-sm font-medium text-gray-700 mb-1">City</label>
-                                    <input
-                                    type="text"
-                                    id="addressCity"
-                                    name="city"
-                                    value={currentAddressForm.city}
-                                    onChange={handleAddressFormChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="City"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="addressState" className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                                    <input
-                                    type="text"
-                                    id="addressState"
-                                    name="state"
-                                    value={currentAddressForm.state}
-                                    onChange={handleAddressFormChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="State"
-                                    />
-                                </div>
-                                <div>
-                                    <label htmlFor="addressPincode" className="block text-sm font-medium text-gray-700 mb-1">Pincode</label>
-                                    <input
-                                    type="text"
-                                    id="addressPincode"
-                                    name="pincode"
-                                    value={currentAddressForm.pincode}
-                                    onChange={handleAddressFormChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="6-digit pincode"
-                                    maxLength={6}
-                                    pattern="\d{6}"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex gap-2 mt-4">
-                              <button
-                                onClick={handleAddOrUpdateAddress}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                              >
-                                {isEditingAddress ? "Update Address" : "Add Address"}
-                              </button>
-                              <button
-                                onClick={resetAddressFormState} // Use the correct reset function
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
+                          <AddressForm
+                            isEditing={isEditingAddress}
+                            initialData={currentAddressForm}
+                            onSave={async (formData) => {
+                              const newAddress = { ...formData, id: isEditingAddress ? (currentAddressForm as Address).id : String(Date.now()) };
+                              const updatedAddresses = isEditingAddress
+                                ? addresses.map(addr => addr.id === newAddress.id ? newAddress : addr)
+                                : [...addresses, newAddress];
+                              
+                              setAddresses(updatedAddresses);
+                              await updateUserAddressesInDb(updatedAddresses);
+                              toast.success(isEditingAddress ? "Address updated successfully!" : "New address added successfully!");
+                              resetAddressFormState();
+                            }}
+                            onCancel={resetAddressFormState}
+                          />
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -763,14 +611,13 @@ export default function AccountPage() {
               </section>
             )}
 
-            {/* Contact Tab Content */}
             {activeTab === "contact" && (
               <section className="space-y-6">
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
                       <Phone size={28} className="text-blue-600" />
-                      <h2 className="text-2xl font-bold">Contact Details</h2>
+                      <h2 className="text-2xl font-bold text-gray-900">Contact Details</h2>
                     </div>
                     {!editContact && (
                       <button
@@ -782,7 +629,7 @@ export default function AccountPage() {
                       </button>
                     )}
                   </div>
-                  {editContact ? ( // Render edit form if editContact is true
+                  {editContact ? (
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -792,7 +639,7 @@ export default function AccountPage() {
                             id="emailInput"
                             name="email"
                             value={profileForm.email}
-                            onChange={handleContactFormChange}
+                            onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -803,7 +650,7 @@ export default function AccountPage() {
                             id="contactPhone"
                             name="phone"
                             value={profileForm.phone}
-                            onChange={handleContactFormChange}
+                            onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
@@ -819,12 +666,12 @@ export default function AccountPage() {
                         <button
                           onClick={() => {
                             setEditContact(false);
-                            if (userData) { // Reset form to original data if cancelled
-                                setProfileForm(prev => ({
-                                    ...prev,
-                                    email: userData.email,
-                                    phone: userData.phone || '',
-                                }));
+                            if (userData) {
+                              setProfileForm(prev => ({
+                                ...prev,
+                                email: userData.email,
+                                phone: userData.phone || '',
+                              }));
                             }
                           }}
                           className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -833,7 +680,7 @@ export default function AccountPage() {
                         </button>
                       </div>
                     </div>
-                  ) : ( // Render view mode if editContact is false
+                  ) : (
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center gap-3 text-lg">
                         <Mail size={20} className="text-blue-600" />
@@ -843,11 +690,10 @@ export default function AccountPage() {
                         <Phone size={20} className="text-blue-600" />
                         <span>{userData.phone || 'N/A'}</span>
                       </div>
-                      {/* Display location from first address or 'N/A' */}
                       <div className="flex items-center gap-3 text-lg">
                         <Building2 size={20} className="text-blue-600" />
                         <span>
-                            {addresses[0]?.city || 'N/A'}, {addresses[0]?.state || 'N/A'}, {addresses[0]?.pincode || 'N/A'} - {addresses[0]?.country || 'India'}
+                            {addresses[0]?.city || 'N/A'}, {addresses[0]?.state || 'N/A'}, {addresses[0]?.pincode || 'N/A'}
                         </span>
                       </div>
                     </div>
