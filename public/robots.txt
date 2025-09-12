@@ -1,7 +1,16 @@
-User-agent: *
-Disallow:/register
-Disallow:/wishlist
-Disallow:/compare
+User-agent: *  
+Disallow:
+Disallow: /admin/
+Disallow: /vendor/
+Disallow: /private/
+Disallow: /*?*
+Disallow: /*sort=
+Disallow: /*filter=
+User-agent: Googlebot-Image
+Disallow:
+User-agent: Googlebot
+# Allow: /
+User-agent: ia_archiver
+Disallow:
 
-sitemap: https://www.mhebazar.in/sitemap.xml
-sitemap: https://www.mhebazar.in/blog.xml
+Sitemap: https://www.mhebazar.in/sitemap.xml
