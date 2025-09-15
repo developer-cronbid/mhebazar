@@ -20,10 +20,21 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
 
+  // ✅ Step 0: Handle old product redirect first
+  if (!pathname.startsWith("/product")) {
+    const segments = pathname.split("/").filter(Boolean);
+    const lastSegment = segments[segments.length - 1];
+    const productPattern = /-\d+$/;
+
+    if (lastSegment && productPattern.test(lastSegment)) {
+      return NextResponse.redirect(new URL(`/product/${lastSegment}`, request.url));
+    }
+  }
+
+  // ✅ Step 1: Auth handling
   let isAuthenticated = false;
   let userRole: number | null = null;
 
-  // 1. Try validating access token
   if (accessToken) {
     try {
       const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
@@ -34,9 +45,7 @@ export async function middleware(request: NextRequest) {
       });
       isAuthenticated = true;
       userRole = userResponse.data?.role?.id;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      // 2. Try refreshing token if access token fails
       if (refreshToken) {
         try {
           const refreshResponse = await axios.post(
@@ -68,7 +77,7 @@ export async function middleware(request: NextRequest) {
           isAuthenticated = true;
           userRole = userResponse.data?.role?.id;
 
-          return response; // Token refreshed, continue
+          return response;
         } catch (refreshError) {
           console.error("Token refresh failed", refreshError);
         }
@@ -76,16 +85,15 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 3. Public Routes: Allow all public paths
+  // ✅ Step 2: Public routes
   if (publicPaths.includes(pathname)) {
-    // Redirect authenticated user away from /login or /register
     if (isAuthenticated && (pathname === "/login" || pathname === "/register")) {
       return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
   }
 
-  // 4. Protected Routes: Block unauthenticated users
+  // ✅ Step 3: Protected routes
   if (protectedPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     if (!isAuthenticated) {
       const response = NextResponse.redirect(new URL("/login", request.url));
@@ -94,7 +102,6 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    // Role-based restrictions
     if (userRole === ROLES.USER && (pathname.startsWith("/admin") || pathname.startsWith("/vendor"))) {
       return NextResponse.redirect(new URL("/", request.url));
     }
@@ -104,9 +111,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 5. All other routes:
-  //    - If user is authenticated, continue
-  //    - If not authenticated and not protected, allow anyway
+  // ✅ Step 4: Default allow
   return NextResponse.next();
 }
 
