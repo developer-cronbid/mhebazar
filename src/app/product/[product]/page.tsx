@@ -12,12 +12,10 @@ import styles from './page.module.css';
 // This function now fetches real data for better SEO
 export async function generateMetadata({
   params,
-  searchParams,
 }: {
   params: { product: string };
-  searchParams: { id: string };
 }) {
-  const productId = parseInt(searchParams.id, 10);
+  const productId = parseInt(params.product.split('-').pop() || '', 10);
 
   // Validate ID early
   if (isNaN(productId)) {
@@ -47,13 +45,10 @@ export async function generateMetadata({
 // The page component is now an async function
 export default async function IndividualProductPage({
   params,
-  searchParams,
 }: {
   params: { product: string };
-  searchParams: { id: string };
 }) {
-  const { product: productSlug } = params;
-  const productId = parseInt(searchParams.id, 10);
+  const productId = parseInt(params.product.split('-').pop() || '', 10);
 
   // If the ID is not a valid number, render a 404 page
   if (isNaN(productId)) {
@@ -86,11 +81,11 @@ export default async function IndividualProductPage({
           { label: category_name, href: `/${cat_slug}` },
           ...(subcategory_name ? [{ label: subcategory_name, href: `/${cat_slug}/${subcat_slug}` }] : []),
           // Use the actual product name for the label for better UX
-          { label: product, href: `/product/${productSlug}?id=${productId}` },
+          { label: product, href: `/product/${product}-${productId}` },
         ]}
       />
 
-      <ProductSection productSlug={productSlug} productId={productId} />
+      <ProductSection productSlug={params.product} productId={productId} />
 
       {/* Section container with fade-slide animation */}
       <div className={styles.animatedSection}>

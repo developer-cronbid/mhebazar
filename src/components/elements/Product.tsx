@@ -161,7 +161,7 @@ const ProductCard = ({
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
   const productSlug = slugify(title || "");
-  const productDetailUrl = `/product/${productSlug}/?id=${id}`;
+  const productDetailUrl = `/product/${productSlug}-${id}`; // Change this line
 
   // Determine button text and form based on page URL type
   const isRentalPage = pageUrlType === "rental";

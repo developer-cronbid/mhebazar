@@ -260,7 +260,6 @@ export default function SearchBar({
       if (item.type === "vendor") {
         router.push(`/vendor-listing/${item.slug}`);
       } else if (item.type === "vendor_category") {
-        // Handle new vendor-category links
         router.push(`/vendor-listing/${item.vendorSlug}?page=1&category=${item.categorySlug}`);
       } else if (item.type === "category") {
         router.push(`/${createSlug(item.name)}`);
@@ -270,7 +269,7 @@ export default function SearchBar({
       } else if (item.type === "product_type") {
         router.push(`/${item.slug}`);
       } else if (item.type === "product") {
-        router.push(`/product/${createSlug(item.name)}?id=${item.id}`);
+        router.push(`/product/${createSlug(item.name)}-${item.id}`);
       }
     },
     [router, setSearchQuery]

@@ -50,7 +50,7 @@ function TopRatedItem({ item }: { item: DisplayItem }): JSX.Element | null {
   const initials = label?.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
   return (
-    <Link href={`/product/${slug}/?id=${item.id}`} className="block">
+    <Link href={`/product/${item.slug}-${item.id}`} className="block">
       <div className="flex items-center gap-6 p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200 cursor-pointer min-h-[120px]">
         <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 flex-shrink-0 flex items-center justify-center">
           {image && !showInitials ? (
@@ -83,7 +83,7 @@ function NewArrivalItem({ item }: { item: DisplayItem }): JSX.Element | null {
 
   return (
     <div className="w-32 flex-shrink-0 mr-4">
-      <Link href={`/product/${item.slug}/?id=${item.id}`} className="block">
+      <Link href={`/product/${item.slug}-${item.id}`} className="block">
         <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 hover:shadow-md transition-all duration-200 p-4">
           <Image
             src={item.image}

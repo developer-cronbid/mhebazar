@@ -117,7 +117,7 @@ export default function MostPopular() {
     if (itemImageError || !product.image) return null;
     return (
       <div key={idx} className="w-44 flex-shrink-0 mr-4">
-        <Link href={`/product/${product.slug}/?id=${product.id}`} className="block">
+        <Link href={`/product/${product.slug}-${product.id}`} className="block">
           <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 p-4 h-44 flex flex-col items-center justify-center">
             <div className="relative w-32 h-32 mb-2">
               <Image
@@ -170,7 +170,7 @@ export default function MostPopular() {
           </div>
 
           <div className="relative w-64 h-64 sm:w-80 sm:h-80 flex-shrink-0">
-            <Link href={`/product/${popularData.slug}/?id=${popularData.id}`} passHref>
+            <Link href={`/product/${popularData.slug}-${popularData.id}`} passHref>
               <Image
                 src={popularData.mainImage}
                 alt={popularData.mainLabel}
