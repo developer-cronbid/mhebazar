@@ -31,6 +31,22 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // ✅ Step 0.1: Handle old query param style product URLs
+  if (pathname.startsWith("/product") && request.nextUrl.searchParams.has("id")) {
+    const id = request.nextUrl.searchParams.get("id");
+    const segments = pathname.split("/").filter(Boolean);
+
+    // e.g. /product/manual-stacker -> "manual-stacker"
+    const productSlug = segments[segments.length - 1];
+
+    if (id && productSlug && !productSlug.endsWith(`-${id}`)) {
+      return NextResponse.redirect(
+        new URL(`/product/${productSlug}-${id}`, request.url)
+      );
+    }
+  }
+
+
   // ✅ Step 1: Auth handling
   let isAuthenticated = false;
   let userRole: number | null = null;
