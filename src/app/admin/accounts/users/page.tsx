@@ -37,15 +37,14 @@ interface User {
 const UsersTable = () => {
   const [data, setData] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [totalUsers, setTotalUsers] = useState(0);
 
-  // States for filtering
+  // States for filtering (server-side)
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
 
-  // States for server-side operations
+  // States for client-side search and pagination
   const [page, setPage] = useState(1);
-  const pageSize = 20; // Hardcoded page size
+  const pageSize = 20;
   const [globalFilter, setGlobalFilter] = useState('');
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
   const [sortBy, setSortBy] = useState<SortingState>([
@@ -61,20 +60,12 @@ const UsersTable = () => {
     return () => clearTimeout(handler);
   }, [globalFilter]);
 
-  // API Request Logic
+  // API Request Logic: Fetch all data with server-side filters
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const params = new URLSearchParams();
-        params.append('page', String(page));
-        params.append('page_size', String(pageSize));
-
-        if (sortBy.length > 0) {
-          const sortField = sortBy[0];
-          const ordering = sortField.desc ? `-${sortField.id}` : sortField.id;
-          params.append('ordering', ordering);
-        }
 
         if (statusFilter !== 'all') {
           if (statusFilter === 'verified') {
@@ -88,10 +79,31 @@ const UsersTable = () => {
           params.append('role__name', roleFilter);
         }
 
-        const response = await api.get(`/users/`, { params });
-        setData(response.data.results);
-        setTotalUsers(response.data.count);
+        // Fetch all data that matches the status and role filters
+        // This is a crucial change to enable client-side search
+        const allData: User[] = [];
+        let nextPage = 1;
+        let hasMore = true;
 
+        while (hasMore) {
+          const response = await api.get(`/users/`, {
+            params: {
+              ...Object.fromEntries(params.entries()),
+              page: String(nextPage),
+              page_size: '100', // Fetch a large page size to reduce requests
+            },
+          });
+          
+          allData.push(...response.data.results);
+          if (response.data.next) {
+            nextPage++;
+          } else {
+            hasMore = false;
+          }
+        }
+        
+        setData(allData);
+        setPage(1); // Reset page to 1 whenever server filters change
       } catch (error) {
         console.error("Failed to fetch user data:", error);
       } finally {
@@ -100,22 +112,62 @@ const UsersTable = () => {
     };
 
     fetchData();
-  }, [page, sortBy, statusFilter, roleFilter]);
+    // Re-fetch only when server-side filters change
+  }, [statusFilter, roleFilter]);
 
+  // Memoize the data filtered by search and sort
+  const searchedAndSortedData = useMemo(() => {
+    let result = [...data];
 
-  // Apply client-side search filtering
-  const filteredData = useMemo(() => {
-    if (!debouncedGlobalFilter) {
-      return data;
+    // Apply client-side search filtering
+    if (debouncedGlobalFilter) {
+      const filterValue = debouncedGlobalFilter.toLowerCase();
+      result = result.filter(user =>
+        user.full_name?.toLowerCase().includes(filterValue) ||
+        user.email?.toLowerCase().includes(filterValue) ||
+        user.username?.toLowerCase().includes(filterValue)
+      );
     }
-    const filterValue = debouncedGlobalFilter.toLowerCase();
-    return data.filter(user =>
-      user.full_name.toLowerCase().includes(filterValue) ||
-      user.email.toLowerCase().includes(filterValue) ||
-      user.username.toLowerCase().includes(filterValue)
-    );
-  }, [data, debouncedGlobalFilter]);
+    
+    // Apply client-side sorting
+    if (sortBy.length > 0) {
+      const sortField = sortBy[0];
+      const { id, desc } = sortField;
 
+      result.sort((a, b) => {
+        const valA = (a as any)[id];
+        const valB = (b as any)[id];
+
+        if (valA === valB) return 0;
+
+        // Custom sorting logic for date_joined
+        if (id === 'date_joined') {
+          const dateA = new Date(valA).getTime();
+          const dateB = new Date(valB).getTime();
+          return desc ? dateB - dateA : dateA - dateB;
+        }
+
+        // Default string/number sorting
+        if (typeof valA === 'string' && typeof valB === 'string') {
+          return desc ? valB.localeCompare(valA) : valA.localeCompare(valB);
+        }
+        
+        return desc ? (valB > valA ? 1 : -1) : (valA > valB ? 1 : -1);
+      });
+    }
+
+    return result;
+  }, [data, debouncedGlobalFilter, sortBy]);
+
+
+  // Implement client-side pagination on the searched and sorted data
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return searchedAndSortedData.slice(start, end);
+  }, [searchedAndSortedData, page, pageSize]);
+
+  const totalUsers = searchedAndSortedData.length;
   const totalPages = Math.ceil(totalUsers / pageSize);
 
   // Table columns definition
@@ -177,17 +229,19 @@ const UsersTable = () => {
 
   // Configure TanStack Table
   const table = useReactTable({
-    data: filteredData,
+    data: paginatedData, // Use the client-side paginated data
     columns,
     state: { sorting: sortBy },
     onSortingChange: setSortBy,
     getCoreRowModel: getCoreRowModel(),
+    // Now everything is manual on the client-side
     manualPagination: true,
-    manualFiltering: false, // Changed to false for client-side filtering
-    manualSorting: true,
+    manualFiltering: false,
+    manualSorting: false,
     pageCount: totalPages,
   });
 
+  // Handle page change
   function handlePageChange(newPage: number) {
     if (newPage >= 1 && newPage <= totalPages) {
       setPage(newPage);
@@ -198,32 +252,12 @@ const UsersTable = () => {
   const handleExportToExcel = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
+      // Use the already searched and sorted data for export
+      const usersToExport = searchedAndSortedData;
 
-      if (sortBy.length > 0) {
-        const sortField = sortBy[0];
-        const ordering = sortField.desc ? `-${sortField.id}` : sortField.id;
-        params.append('ordering', ordering);
-      }
-
-      if (statusFilter !== 'all') {
-        if (statusFilter === 'verified') {
-          params.append('is_email_verified', 'true');
-        } else if (statusFilter === 'not_verified') {
-          params.append('is_email_verified', 'false');
-        }
-      }
-
-      if (roleFilter !== 'all') {
-        params.append('role__name', roleFilter);
-      }
-      
-      const response = await api.get(`/users/`, { params });
-      const usersToExport: User[] = response.data.results;
-      
       const headers = ['Full Name', 'Email', 'Mobile No.', 'Username', 'Date Joined'];
       const csvRows = [headers.join(',')];
-      
+
       usersToExport.forEach(user => {
         const row = [
           `"${user.full_name}"`,
@@ -234,9 +268,9 @@ const UsersTable = () => {
         ];
         csvRows.push(row.join(','));
       });
-      
+
       const csvString = csvRows.join('\n');
-      
+
       const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -246,9 +280,9 @@ const UsersTable = () => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       URL.revokeObjectURL(url);
-      
+
     } catch (error) {
       console.error("Failed to export user data:", error);
       alert("Failed to export data. Please try again.");
@@ -287,7 +321,7 @@ const UsersTable = () => {
             <button
               className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={handleExportToExcel}
-              disabled={loading || data.length === 0}
+              disabled={loading || searchedAndSortedData.length === 0}
             >
               <Download size={16} />
               Export as Excel
@@ -305,7 +339,7 @@ const UsersTable = () => {
                 value={statusFilter}
                 onValueChange={value => {
                   setStatusFilter(value);
-                  setPage(1);
+                  setPage(1); // Reset page on filter change
                 }}
               >
                 <SelectTrigger className="w-[140px]">
@@ -326,7 +360,7 @@ const UsersTable = () => {
                 value={roleFilter}
                 onValueChange={value => {
                   setRoleFilter(value);
-                  setPage(1);
+                  setPage(1); // Reset page on filter change
                 }}
               >
                 <SelectTrigger className="w-[140px]">
@@ -369,7 +403,10 @@ const UsersTable = () => {
                 type="text"
                 placeholder="Search..."
                 value={globalFilter}
-                onChange={e => setGlobalFilter(e.target.value)}
+                onChange={e => {
+                    setGlobalFilter(e.target.value);
+                    setPage(1); // Reset page on search
+                }}
                 className="border border-gray-300 rounded px-3 py-1 text-sm h-9"
               />
             </div>
@@ -418,7 +455,7 @@ const UsersTable = () => {
                       Loading...
                     </td>
                   </tr>
-                ) : filteredData.length === 0 ? (
+                ) : paginatedData.length === 0 ? (
                   <tr>
                     <td colSpan={columns.length} className="text-center py-8">
                       No data found.
@@ -446,7 +483,7 @@ const UsersTable = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between gap-4 mt-6">
           <div className="text-sm text-gray-600">
-            {!loading && `Showing ${filteredData.length > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalUsers)} of ${totalUsers} entries`}
+            {!loading && `Showing ${paginatedData.length > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalUsers)} of ${totalUsers} entries`}
           </div>
           <div className="cursor-default">
             <Pagination>

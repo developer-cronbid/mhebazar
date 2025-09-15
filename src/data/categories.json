@@ -1,5 +1,28 @@
 [
     {
+        "id": 19,
+        "name": "Pallet",
+        "image_url": "/media/category/19/download_11.webp",
+        "subcategories": [
+            {
+                "id": 109,
+                "name": "Wooden Pallet"
+            },
+            {
+                "id": 110,
+                "name": "Plastic Pallet"
+            },
+            {
+                "id": 111,
+                "name": "Metal Pallet"
+            },
+            {
+                "id": 112,
+                "name": "Other"
+            }
+        ]
+    },
+    {
         "id": 1,
         "name": "Battery",
         "image_url": "/media/category/1/battery1.webp",
@@ -11,6 +34,43 @@
             {
                 "id": 61,
                 "name": "Lead-Acid Traction Battery"
+            }
+        ]
+    },
+    {
+        "id": 18,
+        "name": "Spare Parts",
+        "image_url": "/media/category/18/spare.png",
+        "subcategories": []
+    },
+    {
+        "id": 12,
+        "name": "Forklift",
+        "image_url": "/media/category/12/form1.webp",
+        "subcategories": [
+            {
+                "id": 47,
+                "name": "Electric (Lead-Acid) Forklift"
+            },
+            {
+                "id": 48,
+                "name": "Electric (Li-Ion) Forklift"
+            },
+            {
+                "id": 49,
+                "name": "Articulated Forklift"
+            },
+            {
+                "id": 50,
+                "name": "Heavy Forklift"
+            },
+            {
+                "id": 51,
+                "name": "Diesel Forklift"
+            },
+            {
+                "id": 52,
+                "name": "LPG forklifts"
             }
         ]
     },
@@ -38,6 +98,17 @@
             {
                 "id": 5,
                 "name": "Scissors Hand Pallet Truck"
+            }
+        ]
+    },
+    {
+        "id": 9,
+        "name": "Electric Pallet Truck (BOPT)",
+        "image_url": "/media/category/9/download_3.webp",
+        "subcategories": [
+            {
+                "id": 34,
+                "name": "Electric Pallet Truck"
             }
         ]
     },
@@ -93,10 +164,95 @@
         ]
     },
     {
-        "id": 4,
-        "name": "Manual Platform Trolly",
-        "image_url": "/media/category/4/Manual-PLatform-Trolley1_hdngQDc.webp",
+        "id": 25,
+        "name": "Charger",
+        "image_url": "/media/category/25/image_8.webp",
         "subcategories": []
+    },
+    {
+        "id": 10,
+        "name": "Reach Truck",
+        "image_url": "/media/category/10/download_10.webp",
+        "subcategories": [
+            {
+                "id": 35,
+                "name": "Double Deep Reach Truck"
+            },
+            {
+                "id": 36,
+                "name": "Sit Down Reach Truck"
+            },
+            {
+                "id": 37,
+                "name": "Stand On Reach Truck"
+            }
+        ]
+    },
+    {
+        "id": 11,
+        "name": "Racking System",
+        "image_url": "/media/category/11/download_9.webp",
+        "subcategories": [
+            {
+                "id": 38,
+                "name": "Light Duty Rack"
+            },
+            {
+                "id": 39,
+                "name": "Medium Duty Rack"
+            },
+            {
+                "id": 40,
+                "name": "Heavy Duty Rack"
+            },
+            {
+                "id": 41,
+                "name": "Mezzanine Floors"
+            },
+            {
+                "id": 42,
+                "name": "Multi-Tier Rack"
+            },
+            {
+                "id": 43,
+                "name": "Cantilever Rack"
+            },
+            {
+                "id": 44,
+                "name": "Drive-in Rack"
+            },
+            {
+                "id": 45,
+                "name": "VNA Rack"
+            }
+        ]
+    },
+    {
+        "id": 15,
+        "name": "Order Picker",
+        "image_url": "/media/category/15/download_7.webp",
+        "subcategories": []
+    },
+    {
+        "id": 16,
+        "name": "Very Narrow Aisle Truck",
+        "image_url": "/media/category/16/download_6.webp",
+        "subcategories": []
+    },
+    {
+        "id": 6,
+        "name": "Tow Truck",
+        "image_url": "/media/category/6/tow-truck1.webp",
+        "subcategories": [
+            {
+                "id": 20,
+                "name": "4-Wheeler Tow Truck (Electric)"
+            },
+            {
+                "id": 21,
+                "name": "3-Wheeler Tow Truck (Electric)"
+            }
+        ]
     },
     {
         "id": 5,
@@ -114,19 +270,10 @@
         ]
     },
     {
-        "id": 6,
-        "name": "Tow Truck",
-        "image_url": "/media/category/6/tow-truck1.webp",
-        "subcategories": [
-            {
-                "id": 20,
-                "name": "4-Wheeler Tow Truck (Electric)"
-            },
-            {
-                "id": 21,
-                "name": "3-Wheeler Tow Truck (Electric)"
-            }
-        ]
+        "id": 4,
+        "name": "Manual Platform Trolly",
+        "image_url": "/media/category/4/Manual-PLatform-Trolley1_hdngQDc.webp",
+        "subcategories": []
     },
     {
         "id": 7,
@@ -191,106 +338,6 @@
         ]
     },
     {
-        "id": 9,
-        "name": "Electric Pallet Truck (BOPT)",
-        "image_url": "/media/category/9/download_3.webp",
-        "subcategories": [
-            {
-                "id": 34,
-                "name": "Electric Pallet Truck"
-            }
-        ]
-    },
-    {
-        "id": 10,
-        "name": "Reach Truck",
-        "image_url": "/media/category/10/download_10.webp",
-        "subcategories": [
-            {
-                "id": 35,
-                "name": "Double Deep Reach Truck"
-            },
-            {
-                "id": 36,
-                "name": "Sit Down Reach Truck"
-            },
-            {
-                "id": 37,
-                "name": "Stand On Reach Truck"
-            }
-        ]
-    },
-    {
-        "id": 11,
-        "name": "Racking System",
-        "image_url": "/media/category/11/download_9.webp",
-        "subcategories": [
-            {
-                "id": 38,
-                "name": "Light Duty Rack"
-            },
-            {
-                "id": 39,
-                "name": "Medium Duty Rack"
-            },
-            {
-                "id": 40,
-                "name": "Heavy Duty Rack"
-            },
-            {
-                "id": 41,
-                "name": "Mezzanine Floors"
-            },
-            {
-                "id": 42,
-                "name": "Multi-Tier Rack"
-            },
-            {
-                "id": 43,
-                "name": "Cantilever Rack"
-            },
-            {
-                "id": 44,
-                "name": "Drive-in Rack"
-            },
-            {
-                "id": 45,
-                "name": "VNA Rack"
-            }
-        ]
-    },
-    {
-        "id": 12,
-        "name": "Forklift",
-        "image_url": "/media/category/12/form1.webp",
-        "subcategories": [
-            {
-                "id": 47,
-                "name": "Electric (Lead-Acid) Forklift"
-            },
-            {
-                "id": 48,
-                "name": "Electric (Li-Ion) Forklift"
-            },
-            {
-                "id": 49,
-                "name": "Articulated Forklift"
-            },
-            {
-                "id": 50,
-                "name": "Heavy Forklift"
-            },
-            {
-                "id": 51,
-                "name": "Diesel Forklift"
-            },
-            {
-                "id": 52,
-                "name": "LPG forklifts"
-            }
-        ]
-    },
-    {
         "id": 13,
         "name": "Container Handler",
         "image_url": "/media/category/13/download_8.webp",
@@ -312,56 +359,9 @@
         "subcategories": []
     },
     {
-        "id": 15,
-        "name": "Order Picker",
-        "image_url": "/media/category/15/download_7.webp",
-        "subcategories": []
-    },
-    {
-        "id": 16,
-        "name": "Very Narrow Aisle Truck",
-        "image_url": "/media/category/16/download_6.webp",
-        "subcategories": []
-    },
-    {
         "id": 17,
         "name": "Automated Guided Vehicle",
         "image_url": "/media/category/17/download_5.webp",
-        "subcategories": []
-    },
-    {
-        "id": 18,
-        "name": "Spare Parts",
-        "image_url": "/media/category/18/spare.png",
-        "subcategories": []
-    },
-    {
-        "id": 19,
-        "name": "Pallet",
-        "image_url": "/media/category/19/download_11.webp",
-        "subcategories": [
-            {
-                "id": 109,
-                "name": "Wooden Pallet"
-            },
-            {
-                "id": 110,
-                "name": "Plastic Pallet"
-            },
-            {
-                "id": 111,
-                "name": "Metal Pallet"
-            },
-            {
-                "id": 112,
-                "name": "Other"
-            }
-        ]
-    },
-    {
-        "id": 20,
-        "name": "Safety Solutions",
-        "image_url": "/media/category/20/image_2.webp",
         "subcategories": []
     },
     {
@@ -500,9 +500,9 @@
         "subcategories": []
     },
     {
-        "id": 25,
-        "name": "Charger",
-        "image_url": "/media/category/25/image_8.webp",
+        "id": 20,
+        "name": "Safety Solutions",
+        "image_url": "/media/category/20/image_2.webp",
         "subcategories": []
     }
 ]

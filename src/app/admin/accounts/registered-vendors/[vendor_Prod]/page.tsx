@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import api from '@/lib/api';
 import ProductForm from "@/components/forms/uploadForm/ProductForm";
 import { Product } from '@/types';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 // Define proper error type
 interface ApiError {
@@ -43,14 +44,12 @@ const VendorProducts = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  // --- OPTIMIZATION: State for server-side filtering, sorting, and pagination ---
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('Latest');
   const [showCount, setShowCount] = useState(10);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [totalProductsCount, setTotalProductsCount] = useState(0);
   const [notApprovedCount, setNotApprovedCount] = useState(0);
-  // --- END OPTIMIZATION ---
 
   const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [selectAll, setSelectAll] = useState(false);
@@ -58,13 +57,34 @@ const VendorProducts = () => {
   const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
   const [productRejectionReason, setProductRejectionReason] = useState("");
 
-  // --- STATE CONSOLIDATION: `selectedProduct` is now used for both edit and reject actions ---
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const searchParams = useSearchParams();
-  const vendorId = searchParams.get('user');
+  const vendorIdFromUrl = searchParams.get('user');
+
+  const [vendors, setVendors] = useState<{ id: string, brand: string }[]>([]);
+  const [selectedVendorId, setSelectedVendorId] = useState<string | 'all'>(vendorIdFromUrl || 'all');
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+
+  useEffect(() => {
+    const fetchVendors = async () => {
+      try {
+        const response = await api.get('/vendor/approved/');
+        setVendors(response.data.results.map((v: any) => ({ id: v.user_info.id.toString(), brand: v.brand })));
+      } catch (err) {
+        console.error("Failed to fetch vendors:", err);
+      }
+    };
     const fetchCategories = async () => {
       try {
         const res = await api.get(`/categories/`);
@@ -78,31 +98,34 @@ const VendorProducts = () => {
         toast.error("Could not load categories.");
       }
     };
-
+    fetchVendors();
     fetchCategories();
   }, []);
 
-  // --- Data fetching now includes all filter, sort, and pagination params ---
   useEffect(() => {
-    if (!vendorId) {
-      setError("Vendor ID is missing from the URL query parameter.");
-      setLoading(false);
-      return;
-    }
-
     const fetchProducts = async () => {
       setLoading(true);
 
-      // Construct query parameters
       const params = new URLSearchParams({
-        user: vendorId,
         page: currentPage.toString(),
         page_size: showCount.toString(),
         ordering: getOrderingParam(sortBy),
       });
 
+      if (debouncedSearchQuery) {
+        params.append('search', debouncedSearchQuery);
+      }
+
+      if (selectedVendorId !== 'all') {
+        params.append('user', selectedVendorId);
+      }
+      
+      // ✅ CORRECTED: Append category ID, not category name
       if (selectedCategory !== 'All') {
-        params.append('category_name', selectedCategory);
+        const categoryId = categories.find(cat => cat.name === selectedCategory)?.id;
+        if (categoryId) {
+          params.append('category', String(categoryId));
+        }
       }
 
       try {
@@ -113,7 +136,6 @@ const VendorProducts = () => {
           setTotalProductsCount(response.data.count);
           setNotApprovedCount(response.data.not_approved_count || 0);
         } else {
-          console.warn("API response was not in the expected format:", response.data);
           setProducts([]);
           setTotalProductsCount(0);
         }
@@ -130,14 +152,14 @@ const VendorProducts = () => {
     };
 
     fetchProducts();
-  }, [vendorId, currentPage, showCount, sortBy, selectedCategory]);
+  }, [selectedVendorId, currentPage, showCount, sortBy, selectedCategory, debouncedSearchQuery]);
 
-  // --- This useEffect resets the page to 1 when filters change ---
   useEffect(() => {
     setCurrentPage(1);
     setSelectAll(false);
     setSelectedProducts(new Set());
-  }, [selectedCategory, sortBy, showCount]);
+  }, [selectedCategory, sortBy, showCount, selectedVendorId, debouncedSearchQuery]);
+
 
   const totalPages = Math.ceil(totalProductsCount / showCount);
   const startIndex = (currentPage - 1) * showCount;
@@ -243,22 +265,20 @@ const VendorProducts = () => {
     }
   };
 
-  // --- IMPLEMENTATION: Handles opening the form for editing a product ---
   const handleEditClick = async (productId: number) => {
     try {
       setSelectedProduct(null);
       const response = await api.get(`/products/${productId}/`);
       setSelectedProduct(response.data);
-      setIsSheetOpen(true); // This happens too quickly
+      setIsSheetOpen(true);
     } catch (error) {
       console.error('Error fetching product details:', error);
       toast.error("Failed to load product data for editing.");
     }
   };
 
-  // --- IMPLEMENTATION: Handles opening the form for adding a new product ---
   const handleAddClick = () => {
-    setSelectedProduct(null); // Ensure form is empty for new product
+    setSelectedProduct(null);
     setIsSheetOpen(true);
   };
 
@@ -267,7 +287,6 @@ const VendorProducts = () => {
       try {
         await api.delete(`products/${productId}/`);
         toast.success(`Product "${productTitle}" deleted.`);
-        // A full refetch is simplest after a delete
         const event = new Event('refetch');
         window.dispatchEvent(event);
       } catch (err) {
@@ -277,7 +296,6 @@ const VendorProducts = () => {
     }
   };
 
-  // ✅ Export to Excel function added
   const handleExportToExcel = async () => {
     if (totalProductsCount === 0) {
       toast.error("No products to export.");
@@ -286,15 +304,25 @@ const VendorProducts = () => {
 
     toast.info("Preparing your export...", { description: "This may take a moment." });
 
-    // Construct query parameters to fetch all data based on current filters
     const params = new URLSearchParams({
-      user: vendorId!,
       ordering: getOrderingParam(sortBy),
-      page_size: totalProductsCount.toString(), // Fetch all products in one go
+      page_size: totalProductsCount.toString(),
     });
 
+    if (selectedVendorId !== 'all') {
+      params.append('user', selectedVendorId);
+    }
+    
+    // ✅ CORRECTED: Use category ID for export
     if (selectedCategory !== 'All') {
-      params.append('category_name', selectedCategory);
+        const categoryId = categories.find(cat => cat.name === selectedCategory)?.id;
+        if (categoryId) {
+            params.append('category', String(categoryId));
+        }
+    }
+
+    if (debouncedSearchQuery) {
+      params.append('search', debouncedSearchQuery);
     }
 
     try {
@@ -343,7 +371,6 @@ const VendorProducts = () => {
     }
   };
 
-  // Star Rating Component
   const StarRating = ({ average_rating }: { average_rating: number }) => (
     <div className="flex space-x-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -371,7 +398,6 @@ const VendorProducts = () => {
     </button>
   );
 
-  // Add this helper function for image URLs
   const getImageUrl = (imageUrl: string | undefined): string => {
     if (!imageUrl) return '/no-product.png';
 
@@ -387,6 +413,11 @@ const VendorProducts = () => {
   };
 
   const uniqueCategories = useMemo(() => ['All', ...Array.from(new Set(categories.map(c => c.name)))], [categories]);
+  const getCategoryName = (categoryId: string | null) => {
+    if (categoryId === 'All' || categoryId === null) return 'All';
+    const cat = categories.find(c => String(c.id) === categoryId);
+    return cat ? cat.name : 'Select';
+  };
 
   if (loading && products.length === 0) {
     return <div className="flex justify-center items-center h-screen">Loading products...</div>;
@@ -402,7 +433,6 @@ const VendorProducts = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Vendor Products</h1>
           <div className="flex space-x-2">
-            {/* --- IMPLEMENTATION: Button now triggers the add product flow --- */}
             <Button
               variant="default"
               className="bg-[#5CA131] hover:bg-green-700 text-white px-4 py-2 rounded-md flex items-center space-x-2"
@@ -428,7 +458,6 @@ const VendorProducts = () => {
           </div>
         </div>
 
-        {/* --- START: Implemented Filter Bar --- */}
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
@@ -467,9 +496,36 @@ const VendorProducts = () => {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="border rounded-md px-2 py-1 text-sm focus:ring-green-500 focus:border-green-500"
                 >
-                  {/* Use the new variable and add the string type to 'cat' */}
                   {uniqueCategories.map((cat: string) => <option key={cat} value={cat}>{cat}</option>)}
                 </select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <label htmlFor="vendor-filter" className="text-sm text-gray-600">Vendor</label>
+                <Select
+                  value={selectedVendorId}
+                  onValueChange={(value) => setSelectedVendorId(value)}
+                >
+                  <SelectTrigger className="w-[180px] text-sm">
+                    <SelectValue placeholder="Select Vendor" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Vendors</SelectItem>
+                    {vendors.map((vendor) => (
+                      <SelectItem key={vendor.id} value={vendor.id}>
+                        {vendor.brand}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="border border-gray-300 rounded-md px-3 py-1 text-sm h-9 focus:ring-green-500 focus:border-green-500"
+                />
               </div>
             </div>
             <div className="text-sm text-gray-600">
@@ -477,7 +533,6 @@ const VendorProducts = () => {
             </div>
           </div>
         </div>
-        {/* --- END: Implemented Filter Bar --- */}
 
         <div className="bg-white rounded-lg shadow-sm overflow-x-auto">
           <Table>
@@ -500,7 +555,6 @@ const VendorProducts = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {/* OPTIMIZATION: Map over `products` directly */}
               {products.length > 0 ? (
                 products.map((product) => (
                   <TableRow key={product.id} className="hover:bg-gray-50">
@@ -627,7 +681,6 @@ const VendorProducts = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-[160px]">
-                          {/* --- IMPLEMENTATION: Edit button now calls the correct handler --- */}
                           <DropdownMenuItem onClick={() => window.open(`/products-details/${product.id}`, '_blank')}>
                             <ExternalLink className="mr-2 h-4 w-4" />
                             View Details
@@ -655,10 +708,8 @@ const VendorProducts = () => {
           </Table>
         </div>
 
-        {/* --- START: Implemented Pagination --- */}
         <div className="flex justify-between items-center mt-6">
           <span className="text-sm text-gray-600">
-            {/* OPTIMIZATION: Update pagination text */}
             Showing {Math.min(startIndex + 1, totalProductsCount)} to {Math.min(startIndex + showCount, totalProductsCount)} of {totalProductsCount} results
           </span>
           <div className="flex items-center space-x-2">
@@ -675,7 +726,6 @@ const VendorProducts = () => {
         </div>
       </div>
 
-      {/* Product Rejection Modal */}
       <Dialog open={isProductRejectModalOpen} onOpenChange={setIsProductRejectModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -704,7 +754,7 @@ const VendorProducts = () => {
         onOpenChange={(open) => {
           setIsSheetOpen(open);
           if (!open) {
-            setSelectedProduct(null); // Reset on close
+            setSelectedProduct(null);
           }
         }}
       >
@@ -717,7 +767,6 @@ const VendorProducts = () => {
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto">
-            {/* Pass the selected product to the form. It will be null for new products */}
             <ProductForm product={selectedProduct} />
           </div>
         </SheetContent>
