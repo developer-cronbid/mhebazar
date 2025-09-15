@@ -39,7 +39,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-// import categoriesData from "@/data/categories.json";
+import categoriesData from "@/data/categories.json";
 import {
   Dialog,
   DialogContent,
@@ -83,8 +83,8 @@ export interface User {
 }
 
 export default function Navbar(): JSX.Element {
-  // Use the imported JSON data directly
-  // const categories: Category[] = categoriesData;
+  // Move categories definition to the top with other state declarations
+  const categories: Category[] = categoriesData;
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
@@ -185,7 +185,7 @@ export default function Navbar(): JSX.Element {
 
             <div className="hidden md:flex flex-1 max-w-5xl mx-2 sm:mx-8 items-center gap-2 sm:gap-4">
               <SearchBar
-       
+                categories={categories}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
@@ -386,7 +386,6 @@ export default function Navbar(): JSX.Element {
           <div className="md:hidden pb-2 sm:pb-3">
             <div className="flex items-center gap-2">
               <SearchBar
-             
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
@@ -434,6 +433,7 @@ export default function Navbar(): JSX.Element {
                 <CategoryMenu
                   isOpen={categoriesOpen}
                   onClose={() => setCategoriesOpen(false)}
+                  categories={categories}
                 />
               </div>
 
@@ -599,7 +599,7 @@ export default function Navbar(): JSX.Element {
                   <div className="px-4 py-3 bg-gray-50 text-sm font-semibold text-gray-600 uppercase tracking-wide">
                     Categories
                   </div>
-                  {categories.map((category) => (
+                  {categories?.map((category) => (
                     <div key={category.id} className="border-b border-gray-100">
                       <button
                         onClick={() => {

@@ -53,6 +53,7 @@ interface Category {
 interface CategoryMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  categories: Category[]; // Add this line
 }
 
 
@@ -86,8 +87,7 @@ const CategoryIcon = ({ category }: { category: Category }) => {
   );
 };
 
-export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
-  const categories: Category[] = categoriesData;
+export default function CategoryMenu({ isOpen, onClose, categories }: CategoryMenuProps) {
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   const isDesktop = useMediaQuery("(min-width: 768px)");
 

@@ -25,7 +25,7 @@ type SpeechRecognition = any;
 type SpeechRecognitionEvent = any;
 
 type SearchBarProps = {
-  categories: Category[];
+  categories?: Category[]; // Make it optional with default value
   searchQuery: string;
   setSearchQuery: (value: string) => void;
 };
@@ -65,7 +65,7 @@ const TYPE_CHOICES = [
 ];
 
 export default function SearchBar({
-  categories,
+  categories = [], // Provide default empty array
   searchQuery,
   setSearchQuery,
 }: SearchBarProps): JSX.Element {
