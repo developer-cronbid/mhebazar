@@ -103,22 +103,19 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
     >
       {/* Icon Container */}
       <div>
-        {/* 5. Image size is now responsive. `width` and `height` props on `Image` should match the largest size for optimization. */}
         <Image src={icon} alt={label} width={80} height={80} className="w-16 h-16 md:w-20 md:h-20" />
       </div>
 
-      {/* Text content - `mt-auto` pushes this block to the bottom of the card. */}
+      {/* Text content */}
       <div className="mt-auto">
-        {/* 6. Font sizes are responsive for better readability. */}
         <h2 className="text-3xl sm:text-4xl font-bold text-green-600">{number}</h2>
         <p className="text-base md:text-lg text-gray-500">{label}</p>
       </div>
 
-      {/* 7. Chevron icon is now absolutely positioned for a robust and clean layout. */}
+      {/* Chevron icon is now absolutely positioned for a robust and clean layout. */}
       {/* Its position adjusts with the card's padding. */}
-      <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6">
-        {/* 8. Added a subtle transition effect on hover for better user feedback. */}
-        <ChevronRightIcon className="h-6 w-6 md:h-7 md:w-7 text-green-600 transition-transform duration-300 group-hover:translate-x-1" />
+      <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 transition-transform duration-300 group-hover:translate-x-1">
+        <ChevronRightIcon className="h-6 w-6 md:h-7 md:w-7 text-green-600" />
       </div>
     </div>
   );
