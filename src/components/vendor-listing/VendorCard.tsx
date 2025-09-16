@@ -1,9 +1,16 @@
+// src/components/VendorCard.tsx
 "use client";
 
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+
+// Helper function to create a URL-safe slug
+const createSlug = (name: string): string => {
+  if (!name) return "";
+  return name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+};
 
 type Vendor = {
   id: number;
@@ -34,9 +41,12 @@ export default function VendorCard({ vendor }: Props) {
     setIsAdminPath(window.location.pathname.startsWith("/admin/"));
   }, []);
 
+  // Use the slugified brand name for the URL
+  const vendorSlug = createSlug(vendor.brand);
+
   const href = isAdminPath
-    ? `/admin/accounts/registered-vendors/${vendor.brand}/?user=${vendor?.user_info?.id}`
-    : `/vendor-listing/${vendor.brand}`;
+    ? `/admin/accounts/registered-vendors/${vendorSlug}/?user=${vendor?.user_info?.id}`
+    : `/vendor-listing/${vendorSlug}`;
 
   return (
     <div className="relative border border-gray-200 rounded-2xl p-4 flex flex-col items-center shadow-sm hover:shadow-lg transition-all duration-200 bg-white w-full h-full font-inter">
@@ -71,16 +81,13 @@ export default function VendorCard({ vendor }: Props) {
           </Button>
         </Link>
         <Link href="/contact" className="flex-1">
-
-        <Button
-          variant="outline"
-          className="w-full flex-1 text-sm font-medium py-2 rounded-lg border border-[#5CA131] text-[#5CA131] hover:bg-[#f2fbf2] transition-colors duration-150"
-        >
-          Contact
-        </Button>
-
+          <Button
+            variant="outline"
+            className="w-full flex-1 text-sm font-medium py-2 rounded-lg border border-[#5CA131] text-[#5CA131] hover:bg-[#f2fbf2] transition-colors duration-150"
+          >
+            Contact
+          </Button>
         </Link>
-
       </div>
     </div>
   );

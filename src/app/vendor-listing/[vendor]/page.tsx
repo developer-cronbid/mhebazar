@@ -1,10 +1,10 @@
-//src/app/vendor-listing/[vendor]/page.tsx
+// src/app/vendor-listing/[vendor]/page.tsx
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
-import ProductListing from "@/components/products/ProductListing"; // Corrected to remove { Product }
-import { Product } from "@/types"; // Assuming Product type is in @/types
+import ProductListing from "@/components/products/ProductListing";
+import { Product } from "@/types";
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import VendorBanner from "@/components/vendor-listing/VendorBanner";
 import api from "@/lib/api";
@@ -19,51 +19,56 @@ const formatNameFromSlug = (slug: string): string => {
 const slugify = (str: string): string =>
   str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
+// NEW HELPER: Reverses the slugify process
+const normalizeVendorSlug = (str: string): string => {
+  return decodeURIComponent(str)
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-');
+};
+
 // --- API Response and Type Interfaces ---
+// These interfaces should be in a global types file in a real app
 interface VendorDetails {
   id: number;
-  user_id: number;
-  username: string;
+  user_info: {
+    id: number;
+    username: string;
+    profile_photo: string | null;
+    email: string;
+    first_name: string;
+    last_name: string;
+    phone: string | null;
+    role: string | null;
+    description: string | null;
+    date_joined: string;
+    is_active: boolean;
+  };
+  user_banner: { id: number; image: string }[];
   company_name: string;
+  company_email: string;
+  company_address: string;
+  company_phone: string;
   brand: string;
+  pcode: string | null;
+  gst_no: string | null;
+  application_date: string;
+  is_approved: boolean;
 }
 
 interface UserProfile {
   id: number;
-  description: string | null;
+  username: string;
+  first_name: string;
+  last_name: string;
+  full_name: string;
+  description: string;
+  phone: string;
+  address: string | null;
   profile_photo: string | null;
   user_banner: { id: number; image: string }[];
-}
-
-interface ApiSubcategory {
-  id: number;
-  name: string;
-}
-
-interface ApiCategory {
-  id: number;
-  name: string;
-  subcategories: ApiSubcategory[];
-}
-
-interface ApiProduct {
-  id: number;
-  category_name: string;
-  subcategory_name: string;
-  images: { id: number; image: string }[];
-  name: string;
-  description: string;
-  price: string;
-  direct_sale: boolean;
-  type: string;
-  is_active: boolean;
-  hide_price: boolean;
-  stock_quantity: number;
-  manufacturer: string;
-  average_rating: number | null;
-  category: number | null;
-  model: string | null;
-  user_name: string | null;
 }
 
 interface ApiResponse<T> {
@@ -73,10 +78,31 @@ interface ApiResponse<T> {
   results: T[];
 }
 
+interface ApiProduct {
+  id: number;
+  name: string;
+  description: string;
+  images: { id: number; image: string }[];
+  price: string;
+  direct_sale: boolean;
+  is_active: boolean;
+  hide_price: boolean;
+  stock_quantity: number;
+  manufacturer: string;
+  average_rating: number;
+  type: string;
+  category: number;
+  category_name: string;
+  subcategory: number | null;
+  subcategory_name: string | null;
+  model: string | null;
+  user_name: string;
+}
+
 export default function VendorPage({ params }: { params: { vendor: string } }) {
-  const { vendor: vendorSlug } = params;
   const router = useRouter();
   const searchParams = useSearchParams();
+  const normalizedVendorSlug = useMemo(() => normalizeVendorSlug(params.vendor), [params.vendor]);
 
   // --- State for Data and Loading ---
   const [products, setProducts] = useState<Product[]>([]);
@@ -87,8 +113,6 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [noProductsFoundMessage, setNoProductsFoundMessage] = useState<string | null>(null);
-
-  // --- Filter States ---
   const [searchInput, setSearchInput] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set<string>());
 
@@ -122,25 +146,30 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
     setSearchInput(searchQuery);
   }, [searchQuery]);
 
-
-  // --- DATA FETCHING ---
-
-  // Effect 1: Fetch Vendor and User Profile details.
+  // --- DATA FETCHING (COMBINED LOGIC) ---
   useEffect(() => {
-    const fetchVendorContext = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       setError(null);
+      setNoProductsFoundMessage(null);
+
+      let fetchedVendorDetails: VendorDetails | null = null;
+      let fetchedUserProfile: UserProfile | null = null;
+
       try {
-        const vendorResponse = await api.get<ApiResponse<VendorDetails>>(`/vendor/?brand=${vendorSlug}`);
-        const vendorData = vendorResponse.data?.results?.[0];
-        if (!vendorData) {
+        // Step 1: Fetch Vendor details using the slug
+        const vendorResponse = await api.get<VendorDetails>(`/vendor/by-slug/${normalizedVendorSlug}/`);
+        fetchedVendorDetails = vendorResponse.data;
+        
+        if (!fetchedVendorDetails) {
           notFound();
           return;
         }
-        setVendorDetails(vendorData);
 
-        const userProfileResponse = await api.get<UserProfile>(`/users/${vendorData.user_id}/`);
-        setUserProfile(userProfileResponse.data);
+        // Step 2: Fetch User Profile using the ID from vendor details
+        const userProfileResponse = await api.get<UserProfile>(`/users/${fetchedVendorDetails.user_info.id}/`);
+        fetchedUserProfile = userProfileResponse.data;
+        
       } catch (err: unknown) {
         console.error("[Vendor Page] Failed to fetch vendor context:", err);
         if (err instanceof AxiosError && err.response?.status === 404) {
@@ -148,59 +177,44 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
         } else {
           setError("Failed to load vendor details. Please try again later.");
         }
+        setIsLoading(false);
+        return; // Exit if the first two fetches fail
       }
-    };
-    fetchVendorContext();
-  }, [vendorSlug]);
 
+      setVendorDetails(fetchedVendorDetails);
+      setUserProfile(fetchedUserProfile);
 
-  // Effect 2: Fetch products whenever the vendor or any filter parameters change.
-  useEffect(() => {
-    if (!vendorDetails) return;
-
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setNoProductsFoundMessage(null);
-
+      // Step 3: Fetch products using the user_id obtained from the previous call
       try {
         const queryParams = new URLSearchParams();
-        queryParams.append("user", vendorDetails.user_id.toString());
+        queryParams.append("user", fetchedVendorDetails.user_info.id.toString());
         queryParams.append("page", currentPage.toString());
 
-        // Handle Category & Subcategory filters
         const currentSelectedFilters = new Set<string>();
         if (categorySlug) {
           const formattedCatName = formatNameFromSlug(categorySlug);
-          try {
-            const catResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedCatName}`);
-            const category = catResponse.data[0];
-            if (category) {
-              queryParams.append("category", category.id.toString());
-              currentSelectedFilters.add(category.name);
-
-              if (subcategorySlug) {
-                const subcategory = category.subcategories.find(sub => slugify(sub.name) === subcategorySlug);
-                if (subcategory) {
-                  queryParams.append("subcategory", subcategory.id.toString());
-                  currentSelectedFilters.add(subcategory.name);
-                }
+          const catResponse = await api.get<any>(`/categories/?name=${formattedCatName}`);
+          const category = catResponse.data[0];
+          if (category) {
+            queryParams.append("category", category.id.toString());
+            currentSelectedFilters.add(category.name);
+            if (subcategorySlug) {
+              const subcategory = category.subcategories.find(sub => slugify(sub.name) === subcategorySlug);
+              if (subcategory) {
+                queryParams.append("subcategory", subcategory.id.toString());
+                currentSelectedFilters.add(subcategory.name);
               }
             }
-          } catch (e) {
-            console.error(`Could not resolve category ID for slug: ${categorySlug}`, e);
           }
         }
         if (typeSlug) currentSelectedFilters.add(formatNameFromSlug(typeSlug));
         setSelectedFilters(currentSelectedFilters);
 
-        // Handle other filters
         if (searchQuery) queryParams.append("search", searchQuery);
         if (typeSlug) queryParams.append("type", typeSlug);
         if (minPrice !== '') queryParams.append("min_price", minPrice.toString());
         if (maxPrice !== '') queryParams.append("max_price", maxPrice.toString());
         if (rating !== null) queryParams.append("average_rating", rating.toString());
-
-        // Handle sorting
         if (sortBy && sortBy !== "relevance") {
           const sortParam = sortBy === "price_asc" ? "price" : sortBy === "price_desc" ? "-price" : "-created_at";
           queryParams.append("ordering", sortParam);
@@ -243,10 +257,8 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
         setIsLoading(false);
       }
     };
-
-    fetchProducts();
-  }, [vendorDetails, searchParams]); // searchParams covers all filter changes
-
+    fetchData();
+  }, [normalizedVendorSlug, searchParams]);
 
   // --- EVENT HANDLERS ---
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -288,7 +300,6 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
       case 'rating':
         updateOrDeleteParam('average_rating', newValue);
         break;
-      // 'manufacturer' case is intentionally omitted as it's not used on this page
     }
     router.push(`${window.location.pathname}?${newSearchParams.toString()}`);
   }, [router, searchParams]);
@@ -307,7 +318,7 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
   };
 
   // --- RENDER LOGIC ---
-  if (isLoading && !vendorDetails) {
+  if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen">Loading Vendor...</div>;
   }
 
@@ -323,12 +334,12 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className=" mx-auto px-4 py-2">
+      <div className="mx-auto px-4 py-2">
         <Breadcrumb
           items={[
             { label: "Home", href: "/" },
             { label: "Vendors", href: "/vendor-listing" },
-            { label: vendorDetails.company_name, href: `/vendor-listing/${vendorSlug}` },
+            { label: vendorDetails.company_name, href: `/vendor-listing/${normalizedVendorSlug}` },
           ]}
         />
         {userProfile && (
@@ -341,9 +352,6 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
             bannerImages={bannerImageUrls.length > 0 ? bannerImageUrls : ['/images/default_banner.jpg']}
           />
         )}
-
-        {/* The Search Bar is now part of ProductListing's top controls for consistency, so this can be removed */}
-
         <ProductListing
           products={products}
           title={`Products from ${vendorDetails.company_name}`}
@@ -359,11 +367,10 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
           noProductsMessage={noProductsFoundMessage}
           minPrice={minPrice}
           maxPrice={maxPrice}
-          selectedManufacturer={null} // Explicitly null
+          selectedManufacturer={null}
           selectedRating={rating}
           sortBy={sortBy}
           onSortChange={handleSortChange}
-          // The critical prop to hide the redundant manufacturer filter UI
           showManufacturerFilter={false}
         />
       </div>

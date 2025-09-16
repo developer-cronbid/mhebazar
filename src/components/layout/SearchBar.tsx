@@ -1,4 +1,4 @@
-// SearchBar.tsx
+// src/components/SearchBar.tsx
 "use client";
 
 import { Search, Mic } from "lucide-react";
@@ -55,7 +55,7 @@ interface ApiResponse<T> {
 
 // Helper function to create slugs
 const createSlug = (name: string): string =>
-  name?.toLowerCase().replace(/\s+/g, "-");
+  name?.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
 const TYPE_CHOICES = [
   { name: "New", slug: "new" },
@@ -112,7 +112,7 @@ export default function SearchBar({
                 id: vendor.id,
                 name: vendorName,
                 type: "vendor",
-                slug: vendor.brand
+                slug: createSlug(vendor.brand) // Use slugified brand name
               });
 
               // Fetch products for the matched vendor to get their categories
@@ -130,7 +130,7 @@ export default function SearchBar({
                   id: `${vendor.id}-${createSlug(categoryName)}`, // Ensure unique key
                   name: `${vendorName} ${categoryName}`,
                   type: "vendor_category",
-                  vendorSlug: vendor.brand,
+                  vendorSlug: createSlug(vendor.brand), // Use slugified brand name
                   categorySlug: createSlug(categoryName),
                 });
               });
