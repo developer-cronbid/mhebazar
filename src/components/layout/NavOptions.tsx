@@ -24,9 +24,12 @@ const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.e
 
 // Correct way to define a utility function outside of a component.
 const createSlug = (name: string): string => {
-  return name.toLowerCase().replace(/\s+/g, "-");
+  // Convert to lowercase and replace spaces and parentheses with a single hyphen.
+  const slug = name.toLowerCase().replace(/[\s()]+/g, '-');
+  
+  // Remove any leading or trailing hyphens that might have been created.
+  return slug.replace(/^-+|-+$/g, '');
 };
-
 function getFullImageUrl(imagePath: string | null): string | null {
   if (!imagePath) {
     return null;

@@ -1,13 +1,14 @@
 // src/components/products/SideFilter.tsx
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { useState, useEffect, useCallback, JSX } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronRight, ChevronUp, Funnel, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronUp, Funnel } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
-import categoriesData from "@/data/categories.json"; // Import the local JSON data
+import categoriesData from "@/data/categories.json";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface Subcategory {
   id: number;
@@ -39,6 +40,26 @@ interface SideFilterProps {
   showManufacturerFilter?: boolean;
 }
 
+// Updated helper function for consistent slug generation
+const toSlug = (name: string): string => {
+  let slug = name.toLowerCase();
+  
+  // Replace ' (something)' with '-something'
+  slug = slug.replace(/\s*\((\w+)\)/g, '-$1');
+  
+  // Replace all non-alphanumeric characters (except hyphens) with a hyphen
+  slug = slug.replace(/[^a-z0-9-]/g, '-');
+  
+  // Replace multiple hyphens with a single hyphen
+  slug = slug.replace(/--+/g, '-');
+  
+  // Trim leading/trailing hyphens
+  slug = slug.replace(/^-+|-+$/g, '');
+  
+  return slug;
+};
+
+
 const SideFilter = ({
   selectedFilters,
   onFilterChange,
@@ -54,8 +75,8 @@ const SideFilter = ({
   const [search, setSearch] = useState<string>("");
   const [manufacturers, setManufacturers] = useState<string[]>([]);
   const [isLoadingManufacturers, setIsLoadingManufacturers] = useState<boolean>(true);
+  const pathname = usePathname();
 
-  // Use the imported JSON data directly, no need for useEffect to fetch it
   const categories: Category[] = categoriesData;
 
   const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
@@ -89,16 +110,16 @@ const SideFilter = ({
   }, [fetchManufacturers, showManufacturerFilter]);
 
   useEffect(() => {
-    if (categories.length > 0) {
-      const currentCategory = categories.find(cat =>
-        (selectedCategoryName && cat.name.toLowerCase() === selectedCategoryName.toLowerCase()) ||
-        (selectedSubcategoryName && cat.subcategories.some(sub => sub.name.toLowerCase() === selectedSubcategoryName.toLowerCase()))
-      );
+    if (categories.length > 0 && pathname) {
+      const pathSegments = pathname.split('/').filter(Boolean);
+      const currentCategorySlug = pathSegments[0];
+      const currentCategory = categories.find(cat => toSlug(cat.name) === currentCategorySlug);
+      
       if (currentCategory) {
         setExpandedCategory(currentCategory.id);
       }
     }
-  }, [selectedCategoryName, selectedSubcategoryName, categories]);
+  }, [pathname, categories]);
 
   const filteredCategories: Category[] = categories.filter((cat) =>
     cat.name.toLowerCase().includes(search.toLowerCase())
@@ -125,11 +146,8 @@ const SideFilter = ({
     onFilterChange(value || 0, 'rating', value);
   }, [onFilterChange]);
 
-  const isFilterActive = (value: string): boolean => {
-    const lowerValue = value.toLowerCase();
-    if (selectedCategoryName && lowerValue === selectedCategoryName.toLowerCase()) return true;
-    if (selectedSubcategoryName && lowerValue === selectedSubcategoryName.toLowerCase()) return true;
-    if (Array.isArray(selectedTypes) && selectedTypes.includes(lowerValue)) return true;
+  const isFilterActive = (slug: string): boolean => {
+    return pathname.endsWith(`/${slug}`);
   };
 
   return (
@@ -167,63 +185,77 @@ const SideFilter = ({
 
         <h2 className="text-base font-bold text-black font-sans mb-2.5">Categories</h2>
         <div className="space-y-0 mb-4">
-          {filteredCategories.map((category: Category) => (
-            <div key={category.id} className="border-b border-gray-200 last:border-b-0">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => onFilterChange(category.name, "category", category.name)}
-                  className={`flex-1 text-left py-2 px-0 transition-colors duration-200 ${isFilterActive(category.name)
-                    ? "bg-green-50 text-green-700 font-medium"
-                    : "hover:bg-gray-50 text-black"
-                    }`}
-                >
-                  <span className="text-sm font-sans text-black truncate line-clamp-1">{category.name}</span>
-                </button>
-                {category.subcategories.length > 0 && (
-                  <button
-                    onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
-                    className="p-2 -mr-2 rounded-full hover:bg-gray-100"
-                    aria-expanded={expandedCategory === category.id}
+          {filteredCategories.map((category: Category) => {
+            const categorySlug = toSlug(category.name);
+            const isCategoryActive = pathname === `/${categorySlug}`;
+            
+            return (
+              <div key={category.id} className="border-b border-gray-200 last:border-b-0">
+                <div className="flex items-center justify-between">
+                  <Link
+                    href={`/${categorySlug}`}
+                    className={`flex-1 text-left py-2 px-0 transition-colors duration-200 ${isCategoryActive
+                      ? "bg-green-50 text-green-700 font-medium"
+                      : "hover:bg-gray-50 text-black"
+                      }`}
                   >
-                    {expandedCategory === category.id ? (
-                      <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
-                    ) : (
-                      <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
-                    )}
-                  </button>
-                )}
+                    <span className="text-sm font-sans text-black truncate line-clamp-1">{category.name}</span>
+                  </Link>
+                  {category.subcategories.length > 0 && (
+                    <button
+                      onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
+                      className="p-2 -mr-2 rounded-full hover:bg-gray-100"
+                      aria-expanded={expandedCategory === category.id}
+                    >
+                      {expandedCategory === category.id ? (
+                        <ChevronUp className="w-3.5 h-3.5 text-gray-500" />
+                      ) : (
+                        <ChevronDown className="w-3.5 h-3.5 text-gray-500" />
+                      )}
+                    </button>
+                  )}
+                </div>
+                <AnimatePresence>
+                  {expandedCategory === category.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="ml-4 mt-1 space-y-1">
+                        {category.subcategories.map((subcategory: Subcategory, index: number) => {
+                          const subcategorySlug = toSlug(subcategory.name);
+                          const href = `/${categorySlug}/${subcategorySlug}`;
+                          const isSubcategoryActive = pathname === href;
+
+                          return (
+                            <motion.div
+                              key={subcategory.id}
+                              initial={{ x: -10, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              transition={{ delay: index * 0.02 }}
+                            >
+                              <Link
+                                href={href}
+                                className={`w-full block text-left p-2 text-xs rounded-md transition-colors duration-200 ${isSubcategoryActive
+                                  ? "bg-blue-50 text-blue-700 font-medium"
+                                  : "text-gray-600 hover:bg-green-50"
+                                  }`}
+                              >
+                                <span className="truncate line-clamp-1">{subcategory.name}</span>
+                              </Link>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              <AnimatePresence>
-                {expandedCategory === category.id && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="ml-4 mt-1 space-y-1">
-                      {category.subcategories.map((subcategory: Subcategory, index: number) => (
-                        <motion.button
-                          key={subcategory.id}
-                          initial={{ x: -10, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: index * 0.02 }}
-                          className={`w-full text-left p-2 text-xs rounded-md transition-colors duration-200 ${isFilterActive(subcategory.name)
-                            ? "bg-blue-50 text-blue-700 font-medium"
-                            : "text-gray-600 hover:bg-green-50"
-                            }`}
-                          onClick={() => onFilterChange(subcategory.name, "subcategory", subcategory.name)}
-                        >
-                          <span className="truncate line-clamp-1">{subcategory.name}</span>
-                        </motion.button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <h2 className="text-base font-bold text-black font-sans mb-2.5">Product Types</h2>
@@ -242,8 +274,8 @@ const SideFilter = ({
                 key={index}
                 onClick={handleTypeChange}
                 className={`w-full text-left py-2 px-0 transition-colors duration-200 ${isActive
-                    ? "bg-green-50 text-green-700 font-medium"
-                    : "hover:bg-gray-50 text-black"
+                  ? "bg-green-50 text-green-700 font-medium"
+                  : "hover:bg-gray-50 text-black"
                   }`}
                 aria-pressed={isActive}
               >

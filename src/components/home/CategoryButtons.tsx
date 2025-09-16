@@ -55,6 +55,8 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
     setShowInitials(true);
   };
 
+
+
   const initials = label
     ?.split(" ")
     .map((w) => w[0])
@@ -114,6 +116,14 @@ export default function CategoriesSection(): JSX.Element {
 
   const displayedCategories = showAll ? categories : categories.slice(0, 7);
 
+  const createSlug = (name: string): string => {
+  // Convert to lowercase and replace spaces, parentheses, and underscores with a single hyphen.
+  const slug = name.toLowerCase().replace(/[\s()]+/g, '-');
+  
+  // Remove any leading or trailing hyphens that might have been created.
+  return slug.replace(/^-+|-+$/g, '');
+};
+
   return (
     <section className="py-10 mb-4 w-full mx-auto px-4 md:px-8 bg-black-50">
       <h2 className="text-3xl font-bold mb-8 text-left text-black-900">
@@ -131,7 +141,7 @@ export default function CategoriesSection(): JSX.Element {
             key={cat.id}
             imageSrc={cat.image_url}
             label={cat.name}
-            slug={cat.name.toLowerCase().replace(/\s+/g, "-")}
+            slug={createSlug(cat.name)}
           />
         ))}
         {categories.length > 7 && (

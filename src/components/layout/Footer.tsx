@@ -23,7 +23,13 @@ interface Category {
   subcategories: Subcategory[];
 }
 
-const createSlug = (name: string): string => name.toLowerCase().replace(/\s+/g, "-");
+const createSlug = (name: string): string => {
+  // Convert to lowercase and replace spaces, parentheses, and underscores with a single hyphen.
+  const slug = name.toLowerCase().replace(/[\s()_]+/g, '-');
+  
+  // Remove any leading or trailing hyphens.
+  return slug.replace(/^-+|-+$/g, '');
+};
 
 export default function Footer(): JSX.Element {
   const categories: Category[] = categoriesData;

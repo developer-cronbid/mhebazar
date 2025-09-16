@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import axios from "axios";
 
+// Add this import at the top of the file
+import categoriesData from "./data/categories.json";
+
 const ROLES = {
   ADMIN: 1,
   VENDOR: 2,
@@ -15,34 +18,94 @@ const protectedPrefixes = ["/admin", "/vendor/", "/account"];
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
 
+// Corrected and more robust toSlug helper function
+const toSlug = (name: string): string => {
+  if (!name) return '';
+  
+  // Replace all non-alphanumeric characters (except hyphens and spaces) with a hyphen
+  let slug = name.toString().toLowerCase().trim()
+    .replace(/[\s\W-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  
+  return slug;
+};
+
+// Use the corrected toSlug function to create the sets
+const categorySlugs = new Set();
+const subcategorySlugs = new Set();
+const categorySubcategoryMap = new Map();
+
+categoriesData.forEach(category => {
+  const categorySlug = toSlug(category.name);
+  categorySlugs.add(categorySlug);
+  const subcategorySlugsForCategory = category.subcategories.map(sub => toSlug(sub.name));
+  categorySubcategoryMap.set(categorySlug, subcategorySlugsForCategory);
+  subcategorySlugsForCategory.forEach(slug => subcategorySlugs.add(slug));
+});
+
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
 
-  // ✅ Step 0: Handle old product redirect first
-  if (!pathname.startsWith("/product")) {
-    const segments = pathname.split("/").filter(Boolean);
-    const lastSegment = segments[segments.length - 1];
-    const productPattern = /-\d+$/;
-
-    if (lastSegment && productPattern.test(lastSegment)) {
-      return NextResponse.redirect(new URL(`/product/${lastSegment}`, request.url));
-    }
+  // ✅ New Step 0.0: Handle all used-mhe redirects
+  if (pathname.startsWith('/used-mhe')) {
+    return NextResponse.redirect(new URL('/used', request.url));
   }
 
-  // ✅ Step 0.1: Handle old query param style product URLs
+  // Normalize pathname: remove trailing slash for consistent matching
+  const normalizedPathname = pathname.endsWith('/') && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
+  const segments = normalizedPathname.split("/").filter(Boolean);
+  const lastSegment = segments[segments.length - 1];
+  const productPattern = /-\d+$/;
+
+  // ✅ Step 0.1: Handle old product redirect first
+  if (lastSegment && productPattern.test(lastSegment)) {
+    return NextResponse.redirect(new URL(`/product/${lastSegment}`, request.url));
+  }
+
+  // ✅ Step 0.2: Handle old query param style product URLs
   if (pathname.startsWith("/product") && request.nextUrl.searchParams.has("id")) {
     const id = request.nextUrl.searchParams.get("id");
-    const segments = pathname.split("/").filter(Boolean);
-
-    // e.g. /product/manual-stacker -> "manual-stacker"
     const productSlug = segments[segments.length - 1];
 
     if (id && productSlug && !productSlug.endsWith(`-${id}`)) {
       return NextResponse.redirect(
         new URL(`/product/${productSlug}-${id}`, request.url)
       );
+    }
+  }
+
+  // ✅ Step 0.3: New logic to clean up invalid URL segments
+  // This logic runs only if the URL is not already a product page
+  if (!pathname.startsWith("/product")) {
+    
+    // Case 1: baseurl/cat-name/not-subcat-name-butsomething-else
+    // Check if the first segment is a valid category and the second is NOT a subcategory.
+    if (segments.length > 1) {
+      const categorySlug = toSlug(segments[0]);
+      const subcategorySlug = toSlug(segments[1]);
+
+      const validSubcategories = categorySubcategoryMap.get(categorySlug) || [];
+
+      // Check for a known category but an invalid second segment
+      if (categorySlugs.has(categorySlug) && !validSubcategories.includes(subcategorySlug)) {
+        return NextResponse.redirect(new URL(`/${categorySlug}`, request.url));
+      }
+    }
+    
+    // Case 2: baseurl/cat-name/subcat-name/something-else
+    // Check if the first two segments form a valid cat/subcat pair and there's a third segment.
+    if (segments.length > 2) {
+      const categorySlug = toSlug(segments[0]);
+      const subcategorySlug = toSlug(segments[1]);
+
+      const validSubcategories = categorySubcategoryMap.get(categorySlug) || [];
+
+      if (categorySlugs.has(categorySlug) && validSubcategories.includes(subcategorySlug)) {
+        return NextResponse.redirect(new URL(`/${categorySlug}/${subcategorySlug}`, request.url));
+      }
     }
   }
 
