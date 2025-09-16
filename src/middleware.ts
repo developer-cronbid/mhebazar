@@ -1,4 +1,3 @@
-// middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import axios from "axios";
@@ -60,27 +59,32 @@ export async function middleware(request: NextRequest) {
   const lastSegment = segments[segments.length - 1];
   const productPattern = /-\d+$/;
 
-  // ✅ Step 0.1: Handle old product redirect first
-  if (lastSegment && productPattern.test(lastSegment)) {
-    return NextResponse.redirect(new URL(`/product/${lastSegment}`, request.url));
-  }
+  // --- START of Corrected Product Redirect Logic ---
 
-  // ✅ Step 0.2: Handle old query param style product URLs
-  if (pathname.startsWith("/product") && request.nextUrl.searchParams.has("id")) {
-    const id = request.nextUrl.searchParams.get("id");
-    const productSlug = segments[segments.length - 1];
-
-    if (id && productSlug && !productSlug.endsWith(`-${id}`)) {
-      return NextResponse.redirect(
-        new URL(`/product/${productSlug}-${id}`, request.url)
-      );
+  // ✅ Step 0.1: Handle old query param style product URLs (/product?id=123)
+  if (normalizedPathname === '/product' && request.nextUrl.searchParams.has('id')) {
+    const id = request.nextUrl.searchParams.get('id');
+    if (id) {
+      try {
+        const { data } = await axios.get(`${API_BASE_URL}/products/${id}`);
+        const productSlug = toSlug(data.name);
+        return NextResponse.redirect(new URL(`/product/${productSlug}-${id}`, request.url));
+      } catch (e) {
+        // Product not found or API error, let Next.js handle the 404
+        return NextResponse.next();
+      }
     }
   }
 
+  // ✅ Step 0.2: Redirect any URL ending in a slug-id pattern to the product page
+  // This handles /something/else-123 -> /product/else-123
+  if (!pathname.startsWith('/product') && lastSegment && productPattern.test(lastSegment)) {
+    return NextResponse.redirect(new URL(`/product/${lastSegment}`, request.url));
+  }
+  
   // ✅ Step 0.3: New logic to clean up invalid URL segments
-  // This logic runs only if the URL is not already a product page
+  // This logic runs only if the URL is not a product page
   if (!pathname.startsWith("/product")) {
-    
     // Case 1: baseurl/cat-name/not-subcat-name-butsomething-else
     // Check if the first segment is a valid category and the second is NOT a subcategory.
     if (segments.length > 1) {
@@ -108,6 +112,7 @@ export async function middleware(request: NextRequest) {
       }
     }
   }
+  // --- END of Corrected Product Redirect Logic ---
 
 
   // ✅ Step 1: Auth handling

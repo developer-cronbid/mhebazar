@@ -1,6 +1,5 @@
 // src/app/product/[product]/page.tsx
-
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import api from '@/lib/api';
 import Breadcrumb from '@/components/elements/Breadcrumb';
 import ProductSection from '@/components/products/IndividualProduct';
@@ -8,6 +7,18 @@ import SparePartsFeatured from '@/components/home/SparepartsFeatured';
 import VendorProducts from '@/components/elements/VendorFeaturedProducts';
 import CategoryProducts from '@/components/elements/CategoryProducts';
 import styles from './page.module.css';
+
+// Helper function for SEO-friendly slug generation
+const slugify = (text: string): string => {
+  return (text || '')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .replace(/-+$/, '');
+};
 
 // This function now fetches real data for better SEO
 export async function generateMetadata({
@@ -27,7 +38,7 @@ export async function generateMetadata({
 
   try {
     const response = await api.get(`/products/${productId}`);
-    const productName = response.data.name; // Use the actual product name from the API
+    const productName = response.data.name;
 
     return {
       title: `${productName} - MHE Product Details`,
@@ -45,10 +56,25 @@ export async function generateMetadata({
 // The page component is now an async function
 export default async function IndividualProductPage({
   params,
+  searchParams,
 }: {
   params: { product: string };
+  searchParams: { id?: string };
 }) {
-  const productId = parseInt(params.product.split('-').pop() || '', 10);
+  let productId: number;
+  let productSlugFromUrl: string;
+
+  // Case 1: Handle old query parameter URLs like /product?id=123
+  if (searchParams.id) {
+    productId = parseInt(searchParams.id, 10);
+    // Use a placeholder slug for now
+    productSlugFromUrl = params.product || 'product';
+  } else {
+    // Case 2: Handle slug-based URLs like /product/forklift-123
+    const parts = params.product.split('-');
+    productId = parseInt(parts.pop() || '', 10);
+    productSlugFromUrl = parts.join('-');
+  }
 
   // If the ID is not a valid number, render a 404 page
   if (isNaN(productId)) {
@@ -57,13 +83,26 @@ export default async function IndividualProductPage({
 
   let productData;
   try {
-    // Fetch data directly on the server. No useState or useEffect needed.
     const response = await api.get(`/products/${productId}`);
     productData = response.data;
   } catch (error) {
-    // If the API call fails (e.g., product not found), trigger a 404 page
     console.error('Failed to fetch product:', error);
     notFound();
+  }
+
+  // Generate the correct, canonical slug from the product name
+  const canonicalProductSlug = slugify(productData.name);
+
+  // If the URL slug doesn't match the canonical slug, redirect to the correct URL
+  if (productSlugFromUrl !== canonicalProductSlug) {
+    const canonicalUrl = `/product/${canonicalProductSlug}-${productId}`;
+    redirect(canonicalUrl);
+  }
+  
+  // If the old query param URL was used, redirect to the new format
+  if (searchParams.id) {
+    const canonicalUrl = `/product/${canonicalProductSlug}-${productId}`;
+    redirect(canonicalUrl);
   }
 
   const { category_name, subcategory_name, name: productName } = productData;
@@ -80,14 +119,12 @@ export default async function IndividualProductPage({
           { label: 'Home', href: '/' },
           { label: category_name, href: `/${cat_slug}` },
           ...(subcategory_name ? [{ label: subcategory_name, href: `/${cat_slug}/${subcat_slug}` }] : []),
-          // Use the actual product name for the label for better UX
-          { label: product, href: `/product/${product}-${productId}` },
+          { label: product, href: `/product/${canonicalProductSlug}-${productId}` },
         ]}
       />
 
       <ProductSection productSlug={params.product} productId={productId} />
 
-      {/* Section container with fade-slide animation */}
       <div className={styles.animatedSection}>
         <SparePartsFeatured />
       </div>
