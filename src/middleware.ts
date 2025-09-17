@@ -23,7 +23,9 @@ const toSlug = (name: string): string => {
   
   // Replace all non-alphanumeric characters (except hyphens and spaces) with a hyphen
   let slug = name.toString().toLowerCase().trim()
+    .replace(/\s/g, '-')
     .replace(/[\s\W-]+/g, '-')
+    .replace(/--+/g, '-')
     .replace(/^-+|-+$/g, '');
   
   return slug;
@@ -33,11 +35,16 @@ const toSlug = (name: string): string => {
 const categorySlugs = new Set();
 const subcategorySlugs = new Set();
 const categorySubcategoryMap = new Map();
+const subcategoryToCategoryMap = new Map();
 
 categoriesData.forEach(category => {
   const categorySlug = toSlug(category.name);
   categorySlugs.add(categorySlug);
-  const subcategorySlugsForCategory = category.subcategories.map(sub => toSlug(sub.name));
+  const subcategorySlugsForCategory = category.subcategories.map(sub => {
+    const subSlug = toSlug(sub.name);
+    subcategoryToCategoryMap.set(subSlug, categorySlug); // Store the parent category for each subcategory
+    return subSlug;
+  });
   categorySubcategoryMap.set(categorySlug, subcategorySlugsForCategory);
   subcategorySlugsForCategory.forEach(slug => subcategorySlugs.add(slug));
 });
@@ -48,20 +55,27 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
 
-  // ✅ New Step 0.0: Handle all used-mhe redirects
-  if (pathname.startsWith('/used-mhe')) {
-    return NextResponse.redirect(new URL('/used', request.url));
-  }
-
   // Normalize pathname: remove trailing slash for consistent matching
   const normalizedPathname = pathname.endsWith('/') && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
   const segments = normalizedPathname.split("/").filter(Boolean);
   const lastSegment = segments[segments.length - 1];
   const productPattern = /-\d+$/;
 
-  // --- START of Corrected Product Redirect Logic ---
+  // --- START of Corrected Redirection Logic ---
 
-  // ✅ Step 0.1: Handle old query param style product URLs (/product?id=123)
+  // ✅ Step 0.1: Prioritized Product ID check
+  // This must come first to handle cases like /used-mhe/product-slug-190
+  // Fix: Added check to ensure it's not already a product page
+  if (!pathname.startsWith('/product') && lastSegment && productPattern.test(lastSegment)) {
+    return NextResponse.redirect(new URL(`/product/${lastSegment}`, request.url));
+  }
+
+  // ✅ Step 0.2: Handle /used-mhe URLs that do NOT have a product ID
+  if (segments[0] === 'used-mhe') {
+    return NextResponse.redirect(new URL('/used', request.url));
+  }
+  
+  // ✅ Step 0.3: Handle old query param style product URLs (/product?id=123)
   if (normalizedPathname === '/product' && request.nextUrl.searchParams.has('id')) {
     const id = request.nextUrl.searchParams.get('id');
     if (id) {
@@ -76,15 +90,22 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ✅ Step 0.2: Redirect any URL ending in a slug-id pattern to the product page
-  // This handles /something/else-123 -> /product/else-123
-  if (!pathname.startsWith('/product') && lastSegment && productPattern.test(lastSegment)) {
-    return NextResponse.redirect(new URL(`/product/${lastSegment}`, request.url));
+  // ✅ Step 0.4: Correctly handle baseurl/[sub-cat-name]/[something-else]
+  // This redirects /manual-mobile-scissors-lift/aepl-scissor-lift-table-mobile-800-kg-asps800
+  // to /scissors-lift/manual-mobile-scissors-lift
+  if (segments.length >= 1) {
+    const firstSegmentSlug = toSlug(segments[0]);
+    if (subcategorySlugs.has(firstSegmentSlug)) {
+      const parentCategorySlug = subcategoryToCategoryMap.get(firstSegmentSlug);
+      if (parentCategorySlug) {
+        return NextResponse.redirect(new URL(`/${parentCategorySlug}/${firstSegmentSlug}`, request.url));
+      }
+    }
   }
-  
-  // ✅ Step 0.3: New logic to clean up invalid URL segments
-  // This logic runs only if the URL is not a product page
+
+  // ✅ Step 0.5: New logic to clean up invalid URL segments
   if (!pathname.startsWith("/product")) {
+    
     // Case 1: baseurl/cat-name/not-subcat-name-butsomething-else
     // Check if the first segment is a valid category and the second is NOT a subcategory.
     if (segments.length > 1) {
@@ -112,7 +133,6 @@ export async function middleware(request: NextRequest) {
       }
     }
   }
-  // --- END of Corrected Product Redirect Logic ---
 
 
   // ✅ Step 1: Auth handling
