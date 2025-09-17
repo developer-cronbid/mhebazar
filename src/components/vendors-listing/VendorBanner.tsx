@@ -1,4 +1,4 @@
-// src/components/vendor-listing/VendorBanner.tsx
+// src/components/vendors-listing/VendorBanner.tsx
 "use client";
 import React, { useState, useRef, useMemo } from "react";
 import Image from "next/image";

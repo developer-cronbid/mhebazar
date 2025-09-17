@@ -1,7 +1,7 @@
 import api from "@/lib/api";
-import VendorCard from "@/components/vendor-listing/VendorCard";
+import VendorCard from "@/components/vendors-listing/VendorCard";
 import Breadcrumb from "@/components/elements/Breadcrumb";
-import ClientSideControls from "@/components/vendor-listing/ClientSideControls"; // The new Client Component
+import ClientSideControls from "@/components/vendors-listing/ClientSideControls"; // The new Client Component
 import {
   Pagination,
   PaginationContent,
@@ -112,12 +112,12 @@ export default async function VendorsPage({
   const generatePageLink = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
-    return `/vendor-listing?${params.toString()}`;
+    return `/vendors-listing?${params.toString()}`;
   };
 
   return (
     <main className="font-inter">
-      <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Brand Store', href: '/vendor-listing' }]} />
+      <Breadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Brand Store', href: '/vendors-listing' }]} />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Render the Client Component for interactive elements */}
         <ClientSideControls initialSearch={searchQuery} initialSort={sortOption} />

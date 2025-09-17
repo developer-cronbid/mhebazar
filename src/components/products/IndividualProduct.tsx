@@ -856,7 +856,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
 
                 <span className="text-lg text-gray-600">by</span>
                 <Link
-                  href={`/vendor-listing/${data.user_name}`}
+                  href={`/vendors-listing/${data.user_name}`}
                   className="text-lg hover:underline text-green-400"
                 >
                   {data.user_name || "MHE Bazar"}

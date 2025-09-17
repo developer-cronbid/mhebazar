@@ -89,7 +89,7 @@ const VendorMarquee = () => {
         {vendors.map((vendor) => (
           <Link
             key={vendor.id}
-            href={`/vendor-listing/${vendor.brand}`}
+            href={`/vendors-listing/${vendor.brand}`}
             className=" hover:scale-105 transition-transform"
           >
             <Image

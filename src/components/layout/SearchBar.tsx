@@ -258,9 +258,9 @@ export default function SearchBar({
       setSearchQuery("");
 
       if (item.type === "vendor") {
-        router.push(`/vendor-listing/${item.slug}`);
+        router.push(`/vendors-listing/${item.slug}`);
       } else if (item.type === "vendor_category") {
-        router.push(`/vendor-listing/${item.vendorSlug}?page=1&category=${item.categorySlug}`);
+        router.push(`/vendors-listing/${item.vendorSlug}?page=1&category=${item.categorySlug}`);
       } else if (item.type === "category") {
         router.push(`/${createSlug(item.name)}`);
       } else if (item.type === "subcategory") {

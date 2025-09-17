@@ -190,7 +190,7 @@ export default function Navbar(): JSX.Element {
                 setSearchQuery={setSearchQuery}
               />
               <Link
-                href="/vendor-listing"
+                href="/vendors-listing"
                 className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect hidden sm:block"
               >
                   <Image
@@ -390,7 +390,7 @@ export default function Navbar(): JSX.Element {
                 setSearchQuery={setSearchQuery}
               />
               <Link
-                href="/vendor-listing"
+                href="/vendors-listing"
                 className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect"
               >
                 <Image
@@ -690,9 +690,9 @@ export default function Navbar(): JSX.Element {
                     </Link>
                   ))}
                   <Link
-                    href="/vendor-listing"
+                    href="/vendors-listing"
                     className={`block px-4 py-3 font-semibold border-b border-gray-100 transition relative overflow-hidden shine-effect ${
-                      pathname === "/vendor-listing"
+                      pathname === "/vendors-listing"
                         ? "text-gray-900 bg-gray-50 font-bold"
                         : "hover:bg-gray-50"
                     }`}

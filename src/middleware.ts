@@ -1,9 +1,8 @@
+// middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import axios from "axios";
-
-// Add this import at the top of the file
-import categoriesData from "./data/categories.json";
+import redirects from "./data/redirects.json"; // ✅ your generated JSON
 
 const ROLES = {
   ADMIN: 1,
@@ -17,128 +16,22 @@ const protectedPrefixes = ["/admin", "/vendor/", "/account"];
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
 
-// Corrected and more robust toSlug helper function
-const toSlug = (name: string): string => {
-  if (!name) return '';
-  
-  // Replace all non-alphanumeric characters (except hyphens and spaces) with a hyphen
-  let slug = name.toString().toLowerCase().trim()
-    .replace(/\s/g, '-')
-    .replace(/[\s\W-]+/g, '-')
-    .replace(/--+/g, '-')
-    .replace(/^-+|-+$/g, '');
-  
-  return slug;
-};
-
-// Use the corrected toSlug function to create the sets
-const categorySlugs = new Set();
-const subcategorySlugs = new Set();
-const categorySubcategoryMap = new Map();
-const subcategoryToCategoryMap = new Map();
-
-categoriesData.forEach(category => {
-  const categorySlug = toSlug(category.name);
-  categorySlugs.add(categorySlug);
-  const subcategorySlugsForCategory = category.subcategories.map(sub => {
-    const subSlug = toSlug(sub.name);
-    subcategoryToCategoryMap.set(subSlug, categorySlug); // Store the parent category for each subcategory
-    return subSlug;
-  });
-  categorySubcategoryMap.set(categorySlug, subcategorySlugsForCategory);
-  subcategorySlugsForCategory.forEach(slug => subcategorySlugs.add(slug));
-});
-
-
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // ✅ Step 0: Handle redirects from JSON
+  const redirectTarget = (redirects as Record<string, string>)[pathname];
+  if (redirectTarget) {
+    return NextResponse.redirect(new URL(redirectTarget, request.url));
+  }
+
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
 
-  // Normalize pathname: remove trailing slash for consistent matching
-  const normalizedPathname = pathname.endsWith('/') && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
-  const segments = normalizedPathname.split("/").filter(Boolean);
-  const lastSegment = segments[segments.length - 1];
-  const productPattern = /-\d+$/;
-
-  // --- START of Corrected Redirection Logic ---
-
-  // ✅ Step 0.1: Prioritized Product ID check
-  // This must come first to handle cases like /used-mhe/product-slug-190
-  // Fix: Added check to ensure it's not already a product page
-  if (!pathname.startsWith('/product') && lastSegment && productPattern.test(lastSegment)) {
-    return NextResponse.redirect(new URL(`/product/${lastSegment}`, request.url));
-  }
-
-  // ✅ Step 0.2: Handle /used-mhe URLs that do NOT have a product ID
-  if (segments[0] === 'used-mhe') {
-    return NextResponse.redirect(new URL('/used', request.url));
-  }
-  
-  // ✅ Step 0.3: Handle old query param style product URLs (/product?id=123)
-  if (normalizedPathname === '/product' && request.nextUrl.searchParams.has('id')) {
-    const id = request.nextUrl.searchParams.get('id');
-    if (id) {
-      try {
-        const { data } = await axios.get(`${API_BASE_URL}/products/${id}`);
-        const productSlug = toSlug(data.name);
-        return NextResponse.redirect(new URL(`/product/${productSlug}-${id}`, request.url));
-      } catch (e) {
-        // Product not found or API error, let Next.js handle the 404
-        return NextResponse.next();
-      }
-    }
-  }
-
-  // ✅ Step 0.4: Correctly handle baseurl/[sub-cat-name]/[something-else]
-  // This redirects /manual-mobile-scissors-lift/aepl-scissor-lift-table-mobile-800-kg-asps800
-  // to /scissors-lift/manual-mobile-scissors-lift
-  if (segments.length >= 1) {
-    const firstSegmentSlug = toSlug(segments[0]);
-    if (subcategorySlugs.has(firstSegmentSlug)) {
-      const parentCategorySlug = subcategoryToCategoryMap.get(firstSegmentSlug);
-      if (parentCategorySlug) {
-        return NextResponse.redirect(new URL(`/${parentCategorySlug}/${firstSegmentSlug}`, request.url));
-      }
-    }
-  }
-
-  // ✅ Step 0.5: New logic to clean up invalid URL segments
-  if (!pathname.startsWith("/product")) {
-    
-    // Case 1: baseurl/cat-name/not-subcat-name-butsomething-else
-    // Check if the first segment is a valid category and the second is NOT a subcategory.
-    if (segments.length > 1) {
-      const categorySlug = toSlug(segments[0]);
-      const subcategorySlug = toSlug(segments[1]);
-
-      const validSubcategories = categorySubcategoryMap.get(categorySlug) || [];
-
-      // Check for a known category but an invalid second segment
-      if (categorySlugs.has(categorySlug) && !validSubcategories.includes(subcategorySlug)) {
-        return NextResponse.redirect(new URL(`/${categorySlug}`, request.url));
-      }
-    }
-    
-    // Case 2: baseurl/cat-name/subcat-name/something-else
-    // Check if the first two segments form a valid cat/subcat pair and there's a third segment.
-    if (segments.length > 2) {
-      const categorySlug = toSlug(segments[0]);
-      const subcategorySlug = toSlug(segments[1]);
-
-      const validSubcategories = categorySubcategoryMap.get(categorySlug) || [];
-
-      if (categorySlugs.has(categorySlug) && validSubcategories.includes(subcategorySlug)) {
-        return NextResponse.redirect(new URL(`/${categorySlug}/${subcategorySlug}`, request.url));
-      }
-    }
-  }
-
-
-  // ✅ Step 1: Auth handling
   let isAuthenticated = false;
   let userRole: number | null = null;
 
+  // 1. Try validating access token
   if (accessToken) {
     try {
       const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
@@ -149,7 +42,9 @@ export async function middleware(request: NextRequest) {
       });
       isAuthenticated = true;
       userRole = userResponse.data?.role?.id;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
+      // 2. Try refreshing token if access token fails
       if (refreshToken) {
         try {
           const refreshResponse = await axios.post(
@@ -181,7 +76,7 @@ export async function middleware(request: NextRequest) {
           isAuthenticated = true;
           userRole = userResponse.data?.role?.id;
 
-          return response;
+          return response; // Token refreshed, continue
         } catch (refreshError) {
           console.error("Token refresh failed", refreshError);
         }
@@ -189,15 +84,19 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ✅ Step 2: Public routes
+  // 3. Public Routes: Allow all public paths
   if (publicPaths.includes(pathname)) {
-    if (isAuthenticated && (pathname === "/login" || pathname === "/register")) {
+    // Redirect authenticated user away from /login or /register
+    if (
+      isAuthenticated &&
+      (pathname === "/login" || pathname === "/register")
+    ) {
       return NextResponse.redirect(new URL("/", request.url));
     }
     return NextResponse.next();
   }
 
-  // ✅ Step 3: Protected routes
+  // 4. Protected Routes: Block unauthenticated users
   if (protectedPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     if (!isAuthenticated) {
       const response = NextResponse.redirect(new URL("/login", request.url));
@@ -206,7 +105,11 @@ export async function middleware(request: NextRequest) {
       return response;
     }
 
-    if (userRole === ROLES.USER && (pathname.startsWith("/admin") || pathname.startsWith("/vendor"))) {
+    // Role-based restrictions
+    if (
+      userRole === ROLES.USER &&
+      (pathname.startsWith("/admin") || pathname.startsWith("/vendor"))
+    ) {
       return NextResponse.redirect(new URL("/", request.url));
     }
 
@@ -215,12 +118,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // ✅ Step 4: Default allow
+  // 5. All other routes
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.\\..).*)"],
 };
