@@ -1,375 +1,312 @@
-<?xml version="1.0" encoding="UTF-8"?> 
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"> 
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+
+
 <url>
-  <loc>http://www.mhebazar.in/</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>1.00</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/compare</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/compare</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/used</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/used</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/attachments</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/attachments</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/spare-parts</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/spare-parts</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/services</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/services</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/training</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/training</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/blog</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/blog</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/services/subscription-plan</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/services/subscription-plan</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/pallet</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/pallet</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/battery</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/battery</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/forklift</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/forklift</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/pallet-truck</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/pallet-truck</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/electric-pallet-truck-bopt</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/electric-pallet-truck-bopt</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/stacker</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/stacker</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/new</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/new</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/blog/reach-truck-vs-electric-forklift-suitable-for-warehouse</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/blog/reach-truck-vs-electric-forklift-suitable-for-warehouse</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/blog/top-mistakes-buying-used-mhe-equipment-online</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/blog/top-mistakes-buying-used-mhe-equipment-online</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/blog/manual-vs-semi-electric-stackers</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/blog/manual-vs-semi-electric-stackers</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/tel:+919289094445</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/about</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/tel:+919840088428</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/contact</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/about</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/terms-conditions</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/contact</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/charger</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/terms-conditions</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/reach-truck</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/charger</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/racking-system</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/reach-truck</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/order-picker</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/racking-system</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/very-narrow-aisle-truck</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/order-picker</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/tow-truck</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/very-narrow-aisle-truck</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/platform-truck</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/tow-truck</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/manual-platform-trolly</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/platform-truck</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/dock-leveller</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/manual-platform-trolly</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/scissors-lift</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/dock-leveller</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/container-handler</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/scissors-lift</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/explosionproof-mhe-solution</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/container-handler</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/automated-guided-vehicle</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/explosionproof-mhe-solution</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/forklift-attachments</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/automated-guided-vehicle</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/conveyor</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/forklift-attachments</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/wrapping-machine</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/conveyor</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/cleaning-equipment</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/wrapping-machine</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/safety-solutions</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.80</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/cleaning-equipment</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/metalkraft-industries</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/safety-solutions</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/sfs</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/metalkraft-industries</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/godrej</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/sfs</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/bolzoni</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/godrej</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/phl</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/bolzoni</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/cascade</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/phl</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/aepl</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/cascade</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/byd</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/aepl</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/troax</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/byd</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/logisnext</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/troax</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/stw</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/logisnext</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/stakon</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/stw</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/asmita</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/stakon</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/manasi-engineering</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/asmita</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/unik</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/manasi-engineering</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/supra</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/unik</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/tallboy</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/supra</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/greentech-india</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
 <url>
-  <loc>http://www.mhebazar.in/vendors-listing/tallboy</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
+  <loc>https://www.mhebazar.in/vendors-listing/mhe-bazar</loc>
+  <lastmod>2025-09-17T12:14:53+00:00</lastmod>
+  <priority>0.64</priority>
 </url>
-<url>
-  <loc>http://www.mhebazar.in/vendors-listing/greentech-india</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
-</url>
-<url>
-  <loc>http://www.mhebazar.in/vendors-listing/mhe-bazar</loc>
-  <priority>0.8</priority>
-  <changefreq>daily</changefreq>
-  <lastmod>2025-09-17</lastmod>
-</url>
+
+
 </urlset>
