@@ -19,15 +19,23 @@ const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
 export async function middleware(request: NextRequest) {
   const { pathname, href } = request.nextUrl;
 
-  // ✅ Step 0: Handle redirects from JSON
-  const redirectMap = redirects as Record<string, string>;
-  const redirectTarget =
-    redirectMap[href] || // full URL match
-    redirectMap[pathname]; // path-only match
+// ✅ Step 0: Handle redirects from JSON
+const redirectMap = redirects as Record<string, string>;
 
-  if (redirectTarget) {
-    return NextResponse.redirect(redirectTarget);
-  }
+// Normalize keys to handle spaces (%20) vs real spaces
+const decodedPathname = decodeURIComponent(pathname);
+const decodedHref = decodeURIComponent(href);
+
+const redirectTarget =
+  redirectMap[href] ||
+  redirectMap[pathname] ||
+  redirectMap[decodedHref] ||
+  redirectMap[decodedPathname];
+
+if (redirectTarget) {
+  return NextResponse.redirect(redirectTarget);
+}
+
 
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
