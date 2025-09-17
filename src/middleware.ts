@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import axios from "axios";
-import redirects from "./data/redirects.json"; // ✅ your generated JSON
+import redirects from "./data/redirects.json";
 
 const ROLES = {
   ADMIN: 1,
@@ -17,12 +17,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, href } = request.nextUrl;
 
   // ✅ Step 0: Handle redirects from JSON
-  const redirectTarget = (redirects as Record<string, string>)[pathname];
+  const redirectMap = redirects as Record<string, string>;
+  const redirectTarget =
+    redirectMap[href] || // full URL match
+    redirectMap[pathname]; // path-only match
+
   if (redirectTarget) {
-    return NextResponse.redirect(new URL(redirectTarget, request.url));
+    return NextResponse.redirect(redirectTarget);
   }
 
   const accessToken = request.cookies.get("access_token")?.value;
