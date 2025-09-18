@@ -9,69 +9,16 @@ import { ImQuotesLeft } from "react-icons/im";
 // Move reviews data outside component
 const reviews = [
   {
-    name: "Mr. Perumal",
-    role: "Sunray Material Handling Pvt. Ltd.",
-    avatar:
-      "/css/newassets/imgs/page/testimonials/rial-handling-pvt-ltd-mr-rajappa.webp",
-    fallback: "PN",
-    content: (
-      <div>
-        <p>
-          One of our customers asked for BOPT on a rental basis and we decided
-          to supply it with Lithium-Ion Batteries, considering its{" "}
-          <span className="font-semibold">
-            benefits like opportunity charging, Maintenance free, Emission
-            Free and long life, etc…
-          </span>
-        </p>
-
-        <p>
-          {" "}
-          On supply of
-          <span className="font-semibold">
-            {" "}
-            6 Nos BOPT with 25V 200Ah Li-Ion Battery
-          </span>{" "}
-          one year back, till now we are free from its maintenance and also
-          opportunity charging gives the benefit to operate the BOPT more
-          without keeping it idle for charging. It is more beneficial to our
-          customers also and for us also as providing equipment on rental.
-        </p>
-
-        <p>
-          <span className="font-semibold">
-            We are very happy with the MHE Bazar Li-Ion battery,
-          </span>{" "}
-          and the information provided by the salesperson and the service team
-          was also very cooperative and guided us to install it in our
-          equipment.
-        </p>
-
-        <p>
-          {" "}
-          Mr. Ulhas and Mr. Manik are our friends and we will definitely work
-          with them again for our next requirement for{" "}
-          <span className="font-semibold">
-            MHE Bazar Lithium-ion Battery.
-          </span>
-          <br />
-          And again, I will request to all who are using MHEs with Lead-Acid
-          batteries that they can convert their MHEs into Li-ion Battery
-          Operated with a very small investment as this technology is very
-          good for the environment and operational use also so{" "}
-          <span className="font-semibold">
-            do this for Green India and Net Zero Nation.
-          </span>
-        </p>
-      </div>
-    ),
-  },
-  {
+    id: 1,
     name: "Mr. Manohari Lal",
     role: "M/s. A.M. Enterprises",
     avatar:
       "/css/newassets/imgs/page/testimonials/photo/M_s. AM Enterprises, Mr. Manohari Lal.png",
     fallback: "ML",
+    rating: 5,
+    category: "MHE Equipment",
+    date: "2023-01-15",
+    tags: ["BYD Forklifts", "MHE Spares", "AMC Service", "Rental Service"],
     content: (
       <div>
         <p>
@@ -99,7 +46,6 @@ const reviews = [
           just need to inform to the team they will take care of all other
           things without any interruption.
         </p>
-
         <p>
           So as a MHE Rental provider the same sort of service we required and
           that we are getting constantly.We are expecting the same support in
@@ -109,45 +55,53 @@ const reviews = [
     ),
   },
   {
+    id: 2,
     name: "Mr. Nitish Hirve",
     role: "Operations Head",
     avatar:
       "/css/newassets/imgs/page/testimonials/photo/M_s. Asmita Engineering, Mr. Nitish Hirve.png",
     fallback: "NH",
+    rating: 5,
+    category: "Electric Equipment",
+    date: "2023-02-20",
+    tags: ["Asmita Engineering", "Lithium-Ion", "Electric Hand Pallet Truck", "eHPT"],
     content: (
       <div>
         <p>
           <span className="font-semibold">Asmita Engineering</span> is engaged
           in manufacturing, supplying and exporting a gamut of Material
           Handling Equipment. The range we offer is acknowledged by our
-          clients&apos; for its high performance, high efficiency, and sturdy
+          clients' for its high performance, high efficiency, and sturdy
           construction
         </p>
-
         <p>
-          &quot;We recently acquired{" "}
+          "We recently acquired{" "}
           <span className="font-semibold">
-            Greentech&apos;s Lithium-Ion Electric Hand Pallet Truck (eHPT)
+            Greentech's Lithium-Ion Electric Hand Pallet Truck (eHPT)
           </span>{" "}
-          2 Units and it&apos;s been a game-changer for our MHE operations and we
+          2 Units and it's been a game-changer for our MHE operations and we
           supplied to our end customers also. Its{" "}
           <span className="font-semibold">
             efficiency and durability have exceeded our expectations, allowing
             us to enhance productivity while reducing environmental impact.
           </span>{" "}
-          A stellar addition to our pioneering fleet!&quot;
+          A stellar addition to our pioneering fleet!"
         </p>
-
         <p>Highly recommended for your Material handling solution…!</p>
       </div>
     ),
   },
   {
+    id: 3,
     name: "Mr. Pathan Nawaz",
     role: "M/s. R S Global",
     avatar:
       "/css/newassets/imgs/page/testimonials/photo/M_s. R S Global, Mr. Pathan Nawaz.png",
-    fallback: "NH",
+    fallback: "PN",
+    rating: 5,
+    category: "Battery Technology",
+    date: "2023-03-10",
+    tags: ["Lithium-Ion Battery", "eHPT", "Reduced Pollution", "Ergonomic Design"],
     content: (
       <div>
         <p>
@@ -166,11 +120,10 @@ const reviews = [
           </span>{" "}
           in our workspace. The{" "}
           <span className="font-semibold">
-            eHPT&apos;s precise maneuverability and ergonomic design have
+            eHPT's precise maneuverability and ergonomic design have
             significantly increased our productivity and operator comfort.
           </span>
         </p>
-
         <p>
           {" "}
           Additionally, the{" "}
@@ -180,16 +133,15 @@ const reviews = [
           </span>{" "}
           for 3-shift operation.
         </p>
-
         <p>
-          Greentech India&apos;s{" "}
+          Greentech India's{" "}
           <span className="font-semibold">
             exemplary service and expertise made the purchasing process
             seamless.
           </span>{" "}
           We{" "}
           <span className="font-semibold">
-            highly recommend purchasing MHE&apos;s from Greentech India
+            highly recommend purchasing MHE's from Greentech India
           </span>{" "}
           Material Handling LLP for their{" "}
           <span className="font-semibold">
@@ -199,13 +151,85 @@ const reviews = [
       </div>
     ),
   },
-
   {
-    name: "Customer",
-    role: "",
+    id: 4,
+    name: "Mr. Perumal",
+    role: "M/s. Prime Forklifters Pvt. Ltd.",
+    avatar:
+      "/css/newassets/imgs/page/testimonials/e-forklifters-pvt-ltd-mr-perumal.webp",
+    fallback: "PN",
+    rating: 5,
+    category: "MHE Equipment",
+    date: "2023-04-05",
+    tags: ["BYD forklift", "Lithium-Ion", "Rental Replacement", "Customer Support"],
+    content: (
+      <div>
+        <p>
+          <span className="font-semibold">
+            first BYD forklift from Greentech India Material Handling LLP.
+          </span>
+          We acquired the Now after watching the performance of the first
+          equipment, we have already purchased more than 10 BYD equipment.
+          Greentech India Material Handling LLP is a very supportive company
+          with excellent response for service and spare parts support.
+        </p>
+        <p>
+          We are completely{" "}
+          <span className="font-semibold">
+            satisfied with the performance of the equipment and the support
+            from Greentech India
+          </span>{" "}
+          Material Handling LLP.
+        </p>
+        <p>
+          <span className="font-semibold">
+            Being in the field of MHE for more than 35 years we are very happy
+            to own BYD in our fleet which at present is one of the best
+            Lithium-Ion powered forklifts
+          </span>{" "}
+          in the world for the price sold in India. The BYD Lithium-Ion
+          battery forklift's technology is a game-changer, offering
+          <span className="font-semibold">
+            impressive efficiency and longer run times.
+          </span>{" "}
+          Additionally, the{" "}
+          <span className="font-semibold">
+            reduced maintenance costs and eco-friendliness
+          </span>{" "}
+          of the lithium-ion battery are remarkable benefits.
+        </p>
+        <p>
+          We are now in the process of procuring{" "}
+          <span className="font-semibold">
+            many of our Rental replacement equipment from BYD through
+            Greentech India
+          </span>{" "}
+          Material Handling LLP, their service and expertise make our
+          purchasing process seamless.
+        </p>
+        <p>
+          We{" "}
+          <span className="font-semibold">
+            highly recommend purchasing Forklifts or other MHEs from Greentech
+            India
+          </span>{" "}
+          Material Handling LLP for their exceptional product knowledge and
+          outstanding customer support.
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: 5,
+    name: "Mr. Prasad Dhaniwale",
+    role: "M/s. Novel Lifting Engineers",
     avatar:
       "/css/newassets/imgs/page/testimonials/ting-engineers-mr-prasad-dhaniwale.webp",
     fallback: "PN",
+    rating: 5,
+    category: "Battery Technology",
+    date: "2023-05-18",
+    tags: ["MHE Bazar", "Lithium-Ion Battery", "Performance", "Durability", "Eco-Friendly"],
     content: (
       <div>
         <p>
@@ -215,13 +239,12 @@ const reviews = [
           </span>{" "}
           which we purchased and using.
         </p>
-
         <p>
           <span className="font-semibold">
             Performance: ⭐⭐⭐⭐⭐
             <br />
           </span>
-          The battery&apos;s performance has been exceptional. It{" "}
+          The battery's performance has been exceptional. It{" "}
           <span className="font-semibold">
             consistently provides a long-lasting charge.
           </span>
@@ -258,7 +281,6 @@ const reviews = [
           </span>{" "}
           for their material handling needs.
         </p>
-
         <p>
           Thank you MHE Bazar for providing us with a product that has
           significantly improved our end-customer operations and contributed
@@ -268,11 +290,16 @@ const reviews = [
     ),
   },
   {
-    name: "Customer",
-    role: "",
+    id: 6,
+    name: "Mr Ram Thanash",
+    role: "M/s. PRT Enterprises Pvt. Ltd.",
     avatar:
       "/css/newassets/imgs/page/testimonials/s-prt-enterprises-mr-ram-thanash.webp",
     fallback: "PN",
+    rating: 4,
+    category: "Electric Equipment",
+    date: "2023-06-01",
+    tags: ["Metal finishing", "Semi-Electric Stacker", "Productivity"],
     content: (
       <div>
         <p>
@@ -284,7 +311,6 @@ const reviews = [
           (blackening), Manganese phosphating, Zinc phosphating, Molybdenum di
           sulfide coating, etc.,
         </p>
-
         <p>
           We purchased{" "}
           <span className="font-semibold">
@@ -300,11 +326,16 @@ const reviews = [
     ),
   },
   {
-    name: "Customer",
-    role: "",
+    id: 7,
+    name: "Mr. Bharat Ganesh",
+    role: "M/s. venkraft Paper Mills Pvt. Ltd.",
     avatar:
       "/css/newassets/imgs/page/testimonials/r-mills-pvt-ltd-mr-bharat-ganesh.webp",
     fallback: "PN",
+    rating: 5,
+    category: "MHE Equipment",
+    date: "2023-07-08",
+    tags: ["Hyundai Forklift", "Rental", "Lithium-Ion Battery", "Eco-Friendly"],
     content: (
       <div>
         <p>
@@ -316,7 +347,6 @@ const reviews = [
           specific requirements and recommended the Hyundai Forklift on Rental
           as the perfect fit for our business.
         </p>
-
         <p>
           {" "}
           This machine comes with an{" "}
@@ -335,7 +365,7 @@ const reviews = [
           We appreciate the environmental responsibility of Hyundai Forklifts,
           which aligns with our values. In a nutshell,{" "}
           <span className="font-semibold">
-            Greentech India&apos;s Hyundai forklift has exceeded our expectations,
+            Greentech India's Hyundai forklift has exceeded our expectations,
           </span>{" "}
           making them our{" "}
           <span className="font-semibold">
@@ -346,11 +376,16 @@ const reviews = [
     ),
   },
   {
-    name: "Customer",
-    role: "",
+    id: 8,
+    name: "Mr. Manoj Shekhawat",
+    role: "M/s. Ambey Developers",
     avatar:
       "/css/newassets/imgs/page/testimonials/mbey-developers-mr-manoj-shekhawat.webp",
     fallback: "PN",
+    rating: 5,
+    category: "Battery Technology",
+    date: "2023-08-14",
+    tags: ["Greentech", "MHE Bazar", "Lithium-ion Battery", "Customer Support"],
     content: (
       <div>
         <p>
@@ -368,7 +403,6 @@ const reviews = [
             MHE industry.
           </span>
         </p>
-
         <p>
           Hence they came up with{" "}
           <span className="font-semibold">
@@ -378,7 +412,6 @@ const reviews = [
           as they are virtually maintenance-free. They have resurrected the
           industry.
         </p>
-
         <p>
           {" "}
           We have{" "}
@@ -393,9 +426,8 @@ const reviews = [
           </span>{" "}
           which ultimately resulted in being very fruitful and viable.
         </p>
-
         <p>
-          <span className="font-semibold">They are the &quot;Man of Mettle&quot;.</span>{" "}
+          <span className="font-semibold">They are the "Man of Mettle".</span>{" "}
           We are perfectly content with all the business we had with them and
           the same also recommend the other MHE users.
         </p>
@@ -403,11 +435,16 @@ const reviews = [
     ),
   },
   {
-    name: "Mr. Rajappa ",
+    id: 9,
+    name: "Mr. Rajappa",
     role: "Sunray Material Handling Pvt. Ltd.",
     avatar:
       "/css/newassets/imgs/page/testimonials/rial-handling-pvt-ltd-mr-rajappa.webp",
     fallback: "PN",
+    rating: 5,
+    category: "Battery Technology",
+    date: "2023-09-22",
+    tags: ["BOPT", "Lithium-Ion Batteries", "Maintenance Free", "Green India"],
     content: (
       <div>
         <p>
@@ -418,7 +455,6 @@ const reviews = [
             Free and long life, etc…
           </span>
         </p>
-
         <p>
           {" "}
           On supply of
@@ -431,7 +467,6 @@ const reviews = [
           without keeping it idle for charging. It is more beneficial to our
           customers also and for us also as providing equipment on rental.
         </p>
-
         <p>
           <span className="font-semibold">
             We are very happy with the MHE Bazar Li-Ion battery,
@@ -440,7 +475,6 @@ const reviews = [
           was also very cooperative and guided us to install it in our
           equipment.
         </p>
-
         <p>
           {" "}
           Mr. Ulhas and Mr. Manik are our friends and we will definitely work
@@ -461,11 +495,16 @@ const reviews = [
     ),
   },
   {
-    name: "Mrs. Divya Roy,",
+    id: 10,
+    name: "Mrs. Divya Roy",
     role: "M/s. Watrana Traction Pvt. Ltd.",
     avatar:
       "/css/newassets/imgs/page/testimonials/a-traction-pvt-ltd-mrs-divya-roy.webp",
     fallback: "PN",
+    rating: 5,
+    category: "MHE Equipment",
+    date: "2023-10-15",
+    tags: ["Spare parts", "After sales", "Customer Support", "Reliability"],
     content: (
       <div>
         <p>
@@ -473,7 +512,6 @@ const reviews = [
           Our team has been happy with its quiet operation, especially in
           after sales and service.
         </p>
-
         <p>
           {" "}
           We would like to agree on the below listed points as excellent
@@ -489,13 +527,11 @@ const reviews = [
           <br />
           5. Value of Vendor
         </p>
-
         <p>
           {" "}
-          Greentech India&apos;s exemplary service and expertise made the
+          Greentech India's exemplary service and expertise made the
           purchasing process seamless.
         </p>
-
         <p>
           We highly recommend purchasing MHE Products and spare parts &amp;
           services from Greentech India Material Handling LLP for their
@@ -505,11 +541,16 @@ const reviews = [
     ),
   },
   {
-    name: "Customer",
-    role: "",
+    id: 11,
+    name: "Mr. Jayanta Dutta",
+    role: "MAC SPARES",
     avatar:
       "/css/newassets/imgs/page/testimonials/mr-jayanta-dutta-mac-spares.webp",
     fallback: "PN",
+    rating: 5,
+    category: "Battery Technology",
+    date: "2023-11-20",
+    tags: ["Green Revolution", "Lithium-Ion Battery", "Uptime", "Maintenance-free"],
     content: (
       <div>
         <p>
@@ -518,7 +559,6 @@ const reviews = [
           working together for the Green Revolution &amp; they are big
           milestones given for all of us.
         </p>
-
         <p>
           {" "}
           For the last 2 years, we have been using their 5 numbers MHE Bazar
@@ -529,7 +569,6 @@ const reviews = [
           especially Thanks to the good management and service team, they are
           always kind support &amp; cooperation with our MAC SPARES TEAM.
         </p>
-
         <p>
           We expect that in Future Green Revolution and other upcoming
           technology, all works will come together in the Eastern Part of
@@ -539,36 +578,38 @@ const reviews = [
     ),
   },
   {
+    id: 12,
     name: "Mr. Xavier",
     role: "M/s. Asian Engineering Group",
     avatar:
       "/css/newassets/imgs/page/testimonials/engineering-group-mr-benzie-xavier.webp",
     fallback: "PN",
+    rating: 5,
+    category: "MHE Equipment",
+    date: "2023-12-05",
+    tags: ["BYD Lithium-Ion Forklift", "Efficiency", "Eco-friendliness"],
     content: (
       <div>
         <p>
           BYD Lithium-Ion Forklift we acquired from Greentech India Material
           Handling LLP.
         </p>
-
         <p>
           {" "}
-          The BYD Lithium-Ion Battery Forklift&apos;s technology is a game-changer,
+          The BYD Lithium-Ion Battery Forklift's technology is a game-changer,
           offering impressive efficiency and longer run times. Our team has
           been happy with its quiet operation, reducing pollution in our
-          workspace. The forklift&apos;s precise maneuverability and ergonomic
+          workspace. The forklift's precise maneuverability and ergonomic
           design have significantly increased our productivity and operator
           comfort.
         </p>
-
         <p>
           {" "}
-          Additionally, the lithium-ion battery&apos;s reduced maintenance costs
-          and eco-friendliness are remarkable benefits. Greentech India&apos;s
+          Additionally, the lithium-ion battery's reduced maintenance costs
+          and eco-friendliness are remarkable benefits. Greentech India's
           exemplary service and expertise made the purchasing process
           seamless.
         </p>
-
         <p>
           {" "}
           We highly recommend purchasing Forklifts and other MHEs from

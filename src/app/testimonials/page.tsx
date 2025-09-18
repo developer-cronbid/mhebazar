@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, Star, ChevronDown, ArrowLeft } from "lucide-react";
@@ -222,8 +222,8 @@ const reviews = [
   },
   {
     id: 5,
-    name: "Customer",
-    role: "M/s. Ting Engineers",
+    name: "Mr. Prasad Dhaniwale",
+    role: "M/s. Novel Lifting Engineers",
     avatar:
       "/css/newassets/imgs/page/testimonials/ting-engineers-mr-prasad-dhaniwale.webp",
     fallback: "PN",
@@ -292,8 +292,8 @@ const reviews = [
   },
   {
     id: 6,
-    name: "Customer",
-    role: "M/s. S. P. R. T. Enterprises",
+    name: "Mr Ram Thanash",
+    role: "M/s. PRT Enterprises Pvt. Ltd.",
     avatar:
       "/css/newassets/imgs/page/testimonials/s-prt-enterprises-mr-ram-thanash.webp",
     fallback: "PN",
@@ -328,8 +328,8 @@ const reviews = [
   },
   {
     id: 7,
-    name: "Customer",
-    role: "M/s. R. Mills Pvt. Ltd.",
+    name: "Mr. Bharat Ganesh",
+    role: "M/s. venkraft Paper Mills Pvt. Ltd.",
     avatar:
       "/css/newassets/imgs/page/testimonials/r-mills-pvt-ltd-mr-bharat-ganesh.webp",
     fallback: "PN",
@@ -378,8 +378,8 @@ const reviews = [
   },
   {
     id: 8,
-    name: "Customer",
-    role: "M/s. Mbey Developers",
+    name: "Mr. Manoj Shekhawat",
+    role: "M/s. Ambey Developers",
     avatar:
       "/css/newassets/imgs/page/testimonials/mbey-developers-mr-manoj-shekhawat.webp",
     fallback: "PN",
@@ -662,6 +662,40 @@ const StarRating = ({ rating }: { rating: number }) => (
 );
 
 export default function TestimonialsPage() {
+
+  useEffect(() => {
+    // Set the document title
+    document.title = "What Customers Say | MHE Bazar Testimonials and Client Reviews";
+
+    // Create or update the meta description tag
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', "Read real testimonials and success stories from satisfied MHE Bazar clients. Discover why businesses trust our material handling and safety solutions.");
+
+    // Create or update the meta title tag (This is a less common practice now, as document.title is the main way to set the page title, but you can include it if you want)
+    let metaTitle = document.querySelector('meta[name="title"]');
+    if (!metaTitle) {
+      metaTitle = document.createElement('meta');
+      metaTitle.setAttribute('name', 'title');
+      document.head.appendChild(metaTitle);
+    }
+    metaTitle.setAttribute('content', "What Customers Say | MHE Bazar Testimonials and Client Reviews");
+
+    // Create or update the canonical link tag
+    let canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute('href', "https://www.mhebazar.in/testimonials");
+
+  }, []); // The empty dependency array ensures this effect runs only once when the component mounts.
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [showFilters, setShowFilters] = useState(false);
