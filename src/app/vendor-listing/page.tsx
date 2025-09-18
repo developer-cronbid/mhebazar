@@ -46,6 +46,11 @@ export const metadata: Metadata = {
     title: 'Vendors listing',
     description: 'Discover trusted MHE vendors offering competitive prices and premium quality products at MHEBazar. Elevate your operations today!',
   },
+  // ✅ Custom meta tags for SEO
+  other: {
+    'title': 'Vendors listing',
+    'description': 'Discover trusted MHE vendors offering competitive prices and premium quality products at MHEBazar. Elevate your operations today!',
+  },
 };
 
 // This is a Server Component, hence no `'use client'` directive
