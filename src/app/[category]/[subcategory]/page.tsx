@@ -23,12 +23,16 @@ interface ApiSubcategory {
   name: string;
   category_name: string;
   category: number;
+  meta_title: string | null;
+  meta_description: string | null;
 }
 
 interface ApiCategory {
   id: number;
   name: string;
   subcategories: ApiSubcategory[];
+  meta_title: string | null;
+  meta_description: string | null;
 }
 
 interface ApiProduct {
@@ -59,6 +63,15 @@ interface ApiResponse<T> {
   results: T[];
 }
 
+interface RouteContext {
+  category: string | null;
+  subcategory: string | null;
+  categoryId: number | null;
+  subcategoryId: number | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+}
+
 export default function SubCategoryPage({
   params,
 }: {
@@ -86,9 +99,13 @@ export default function SubCategoryPage({
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<string>('relevance');
 
+  // Page metadata states
+  const [metaTitle, setMetaTitle] = useState<string>('');
+  const [metaDescription, setMetaDescription] = useState<string>('');
+
   const [validCategoryName, setValidCategoryName] = useState<string | null>(null);
   const [validSubcategoryName, setValidSubcategoryName] = useState<string | null>(null);
-  
+
   // Use a ref for a simple in-memory cache to avoid re-fetching data
   const productCache = useRef(new Map());
 
@@ -96,7 +113,7 @@ export default function SubCategoryPage({
   const validateRouteAndGetIds = useCallback(async (
     catSlug: string,
     subcatSlug: string
-  ): Promise<{ category: string | null; subcategory: string | null; categoryId: number | null, subcategoryId: number | null }> => {
+  ): Promise<RouteContext> => {
     const formattedCatName = formatNameFromSlug(catSlug);
     const formattedSubcatName = formatNameFromSlug(subcatSlug);
 
@@ -106,7 +123,7 @@ export default function SubCategoryPage({
 
       if (!category) {
         setErrorMessage(`Category "${formattedCatName}" not found.`);
-        return { category: null, subcategory: null, categoryId: null, subcategoryId: null };
+        return { category: null, subcategory: null, categoryId: null, subcategoryId: null, metaTitle: null, metaDescription: null };
       }
 
       const subcategory = category.subcategories.find((sub: ApiSubcategory) =>
@@ -115,7 +132,7 @@ export default function SubCategoryPage({
 
       if (!subcategory) {
         setErrorMessage(`Subcategory "${formattedSubcatName}" not found under category "${formattedCatName}".`);
-        return { category: null, subcategory: null, categoryId: null, subcategoryId: null };
+        return { category: null, subcategory: null, categoryId: null, subcategoryId: null, metaTitle: null, metaDescription: null };
       }
 
       setValidCategoryName(category.name);
@@ -127,12 +144,14 @@ export default function SubCategoryPage({
         subcategory: subcategory.name,
         categoryId: category.id,
         subcategoryId: subcategory.id,
+        metaTitle: subcategory.meta_title,
+        metaDescription: subcategory.meta_description,
       };
 
     } catch (err: unknown) {
       console.error("[Subcategory Page] Error validating route:", err);
       setErrorMessage("An error occurred while validating the path.");
-      return { category: null, subcategory: null, categoryId: null, subcategoryId: null };
+      return { category: null, subcategory: null, categoryId: null, subcategoryId: null, metaTitle: null, metaDescription: null };
     }
   }, []);
 
@@ -174,51 +193,51 @@ export default function SubCategoryPage({
       // 1. Caching Check: Create a cache key from the query params
       const cacheKey = queryParams.toString();
       if (productCache.current.has(cacheKey)) {
-          const cachedData = productCache.current.get(cacheKey);
-          
-          let transformedProducts = cachedData.results.map((p: ApiProduct) => ({
-              id: p.id.toString(),
-              image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
-              title: p.name,
-              subtitle: p.description,
-              price: parseFloat(p.price),
-              currency: "₹",
-              category_name: p.category_name,
-              subcategory_name: p.subcategory_name,
-              direct_sale: p.direct_sale,
-              is_active: p.is_active,
-              hide_price: p.hide_price,
-              stock_quantity: p.stock_quantity,
-              manufacturer: p.manufacturer,
-              average_rating: p.average_rating,
-              type: p.type,
-              category_id: p.category,
-              model: p.model,
-              user_name: p.user_name,
-              created_at: p.created_at
-          }));
-          
-          // 2. Conditional Sorting: Give priority to MHE products if the category is 'Spare Parts'
-          if (categoryName.toLowerCase().includes('spare parts')) {
-              transformedProducts = transformedProducts.sort((a, b) => {
-                  const aIsMHE = a.manufacturer?.toLowerCase().includes("mhe");
-                  const bIsMHE = b.manufacturer?.toLowerCase().includes("mhe");
-                  
-                  if (aIsMHE && !bIsMHE) return -1;
-                  if (!aIsMHE && bIsMHE) return 1;
-                  return 0; // Keep the original order for other products
-              });
-          }
+        const cachedData = productCache.current.get(cacheKey);
 
-          if (transformedProducts.length === 0) {
-              setNoProductsFoundMessage(`No products found with the selected filters.`);
-          }
+        let transformedProducts = cachedData.results.map((p: ApiProduct) => ({
+          id: p.id.toString(),
+          image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
+          title: p.name,
+          subtitle: p.description,
+          price: parseFloat(p.price),
+          currency: "₹",
+          category_name: p.category_name,
+          subcategory_name: p.subcategory_name,
+          direct_sale: p.direct_sale,
+          is_active: p.is_active,
+          hide_price: p.hide_price,
+          stock_quantity: p.stock_quantity,
+          manufacturer: p.manufacturer,
+          average_rating: p.average_rating,
+          type: p.type,
+          category_id: p.category,
+          model: p.model,
+          user_name: p.user_name,
+          created_at: p.created_at
+        }));
 
-          setProducts(transformedProducts);
-          setTotalProducts(cachedData.count);
-          setTotalPages(Math.ceil(cachedData.count / 12));
-          setIsLoading(false);
-          return;
+        // 2. Conditional Sorting: Give priority to MHE products if the category is 'Spare Parts'
+        if (categoryName.toLowerCase().includes('spare parts')) {
+          transformedProducts = transformedProducts.sort((a, b) => {
+            const aIsMHE = a.manufacturer?.toLowerCase().includes("mhe");
+            const bIsMHE = b.manufacturer?.toLowerCase().includes("mhe");
+
+            if (aIsMHE && !bIsMHE) return -1;
+            if (!aIsMHE && bIsMHE) return 1;
+            return 0; // Keep the original order for other products
+          });
+        }
+
+        if (transformedProducts.length === 0) {
+          setNoProductsFoundMessage(`No products found with the selected filters.`);
+        }
+
+        setProducts(transformedProducts);
+        setTotalProducts(cachedData.count);
+        setTotalPages(Math.ceil(cachedData.count / 12));
+        setIsLoading(false);
+        return;
       }
 
       // 3. API Request: If not in cache, fetch from the API
@@ -250,22 +269,22 @@ export default function SubCategoryPage({
           user_name: p.user_name,
           created_at: p.created_at
         }));
-        
+
         // 4. Conditional Sorting: Apply special sorting to MHE products if the category is 'Spare Parts'
         if (categoryName.toLowerCase().includes('spare parts')) {
-             transformedProducts = transformedProducts.sort((a, b) => {
-                const aIsMHE = a.manufacturer?.toLowerCase().includes("mhe");
-                const bIsMHE = b.manufacturer?.toLowerCase().includes("mhe");
-                
-                if (aIsMHE && !bIsMHE) return -1;
-                if (!aIsMHE && bIsMHE) return 1;
-                return 0;
-            });
+          transformedProducts = transformedProducts.sort((a, b) => {
+            const aIsMHE = a.manufacturer?.toLowerCase().includes("mhe");
+            const bIsMHE = b.manufacturer?.toLowerCase().includes("mhe");
+
+            if (aIsMHE && !bIsMHE) return -1;
+            if (!aIsMHE && bIsMHE) return 1;
+            return 0;
+          });
         }
-        
+
         // 5. Caching: Store the new data in the cache
         productCache.current.set(cacheKey, response.data);
-        
+
         setProducts(transformedProducts);
         setTotalProducts(response.data.count);
         setTotalPages(Math.ceil(response.data.count / 12));
@@ -304,12 +323,16 @@ export default function SubCategoryPage({
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
-      const { category, subcategory, categoryId, subcategoryId } = await validateRouteAndGetIds(
+      const { category, subcategory, categoryId, subcategoryId, metaTitle, metaDescription } = await validateRouteAndGetIds(
         urlCategorySlug,
         urlSubcategorySlug
       );
 
       if (category && subcategory && categoryId !== null && subcategoryId !== null) {
+        // Set metadata from the validated route data
+        setMetaTitle(metaTitle || `${subcategory} Products | MHE Bazar`);
+        setMetaDescription(metaDescription || `Browse our wide range of ${subcategory} products and equipment.`);
+
         await fetchProductsData(
           categoryId,
           subcategoryId,
@@ -345,6 +368,22 @@ export default function SubCategoryPage({
     sortBy,
     errorMessage
   ]);
+
+  // Effect to handle dynamic meta title and description updates
+  useEffect(() => {
+    if (metaTitle) {
+      document.title = metaTitle;
+    }
+    if (metaDescription) {
+      let meta = document.querySelector('meta[name="description"]');
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.setAttribute('name', 'description');
+        document.head.appendChild(meta);
+      }
+      meta.setAttribute('content', metaDescription);
+    }
+  }, [metaTitle, metaDescription]);
 
   const handleFilterChange = useCallback((
     filterValue: string | number,
