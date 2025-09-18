@@ -30,7 +30,7 @@ src/
 ├── app/                    # Next.js App Router pages
 │   ├── [category]/        # Dynamic category pages
 │   ├── product/           # Product pages
-│   ├── vendors-listing/    # Vendor pages
+│   ├── vendor-listing/    # Vendor pages
 │   └── layout.tsx         # Root layout
 ├── components/
 │   ├── elements/          # Reusable UI elements
@@ -41,7 +41,7 @@ src/
 │   ├── layout/            # Layout components
 │   ├── products/          # Product-related components
 │   ├── ui/                # shadcn/ui components
-│   └── vendors-listing/    # Vendor components
+│   └── vendor-listing/    # Vendor components
 ├── lib/
 │   ├── hooks/
 │   │   ├── useApi.ts     # Custom API hook for data fetching

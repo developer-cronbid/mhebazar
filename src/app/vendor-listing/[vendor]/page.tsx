@@ -1,4 +1,4 @@
-// src/app/vendors-listing/[vendor]/page.tsx
+// src/app/vendor-listing/[vendor]/page.tsx
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -6,7 +6,7 @@ import { useRouter, useSearchParams, notFound } from "next/navigation";
 import ProductListing from "@/components/products/ProductListing";
 import { Product } from "@/types";
 import Breadcrumb from "@/components/elements/Breadcrumb";
-import VendorBanner from "@/components/vendors-listing/VendorBanner";
+import VendorBanner from "@/components/vendor-listing/VendorBanner";
 import api from "@/lib/api";
 import { AxiosError } from "axios";
 
@@ -338,8 +338,8 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
         <Breadcrumb
           items={[
             { label: "Home", href: "/" },
-            { label: "Vendors", href: "/vendors-listing" },
-            { label: vendorDetails.company_name, href: `/vendors-listing/${normalizedVendorSlug}` },
+            { label: "Vendors", href: "/vendor-listing" },
+            { label: vendorDetails.company_name, href: `/vendor-listing/${normalizedVendorSlug}` },
           ]}
         />
         {userProfile && (

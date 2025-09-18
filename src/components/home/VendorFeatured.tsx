@@ -117,7 +117,7 @@ const VendorProductsFeatured: React.FC = () => {
       <div className="w-full mx-auto px-4 py-4">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
-          <Link href="/vendors-listing">
+          <Link href="/vendor-listing">
             <span className="text-[#42a856] font-medium cursor-pointer">
               View More
             </span>
@@ -140,7 +140,7 @@ const VendorProductsFeatured: React.FC = () => {
       <section className="w-full mx-auto px-4 py-4">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
-          <Link href="/vendors-listing">
+          <Link href="/vendor-listing">
             <span className="text-[#42a856] font-medium cursor-pointer">
               View More
             </span>
@@ -158,7 +158,7 @@ const VendorProductsFeatured: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Vendor Products</h2>
         <Link
-          href="/vendors-listing"
+          href="/vendor-listing"
           className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200 cursor-pointer"
         >
           View More

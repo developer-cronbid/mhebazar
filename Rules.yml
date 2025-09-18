@@ -51,7 +51,7 @@ project_structure:
     app:
       - category: Dynamic category pages
       - product: Product pages
-      - vendors-listing: Vendor pages
+      - vendor-listing: Vendor pages
       - layout.tsx: Root layout
     components:
       - elements: Reusable UI elements
@@ -60,7 +60,7 @@ project_structure:
       - layout: Layout components
       - products: Product-related components
       - ui: shadcn/ui components
-      - vendors-listing: Vendor components
+      - vendor-listing: Vendor components
     lib:
       - utils.ts: Utility functions
 

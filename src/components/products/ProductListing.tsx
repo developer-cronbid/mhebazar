@@ -429,7 +429,7 @@ export default function ProductListing({
                 </div>
 
                 {/* Mobile Filter Button - Only show if NOT a vendor page */}
-                {!window.location.pathname.startsWith("/vendors-listing/") && (
+                {!window.location.pathname.startsWith("/vendor-listing/") && (
                   <button
                     className="lg:hidden flex items-center gap-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-xs font-medium shadow transition-all duration-200"
                     onClick={() => setMobileFilterOpen(true)}

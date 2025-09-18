@@ -108,7 +108,7 @@ export default function Footer(): JSX.Element {
                 <li><Link href="/training" className="text-gray-600 hover:text-blue-700 transition">Training</Link></li>
                 <li><Link href="/blog" className="text-gray-600 hover:text-blue-700 transition">Blogs</Link></li>
                 <li><Link href="/contact" className="text-gray-600 hover:text-blue-700 transition">Contact Us</Link></li>
-                <li><Link href="/vendors-listing" className="text-gray-600 hover:text-blue-700 transition">Vendors Listing</Link></li>
+                <li><Link href="/vendor-listing" className="text-gray-600 hover:text-blue-700 transition">Vendors Listing</Link></li>
                 <li><Link href="/services/subscription-plan" className="text-gray-600 hover:text-blue-700 transition">Price Plan</Link></li>
                 <li><Link href="/terms-conditions" className="text-gray-600 underline hover:text-blue-700 transition">Terms & Conditions</Link></li>
               </ul>

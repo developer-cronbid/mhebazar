@@ -1,4 +1,4 @@
-// src/app/vendors-listing/[vendor]/ClientVendorControls.tsx
+// src/app/vendor-listing/[vendor]/ClientVendorControls.tsx
 "use client";
 
 import { useMemo, useCallback, useState } from "react";

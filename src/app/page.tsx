@@ -63,7 +63,7 @@ export default async function HomePage() {
         <SectionWrapper className="my-4 md:my-6">
           <div className="flex justify-between items-center mb-8 px-4">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Our Brands</h2>
-            <Link href="/vendors-listing" className="text-green-600 font-medium hover:underline">
+            <Link href="/vendor-listing" className="text-green-600 font-medium hover:underline">
               View All Brands
             </Link>
           </div>

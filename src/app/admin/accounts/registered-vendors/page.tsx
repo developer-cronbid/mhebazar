@@ -1,5 +1,5 @@
 // import Breadcrumb from "@/components/elements/Breadcrumb";
-import VendorCard from "@/components/vendors-listing/VendorCard";
+import VendorCard from "@/components/vendor-listing/VendorCard";
 // import Link from "next/link";
 
 import { Metadata } from "next";
