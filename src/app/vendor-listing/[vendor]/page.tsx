@@ -9,6 +9,7 @@ import Breadcrumb from "@/components/elements/Breadcrumb";
 import VendorBanner from "@/components/vendor-listing/VendorBanner";
 import api from "@/lib/api";
 import { AxiosError } from "axios";
+import vendorSeoData from "@/data/vendorseo.json";
 
 // --- Helper Functions ---
 const formatNameFromSlug = (slug: string): string => {
@@ -160,7 +161,7 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
         // Step 1: Fetch Vendor details using the slug
         const vendorResponse = await api.get<VendorDetails>(`/vendor/by-slug/${normalizedVendorSlug}/`);
         fetchedVendorDetails = vendorResponse.data;
-        
+
         if (!fetchedVendorDetails) {
           notFound();
           return;
@@ -169,7 +170,7 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
         // Step 2: Fetch User Profile using the ID from vendor details
         const userProfileResponse = await api.get<UserProfile>(`/users/${fetchedVendorDetails.user_info.id}/`);
         fetchedUserProfile = userProfileResponse.data;
-        
+
       } catch (err: unknown) {
         console.error("[Vendor Page] Failed to fetch vendor context:", err);
         if (err instanceof AxiosError && err.response?.status === 404) {
@@ -259,6 +260,39 @@ export default function VendorPage({ params }: { params: { vendor: string } }) {
     };
     fetchData();
   }, [normalizedVendorSlug, searchParams]);
+
+  // --- METADATA UPDATE LOGIC (NEW) ---
+  useEffect(() => {
+    if (vendorDetails) {
+      // Find the metadata in the imported JSON based on the normalized slug
+      const vendorSeo = vendorSeoData.find(v => normalizeVendorSlug(v.url.split('/').pop() || '') === normalizedVendorSlug);
+
+      const pageTitle = vendorSeo?.title || `Products from ${vendorDetails.company_name} | MHE Bazar`;
+      const metaTitle = vendorSeo?.meta_title || `Explore Products from ${vendorDetails.company_name} - Authorized Vendor at MHE Bazar`;
+      const metaDescription = vendorSeo?.meta_description || `Browse the complete range of products and solutions offered by ${vendorDetails.company_name} at the MHE Bazar Brand Store. Find high-quality material handling equipment and more.`;
+
+      // Set the document title
+      document.title = pageTitle;
+
+      // Update or create meta title tag
+      let metaTitleTag = document.querySelector('meta[name="title"]');
+      if (!metaTitleTag) {
+        metaTitleTag = document.createElement('meta');
+        metaTitleTag.setAttribute('name', 'title');
+        document.head.appendChild(metaTitleTag);
+      }
+      metaTitleTag.setAttribute('content', metaTitle);
+
+      // Update or create meta description tag
+      let metaDescriptionTag = document.querySelector('meta[name="description"]');
+      if (!metaDescriptionTag) {
+        metaDescriptionTag = document.createElement('meta');
+        metaDescriptionTag.setAttribute('name', 'description');
+        document.head.appendChild(metaDescriptionTag);
+      }
+      metaDescriptionTag.setAttribute('content', metaDescription);
+    }
+  }, [vendorDetails, normalizedVendorSlug]);
 
   // --- EVENT HANDLERS ---
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
