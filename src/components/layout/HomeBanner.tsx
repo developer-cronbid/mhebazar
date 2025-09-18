@@ -5,17 +5,17 @@ import BannerCarouselClient from "./BannerCarouselClient";
 
 const BANNER_DATA = [
 	{
-		image: "/Banner1.png",
+		image: "/Banner1.webp",
 		alt: "Forklift rentals and purchases",
 		url: "/forklift",
 	},
 	{
-		image: "/Banner3.png",
+		image: "/Banner2.webp",
 		alt: "Reliable batteries for your operations",
 		url: "/battery",
 	},
 	{
-		image: "/Banner4.png",
+		image: "/Banner3.webp",
 		alt: "Keep your machines running and operate with skill",
 		splitUrls: {
 			left: "/spare-parts",
