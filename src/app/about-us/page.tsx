@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import HomeBanner from "@/components/layout/HomeBanner";
@@ -28,12 +28,35 @@ const SectionWrapper = ({ children, className }: { children: React.ReactNode; cl
 };
 
 const AboutPage = () => {
+  useEffect(() => {
+    // Set the document title
+    document.title = "Get Complete Material Handling Solutions at MHE Bazar - Buy, Sell or Rent Now!";
+
+    // Create or update the meta title tag
+    let metaTitle = document.querySelector('meta[name="title"]');
+    if (!metaTitle) {
+      metaTitle = document.createElement('meta');
+      metaTitle.setAttribute('name', 'title');
+      document.head.appendChild(metaTitle);
+    }
+    metaTitle.setAttribute('content', "MHE Bazar - Buy, Rent, and Maintain Material Handling Equipment");
+
+    // Create or update the meta description tag
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', "MHE Bazar offers forklifts, pallet trucks, stackers, and more. Equipment sales, rentals, spare parts, and maintenance services across India.");
+  }, []);
+
   return (
     <>
       <Breadcrumb
         items={[
           { label: "Home", href: "/" },
-          { label: "About Us", href: "/about" },
+          { label: "About Us", href: "/about-us" },
         ]}
       />
       
@@ -69,7 +92,7 @@ const AboutPage = () => {
       <SectionWrapper>
         <section>
           <div className="max-w-12xl mx-auto px-4 mt-12 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-semibold m-12  text-gray-900">
+            <h2 className="text-2xl font-semibold m-12  text-gray-900">
               The portal is having the complete <br /> solution for MHE like:
             </h2>
             <div className="text-center">

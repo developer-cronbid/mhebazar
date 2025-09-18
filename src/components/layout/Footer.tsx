@@ -100,7 +100,7 @@ export default function Footer(): JSX.Element {
             <div className="lg:col-span-1">
               <h3 className="font-bold text-gray-800 mb-4 text-lg">Company</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/about" className="text-gray-600 hover:text-blue-700 transition">About</Link></li>
+                <li><Link href="/about-us" className="text-gray-600 hover:text-blue-700 transition">About</Link></li>
                 <li><Link href="/used" className="text-gray-600 hover:text-blue-700 transition">Rental/Used MHE</Link></li>
                 <li><Link href="/services" className="text-gray-600 hover:text-blue-700 transition">Services</Link></li>
                 <li><Link href="/attachments" className="text-gray-600 hover:text-blue-700 transition">Attachments</Link></li>
