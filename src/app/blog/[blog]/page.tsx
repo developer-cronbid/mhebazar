@@ -18,6 +18,9 @@ interface Blog {
   description: string;
   author_name: string | null;
   created_at: string;
+  // NEW: Add meta tags and description1 to the interface
+  meta_title: string | null;
+  description1: string | null;
 }
 
 interface TocItem {
@@ -92,6 +95,45 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
       fetchBlogData();
     }
   }, [slug]);
+
+  // Effect to update meta tags based on fetched blog data
+  useEffect(() => {
+    if (blog) {
+      const metaTitle = blog.meta_title || blog.blog_title || "MHE Bazar Blog";
+      const metaDescription = blog.description1 || blog.description || "Read the latest blog posts on material handling equipment.";
+
+      // Set the document title
+      document.title = metaTitle;
+
+      // Update or create meta description tag
+      let metaDescriptionTag = document.querySelector('meta[name="description"]');
+      if (!metaDescriptionTag) {
+        metaDescriptionTag = document.createElement('meta');
+        metaDescriptionTag.setAttribute('name', 'description');
+        document.head.appendChild(metaDescriptionTag);
+      }
+      metaDescriptionTag.setAttribute('content', metaDescription);
+
+      // Update or create meta title tag
+      let metaTitleTag = document.querySelector('meta[name="title"]');
+      if (!metaTitleTag) {
+        metaTitleTag = document.createElement('meta');
+        metaTitleTag.setAttribute('name', 'title');
+        document.head.appendChild(metaTitleTag);
+      }
+      metaTitleTag.setAttribute('content', metaTitle);
+
+      // Update or create canonical link tag
+      const canonicalUrl = `https://www.mhebazar.in/blog/${slug}`;
+      let canonicalLinkTag = document.querySelector('link[rel="canonical"]');
+      if (!canonicalLinkTag) {
+        canonicalLinkTag = document.createElement('link');
+        canonicalLinkTag.setAttribute('rel', 'canonical');
+        document.head.appendChild(canonicalLinkTag);
+      }
+      canonicalLinkTag.setAttribute('href', canonicalUrl);
+    }
+  }, [blog, slug]);
 
   // Effect 1: Calculate TOC data and reading time (no changes here)
   useEffect(() => {

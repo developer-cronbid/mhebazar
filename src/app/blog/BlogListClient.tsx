@@ -118,6 +118,31 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
   const [sortOrder, setSortOrder] = useState<string>(initialSortOrder);
   const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
 
+  // UseEffect hook to set the page's title and meta tags
+  useEffect(() => {
+    // Set the document title
+    document.title = "Empower Your Material Handling Expertise: Insights from Mhe Bazar's Blog";
+
+    // Create or update the meta title tag
+    let metaTitle = document.querySelector('meta[name="title"]');
+    if (!metaTitle) {
+      metaTitle = document.createElement('meta');
+      metaTitle.setAttribute('name', 'title');
+      document.head.appendChild(metaTitle);
+    }
+    metaTitle.setAttribute('content', "MHE Bazar Blog | Insights on Material Handling and Safety");
+
+    // Create or update the meta description tag
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', "Explore expert articles on material handling equipment, warehouse safety, battery solutions, and industrial trends—only on the official MHE Bazar Blog");
+  }, []);
+
+
   const createQueryString = useCallback(
     (name: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
