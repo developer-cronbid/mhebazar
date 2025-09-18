@@ -1,14 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
-import { Phone, Mail, CheckCircle, RefreshCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Phone, Mail, CheckCircle} from "lucide-react";
 import Breadcrumb from "@/components/elements/Breadcrumb";
-import { Input } from "@/components/ui/input"; // Assuming shadcn/ui Input
-import { Textarea } from "@/components/ui/textarea"; // Assuming shadcn/ui Textarea
-import { Button } from "@/components/ui/button"; // Assuming shadcn/ui Button
-import api from "@/lib/api"; // Your existing API instance
-import { toast } from "sonner"; // For notifications
 import ContactForm from "@/components/forms/publicforms/ContactForm";
 
 const offices = [
@@ -32,7 +27,7 @@ const offices = [
   },
   {
     title: "Branch Office:",
-    address: `Plot No A-61, Next to Spree Hotel, H Block, MIDC, MIDC, Pimpri Colony, Pimpri-Chinchwad, Pune Maharashtra 411018`,
+    address: `Plot No A-61, Next to Spree Hotel, H Block, MIDC, MIDC, Pimpri-Chinchwad, Pune Maharashtra 411018`,
     person: "Mr. Sumedh Ramteke",
     phone: "+91 730 5950 939",
     email: "sumedh.ramteke@mhebazar.com",
@@ -43,6 +38,39 @@ const offices = [
 
 export default function ContactPage() {
   const [selectedOfficeIndex, setSelectedOfficeIndex] = useState(0);
+
+  // Use a useEffect hook to update the metadata when the component mounts
+  useEffect(() => {
+    // Set the document title
+    document.title = "Contact MHEBazar for Material Handling Equipment Solutions | Reach Us Now";
+
+    // Create or update the meta title tag
+    let metaTitle = document.querySelector('meta[name="title"]');
+    if (!metaTitle) {
+      metaTitle = document.createElement('meta');
+      metaTitle.setAttribute('name', 'title');
+      document.head.appendChild(metaTitle);
+    }
+    metaTitle.setAttribute('content', "Contact Us – Material Handling Equipment Experts in India​");
+
+    // Create or update the meta description tag
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', "Get in touch with MHE Bazar for all your material handling equipment needs. Reach our Delhi, Chennai, or Pune offices via phone or email.");
+
+    // Create or update the canonical link tag
+    let canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute('href', "https://www.mhebazar.in/contact");
+  }, []); // The empty array ensures this runs only once on mount
 
   return (
     <>
