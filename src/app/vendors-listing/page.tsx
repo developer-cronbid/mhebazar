@@ -11,6 +11,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Metadata } from 'next';
 
 // Vendor types remain the same as they are shared with the backend.
 type Vendor = {
@@ -29,6 +30,22 @@ type VendorResponse = {
   next: string | null;
   previous: string | null;
   results: Vendor[];
+};
+
+// Add static metadata for the page
+export const metadata: Metadata = {
+  title: 'Vendors listing',
+  description: 'Discover trusted MHE vendors offering competitive prices and premium quality products at MHEBazar. Elevate your operations today!',
+  openGraph: {
+    title: 'Vendors listing',
+    description: 'Discover trusted MHE vendors offering competitive prices and premium quality products at MHEBazar. Elevate your operations today!',
+    url: 'https://www.mhebazar.in/vendors-listing',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Vendors listing',
+    description: 'Discover trusted MHE vendors offering competitive prices and premium quality products at MHEBazar. Elevate your operations today!',
+  },
 };
 
 // This is a Server Component, hence no `'use client'` directive
