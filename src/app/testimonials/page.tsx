@@ -6,9 +6,185 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, Star, ChevronDown, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
+import React from "react";
 
 // --- Testimonial Data ---
+// Re-ordered to prioritize Perumal, Xavier, and Rajappa
 const reviews = [
+  // Perumal - ID 4
+  {
+    id: 4,
+    name: "Mr. Perumal",
+    role: "M/s. Prime Forklifters Pvt. Ltd.",
+    avatar:
+      "/css/newassets/imgs/page/testimonials/e-forklifters-pvt-ltd-mr-perumal.webp",
+    fallback: "PN",
+    rating: 5,
+    category: "MHE Equipment",
+    date: "2023-04-05",
+    tags: ["BYD forklift", "Lithium-Ion", "Rental Replacement", "Customer Support"],
+    content: (
+      <div>
+        <p>
+          <span className="font-semibold">
+            first BYD forklift from Greentech India Material Handling LLP.
+          </span>
+          We acquired the Now after watching the performance of the first
+          equipment, we have already purchased more than 10 BYD equipment.
+          Greentech India Material Handling LLP is a very supportive company
+          with excellent response for service and spare parts support.
+        </p>
+        <p>
+          We are completely{" "}
+          <span className="font-semibold">
+            satisfied with the performance of the equipment and the support
+            from Greentech India
+          </span>{" "}
+          Material Handling LLP.
+        </p>
+        <p>
+          <span className="font-semibold">
+            Being in the field of MHE for more than 35 years we are very happy
+            to own BYD in our fleet which at present is one of the best
+            Lithium-Ion powered forklifts
+          </span>{" "}
+          in the world for the price sold in India. The BYD Lithium-Ion
+          battery forklift&apos;s technology is a game-changer, offering
+          <span className="font-semibold">
+            impressive efficiency and longer run times.
+          </span>{" "}
+          Additionally, the{" "}
+          <span className="font-semibold">
+            reduced maintenance costs and eco-friendliness
+          </span>{" "}
+          of the lithium-ion battery are remarkable benefits.
+        </p>
+        <p>
+          We are now in the process of procuring{" "}
+          <span className="font-semibold">
+            many of our Rental replacement equipment from BYD through
+            Greentech India
+          </span>{" "}
+          Material Handling LLP, their service and expertise make our
+          purchasing process seamless.
+        </p>
+        <p>
+          We{" "}
+          <span className="font-semibold">
+            highly recommend purchasing Forklifts or other MHEs from Greentech
+            India
+          </span>{" "}
+          Material Handling LLP for their exceptional product knowledge and
+          outstanding customer support.
+        </p>
+      </div>
+    ),
+  },
+  // Xavier - ID 12
+  {
+    id: 12,
+    name: "Mr. Xavier",
+    role: "M/s. Asian Engineering Group",
+    avatar:
+      "/css/newassets/imgs/page/testimonials/engineering-group-mr-benzie-xavier.webp",
+    fallback: "PN",
+    rating: 5,
+    category: "MHE Equipment",
+    date: "2023-12-05",
+    tags: ["BYD Lithium-Ion Forklift", "Efficiency", "Eco-friendliness"],
+    content: (
+      <div>
+        <p>
+          BYD Lithium-Ion Forklift we acquired from Greentech India Material
+          Handling LLP.
+        </p>
+        <p>
+          {" "}
+          The BYD Lithium-Ion Battery Forklift&apos;s technology is a game-changer,
+          offering impressive efficiency and longer run times. Our team has
+          been happy with its quiet operation, reducing pollution in our
+          workspace. The forklift&apos;s precise maneuverability and ergonomic
+          design have significantly increased our productivity and operator
+          comfort.
+        </p>
+        <p>
+          {" "}
+          Additionally, the lithium-ion battery&apos;s reduced maintenance costs
+          and eco-friendliness are remarkable benefits. Greentech India&apos;s
+          exemplary service and expertise made the purchasing process
+          seamless.
+        </p>
+        <p>
+          {" "}
+          We highly recommend purchasing Forklifts and other MHEs from
+          Greentech India Material Handling LLP for their exceptional products
+          and outstanding customer support.
+        </p>
+      </div>
+    ),
+  },
+  // Rajappa - ID 9
+  {
+    id: 9,
+    name: "Mr. Rajappa",
+    role: "Sunray Material Handling Pvt. Ltd.",
+    avatar:
+      "/css/newassets/imgs/page/testimonials/rial-handling-pvt-ltd-mr-rajappa.webp",
+    fallback: "PN",
+    rating: 5,
+    category: "Battery Technology",
+    date: "2023-09-22",
+    tags: ["BOPT", "Lithium-Ion Batteries", "Maintenance Free", "Green India"],
+    content: (
+      <div>
+        <p>
+          One of our customers asked for BOPT on a rental basis and we decided
+          to supply it with Lithium-Ion Batteries, considering its{" "}
+          <span className="font-semibold">
+            benefits like opportunity charging, Maintenance free, Emission
+            Free and long life, etc…
+          </span>
+        </p>
+        <p>
+          {" "}
+          On supply of
+          <span className="font-semibold">
+            {" "}
+            6 Nos BOPT with 25V 200Ah Li-Ion Battery
+          </span>{" "}
+          one year back, till now we are free from its maintenance and also
+          opportunity charging gives the benefit to operate the BOPT more
+          without keeping it idle for charging. It is more beneficial to our
+          customers also and for us also as providing equipment on rental.
+        </p>
+        <p>
+          <span className="font-semibold">
+            We are very happy with the MHE Bazar Li-Ion battery,
+          </span>{" "}
+          and the information provided by the salesperson and the service team
+          was also very cooperative and guided us to install it in our
+          equipment.
+        </p>
+        <p>
+          {" "}
+          Mr. Ulhas and Mr. Manik are our friends and we will definitely work
+          with them again for our next requirement for{" "}
+          <span className="font-semibold">
+            MHE Bazar Lithium-ion Battery.
+          </span>
+          <br />
+          And again, I will request to all who are using MHEs with Lead-Acid
+          batteries that they can convert their MHEs into Li-ion Battery
+          Operated with a very small investment as this technology is very
+          good for the environment and operational use also so{" "}
+          <span className="font-semibold">
+            do this for Green India and Net Zero Nation.
+          </span>
+        </p>
+      </div>
+    ),
+  },
+  // All other reviews
   {
     id: 1,
     name: "Mr. Manohari Lal",
@@ -72,21 +248,21 @@ const reviews = [
           <span className="font-semibold">Asmita Engineering</span> is engaged
           in manufacturing, supplying and exporting a gamut of Material
           Handling Equipment. The range we offer is acknowledged by our
-          clients' for its high performance, high efficiency, and sturdy
+          clients&apos; for its high performance, high efficiency, and sturdy
           construction
         </p>
         <p>
-          "We recently acquired{" "}
+          &quot;We recently acquired{" "}
           <span className="font-semibold">
-            Greentech's Lithium-Ion Electric Hand Pallet Truck (eHPT)
+            Greentech&apos;s Lithium-Ion Electric Hand Pallet Truck (eHPT)
           </span>{" "}
-          2 Units and it's been a game-changer for our MHE operations and we
+          2 Units and it&apos;s been a game-changer for our MHE operations and we
           supplied to our end customers also. Its{" "}
           <span className="font-semibold">
             efficiency and durability have exceeded our expectations, allowing
             us to enhance productivity while reducing environmental impact.
           </span>{" "}
-          A stellar addition to our pioneering fleet!"
+          A stellar addition to our pioneering fleet!&quot;
         </p>
         <p>Highly recommended for your Material handling solution…!</p>
       </div>
@@ -121,7 +297,7 @@ const reviews = [
           </span>{" "}
           in our workspace. The{" "}
           <span className="font-semibold">
-            eHPT's precise maneuverability and ergonomic design have
+            eHPT&apos;s precise maneuverability and ergonomic design have
             significantly increased our productivity and operator comfort.
           </span>
         </p>
@@ -135,87 +311,19 @@ const reviews = [
           for 3-shift operation.
         </p>
         <p>
-          Greentech India's{" "}
+          Greentech India&apos;s{" "}
           <span className="font-semibold">
             exemplary service and expertise made the purchasing process
             seamless.
           </span>{" "}
           We{" "}
           <span className="font-semibold">
-            highly recommend purchasing MHE's from Greentech India
+            highly recommend purchasing MHE&apos;s from Greentech India
           </span>{" "}
           Material Handling LLP for their{" "}
           <span className="font-semibold">
             exceptional products and outstanding customer support.
           </span>
-        </p>
-      </div>
-    ),
-  },
-  {
-    id: 4,
-    name: "Mr. Perumal",
-    role: "M/s. Prime Forklifters Pvt. Ltd.",
-    avatar:
-      "/css/newassets/imgs/page/testimonials/e-forklifters-pvt-ltd-mr-perumal.webp",
-    fallback: "PN",
-    rating: 5,
-    category: "MHE Equipment",
-    date: "2023-04-05",
-    tags: ["BYD forklift", "Lithium-Ion", "Rental Replacement", "Customer Support"],
-    content: (
-      <div>
-        <p>
-          <span className="font-semibold">
-            first BYD forklift from Greentech India Material Handling LLP.
-          </span>
-          We acquired the Now after watching the performance of the first
-          equipment, we have already purchased more than 10 BYD equipment.
-          Greentech India Material Handling LLP is a very supportive company
-          with excellent response for service and spare parts support.
-        </p>
-        <p>
-          We are completely{" "}
-          <span className="font-semibold">
-            satisfied with the performance of the equipment and the support
-            from Greentech India
-          </span>{" "}
-          Material Handling LLP.
-        </p>
-        <p>
-          <span className="font-semibold">
-            Being in the field of MHE for more than 35 years we are very happy
-            to own BYD in our fleet which at present is one of the best
-            Lithium-Ion powered forklifts
-          </span>{" "}
-          in the world for the price sold in India. The BYD Lithium-Ion
-          battery forklift's technology is a game-changer, offering
-          <span className="font-semibold">
-            impressive efficiency and longer run times.
-          </span>{" "}
-          Additionally, the{" "}
-          <span className="font-semibold">
-            reduced maintenance costs and eco-friendliness
-          </span>{" "}
-          of the lithium-ion battery are remarkable benefits.
-        </p>
-        <p>
-          We are now in the process of procuring{" "}
-          <span className="font-semibold">
-            many of our Rental replacement equipment from BYD through
-            Greentech India
-          </span>{" "}
-          Material Handling LLP, their service and expertise make our
-          purchasing process seamless.
-        </p>
-        <p>
-          We{" "}
-          <span className="font-semibold">
-            highly recommend purchasing Forklifts or other MHEs from Greentech
-            India
-          </span>{" "}
-          Material Handling LLP for their exceptional product knowledge and
-          outstanding customer support.
         </p>
       </div>
     ),
@@ -245,7 +353,7 @@ const reviews = [
             Performance: ⭐⭐⭐⭐⭐
             <br />
           </span>
-          The battery's performance has been exceptional. It{" "}
+          The battery&apos;s performance has been exceptional. It{" "}
           <span className="font-semibold">
             consistently provides a long-lasting charge.
           </span>
@@ -366,7 +474,7 @@ const reviews = [
           We appreciate the environmental responsibility of Hyundai Forklifts,
           which aligns with our values. In a nutshell,{" "}
           <span className="font-semibold">
-            Greentech India's Hyundai forklift has exceeded our expectations,
+            Greentech India&apos;s Hyundai forklift has exceeded our expectations,
           </span>{" "}
           making them our{" "}
           <span className="font-semibold">
@@ -428,69 +536,9 @@ const reviews = [
           which ultimately resulted in being very fruitful and viable.
         </p>
         <p>
-          <span className="font-semibold">They are the "Man of Mettle".</span>{" "}
+          <span className="font-semibold">They are the &quot;Man of Mettle&quot;.</span>{" "}
           We are perfectly content with all the business we had with them and
           the same also recommend the other MHE users.
-        </p>
-      </div>
-    ),
-  },
-  {
-    id: 9,
-    name: "Mr. Rajappa",
-    role: "Sunray Material Handling Pvt. Ltd.",
-    avatar:
-      "/css/newassets/imgs/page/testimonials/rial-handling-pvt-ltd-mr-rajappa.webp",
-    fallback: "PN",
-    rating: 5,
-    category: "Battery Technology",
-    date: "2023-09-22",
-    tags: ["BOPT", "Lithium-Ion Batteries", "Maintenance Free", "Green India"],
-    content: (
-      <div>
-        <p>
-          One of our customers asked for BOPT on a rental basis and we decided
-          to supply it with Lithium-Ion Batteries, considering its{" "}
-          <span className="font-semibold">
-            benefits like opportunity charging, Maintenance free, Emission
-            Free and long life, etc…
-          </span>
-        </p>
-        <p>
-          {" "}
-          On supply of
-          <span className="font-semibold">
-            {" "}
-            6 Nos BOPT with 25V 200Ah Li-Ion Battery
-          </span>{" "}
-          one year back, till now we are free from its maintenance and also
-          opportunity charging gives the benefit to operate the BOPT more
-          without keeping it idle for charging. It is more beneficial to our
-          customers also and for us also as providing equipment on rental.
-        </p>
-        <p>
-          <span className="font-semibold">
-            We are very happy with the MHE Bazar Li-Ion battery,
-          </span>{" "}
-          and the information provided by the salesperson and the service team
-          was also very cooperative and guided us to install it in our
-          equipment.
-        </p>
-        <p>
-          {" "}
-          Mr. Ulhas and Mr. Manik are our friends and we will definitely work
-          with them again for our next requirement for{" "}
-          <span className="font-semibold">
-            MHE Bazar Lithium-ion Battery.
-          </span>
-          <br />
-          And again, I will request to all who are using MHEs with Lead-Acid
-          batteries that they can convert their MHEs into Li-ion Battery
-          Operated with a very small investment as this technology is very
-          good for the environment and operational use also so{" "}
-          <span className="font-semibold">
-            do this for Green India and Net Zero Nation.
-          </span>
         </p>
       </div>
     ),
@@ -530,7 +578,7 @@ const reviews = [
         </p>
         <p>
           {" "}
-          Greentech India's exemplary service and expertise made the
+          Greentech India&apos;s exemplary service and expertise made the
           purchasing process seamless.
         </p>
         <p>
@@ -578,48 +626,6 @@ const reviews = [
       </div>
     ),
   },
-  {
-    id: 12,
-    name: "Mr. Xavier",
-    role: "M/s. Asian Engineering Group",
-    avatar:
-      "/css/newassets/imgs/page/testimonials/engineering-group-mr-benzie-xavier.webp",
-    fallback: "PN",
-    rating: 5,
-    category: "MHE Equipment",
-    date: "2023-12-05",
-    tags: ["BYD Lithium-Ion Forklift", "Efficiency", "Eco-friendliness"],
-    content: (
-      <div>
-        <p>
-          BYD Lithium-Ion Forklift we acquired from Greentech India Material
-          Handling LLP.
-        </p>
-        <p>
-          {" "}
-          The BYD Lithium-Ion Battery Forklift's technology is a game-changer,
-          offering impressive efficiency and longer run times. Our team has
-          been happy with its quiet operation, reducing pollution in our
-          workspace. The forklift's precise maneuverability and ergonomic
-          design have significantly increased our productivity and operator
-          comfort.
-        </p>
-        <p>
-          {" "}
-          Additionally, the lithium-ion battery's reduced maintenance costs
-          and eco-friendliness are remarkable benefits. Greentech India's
-          exemplary service and expertise made the purchasing process
-          seamless.
-        </p>
-        <p>
-          {" "}
-          We highly recommend purchasing Forklifts and other MHEs from
-          Greentech India Material Handling LLP for their exceptional products
-          and outstanding customer support.
-        </p>
-      </div>
-    ),
-  },
 ];
 
 const categories = ["All Categories", "MHE Equipment", "Electric Equipment", "Battery Technology"];
@@ -630,7 +636,7 @@ const containerVariants = {
     opacity: 1,
     transition: {
       staggerChildren: 0.1,
-      delayChildren: 0.2
+      delayChildren: 0.2,
     },
   },
 };
@@ -643,12 +649,16 @@ const itemVariants = {
     transition: {
       type: "spring",
       stiffness: 100,
-      damping: 10
-    }
+      damping: 10,
+    },
   },
 };
 
-const StarRating = ({ rating }: { rating: number }) => (
+interface StarRatingProps {
+  rating: number;
+}
+
+const StarRating = ({ rating }: StarRatingProps) => (
   <div className="flex space-x-1">
     {[1, 2, 3, 4, 5].map((star) => (
       <Star
@@ -661,8 +671,21 @@ const StarRating = ({ rating }: { rating: number }) => (
   </div>
 );
 
-export default function TestimonialsPage() {
+// Helper function to extract text from a React element
+function extractTextFromReactNode(node: React.ReactNode): string {
+  if (typeof node === 'string') {
+    return node;
+  }
+  if (Array.isArray(node)) {
+    return node.map(extractTextFromReactNode).join(' ');
+  }
+  if (React.isValidElement(node) && node.props.children) {
+    return extractTextFromReactNode(node.props.children);
+  }
+  return '';
+}
 
+export default function TestimonialsPage() {
   useEffect(() => {
     // Set the document title
     document.title = "What Customers Say | MHE Bazar Testimonials and Client Reviews";
@@ -670,30 +693,23 @@ export default function TestimonialsPage() {
     // Create or update the meta description tag
     let metaDescription = document.querySelector('meta[name="description"]');
     if (!metaDescription) {
-      metaDescription = document.createElement('meta');
-      metaDescription.setAttribute('name', 'description');
+      metaDescription = document.createElement("meta");
+      metaDescription.setAttribute("name", "description");
       document.head.appendChild(metaDescription);
     }
-    metaDescription.setAttribute('content', "Read real testimonials and success stories from satisfied MHE Bazar clients. Discover why businesses trust our material handling and safety solutions.");
-
-    // Create or update the meta title tag (This is a less common practice now, as document.title is the main way to set the page title, but you can include it if you want)
-    let metaTitle = document.querySelector('meta[name="title"]');
-    if (!metaTitle) {
-      metaTitle = document.createElement('meta');
-      metaTitle.setAttribute('name', 'title');
-      document.head.appendChild(metaTitle);
-    }
-    metaTitle.setAttribute('content', "What Customers Say | MHE Bazar Testimonials and Client Reviews");
+    metaDescription.setAttribute(
+      "content",
+      "Read real testimonials and success stories from satisfied MHE Bazar clients. Discover why businesses trust our material handling and safety solutions.",
+    );
 
     // Create or update the canonical link tag
     let canonicalLink = document.querySelector('link[rel="canonical"]');
     if (!canonicalLink) {
-      canonicalLink = document.createElement('link');
-      canonicalLink.setAttribute('rel', 'canonical');
+      canonicalLink = document.createElement("link");
+      canonicalLink.setAttribute("rel", "canonical");
       document.head.appendChild(canonicalLink);
     }
-    canonicalLink.setAttribute('href', "https://www.mhebazar.in/testimonials");
-
+    canonicalLink.setAttribute("href", "https://www.mhebazar.in/testimonials");
   }, []); // The empty dependency array ensures this effect runs only once when the component mounts.
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -701,14 +717,17 @@ export default function TestimonialsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredReviews = useMemo(() => {
-    return reviews.filter(review => {
-      const matchesSearch = review.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           review.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           review.content.props.children.map(child => typeof child === 'string' ? child.toLowerCase() : '').join(' ').includes(searchTerm.toLowerCase()) ||
-                           review.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+    return reviews.filter((review) => {
+      const contentText = extractTextFromReactNode(review.content);
+
+      const matchesSearch =
+        review.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        review.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contentText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        review.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
       const matchesCategory = selectedCategory === "All Categories" || review.category === selectedCategory;
-      
+
       return matchesSearch && matchesCategory;
     });
   }, [searchTerm, selectedCategory]);
@@ -722,7 +741,7 @@ export default function TestimonialsPage() {
           <div className="absolute top-0 left-0 w-96 h-96 bg-white opacity-5 rounded-full -translate-x-48 -translate-y-48"></div>
           <div className="absolute bottom-0 right-0 w-80 h-80 bg-white opacity-5 rounded-full translate-x-40 translate-y-40"></div>
         </div>
-        
+
         <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -730,8 +749,8 @@ export default function TestimonialsPage() {
             transition={{ duration: 0.8 }}
             className="text-center"
           >
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="inline-flex items-center text-white/80 hover:text-white mb-6 transition-colors duration-200"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -744,7 +763,7 @@ export default function TestimonialsPage() {
               Discover what industry leaders say about our innovative material handling solutions
               and exceptional service quality.
             </p>
-            
+
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 max-w-2xl mx-auto">
               <div className="text-center">
@@ -794,7 +813,7 @@ export default function TestimonialsPage() {
                 >
                   <Filter className="w-4 h-4" />
                   {selectedCategory}
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`} />
                 </button>
 
                 <AnimatePresence>
@@ -815,7 +834,7 @@ export default function TestimonialsPage() {
                               setShowFilters(false);
                             }}
                             className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors duration-200 ${
-                              selectedCategory === category ? 'text-green-600 bg-green-50' : 'text-gray-700'
+                              selectedCategory === category ? "text-green-600 bg-green-50" : "text-gray-700"
                             }`}
                           >
                             {category}
@@ -828,7 +847,7 @@ export default function TestimonialsPage() {
               </div>
 
               <div className="text-sm text-gray-600">
-                {filteredReviews.length} testimonial{filteredReviews.length !== 1 ? 's' : ''} found
+                {filteredReviews.length} testimonial{filteredReviews.length !== 1 ? "s" : ""} found
               </div>
             </div>
           </div>
@@ -875,10 +894,10 @@ export default function TestimonialsPage() {
                         {review.category}
                       </div>
                       <p className="text-xs text-gray-500">
-                        {new Date(review.date).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric' 
+                        {new Date(review.date).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
                         })}
                       </p>
                     </div>
@@ -923,7 +942,7 @@ export default function TestimonialsPage() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">No testimonials found</h3>
               <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                Try adjusting your search terms or filters to find what you're looking for.
+                Try adjusting your search terms or filters to find what you&apos;re looking for.
               </p>
               <button
                 onClick={() => {
@@ -949,9 +968,7 @@ export default function TestimonialsPage() {
             viewport={{ once: true }}
             className="text-center"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Ready to Join Our Success Stories?
-            </h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Join Our Success Stories?</h2>
             <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
               Experience the difference our innovative solutions can make for your business.
             </p>
