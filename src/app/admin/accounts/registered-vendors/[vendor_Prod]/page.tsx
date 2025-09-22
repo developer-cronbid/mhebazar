@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+//src/app/admin/accounts/registered-vendors/[vendor_Prod]/page.tsx
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
