@@ -46,7 +46,7 @@
     {
         "id": 12,
         "name": "Forklift",
-        "image_url": "/media/category/12/form1.webp",
+        "image_url": "/media/category/12/Screenshot_2025-09-22_114259.png",
         "subcategories": [
             {
                 "id": 47,
@@ -470,29 +470,7 @@
             }
         ]
     },
-    {
-        "id": 23,
-        "name": "Wrapping Machine",
-        "image_url": "/media/category/23/download.webp",
-        "subcategories": [
-            {
-                "id": 136,
-                "name": "Stretch Wrapping Machine"
-            },
-            {
-                "id": 137,
-                "name": "Paper Roll Stretch Wrapping Machine"
-            },
-            {
-                "id": 138,
-                "name": "Top Pressure Pallet Stretch Wrapping Machine"
-            },
-            {
-                "id": 139,
-                "name": "Box Stretch Wrapping Machine"
-            }
-        ]
-    },
+
     {
         "id": 24,
         "name": "Cleaning Equipment",
