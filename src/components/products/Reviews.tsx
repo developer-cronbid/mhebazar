@@ -425,22 +425,7 @@ export default function ReviewSection({
                         </div>
                       ))}
                   </div>
-                  <div className="flex gap-4 text-xs text-gray-500 mt-3 items-center">
-                    <span className="font-medium">
-                      Was this review helpful?
-                    </span>
-                    <button className="text-green-600 font-semibold hover:underline">
-                      Yes
-                    </button>
-                    <span>·</span>
-                    <button className="text-green-600 font-semibold hover:underline">
-                      No
-                    </button>
-                    <span>·</span>
-                    <button className="text-red-500 font-semibold hover:underline">
-                      Report
-                    </button>
-                  </div>
+                
                 </div>
               ))
             ) : (
