@@ -98,14 +98,14 @@ export default function SearchBar({
           ]);
 
           // Filter results client-side to ensure exact matches and populate respective lists
-          productsResponse.data?.results.forEach(product => {
+          productsResponse.data?.results?.forEach(product => {
             if (product.name.toLowerCase().includes(lowerCaseQuery)) {
               productSuggestions.push({ ...product, type: "product" });
             }
           });
 
           // Process vendor suggestions and fetch their categories
-          const vendorPromises = vendorsResponse.data?.results.map(async (vendor) => {
+          const vendorPromises = vendorsResponse.data?.results?.map(async (vendor) => {
             const vendorName = vendor.brand || vendor.company_name || vendor.full_name || vendor.username;
             if (vendorName?.toLowerCase().includes(lowerCaseQuery)) {
               vendorSuggestions.push({
@@ -118,7 +118,7 @@ export default function SearchBar({
               // Fetch products for the matched vendor to get their categories
               const vendorProductsResponse = await api.get<ApiResponse<Product>>(`/products/?user=${vendor.user_id}`);
               const vendorCategories = new Set<string>();
-              vendorProductsResponse.data?.results.forEach(product => {
+              vendorProductsResponse.data?.results?.forEach(product => {
                 if (product.category_name) {
                   vendorCategories.add(product.category_name);
                 }
@@ -173,7 +173,7 @@ export default function SearchBar({
           ...productTypeSuggestions,
           ...categorySuggestions,
           ...subcategorySuggestions,
-          // ...productSuggestions,
+          ...productSuggestions,
         ];
 
         // Remove duplicates based on ID and type
