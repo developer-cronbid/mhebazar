@@ -17,25 +17,37 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
 
 export async function middleware(request: NextRequest) {
-  const { pathname, href } = request.nextUrl;
+  const { pathname } = request.nextUrl;
+  const decodedPathname = decodeURIComponent(pathname);
+  const fullUrl = request.url;
 
-// ✅ Step 0: Handle redirects from JSON
-const redirectMap = redirects as Record<string, string>;
+  // --- Redirect Logic ---
 
-// Normalize keys to handle spaces (%20) vs real spaces
-const decodedPathname = decodeURIComponent(pathname);
-const decodedHref = decodeURIComponent(href);
+  // 1. Process hardcoded redirects first
+  const redirectMap = redirects as Record<string, string>;
+  const redirectTarget = redirectMap[fullUrl];
+  if (redirectTarget) {
+    return NextResponse.redirect(new URL(redirectTarget, fullUrl));
+  }
 
-const redirectTarget =
-  redirectMap[href] ||
-  redirectMap[pathname] ||
-  redirectMap[decodedHref] ||
-  redirectMap[decodedPathname];
+  // 2. Handle dynamic redirects
+  // Handle "vendors-listing" to "vendor-listing" redirect
+  if (decodedPathname.includes('/vendors-listing')) {
+    const newPath = decodedPathname.replace('/vendors-listing', '/vendor-listing');
+    return NextResponse.redirect(new URL(newPath, fullUrl));
+  }
 
-if (redirectTarget) {
-  return NextResponse.redirect(redirectTarget);
-}
+  // Handle old-style product URLs ending in -[id]
+  // This regex is more robust for paths with multiple segments
+  const productPathMatch = decodedPathname.match(/(.*\/)?([^/]+)-(\d+)$/);
+  // Apply the redirect only if it's not already in the correct /product/ format
+  if (productPathMatch && !decodedPathname.startsWith('/product/')) {
+    const [fullMatch, categoryPath, slug, id] = productPathMatch;
+    const newPath = `/product/${slug}-${id}`;
+    return NextResponse.redirect(new URL(newPath, fullUrl));
+  }
 
+  // --- Authentication and Authorization Logic ---
 
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
@@ -54,9 +66,7 @@ if (redirectTarget) {
       });
       isAuthenticated = true;
       userRole = userResponse.data?.role?.id;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      // 2. Try refreshing token if access token fails
       if (refreshToken) {
         try {
           const refreshResponse = await axios.post(
@@ -88,7 +98,7 @@ if (redirectTarget) {
           isAuthenticated = true;
           userRole = userResponse.data?.role?.id;
 
-          return response; // Token refreshed, continue
+          return response;
         } catch (refreshError) {
           console.error("Token refresh failed", refreshError);
         }
@@ -98,12 +108,11 @@ if (redirectTarget) {
 
   // 3. Public Routes: Allow all public paths
   if (publicPaths.includes(pathname)) {
-    // Redirect authenticated user away from /login or /register
     if (
       isAuthenticated &&
       (pathname === "/login" || pathname === "/register")
     ) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/", fullUrl));
     }
     return NextResponse.next();
   }
@@ -111,7 +120,7 @@ if (redirectTarget) {
   // 4. Protected Routes: Block unauthenticated users
   if (protectedPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     if (!isAuthenticated) {
-      const response = NextResponse.redirect(new URL("/login", request.url));
+      const response = NextResponse.redirect(new URL("/login", fullUrl));
       response.cookies.delete("access_token");
       response.cookies.delete("refresh_token");
       return response;
@@ -122,11 +131,11 @@ if (redirectTarget) {
       userRole === ROLES.USER &&
       (pathname.startsWith("/admin") || pathname.startsWith("/vendor"))
     ) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/", fullUrl));
     }
 
     if (userRole === ROLES.VENDOR && pathname.startsWith("/admin")) {
-      return NextResponse.redirect(new URL("/vendor/dashboard", request.url));
+      return NextResponse.redirect(new URL("/vendor/dashboard", fullUrl));
     }
   }
 
