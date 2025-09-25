@@ -21,30 +21,80 @@ export async function middleware(request: NextRequest) {
   const decodedPathname = decodeURIComponent(pathname);
   const fullUrl = request.url;
 
-  // --- Redirect Logic ---
+  // --- Dynamic Redirect Logic (High Priority) ---
 
-  // 1. Process hardcoded redirects first
-  const redirectMap = redirects as Record<string, string>;
-  const redirectTarget = redirectMap[fullUrl];
-  if (redirectTarget) {
-    return NextResponse.redirect(new URL(redirectTarget, fullUrl));
-  }
-
-  // 2. Handle dynamic redirects
-  // Handle "vendors-listing" to "vendor-listing" redirect
+  // 1. Handle "vendors-listing" to "vendor-listing" redirect
   if (decodedPathname.includes('/vendors-listing')) {
     const newPath = decodedPathname.replace('/vendors-listing', '/vendor-listing');
     return NextResponse.redirect(new URL(newPath, fullUrl));
   }
 
-  // Handle old-style product URLs ending in -[id]
-  // This regex is more robust for paths with multiple segments
+  // 2. Handle old-style product URLs ending in -[id]
   const productPathMatch = decodedPathname.match(/(.*\/)?([^/]+)-(\d+)$/);
-  // Apply the redirect only if it's not already in the correct /product/ format
+  // Redirect only if it's not already in the correct /product/ format
   if (productPathMatch && !decodedPathname.startsWith('/product/')) {
     const [fullMatch, categoryPath, slug, id] = productPathMatch;
     const newPath = `/product/${slug}-${id}`;
     return NextResponse.redirect(new URL(newPath, fullUrl));
+  }
+  
+  // 3. Handle /compare/ cleanup (Redirects /compare/add/123 to /compare)
+  if (decodedPathname.startsWith('/compare/')) {
+    if (decodedPathname !== '/compare') { // Skip if it's already the canonical path
+      return NextResponse.redirect(new URL('/compare', fullUrl));
+    }
+  }
+
+  // 4. Handle /wishlist/ cleanup (Redirects /wishlist/add/123 to /account/wishlist)
+  if (decodedPathname.includes('/wishlist/')) {
+    // Check if the current path is NOT the new canonical path
+    if (decodedPathname !== '/account/wishlist') {
+      return NextResponse.redirect(new URL('/account/wishlist', fullUrl));
+    }
+  }
+
+  // --- Filtered Hardcoded Redirects ---
+
+  const redirectMap = redirects as Record<string, string>;
+  
+  // Filter out any entries that are now covered by dynamic redirects
+  const filteredRedirects = Object.keys(redirectMap).reduce((acc: Record<string, string>, key: string) => {
+    
+    // Check if the key is a full URL or just a path
+    let keyPathname: string;
+    try {
+      keyPathname = new URL(key).pathname;
+    } catch (e) {
+      keyPathname = key;
+      // Handle cases where key might be a relative path without a domain, 
+      // but the original JSON indicates full URLs, so we rely on string search.
+    }
+    
+    const keyDecodedPathname = decodeURIComponent(keyPathname);
+    
+    // Dynamic Product Pattern: ends with -[number] 
+    const isProductUrl = keyDecodedPathname.match(/-\d+$/);
+    
+    // Dynamic Vendor Pattern: includes /vendors-listing
+    const isVendorsListing = keyDecodedPathname.includes('/vendors-listing');
+    
+    // Dynamic Compare Pattern: includes /compare/
+    const isCompare = keyDecodedPathname.includes('/compare/');
+    
+    // Dynamic Wishlist Pattern: includes /wishlist/
+    const isWishlist = keyDecodedPathname.includes('/wishlist/');
+    
+    // Include the redirect only if it doesn't match any of the dynamic patterns
+    if (!isProductUrl && !isVendorsListing && !isCompare && !isWishlist) {
+      acc[key] = redirectMap[key];
+    }
+    return acc;
+  }, {});
+
+  // Process the filtered hardcoded redirects
+  const redirectTarget = filteredRedirects[fullUrl];
+  if (redirectTarget) {
+      return NextResponse.redirect(new URL(redirectTarget, fullUrl));
   }
 
   // --- Authentication and Authorization Logic ---
@@ -67,6 +117,7 @@ export async function middleware(request: NextRequest) {
       isAuthenticated = true;
       userRole = userResponse.data?.role?.id;
     } catch (err) {
+      // 2. Try refreshing token if access token fails
       if (refreshToken) {
         try {
           const refreshResponse = await axios.post(
