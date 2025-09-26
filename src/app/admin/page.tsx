@@ -26,7 +26,6 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 
 // --- Type Definitions ---
-// (Interface definitions for StatsCardProps, VendorApplication, Product, etc. remain the same)
 export interface StatsCardProps {
   icon: string;
   number: string;
@@ -113,7 +112,6 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
       </div>
 
       {/* Chevron icon is now absolutely positioned for a robust and clean layout. */}
-      {/* Its position adjusts with the card's padding. */}
       <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 transition-transform duration-300 group-hover:translate-x-1">
         <ChevronRightIcon className="h-6 w-6 md:h-7 md:w-7 text-green-600" />
       </div>
@@ -156,7 +154,6 @@ const CompleteDashboard = () => {
 
   // --- Data Fetching ---
   const fetchData = useCallback(async () => {
-    // fetchData function remains the same, using the corrected client-side filtering
     setIsLoading(true);
     try {
       const [
@@ -173,10 +170,11 @@ const CompleteDashboard = () => {
         api.get('/contact-forms/?page_size=1'),
       ]);
 
-      const pendingVendors = vendorResponse.data.results.filter((app: any) => !app.is_approved);
+      // FIX: Ensure correct type filtering using the is_approved flag from the serializer
+      const pendingVendors = vendorResponse.data.results.filter((app: VendorApplication) => !app.is_approved);
       setVendorApps(pendingVendors);
 
-      const pendingProductsList = productResponse.data.results.filter((product: Product) => !product.is_active);
+      const pendingProductsList = productResponse.data.results.filter((product: Product) => product.status === 'pending');
 
       const grouped = pendingProductsList.reduce((acc: GroupedProducts, product: Product) => {
         const vendorName = product.user_name || 'Unknown Vendor';
@@ -201,7 +199,6 @@ const CompleteDashboard = () => {
   }, []);
 
   useEffect(() => {
-    // useEffect for auth check remains the same
     const checkUserAndFetch = async () => {
       try {
         const userResponse = await api.get('/users/me/');
@@ -224,7 +221,7 @@ const CompleteDashboard = () => {
 
   // Vendor Handlers
   const handleVendorApprove = async (vendorId: number) => {
-    setLoadingVendorId(vendorId); // Set loading for specific vendor
+    setLoadingVendorId(vendorId);
     try {
       await api.post(`/vendor/${vendorId}/approve/`, { action: 'approve' });
       toast.success("Vendor Approved");
@@ -232,7 +229,7 @@ const CompleteDashboard = () => {
     } catch (error) {
       toast.error("Approval Failed");
     } finally {
-      setLoadingVendorId(null); // Clear loading state
+      setLoadingVendorId(null);
     }
   };
 
@@ -245,7 +242,7 @@ const CompleteDashboard = () => {
     if (!selectedVendor || !vendorRejectionReason.trim()) {
       return toast.error("Rejection reason is required.");
     }
-    setIsSubmitting(true); // Set general modal submitting state
+    setIsSubmitting(true);
     try {
       await api.post(`/vendor/${selectedVendor.id}/approve/`, { action: 'reject', reason: vendorRejectionReason });
       toast.success("Vendor Rejected");
@@ -255,7 +252,7 @@ const CompleteDashboard = () => {
     } catch (error: any) {
       toast.error("Rejection Failed", { description: error.response?.data?.error });
     } finally {
-      setIsSubmitting(false); // Clear submitting state
+      setIsSubmitting(false);
     }
   };
 
@@ -308,7 +305,7 @@ const CompleteDashboard = () => {
 
   return (
     <>
-      {/* Main layout and stats cards remain the same */}
+      {/* Main layout */}
       <div className="overflow-auto bg-gray-50 p-6 sm:p-8 lg:p-10 min-h-screen">
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h2>
         <div className="flex flex-col lg:flex-row gap-10">
@@ -340,6 +337,7 @@ const CompleteDashboard = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg text-blue-700"><Building /> Vendor Applications</CardTitle>
+                  <CardDescription className='text-sm text-gray-500'>{stats.pendingVendors} total applications awaiting review.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {vendorApps.map((app) => (
@@ -366,11 +364,12 @@ const CompleteDashboard = () => {
               </Card>
             )}
 
-            {/* Product Approvals section remains the same */}
+            {/* Product Approvals section */}
             {totalPendingProducts > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-orange-700"><Package /> Product Approvals</CardTitle>
+                  <CardDescription className='text-sm text-gray-500'>{totalPendingProducts} products awaiting approval.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {Object.entries(pendingProducts).map(([vendorName, products]) => (
@@ -432,7 +431,6 @@ const CompleteDashboard = () => {
                   Review the product details below. Submitted by <span className="font-semibold">{selectedProduct.user_name}</span>.
                 </DialogDescription>
               </DialogHeader>
-              {/* The detail display grid remains unchanged */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 py-4">
                 <div className="space-y-2">
                   <h4 className="font-semibold text-lg border-b pb-2 mb-2">Product Information</h4>
