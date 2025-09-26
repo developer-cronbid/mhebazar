@@ -163,7 +163,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
               <div className="w-full lg:w-1/2 xl:w-2/5">
                 <div className="relative w-full h-48 sm:h-64 lg:h-72 rounded-lg shadow-sm overflow-hidden">
                   <Image
-                    src={productDetails.image || "/no-product.png"}
+                    src={productDetails.image || "/no-product.jpg"}
                     alt={productDetails.title}
                     fill
                     className="object-contain"

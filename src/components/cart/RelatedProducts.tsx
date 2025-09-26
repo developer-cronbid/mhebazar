@@ -94,7 +94,7 @@ export default function RelatedProducts() {
             <ProductCardContainer
               key={item.id}
               id={item.id}
-              image={item.images?.[0]?.image || "/no-product.png"}
+              image={item.images?.[0]?.image || "/no-product.jpg"}
               title={item.name}
               subtitle={item.description}
               price={item.price}
@@ -113,7 +113,7 @@ export default function RelatedProducts() {
         ) : (
           <div className="col-span-full flex flex-col items-center justify-center py-16">
             <Image
-              src="/no-product.png"
+              src="/no-product.jpg"
               alt="No product"
               width={112}
               height={112}

@@ -181,7 +181,7 @@ export default function MheWriteAReview({ productId, onOpenChange }: Props) {
       <div className="flex items-start gap-4 sm:gap-8 w-full border-b pb-4 mb-4">
         <div className="min-w-[79px] min-h-[64px] relative">
           <Image
-            src={productData?.images[0]?.image || "/no-product.png"}
+            src={productData?.images[0]?.image || "/no-product.jpg"}
             alt={productData?.name || "Product image for review"}
             layout="fill"
             objectFit="cover"

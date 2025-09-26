@@ -112,7 +112,7 @@ export default function WishlistForm() {
             <div className="flex items-center gap-4">
 
 <Image
-  src={item.product.images?.[0] || '/no-product.png'}
+  src={item.product.images?.[0] || '/no-product.jpg'}
   alt={item.product.name}
   width={64}
   height={64}

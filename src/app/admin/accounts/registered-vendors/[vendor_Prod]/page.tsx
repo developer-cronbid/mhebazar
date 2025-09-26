@@ -400,7 +400,7 @@ const VendorProducts = () => {
   );
 
   const getImageUrl = (imageUrl: string | undefined): string => {
-    if (!imageUrl) return '/no-product.png';
+    if (!imageUrl) return '/no-product.jpg';
 
     try {
       if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
@@ -409,7 +409,7 @@ const VendorProducts = () => {
       return `${process.env.NEXT_PUBLIC_API_URL}${imageUrl}`;
     } catch (error) {
       console.error('Error constructing image URL:', error);
-      return '/no-product.png';
+      return '/no-product.jpg';
     }
   };
 
@@ -573,7 +573,7 @@ const VendorProducts = () => {
                           <Image
                             src={product.images?.[0]?.image
                               ? getImageUrl(product.images[0].image)
-                              : "/no-product.png"
+                              : "/no-product.jpg"
                             }
                             alt={product.name}
                             fill
@@ -582,7 +582,7 @@ const VendorProducts = () => {
                             priority
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
-                              target.src = "/no-product.png";
+                              target.src = "/no-product.jpg";
                             }}
                           />
                           <span className={`absolute top-2 left-2 ${(() => {

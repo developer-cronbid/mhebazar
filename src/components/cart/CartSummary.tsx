@@ -221,7 +221,7 @@ const CartSummary: React.FC<CartSummaryProps> = ({ onNext, onUpdateTotal }) => {
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <Image
                 src={
-                  item.product_details.images?.[0]?.image || "/no-product.png"
+                  item.product_details.images?.[0]?.image || "/no-product.jpg"
                 }
                 alt={item.product_details.name || "Product Image"}
                 width={64}

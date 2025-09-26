@@ -264,7 +264,7 @@ export default function AccountTabsUI({
                 const paymentStatus = mapPaymentStatusToDisplay(payment?.status);
 
                 const displayItem = order.items?.[0]?.product_details;
-                const displayImage = displayItem?.images?.[0]?.image || "/no-product.png";
+                const displayImage = displayItem?.images?.[0]?.image || "/no-product.jpg";
                 const displayTitle = displayItem?.name || "No Product Info";
 
                 return (
@@ -369,7 +369,7 @@ export default function AccountTabsUI({
                                 {order.items.map((item) => (
                                     <div key={item.id} className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                                     <Image
-                                        src={item.product_details?.images?.[0]?.image || "/no-product.png"}
+                                        src={item.product_details?.images?.[0]?.image || "/no-product.jpg"}
                                         alt={item.product_details?.name || "Product Image"}
                                         width={40}
                                         height={40}

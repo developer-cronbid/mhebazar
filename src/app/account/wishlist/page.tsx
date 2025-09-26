@@ -79,7 +79,7 @@ export default function WishlistPage() {
   const transformedWishlist = wishlistItems.map(item => ({
     id: String(item.id), // Use wishlist item ID for client-side key
     title: item.product_details.name,
-    image: item.product_details.images?.[0]?.image || "/no-product.png",
+    image: item.product_details.images?.[0]?.image || "/no-product.jpg",
     price: item.product_details.hide_price ? "₹ ******" : `₹ ${parseFloat(item.product_details.price).toLocaleString('en-IN')}`,
   }));
 

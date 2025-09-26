@@ -185,9 +185,9 @@ export default function DashboardStats() {
     }
     // if (category_id) {
     //   console.log(category_id)
-    //   return categoryImageMap[category_id] || "/no-product.png";
+    //   return categoryImageMap[category_id] || "/no-product.jpg";
     // }
-    return "/no-product.png";
+    return "/no-product.jpg";
   }
 
   // Reset to first page when products change

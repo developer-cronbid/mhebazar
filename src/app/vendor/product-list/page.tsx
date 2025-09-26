@@ -1,3 +1,4 @@
+// src/app/vendor/product-list/page.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,7 @@ const sortOptions = [
 ];
 
 const TYPE_OPTIONS = ["new", "used", "rental", "attachments"] as const;
-type TabType = (typeof TYPE_OPTIONS)[number]; // Define TabType
-
-// const imgUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000';
+type TabType = (typeof TYPE_OPTIONS)[number];
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -79,10 +78,43 @@ export default function ProductList() {
   function getImageSrc(images?: { image: string }[] | string): string {
     if (typeof images === 'string' && images) return `${imgUrl}${images}`;
     if (Array.isArray(images) && images.length > 0 && images[0].image) {
-      return `${imgUrl}${images[0].image}`;
+        const imagePath = images[0].image.startsWith('/') ? images[0].image.substring(1) : images[0].image;
+        return `${imgUrl}${imagePath}`;
     }
-    return "/no-product.png";
+    return "/no-product.jpg";
   }
+
+  // Define fetchProducts outside of useEffect for re-use
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      // Fetch products from the vendor dashboard endpoint
+      const response = await api.get("/vendor/dashboard/"); 
+      const productsData = response.data?.products || [];
+      setProducts(productsData);
+      const uniqueCategories = Array.from(
+        new Set(productsData.map((p: Product) => p.category_name))
+      ) as string[];
+      setCategories(uniqueCategories);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      setError("Failed to load products. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to close the sheet and refresh data
+  const closeSheetAndRefresh = () => {
+    setIsSheetOpen(false);
+    setSelectedProduct(undefined); // Clear selected product state to reset form
+    fetchProducts(); // Refresh the product list
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []); // Initial fetch
 
   useEffect(() => {
     if (showFilter) {
@@ -116,31 +148,9 @@ export default function ProductList() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showSort]);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get("/vendor/dashboard/");
-        const productsData = response.data?.products || [];
-        setProducts(productsData);
-        const uniqueCategories = Array.from(
-          new Set(productsData.map((p: Product) => p.category_name))
-        ) as string[];
-        setCategories(uniqueCategories);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        setError("Failed to load products. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
-
   const productsPerPage = 4;
 
-  // ✅ FIXED: Filtering logic now checks if the product's type array includes the current tab
+  // Filtering logic now checks if the product's type array includes the current tab
   let filteredProducts = products.filter((p) =>
     Array.isArray(p.type) && p.type.includes(tab)
   );
@@ -181,6 +191,8 @@ export default function ProductList() {
 
   const handleEditClick = async (productId: number) => {
     try {
+      // This GET request failed before because the restricted queryset blocked it.
+      // With the fix in views.py, this should now succeed for the product owner.
       const response = await api.get(`/products/${productId}/`);
       setSelectedProduct(response.data);
       setIsSheetOpen(true);
@@ -209,17 +221,24 @@ export default function ProductList() {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
             Product List
           </h1>
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <Sheet open={isSheetOpen} onOpenChange={(open) => {
+            if (!open) {
+                // When closing, clear selected product to reset form for 'Add Product'
+                setSelectedProduct(undefined); 
+            }
+            setIsSheetOpen(open);
+          }}>
             <SheetTrigger asChild>
               <Button
                 variant="default"
                 className="bg-[#5CA131] hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg flex items-center gap-2 w-full sm:w-auto justify-center transition-colors duration-200"
+                onClick={() => setSelectedProduct(undefined)} // Ensure form is clear for new product
               >
                 + Add Product
               </Button>
             </SheetTrigger>
             <SheetContent className="w-full sm:max-w-md">
-              <ProductForm product={selectedProduct} />
+              <ProductForm product={selectedProduct} onSuccess={closeSheetAndRefresh} />
             </SheetContent>
           </Sheet>
         </div>
@@ -310,7 +329,7 @@ export default function ProductList() {
                         target.src = `${imgUrl}${categoryImageMap[product.category]}`;
                       }}
                     />
-                    {/* ✅ FIXED: Badge now uses the 'tab' state for color and text */}
+                    {/* Badge now uses the 'tab' state for color and text */}
                     <span
                       className={`absolute top-1 left-1 sm:top-2 sm:left-2 ${(() => {
                         switch (tab) {
@@ -336,7 +355,15 @@ export default function ProductList() {
                             : "text-yellow-800 bg-yellow-100"
                             }`}
                         >
-                          {product.is_active ? "Approved" : "Pending"}
+                          {product.is_active ? "Active" : "Inactive"}
+                        </span>
+                         <span
+                          className={`text-xs px-3 py-1 rounded-full font-medium ${product.status === 'approved'
+                            ? "text-green-800 bg-green-100"
+                            : product.status === 'pending' ? "text-blue-800 bg-blue-100" : "text-red-800 bg-red-100"
+                            }`}
+                        >
+                          {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
                         </span>
                         <span className="text-xs text-gray-700 bg-gray-100 px-3 py-1 rounded-full font-medium">
                           {product.category_name}

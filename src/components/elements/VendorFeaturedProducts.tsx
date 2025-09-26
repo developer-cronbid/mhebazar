@@ -140,7 +140,7 @@ export default function VendorProducts({ currentProductId }: VendorProductsProps
       ) : (
         <div className="col-span-full flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-[0_4px_16px_0_rgba(0,0,0,0.04)]">
           <Image
-            src="/no-product.png"
+            src="/no-product.jpg"
             alt="No other products"
             width={112}
             height={112}

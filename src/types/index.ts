@@ -1,6 +1,7 @@
 // MHE Bazar Type Definitions
 
 export type Product = {
+  status: string;
   currency: ReactNode;
   image: string | StaticImport;
   subtitle: ReactNode;

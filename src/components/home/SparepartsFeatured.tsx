@@ -194,7 +194,7 @@ export default function SparePartsFeatured() {
           className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm border border-gray-100"
         >
           <Image
-            src="/no-product.png"
+            src="/no-product.jpg"
             alt="No product"
             width={112}
             height={112}

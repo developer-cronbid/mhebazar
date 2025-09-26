@@ -316,7 +316,7 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
                     {cartItems.map((item) => (
                       <div key={item.id} className="flex items-start gap-3">
                         <Image
-                          src={item.product_details.images?.[0]?.image || "/no-product.png"}
+                          src={item.product_details.images?.[0]?.image || "/no-product.jpg"}
                           alt={item.product_details.name}
                           width={48}
                           height={48}

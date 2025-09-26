@@ -1024,7 +1024,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                                 image:
                                   data.images[0]?.image ||
                                   data.category_details?.cat_image ||
-                                  "/no-product.png",
+                                  "/no-product.jpg",
                                 title: data.name,
                                 description: data.description,
                                 price: data.price,
@@ -1117,7 +1117,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               <p className="font-semibold text-xs mb-1">
                 First Purchase Discount
               </p>
-              <p className="text-xs text-gray-600">Up to 15% discount</p>
+              <p className="text-xs text-gray-600">Up to 5% discount</p>
             </div>
             <div className="text-center">
               <div className="flex justify-center mb-2">
@@ -1170,7 +1170,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                       image:
                         data.images[0]?.image ||
                         data.category_details?.cat_image ||
-                        "/no-product.png",
+                        "/no-product.jpg",
                       title: data.name,
                       description: data.description,
                       price: data.price,
@@ -1456,7 +1456,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               <div className="relative w-full h-[70vh] md:h-[80vh] flex items-center justify-center">
                 <FallbackImage
                   src={
-                    data.images[currentMediaIndex]?.image || "/no-product.png"
+                    data.images[currentMediaIndex]?.image || "/no-product.jpg"
                   }
                   alt={`${data.name} media ${currentMediaIndex + 1}`}
                   className="max-h-full max-w-full object-contain rounded-md"

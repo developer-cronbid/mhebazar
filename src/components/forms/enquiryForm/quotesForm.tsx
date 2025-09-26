@@ -151,7 +151,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
             <div className="flex flex-col-reverse justify-center items-center gap-6 lg:gap-8 mb-8">
               <div className="w-full lg:w-1/2 xl:w-2/5">
                 <img
-                  src={product?.image || product?.images[0].image || "/no-product.png"}
+                  src={product?.image || product?.images[0].image || "/no-product.jpg"}
                   alt={product?.title || product?.name || "Product"}
                   className="w-full h-48 sm:h-64 lg:h-72 object-contain rounded-lg shadow-sm"
                 />

@@ -380,7 +380,7 @@ const CompleteDashboard = () => {
                         {products.map(product => (
                           <div key={product.id} className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded object-contain" />
+                              <Image src={product.images?.[0]?.image || '/no-product.jpg'} alt={product.name} width={48} height={48} className="rounded object-contain" />
                               <div>
                                 <p className="font-medium text-gray-900">{product.name}</p>
                                 <p className="text-sm text-gray-500">{product.category_name}</p>
