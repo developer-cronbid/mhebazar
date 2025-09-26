@@ -311,11 +311,11 @@ const CompleteDashboard = () => {
         <div className="flex flex-col lg:flex-row gap-10">
           <div className="flex-1 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://mhebazar.vercel.app/admin/forms/quotes" />
-              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://mhebazar.vercel.app/admin/forms/direct-buy" />
-              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://mhebazar.vercel.app/admin/forms/rentals" />
-              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://mhebazar.vercel.app/admin/forms/training-registrations" />
-              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://mhebazar.vercel.app/admin/contact/contact-form" />
+              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="/admin/forms/quotes" />
+              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="/admin/forms/direct-buy" />
+              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="/admin/forms/rentals" />
+              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="/admin/forms/training-registrations" />
+              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="/admin/contact/contact-form" />
             </div>
             <AnalyticsDashboard />
           </div>
