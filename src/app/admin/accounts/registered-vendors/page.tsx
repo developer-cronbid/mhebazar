@@ -44,8 +44,6 @@ export default function VendorsPage() {
 
   // --- Client-Side Filter/Pagination Logic ---
   
-  // FIX: This function is now memoized and returns the total filtered count, but DOES NOT CALL setState.
-  // We use this function inside useEffect to update state.
   const calculateClientFiltering = useCallback(() => {
     const sourceList = activeTab === "approved" ? allApprovedVendors : allApplications;
     
@@ -69,22 +67,21 @@ export default function VendorsPage() {
   }, [activeTab, searchTerm, currentPage]);
 
   
-  // FIX: useEffect to apply filtering and update state AFTER render. This prevents the infinite loop.
   useEffect(() => {
     const { paginated, filteredCount } = calculateClientFiltering();
     setDisplayedVendors(paginated);
     setTotalFilteredCount(filteredCount);
   }, [calculateClientFiltering]);
 
-  // --- Data Fetching (Fetch all for client-side search) ---
+  // --- Data Fetching (Fetch ALL pages for client-side search) ---
 
   const fetchData = useCallback(async (tab: "approved" | "all") => {
     setLoading(true);
     setError(null);
     const isApprovedTab = tab === "approved";
-    let allVendors: Vendor[] = [];
+    let accumulatedVendors: Vendor[] = [];
 
-    // Skip API call if data is already fetched (performance optimization)
+    // Skip API call if data is already fetched
     if (isApprovedTab && allApprovedVendors.length > 0) {
       setLoading(false);
       return; 
@@ -94,15 +91,23 @@ export default function VendorsPage() {
     }
 
     try {
-      // Use a large page_size to fetch all data for client-side filtering
-      const url = isApprovedTab ? "/vendor/approved/?page_size=1000" : "/vendor/?page_size=1000"; 
-      const response = await api.get<VendorListResponse>(url);
-      allVendors = response.data.results || [];
+      let nextUrl: string | null = isApprovedTab ? "/vendor/approved/?page_size=20" : "/vendor/?page_size=20"; // Start with a manageable page size
       
+      while (nextUrl) {
+          // Use the full URL if it contains the base, otherwise prepend the base
+          const fetchUrl: string = nextUrl.startsWith('/vendor/') ? nextUrl : new URL(nextUrl).pathname + new URL(nextUrl).search;
+          
+          const response = await api.get<VendorListResponse>(fetchUrl);
+          
+          accumulatedVendors = accumulatedVendors.concat(response.data.results || []);
+          nextUrl = response.data.next; // Update nextUrl for the next loop iteration
+      }
+      
+      // Store accumulated data globally
       if (isApprovedTab) {
-        allApprovedVendors = allVendors;
+        allApprovedVendors = accumulatedVendors;
       } else {
-        allApplications = allVendors;
+        allApplications = accumulatedVendors;
       }
 
     } catch (err) {
@@ -131,7 +136,7 @@ export default function VendorsPage() {
   }, [searchTerm]);
 
 
-  // --- Handler for Admin Toggle ---
+  // --- Handler for Admin Toggle (unchanged) ---
 
   const handleToggleApproval = useCallback(
     async (vendorId: number, isCurrentlyApproved: boolean): Promise<void> => {
@@ -149,9 +154,8 @@ export default function VendorsPage() {
         allApprovedVendors = allApprovedVendors.filter(v => v.id !== vendorId); // Simple removal if unapproved
 
         // Trigger re-render by updating the list that drives the filtering logic (by setting searchTerm to itself)
-        // A cleaner way is to force a re-run of the filtering effect:
-        setSearchTerm(s => s + ' '); // This will trigger the filtering effect
-        setSearchTerm(s => s.trim()); // Then revert it back to the original value
+        setSearchTerm(s => s + ' '); 
+        setSearchTerm(s => s.trim()); 
         
       } catch (err) {
         console.error(`Error toggling vendor status for ID ${vendorId}:`, err);
@@ -162,7 +166,7 @@ export default function VendorsPage() {
   );
 
 
-  // --- Component Renders ---
+  // --- Component Renders (unchanged) ---
 
   const TabButton = ({ tabName, label }: { tabName: "approved" | "all", label: string }) => (
     <button
