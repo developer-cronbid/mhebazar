@@ -1,19 +1,6 @@
 import Navbar from "@/components/admin/Navbar";
 import Sidebar from "@/components/admin/Sidebar";
 import type { Metadata } from "next";
-// import { Geist, Geist_Mono } from "next/font/google";
-
-
-
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
 
 export const metadata: Metadata = {
   title: "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
@@ -28,8 +15,9 @@ export default function RootLayout({
   return (
         <div className="flex h-screen bg-gray-50">
           <Sidebar />
-          <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-y-auto">
             <Navbar />
+            {/* The main scrolling content area is now enabled with overflow-y-auto */}
             {children}
           </div>
         </div>
