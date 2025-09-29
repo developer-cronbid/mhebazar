@@ -37,11 +37,24 @@
             }
         ]
     },
-    {
-        "id": 18,
-        "name": "Spare Parts",
-        "image_url": "/media/category/18/spare.png",
-        "subcategories": []
+       {
+        "id": 10,
+        "name": "Reach Truck",
+        "image_url": "/media/category/10/download_10.webp",
+        "subcategories": [
+            {
+                "id": 35,
+                "name": "Double Deep Reach Truck"
+            },
+            {
+                "id": 36,
+                "name": "Sit Down Reach Truck"
+            },
+            {
+                "id": 37,
+                "name": "Stand On Reach Truck"
+            }
+        ]
     },
     {
         "id": 12,
@@ -169,25 +182,14 @@
         "image_url": "/media/category/25/image_8.webp",
         "subcategories": []
     },
-    {
-        "id": 10,
-        "name": "Reach Truck",
-        "image_url": "/media/category/10/download_10.webp",
-        "subcategories": [
-            {
-                "id": 35,
-                "name": "Double Deep Reach Truck"
-            },
-            {
-                "id": 36,
-                "name": "Sit Down Reach Truck"
-            },
-            {
-                "id": 37,
-                "name": "Stand On Reach Truck"
-            }
-        ]
+
+     {
+        "id": 18,
+        "name": "Spare Parts",
+        "image_url": "/media/category/18/spare.png",
+        "subcategories": []
     },
+
     {
         "id": 11,
         "name": "Racking System",
