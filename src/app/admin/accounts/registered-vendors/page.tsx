@@ -1,4 +1,4 @@
-// page.tsx
+// page.tsx (Final version with Network Error fix)
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -39,12 +39,13 @@ export default function VendorsPage() {
   const [displayedVendors, setDisplayedVendors] = useState<Vendor[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalFilteredCount, setTotalFilteredCount] = useState(0); // Holds count of the filtered set
+  const [totalFilteredCount, setTotalFilteredCount] = useState(0); 
 
 
   // --- Client-Side Filter/Pagination Logic ---
   
   const calculateClientFiltering = useCallback(() => {
+    // FIX: Ensure we select the list that corresponds to the active tab
     const sourceList = activeTab === "approved" ? allApprovedVendors : allApplications;
     
     // 1. Filtering
@@ -91,21 +92,23 @@ export default function VendorsPage() {
     }
 
     try {
-      // Start with the initial URL. Using relative path here is safer for the first call.
+      // Start with the initial URL.
       let nextUrl: string | null = isApprovedTab ? "/vendor/approved/?page_size=20" : "/vendor/?page_size=20"; 
       
       while (nextUrl) {
           
-          // --- FIX FOR 404 ERROR: Handle Absolute vs. Relative URLs ---
-          const isAbsoluteUrl = nextUrl.startsWith('http');
+          let fetchPath: string;
           
-          const response = await api.get<VendorListResponse>(nextUrl, {
-              // This is the key fix: Axios automatically treats the URL as absolute if it starts with 'http', 
-              // but we must ensure we ONLY pass the path/params to relative calls to avoid double-base-URL
-              // This logic ensures the call is correct regardless of what the API returns in 'next'.
-              baseURL: isAbsoluteUrl ? undefined : api.defaults.baseURL // Undefined baseURL makes Axios use the full provided URL
-          });
-          // --------------------------------------------------------
+          // FIX: If URL is absolute (from API's 'next' field), extract only the path and query.
+          // This avoids the CORS/Network Error by preventing Axios from sending a cross-protocol request.
+          if (nextUrl.startsWith('http')) {
+             const urlObject = new URL(nextUrl);
+             fetchPath = urlObject.pathname + urlObject.search; // e.g., /api/vendor/?page=2&page_size=20
+          } else {
+             fetchPath = nextUrl;
+          }
+          
+          const response = await api.get<VendorListResponse>(fetchPath); // Axios prepends local baseURL to fetchPath
 
           accumulatedVendors = accumulatedVendors.concat(response.data.results || []);
           nextUrl = response.data.next; // Update nextUrl for the next loop iteration
