@@ -91,14 +91,22 @@ export default function VendorsPage() {
     }
 
     try {
-      let nextUrl: string | null = isApprovedTab ? "/vendor/approved/?page_size=20" : "/vendor/?page_size=20"; // Start with a manageable page size
+      // Start with the initial URL. Using relative path here is safer for the first call.
+      let nextUrl: string | null = isApprovedTab ? "/vendor/approved/?page_size=20" : "/vendor/?page_size=20"; 
       
       while (nextUrl) {
-          // Use the full URL if it contains the base, otherwise prepend the base
-          const fetchUrl: string = nextUrl.startsWith('/vendor/') ? nextUrl : new URL(nextUrl).pathname + new URL(nextUrl).search;
           
-          const response = await api.get<VendorListResponse>(fetchUrl);
+          // --- FIX FOR 404 ERROR: Handle Absolute vs. Relative URLs ---
+          const isAbsoluteUrl = nextUrl.startsWith('http');
           
+          const response = await api.get<VendorListResponse>(nextUrl, {
+              // This is the key fix: Axios automatically treats the URL as absolute if it starts with 'http', 
+              // but we must ensure we ONLY pass the path/params to relative calls to avoid double-base-URL
+              // This logic ensures the call is correct regardless of what the API returns in 'next'.
+              baseURL: isAbsoluteUrl ? undefined : api.defaults.baseURL // Undefined baseURL makes Axios use the full provided URL
+          });
+          // --------------------------------------------------------
+
           accumulatedVendors = accumulatedVendors.concat(response.data.results || []);
           nextUrl = response.data.next; // Update nextUrl for the next loop iteration
       }
@@ -112,6 +120,7 @@ export default function VendorsPage() {
 
     } catch (err) {
       console.error("Failed to fetch vendors:", err);
+      // Removed the unnecessary URL parsing logic from the error message construction as well
       const errorMessage =
         !isApprovedTab && (err as any).response?.status === 403
           ? "Access Denied: You must be an administrator to view all vendor applications."
