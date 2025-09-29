@@ -2,43 +2,29 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, XCircle, Loader2, Mail, Calendar, Eye, User, Briefcase, MoreVertical, Zap, UserCheck, UserX } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Mail, Calendar, Eye, User, Briefcase, MoreVertical } from "lucide-react";
 import Link from "next/link";
-import api from "@/lib/api"; // Needed for status mock
+// Assuming Dropdown components are mocked or imported correctly
 
-// --- Dropdown Menu Components (Mocked for brevity) ---
-// In a real app, these would be imported from a UI library like shadcn/ui
+// --- Dropdown Menu Components (Mocked or Imported) ---
+// Note: Keeping the mock components as per your original file structure.
 const DropdownMenu = ({ children }: { children: React.ReactNode }) => <div className="relative inline-block text-left w-full">{children}</div>;
-const DropdownMenuTrigger = ({ children }: { children: React.ReactNode }) => <div className="cursor-pointer">{children}</div>;
+// FIX: Add onClick handler to DropdownMenuTrigger to control state
+const DropdownMenuTrigger = ({ children, onClick }: { children: React.ReactNode, onClick: () => void }) => <div className="cursor-pointer" onClick={onClick}>{children}</div>;
 const DropdownMenuContent = ({ children }: { children: React.ReactNode }) => <div className="absolute right-0 z-20 w-56 mt-2 origin-top-right bg-white rounded-md shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none p-1">{children}</div>;
-const DropdownMenuItem = ({ children, onClick, className }: { children: React.ReactNode, onClick: () => void, className?: string }) => (
-    <button onClick={onClick} className={`flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100 rounded-md transition-colors ${className}`}>
+const DropdownMenuItem = ({ children, onClick, className, disabled }: { children: React.ReactNode, onClick: () => void, className?: string, disabled?: boolean }) => (
+    <button onClick={onClick} disabled={disabled} className={`flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100 rounded-md transition-colors ${className} ${disabled ? 'opacity-50 cursor-not-allowed hover:bg-white' : ''}`}>
         {children}
     </button>
 );
 const DropdownMenuSeparator = () => <hr className="my-1 border-gray-100" />;
 
-// --- Helper Functions and Types (as before) ---
+// --- Helper Functions and Types ---
 
 const createSlug = (name: string): string => {
   if (!name) return "";
   return name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 };
-
-type ButtonProps = React.ComponentPropsWithoutRef<'button'> & {
-    children: React.ReactNode;
-    className?: string;
-    onClick?: React.MouseEventHandler<HTMLButtonElement>;
-    disabled?: boolean;
-};
-const Button = ({ children, className = '', ...props }: ButtonProps) => (
-  <button
-    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors duration-150 flex items-center justify-center ${className}`}
-    {...props}
-  >
-    {children}
-  </button>
-);
 
 export type AllVendor = {
   id: number; // Vendor ID
@@ -71,62 +57,37 @@ const formatDate = (dateString: string) => {
 
 const VendorRow = ({ vendor, onToggleApproval }: { 
     vendor: AllVendor; 
-    onToggleApproval: AllVendorsTableProps['onToggleApproval'] 
+    onToggleApproval: AllVendorsTableProps['onToggleApproval'];
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isTogglingApproval, setIsTogglingApproval] = useState(false);
-  const [currentIsActive, setCurrentIsActive] = useState<0 | 1 | 2>(1); // Mock status: 1=Active, 0=Inactive, 2=Not Visible
-  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
+  const [isTogglingApproval, setIsTogglingApproval] = useState(false); // Local loading state
   
+  // Destructure only the fields available in your simplified model/serializer
   const { id, user_id, company_name, brand, email, full_name, is_approved, application_date, username } = vendor;
 
-  // --- APPROVAL TOGGLE (Role Change) ---
+  // --- APPROVAL TOGGLE (Role Change via /vendor/{id}/approve/) ---
   const handleToggleApproval = async () => {
     if (isTogglingApproval) return;
     setIsTogglingApproval(true);
-    setIsMenuOpen(false);
+    // Don't close the menu until the action is finished, so the loader is visible
+    // setIsMenuOpen(false); // Removed for better UX with loader
+    
     try {
+      // The promise resolves successfully, which triggers forceUpdate in page.tsx
       await onToggleApproval(id, is_approved);
-      // NOTE: UI is updated by parent component's state change
+      
+      // If successful, close the menu (the row will be re-rendered anyway)
+      setIsMenuOpen(false);
+      
     } catch (error) {
       console.error("Toggle approval failed:", error);
+      // Show error message (Optional: you might want to display a toast here)
     } finally {
       setIsTogglingApproval(false);
     }
   };
   
-  // --- IS_ACTIVE TOGGLE (Custom 3-state MOCK) ---
-  const handleStatusChange = async (nextStatus: 0 | 1 | 2) => {
-    if (isTogglingStatus) return;
-    setIsTogglingStatus(true);
-    setIsMenuOpen(false);
-    
-    // This assumes you have a separate endpoint to patch user status.
-    try {
-        // MOCK: Replace with real API call to /api/users/{user_id}/admin_status/
-        // await api.patch(`/users/${user_id}/admin_status/`, { status: nextStatus }); 
-        
-        // Simulating success
-        console.log(`User ${user_id} status changed to ${nextStatus}.`);
-        setCurrentIsActive(nextStatus);
-    } catch (error) {
-        console.error("User status update failed:", error);
-    } finally {
-        setIsTogglingStatus(false);
-    }
-  };
-  
-  const getStatusDisplay = (status: 0 | 1 | 2) => {
-      switch (status) {
-          case 1: return { label: 'Active', color: 'bg-green-100 text-green-700' };
-          case 2: return { label: 'Not Visible', color: 'bg-yellow-100 text-yellow-700' };
-          case 0: return { label: 'Inactive', color: 'bg-red-100 text-red-700' };
-      }
-  };
-  
-  const statusInfo = getStatusDisplay(currentIsActive);
-
-  // Admin link for View Products (View Admin)
+  // Admin link for View Products 
   const vendorSlug = createSlug(brand);
   const adminHref = `/admin/accounts/registered-vendors/${vendorSlug}/?user=${user_id}`;
 
@@ -173,27 +134,20 @@ const VendorRow = ({ vendor, onToggleApproval }: {
             is_approved ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-yellow-100 text-yellow-800 border border-yellow-300'
           }`}
         >
-          {is_approved ? "Approved (Role: Vendor)" : "Pending (Role: User)"}
+          {is_approved ? "Approved" : "Pending"}
         </span>
-        
-        {/* is_active Status */}
-        <div className="mt-1">
-            <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusInfo.color}`}>
-                {statusInfo.label}
-            </span>
-        </div>
       </td>
 
       {/* Actions Dropdown */}
       <td className="p-4 text-right w-[100px]">
         <DropdownMenu>
-            <DropdownMenuTrigger>
+            <DropdownMenuTrigger onClick={() => setIsMenuOpen(p => !p)}>
                 <button 
-                    onClick={() => setIsMenuOpen(p => !p)}
-                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
-                    disabled={isTogglingApproval || isTogglingStatus}
+                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors border border-transparent hover:border-gray-300"
+                    disabled={isTogglingApproval} // Button disabled when toggling
                 >
-                    <MoreVertical size={20} />
+                    {/* Show loader on the button if status is being toggled */}
+                    {isTogglingApproval ? <Loader2 size={20} className="animate-spin text-indigo-500" /> : <MoreVertical size={20} />}
                 </button>
             </DropdownMenuTrigger>
             {isMenuOpen && (
@@ -209,41 +163,18 @@ const VendorRow = ({ vendor, onToggleApproval }: {
 
                     {/* Approval/Role Toggle */}
                     {is_approved ? (
-                        <DropdownMenuItem onClick={handleToggleApproval} className='text-red-600 font-medium'>
+                        <DropdownMenuItem onClick={handleToggleApproval} className='text-red-600 font-medium' disabled={isTogglingApproval}>
+                            {/* Show loader inside the menu item */}
                             {isTogglingApproval ? <Loader2 size={16} className="mr-2 animate-spin" /> : <XCircle size={16} className="mr-2" />}
-                            Unapprove Vendor (Set Role: User)
+                            Unapprove
                         </DropdownMenuItem>
                     ) : (
-                        <DropdownMenuItem onClick={handleToggleApproval} className='text-[#5CA131] font-medium'>
+                        <DropdownMenuItem onClick={handleToggleApproval} className='text-[#5CA131] font-medium' disabled={isTogglingApproval}>
+                            {/* Show loader inside the menu item */}
                             {isTogglingApproval ? <Loader2 size={16} className="mr-2 animate-spin" /> : <CheckCircle size={16} className="mr-2" />}
-                            Approve Vendor (Set Role: Vendor)
+                            Approve
                         </DropdownMenuItem>
                     )}
-                    <DropdownMenuSeparator />
-                    
-                    {/* 3-State Status Toggles */}
-                    <DropdownMenuItem 
-                        onClick={() => handleStatusChange(1)} 
-                        className={`text-green-600 ${currentIsActive === 1 ? 'bg-green-50/50 font-bold' : ''}`}
-                    >
-                        {isTogglingStatus && currentIsActive !== 1 ? <Loader2 size={16} className="mr-2 animate-spin" /> : <UserCheck size={16} className="mr-2" />}
-                        Set Status: Active (1)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                        onClick={() => handleStatusChange(2)} 
-                        className={`text-yellow-600 ${currentIsActive === 2 ? 'bg-yellow-50/50 font-bold' : ''}`}
-                    >
-                        {isTogglingStatus && currentIsActive !== 2 ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Zap size={16} className="mr-2" />}
-                        Set Status: Not Visible (2)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                        onClick={() => handleStatusChange(0)} 
-                        className={`text-red-600 ${currentIsActive === 0 ? 'bg-red-50/50 font-bold' : ''}`}
-                    >
-                        {isTogglingStatus && currentIsActive !== 0 ? <Loader2 size={16} className="mr-2 animate-spin" /> : <UserX size={16} className="mr-2" />}
-                        Set Status: Inactive (0)
-                    </DropdownMenuItem>
-
                 </DropdownMenuContent>
             )}
         </DropdownMenu>
@@ -274,7 +205,7 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading }
                             Applied On
                         </th>
                         <th className="p-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-[180px]">
-                            Approval & Status
+                            Approval Status
                         </th>
                         <th className="p-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider w-[100px]">
                             Actions
@@ -286,7 +217,7 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading }
                         <VendorRow key={vendor.id} vendor={vendor} onToggleApproval={onToggleApproval} />
                     ))}
                 </tbody>
-            </table >
+            </table>
         </div>
     </div>
   );
