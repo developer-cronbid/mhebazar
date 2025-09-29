@@ -18,18 +18,17 @@ type Vendor = AllVendor & {
   };
 };
 
-// Interface for API response structure (Simplified for the new dedicated endpoint)
+// Interface for API response structure
 interface VendorListResponse {
-  count?: number; // Not provided by the new view, but kept for Approved tab compatibility
-  next?: string | null;
-  previous?: string | null;
-  // The new dedicated endpoint returns a flat list directly
-  results: Vendor[]; 
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Vendor[];
 }
 
 // Global lists to store all fetched vendors for client-side operations
 var allApprovedVendors: Vendor[] = [];
-var allApplications: Vendor[] = []; // This will now hold all vendors from the new endpoint
+var allApplications: Vendor[] = [];
 
 // Role IDs
 const ROLE_ADMIN = 1;
@@ -62,8 +61,7 @@ export default function VendorsPage() {
           vendor.brand?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.company_name?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.email?.toLowerCase().includes(lowerCaseSearch) ||
-          vendor.full_name?.toLowerCase().includes(lowerCaseSearch) ||
-          (vendor.company_phone && vendor.company_phone.includes(lowerCaseSearch)) // Search on new fields too
+          vendor.full_name?.toLowerCase().includes(lowerCaseSearch)
         )
       : sourceList;
 
@@ -99,50 +97,42 @@ export default function VendorsPage() {
     }
 
     try {
+      // Use path relative to /api/
+      let nextUrl: string | null = isApprovedTab ? "vendor/approved/?page_size=20" : "vendor/?page_size=20"; 
+      
       let accumulatedVendors: Vendor[] = []; // Temporary accumulator
       
-      if (isApprovedTab) {
-        // --- EXISTING APPROVED VENDORS LOGIC (unchanged) ---
-        let nextUrl: string | null = "vendor/approved/?page_size=20"; 
-        
-        while (nextUrl) {
-            let fetchPath: string;
-            if (nextUrl.startsWith('http')) {
-               const urlObject = new URL(nextUrl);
-               fetchPath = urlObject.pathname.replace('/api/', '') + urlObject.search;
-            } else {
-               fetchPath = nextUrl;
-            }
-            
-            // NOTE: Using VendorListResponse type which expects "results" array
-            const response = await api.get<VendorListResponse>(fetchPath);
+      while (nextUrl) {
+          
+          let fetchPath: string;
+          
+          // Fix: If URL is absolute, extract only the path and query.
+          if (nextUrl.startsWith('http')) {
+             const urlObject = new URL(nextUrl);
+             // Ensure the path starts with the core API route part (vendor/) not /api/vendor/
+             fetchPath = urlObject.pathname.replace('/api/', '') + urlObject.search;
+          } else {
+             fetchPath = nextUrl;
+          }
+          
+          const response = await api.get<VendorListResponse>(fetchPath);
 
-            accumulatedVendors = accumulatedVendors.concat(response.data.results as Vendor[] || []);
-            nextUrl = response.data.next;
-        }
-        allApprovedVendors = accumulatedVendors;
-        
-      } else {
-        // --- NEW ALL VENDORS LOGIC (uses dedicated endpoint) ---
-        // The new dedicated endpoint returns a flat array (AllVendor[]) directly, not wrapped in {results: []}
-        const response = await api.get<AllVendor[]>("admin/all-vendors/"); 
-        
-        // Map fields from new serializer response (user_is_active -> is_active, current_role_id -> is_approved boolean)
-        accumulatedVendors = response.data.map(v => ({
-            ...v,
-            is_active: v.user_is_active,
-            // is_approved is derived from the role ID: 2 is VENDOR, others are not.
-            is_approved: v.current_role_id === ROLE_VENDOR, 
-        })) as Vendor[];
-        
-        allApplications = accumulatedVendors;
+          accumulatedVendors = accumulatedVendors.concat(response.data.results as Vendor[] || []);
+          nextUrl = response.data.next;
       }
       
+      // Store accumulated data globally
+      if (isApprovedTab) {
+        allApprovedVendors = accumulatedVendors;
+      } else {
+        allApplications = accumulatedVendors;
+      }
+
     } catch (err) {
       console.error("Failed to fetch vendors:", err);
       const errorMessage =
         !isApprovedTab && (err as any).response?.status === 403
-          ? "Access Denied: You must be an administrator to view all vendor applications. Check your user role and JWT token."
+          ? "Access Denied: You must be an administrator to view all vendor applications."
           : "Failed to load vendors. Please try again.";
       setError(errorMessage);
     } finally {
@@ -173,15 +163,19 @@ export default function VendorsPage() {
       setSearchTerm(s => s.trim()); 
   }
 
-  // Handler for 3-state is_active status AND Role ID change 
+  // Handler for Vendor Approval/Rejection (Toggles is_approved and role between 2/3)
+  // REMOVED LOGIC: Not needed as per instructions.
+
+  // Handler for 3-state is_active status AND Role ID change (Uses admin_update)
   const handleUserStatusUpdate = useCallback(
     async (userId: number, newRoleId: number, newStatus: 0 | 1 | 2) => {
       try {
-        // 1. Use the NEW dedicated endpoint for status/role update
-        // We use the correct URL format: admin/all-vendors/{user_id}/update-status/
-        await api.patch(`admin/all-vendors/${userId}/update-status/`, { 
+        // 1. Use the existing admin_update endpoint
+        // NOTE: The backend Admin_update function expects 'status_value' (0, 1, or 2) 
+        // and 'role_id', not 'is_active'.
+        await api.patch(`users/${userId}/admin_update/`, { 
             role_id: newRoleId, 
-            status_value: newStatus 
+            status_value: newStatus // ✅ Corrected field name
         });
 
         // 2. Update the global list locally for instant feedback
@@ -190,16 +184,13 @@ export default function VendorsPage() {
             ...v, 
             // The is_approved status is derived from the newRoleId
             is_approved: newRoleId === ROLE_VENDOR,
-            // The is_active boolean is derived from the newStatus (1 = True, 0/2 = False)
+            // The is_active status is derived from the newStatus (1 = True, 0/2 = False)
             is_active: newStatus === 1,
-            // Also update the stored role ID and is_active bool returned by the new serializer structure
-            current_role_id: newRoleId,
-            user_is_active: newStatus === 1,
             // We need to re-fetch to get the new role and is_active status accurately
           } : v
         );
         allApplications = updateList(allApplications);
-        allApprovedVendors = updateList(allApprovedVendors).filter(v => v.current_role_id === ROLE_VENDOR);
+        allApprovedVendors = updateList(allApprovedVendors).filter(v => v.is_approved === true);
 
 
         // 3. Force a re-render and re-filter
@@ -207,7 +198,7 @@ export default function VendorsPage() {
         
       } catch (err) {
         console.error(`Error updating user status for ID ${userId}:`, err);
-        throw new Error(`Failed to update status/role. Make sure your user has Admin privileges.`);
+        throw new Error(`Failed to update status/role.`);
       }
     },
     []
@@ -328,6 +319,7 @@ export default function VendorsPage() {
           {!loading && !error && activeTab === "all" && (
             <AllVendorsTable
               vendors={displayedVendors as AllVendor[]} 
+              // onToggleApproval={handleToggleApproval} // REMOVED as per instruction
               onStatusUpdate={handleUserStatusUpdate} 
               isLoading={loading}
             />
