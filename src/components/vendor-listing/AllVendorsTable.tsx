@@ -2,44 +2,40 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, XCircle, Loader2, Mail, Calendar, Eye, User, Briefcase, MoreVertical, Zap, UserCheck, UserX } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Mail, Calendar, Eye, User, Briefcase, MoreVertical, Zap, UserCheck, UserX, Shield, UserMinus, Phone, Home, Hash } from "lucide-react";
 import Link from "next/link";
-import api from "@/lib/api"; // Needed for status mock
+// import api from "@/lib/api"; // Not needed here
 
-// --- Dropdown Menu Components (Mocked for brevity) ---
-// In a real app, these would be imported from a UI library like shadcn/ui
-const DropdownMenu = ({ children }: { children: React.ReactNode }) => <div className="relative inline-block text-left w-full">{children}</div>;
+// --- Dropdown Menu Components (Robust and visible) ---
+const DropdownMenu = ({ children }: { children: React.ReactNode[] }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className="relative inline-block text-left w-full">
+            {/* Trigger (child 0) */}
+            <div onClick={() => setIsOpen(p => !p)} onMouseEnter={() => setIsOpen(true)}>{children[0]}</div>
+            {/* Content (child 1) */}
+            {isOpen && <div className="absolute right-0 z-20 w-56 mt-2 origin-top-right bg-white rounded-md shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none p-1">{children[1]}</div>}
+        </div>
+    );
+};
 const DropdownMenuTrigger = ({ children }: { children: React.ReactNode }) => <div className="cursor-pointer">{children}</div>;
-const DropdownMenuContent = ({ children }: { children: React.ReactNode }) => <div className="absolute right-0 z-20 w-56 mt-2 origin-top-right bg-white rounded-md shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none p-1">{children}</div>;
-const DropdownMenuItem = ({ children, onClick, className }: { children: React.ReactNode, onClick: () => void, className?: string }) => (
-    <button onClick={onClick} className={`flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100 rounded-md transition-colors ${className}`}>
+const DropdownMenuContent = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+const DropdownMenuItem = ({ children, onClick, className, disabled }: { children: React.ReactNode, onClick: () => void, className?: string, disabled?: boolean }) => (
+    <button onClick={onClick} disabled={disabled} className={`flex items-center w-full px-4 py-2 text-sm text-left hover:bg-gray-100 rounded-md transition-colors ${className} ${disabled ? 'opacity-50 cursor-not-allowed hover:bg-white' : ''}`}>
         {children}
     </button>
 );
 const DropdownMenuSeparator = () => <hr className="my-1 border-gray-100" />;
 
-// --- Helper Functions and Types (as before) ---
+// --- Helper Functions and Types ---
 
 const createSlug = (name: string): string => {
   if (!name) return "";
+  // Simple slugification for display/link creation
   return name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 };
 
-type ButtonProps = React.ComponentPropsWithoutRef<'button'> & {
-    children: React.ReactNode;
-    className?: string;
-    onClick?: React.MouseEventHandler<HTMLButtonElement>;
-    disabled?: boolean;
-};
-const Button = ({ children, className = '', ...props }: ButtonProps) => (
-  <button
-    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors duration-150 flex items-center justify-center ${className}`}
-    {...props}
-  >
-    {children}
-  </button>
-);
-
+// **UPDATED: Aligned with the new AdminVendorListSerializer response**
 export type AllVendor = {
   id: number; // Vendor ID
   user_id: number; // User ID
@@ -49,13 +45,27 @@ export type AllVendor = {
   company_name: string;
   company_email: string;
   brand: string;
-  is_approved: boolean; 
   application_date: string;
+  
+  // NEW FIELDS added directly from the new dedicated serializer:
+  company_phone: string;
+  company_address: string;
+  pcode: string;
+  gst_no: string;
+  
+  // STATUS FIELDS MAPPED (used for initial state):
+  user_is_active: boolean; // Actual boolean from Django User model
+  current_role_id: 1 | 2 | 3; // Actual role ID from Django Role model
+  
+  // The is_approved/is_active fields used internally by page.tsx logic (kept for compatibility)
+  is_active: boolean; 
+  is_approved: boolean;
 };
 
 type AllVendorsTableProps = {
   vendors: AllVendor[];
-  onToggleApproval: (vendorId: number, isCurrentlyApproved: boolean) => Promise<void>;
+  // onStatusUpdate handles (userId, newRoleId, newStatus(0|1|2))
+  onStatusUpdate: (userId: number, currentRoleId: 1 | 2 | 3, newStatus: 0 | 1 | 2) => Promise<void>; 
   isLoading: boolean;
 };
 
@@ -69,46 +79,63 @@ const formatDate = (dateString: string) => {
 
 // --- Row Component with Dropdown Menu ---
 
-const VendorRow = ({ vendor, onToggleApproval }: { 
+const VendorRow = ({ vendor, onStatusUpdate }: { 
     vendor: AllVendor; 
-    onToggleApproval: AllVendorsTableProps['onToggleApproval'] 
+    onStatusUpdate: AllVendorsTableProps['onStatusUpdate'];
 }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isTogglingApproval, setIsTogglingApproval] = useState(false);
-  const [currentIsActive, setCurrentIsActive] = useState<0 | 1 | 2>(1); // Mock status: 1=Active, 0=Inactive, 2=Not Visible
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   
-  const { id, user_id, company_name, brand, email, full_name, is_approved, application_date, username } = vendor;
+  // **FIXED: Initialize state using the data returned by the new serializer**
+  // Initialize Role ID
+  const [currentRoleId, setCurrentRoleId] = useState<1 | 2 | 3>(vendor.current_role_id);
+  
+  // Initialize 3-State Status: 1 if user_is_active is True, 0 otherwise (we default to 0 not 2 for initial load)
+  const initialIsActive: 0 | 1 | 2 = vendor.user_is_active ? 1 : 0;
+  const [currentIsActive, setCurrentIsActive] = useState<0 | 1 | 2>(initialIsActive); 
+  
+  const { 
+      id, user_id, company_name, brand, email, full_name, application_date, username,
+      company_phone, company_address, pcode, gst_no // Destructured fields
+  } = vendor;
 
-  // --- APPROVAL TOGGLE (Role Change) ---
-  const handleToggleApproval = async () => {
-    if (isTogglingApproval) return;
-    setIsTogglingApproval(true);
-    setIsMenuOpen(false);
+  // Define Role IDs for easy selection in the menu
+  const ROLE_ADMIN = 1 as const;
+  const ROLE_VENDOR = 2 as const;
+  const ROLE_USER = 3 as const;
+
+
+  
+  // --- ROLE CHANGE (Directly to 1, 2, or 3) ---
+  const handleRoleChange = async (newRoleId: 1 | 2 | 3) => {
+    if (isTogglingStatus) return;
+    setIsTogglingStatus(true);
+    
     try {
-      await onToggleApproval(id, is_approved);
-      // NOTE: UI is updated by parent component's state change
+        // Pass the new Role ID and the current visual 3-state status.
+        await onStatusUpdate(user_id, newRoleId, currentIsActive);
+        
+        // Update local state only on success (page.tsx forces a re-fetch/re-render anyway)
+        setCurrentRoleId(newRoleId);
+        
     } catch (error) {
-      console.error("Toggle approval failed:", error);
+        console.error("Role change failed:", error);
     } finally {
-      setIsTogglingApproval(false);
+        setIsTogglingStatus(false);
     }
   };
   
-  // --- IS_ACTIVE TOGGLE (Custom 3-state MOCK) ---
+  // --- IS_ACTIVE TOGGLE (Custom 3-state via /users/admin_update/) ---
   const handleStatusChange = async (nextStatus: 0 | 1 | 2) => {
     if (isTogglingStatus) return;
     setIsTogglingStatus(true);
-    setIsMenuOpen(false);
     
-    // This assumes you have a separate endpoint to patch user status.
     try {
-        // MOCK: Replace with real API call to /api/users/{user_id}/admin_status/
-        // await api.patch(`/users/${user_id}/admin_status/`, { status: nextStatus }); 
+        // Pass the User ID, current Role ID, and new 3-state status
+        await onStatusUpdate(user_id, currentRoleId, nextStatus);
         
-        // Simulating success
-        console.log(`User ${user_id} status changed to ${nextStatus}.`);
+        // Update local state if API call succeeds
         setCurrentIsActive(nextStatus);
+        
     } catch (error) {
         console.error("User status update failed:", error);
     } finally {
@@ -116,11 +143,12 @@ const VendorRow = ({ vendor, onToggleApproval }: {
     }
   };
   
+  // Helper for UI display
   const getStatusDisplay = (status: 0 | 1 | 2) => {
       switch (status) {
-          case 1: return { label: 'Active', color: 'bg-green-100 text-green-700' };
-          case 2: return { label: 'Not Visible', color: 'bg-yellow-100 text-yellow-700' };
-          case 0: return { label: 'Inactive', color: 'bg-red-100 text-red-700' };
+          case 1: return { label: 'Active (1)', color: 'bg-green-100 text-green-700' };
+          case 2: return { label: 'Not Visible (2)', color: 'bg-yellow-100 text-yellow-700' };
+          case 0: return { label: 'Inactive (0)', color: 'bg-red-100 text-red-700' };
       }
   };
   
@@ -157,30 +185,46 @@ const VendorRow = ({ vendor, onToggleApproval }: {
         </div>
       </td>
 
-      {/* Application Date */}
-      <td className="p-4 text-sm text-gray-700 hidden lg:table-cell">
-        <div className="flex items-center space-x-2 justify-center">
-            <Calendar className="w-4 h-4 text-gray-500" />
-            <span>{formatDate(application_date)}</span>
+      {/* Contact Info (Combined new fields) */}
+      <td className="p-4 text-sm text-gray-700 hidden lg:table-cell w-1/4">
+        <div className="space-y-1">
+            <div className="flex items-center space-x-2 text-xs text-gray-700">
+                <Phone className="w-4 h-4 text-blue-500" />
+                <span className="font-mono">{company_phone || 'N/A'}</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs text-gray-700">
+                <Home className="w-4 h-4 text-red-500" />
+                <span className="truncate max-w-[200px]">{company_address}, {pcode || 'N/A'}</span>
+            </div>
+            <div className="flex items-center space-x-2 text-xs text-gray-700">
+                <Hash className="w-4 h-4 text-green-500" />
+                <span className="font-mono">{gst_no || 'N/A'}</span>
+            </div>
         </div>
       </td>
 
       {/* Status */}
-      <td className="p-4 text-center">
-        {/* Approval Status */}
+      <td className="p-4 text-center w-[180px]">
+        {/* Role Status */}
         <span 
           className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap shadow-sm mb-1 inline-block ${
-            is_approved ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+            currentRoleId === ROLE_ADMIN ? 'bg-purple-100 text-purple-800 border border-purple-300' :
+            currentRoleId === ROLE_VENDOR ? 'bg-green-100 text-green-800 border border-green-300' : 
+            'bg-yellow-100 text-yellow-800 border border-yellow-300'
           }`}
         >
-          {is_approved ? "Approved (Role: Vendor)" : "Pending (Role: User)"}
+          Role: {currentRoleId === ROLE_ADMIN ? "Admin (1)" : currentRoleId === ROLE_VENDOR ? "Vendor (2)" : "User (3)"}
         </span>
         
         {/* is_active Status */}
         <div className="mt-1">
             <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${statusInfo.color}`}>
-                {statusInfo.label}
+                Status: {statusInfo.label}
             </span>
+        </div>
+        <div className="flex items-center space-x-2 justify-center text-xs text-gray-500 mt-1">
+            <Calendar className="w-4 h-4" />
+            <span>{formatDate(vendor.application_date)}</span>
         </div>
       </td>
 
@@ -189,63 +233,80 @@ const VendorRow = ({ vendor, onToggleApproval }: {
         <DropdownMenu>
             <DropdownMenuTrigger>
                 <button 
-                    onClick={() => setIsMenuOpen(p => !p)}
-                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
-                    disabled={isTogglingApproval || isTogglingStatus}
+                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors border border-transparent hover:border-gray-300"
+                    disabled={isTogglingStatus}
                 >
                     <MoreVertical size={20} />
                 </button>
             </DropdownMenuTrigger>
-            {isMenuOpen && (
-                <DropdownMenuContent>
-                    {/* View Product Link */}
-                    <Link href={adminHref} passHref>
-                        <DropdownMenuItem onClick={() => setIsMenuOpen(false)} className='text-indigo-600'>
-                            <Eye size={16} className="mr-2" />
-                            View Products
-                        </DropdownMenuItem>
-                    </Link>
-                    <DropdownMenuSeparator />
+            <DropdownMenuContent>
+                {/* View Product Link */}
+                <Link href={adminHref} passHref>
+                    {/* onClick added to prevent console warning */}
+                    <DropdownMenuItem onClick={() => {}} className='text-indigo-600'>
+                        <Eye size={16} className="mr-2" />
+                        View Products
+                    </DropdownMenuItem>
+                </Link>
+                <DropdownMenuSeparator />
 
-                    {/* Approval/Role Toggle */}
-                    {is_approved ? (
-                        <DropdownMenuItem onClick={handleToggleApproval} className='text-red-600 font-medium'>
-                            {isTogglingApproval ? <Loader2 size={16} className="mr-2 animate-spin" /> : <XCircle size={16} className="mr-2" />}
-                            Unapprove Vendor (Set Role: User)
-                        </DropdownMenuItem>
-                    ) : (
-                        <DropdownMenuItem onClick={handleToggleApproval} className='text-[#5CA131] font-medium'>
-                            {isTogglingApproval ? <Loader2 size={16} className="mr-2 animate-spin" /> : <CheckCircle size={16} className="mr-2" />}
-                            Approve Vendor (Set Role: Vendor)
-                        </DropdownMenuItem>
-                    )}
-                    <DropdownMenuSeparator />
-                    
-                    {/* 3-State Status Toggles */}
-                    <DropdownMenuItem 
-                        onClick={() => handleStatusChange(1)} 
-                        className={`text-green-600 ${currentIsActive === 1 ? 'bg-green-50/50 font-bold' : ''}`}
-                    >
-                        {isTogglingStatus && currentIsActive !== 1 ? <Loader2 size={16} className="mr-2 animate-spin" /> : <UserCheck size={16} className="mr-2" />}
-                        Set Status: Active (1)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                        onClick={() => handleStatusChange(2)} 
-                        className={`text-yellow-600 ${currentIsActive === 2 ? 'bg-yellow-50/50 font-bold' : ''}`}
-                    >
-                        {isTogglingStatus && currentIsActive !== 2 ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Zap size={16} className="mr-2" />}
-                        Set Status: Not Visible (2)
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                        onClick={() => handleStatusChange(0)} 
-                        className={`text-red-600 ${currentIsActive === 0 ? 'bg-red-50/50 font-bold' : ''}`}
-                    >
-                        {isTogglingStatus && currentIsActive !== 0 ? <Loader2 size={16} className="mr-2 animate-spin" /> : <UserX size={16} className="mr-2" />}
-                        Set Status: Inactive (0)
-                    </DropdownMenuItem>
+                {/* ROLE CHANGE ACTIONS (1, 2, 3) */}
+                <div className="px-4 py-1 text-xs font-semibold text-gray-500">SET USER ROLE</div>
+                <DropdownMenuItem 
+                    onClick={() => handleRoleChange(ROLE_ADMIN)} 
+                    className={`text-purple-600 ${currentRoleId === ROLE_ADMIN ? 'bg-purple-50/50 font-bold' : ''}`}
+                    disabled={isTogglingStatus || currentRoleId === ROLE_ADMIN}
+                >
+                    {isTogglingStatus && currentRoleId !== ROLE_ADMIN ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Shield size={16} className="mr-2" />}
+                    Set Role: Admin (1)
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                    onClick={() => handleRoleChange(ROLE_VENDOR)} 
+                    className={`text-blue-600 ${currentRoleId === ROLE_VENDOR ? 'bg-blue-50/50 font-bold' : ''}`}
+                    disabled={isTogglingStatus || currentRoleId === ROLE_VENDOR}
+                >
+                    {isTogglingStatus && currentRoleId !== ROLE_VENDOR ? <Loader2 size={16} className="mr-2 animate-spin" /> : <UserCheck size={16} className="mr-2" />}
+                    Set Role: Vendor (2)
+                </DropdownMenuItem>
+                 <DropdownMenuItem 
+                    onClick={() => handleRoleChange(ROLE_USER)} 
+                    className={`text-gray-600 ${currentRoleId === ROLE_USER ? 'bg-gray-50/50 font-bold' : ''}`}
+                    disabled={isTogglingStatus || currentRoleId === ROLE_USER}
+                >
+                    {isTogglingStatus && currentRoleId !== ROLE_USER ? <Loader2 size={16} className="mr-2 animate-spin" /> : <User size={16} className="mr-2" />}
+                    Set Role: User (3)
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                
+                {/* 3-State Status Toggles */}
+                <div className="px-4 py-1 text-xs font-semibold text-gray-500">SET IS_ACTIVE STATUS</div>
 
-                </DropdownMenuContent>
-            )}
+                <DropdownMenuItem 
+                    onClick={() => handleStatusChange(1)} 
+                    className={`text-green-600 ${currentIsActive === 1 ? 'bg-green-50/50 font-bold' : ''}`}
+                    disabled={isTogglingStatus || currentIsActive === 1}
+                >
+                    {isTogglingStatus && currentIsActive !== 1 ? <Loader2 size={16} className="mr-2 animate-spin" /> : <UserCheck size={16} className="mr-2" />}
+                    Set Active (1)
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                    onClick={() => handleStatusChange(2)} 
+                    className={`text-yellow-600 ${currentIsActive === 2 ? 'bg-yellow-50/50 font-bold' : ''}`}
+                    disabled={isTogglingStatus || currentIsActive === 2}
+                >
+                    {isTogglingStatus && currentIsActive !== 2 ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Zap size={16} className="mr-2" />}
+                    Set Not Visible (2)
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                    onClick={() => handleStatusChange(0)} 
+                    className={`text-red-600 ${currentIsActive === 0 ? 'bg-red-50/50 font-bold' : ''}`}
+                    disabled={isTogglingStatus || currentIsActive === 0}
+                >
+                    {isTogglingStatus && currentIsActive !== 0 ? <Loader2 size={16} className="mr-2 animate-spin" /> : <UserMinus size={16} className="mr-2" />}
+                    Set Inactive (0)
+                </DropdownMenuItem>
+
+            </DropdownMenuContent>
         </DropdownMenu>
       </td>
     </tr>
@@ -253,7 +314,7 @@ const VendorRow = ({ vendor, onToggleApproval }: {
 };
 
 
-export default function AllVendorsTable({ vendors, onToggleApproval, isLoading }: AllVendorsTableProps) {
+export default function AllVendorsTable({ vendors, onStatusUpdate, isLoading }: AllVendorsTableProps) {
   if (isLoading) {
     return null; 
   }
@@ -264,17 +325,17 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading }
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-100 border-b border-gray-200">
                     <tr>
-                        <th className="p-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-1/4">
+                        <th className="p-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-1/5">
                             Brand / Company
                         </th>
-                        <th className="p-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden sm:table-cell w-1/4">
+                        <th className="p-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden sm:table-cell w-1/5">
                             Applicant / Email
                         </th>
-                        <th className="p-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-[120px]">
-                            Applied On
+                        <th className="p-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden lg:table-cell w-1/4">
+                            Contact & Address (New)
                         </th>
                         <th className="p-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-[180px]">
-                            Approval & Status
+                            Role & Status
                         </th>
                         <th className="p-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider w-[100px]">
                             Actions
@@ -283,7 +344,7 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading }
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                     {vendors.map((vendor) => (
-                        <VendorRow key={vendor.id} vendor={vendor} onToggleApproval={onToggleApproval} />
+                        <VendorRow key={vendor.id} vendor={vendor} onStatusUpdate={onStatusUpdate} />
                     ))}
                 </tbody>
             </table >

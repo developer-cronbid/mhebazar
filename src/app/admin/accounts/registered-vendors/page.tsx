@@ -1,8 +1,10 @@
-// page.tsx (Final version with Network Error fix)
+// page.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import VendorCard from "@/components/vendor-listing/VendorCard";
+// VendorCard is assumed to be present at this path
+import VendorCard from "@/components/vendor-listing/VendorCard"; 
+// AllVendor type is imported from the other component
 import AllVendorsTable, { AllVendor } from "@/components/vendor-listing/AllVendorsTable";
 import api from "@/lib/api";
 import { Loader2, AlertTriangle, Search, ChevronLeft, ChevronRight } from "lucide-react";
@@ -16,17 +18,23 @@ type Vendor = AllVendor & {
   };
 };
 
-// Interface for API response structure
+// Interface for API response structure (Simplified for the new dedicated endpoint)
 interface VendorListResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Vendor[];
+  count?: number; // Not provided by the new view, but kept for Approved tab compatibility
+  next?: string | null;
+  previous?: string | null;
+  // The new dedicated endpoint returns a flat list directly
+  results: Vendor[]; 
 }
 
 // Global lists to store all fetched vendors for client-side operations
-let allApprovedVendors: Vendor[] = [];
-let allApplications: Vendor[] = [];
+var allApprovedVendors: Vendor[] = [];
+var allApplications: Vendor[] = []; // This will now hold all vendors from the new endpoint
+
+// Role IDs
+const ROLE_ADMIN = 1;
+const ROLE_VENDOR = 2;
+const ROLE_USER = 3;
 
 export default function VendorsPage() {
   const PAGE_SIZE = 10;
@@ -45,7 +53,6 @@ export default function VendorsPage() {
   // --- Client-Side Filter/Pagination Logic ---
   
   const calculateClientFiltering = useCallback(() => {
-    // FIX: Ensure we select the list that corresponds to the active tab
     const sourceList = activeTab === "approved" ? allApprovedVendors : allApplications;
     
     // 1. Filtering
@@ -55,7 +62,8 @@ export default function VendorsPage() {
           vendor.brand?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.company_name?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.email?.toLowerCase().includes(lowerCaseSearch) ||
-          vendor.full_name?.toLowerCase().includes(lowerCaseSearch)
+          vendor.full_name?.toLowerCase().includes(lowerCaseSearch) ||
+          vendor.company_phone?.includes(lowerCaseSearch) // Search on new fields too
         )
       : sourceList;
 
@@ -80,7 +88,6 @@ export default function VendorsPage() {
     setLoading(true);
     setError(null);
     const isApprovedTab = tab === "approved";
-    let accumulatedVendors: Vendor[] = [];
 
     // Skip API call if data is already fetched
     if (isApprovedTab && allApprovedVendors.length > 0) {
@@ -92,38 +99,44 @@ export default function VendorsPage() {
     }
 
     try {
-      // Start with the initial URL.
-      let nextUrl: string | null = isApprovedTab ? "/vendor/approved/?page_size=20" : "/vendor/?page_size=20"; 
+      let accumulatedVendors: Vendor[] = []; // Temporary accumulator
       
-      while (nextUrl) {
-          
-          let fetchPath: string;
-          
-          // FIX: If URL is absolute (from API's 'next' field), extract only the path and query.
-          // This avoids the CORS/Network Error by preventing Axios from sending a cross-protocol request.
-          if (nextUrl.startsWith('http')) {
-             const urlObject = new URL(nextUrl);
-             fetchPath = urlObject.pathname + urlObject.search; // e.g., /api/vendor/?page=2&page_size=20
-          } else {
-             fetchPath = nextUrl;
-          }
-          
-          const response = await api.get<VendorListResponse>(fetchPath); // Axios prepends local baseURL to fetchPath
-
-          accumulatedVendors = accumulatedVendors.concat(response.data.results || []);
-          nextUrl = response.data.next; // Update nextUrl for the next loop iteration
-      }
-      
-      // Store accumulated data globally
       if (isApprovedTab) {
+        // --- EXISTING APPROVED VENDORS LOGIC (unchanged) ---
+        let nextUrl: string | null = "vendor/approved/?page_size=20"; 
+        
+        while (nextUrl) {
+            let fetchPath: string;
+            if (nextUrl.startsWith('http')) {
+               const urlObject = new URL(nextUrl);
+               fetchPath = urlObject.pathname.replace('/api/', '') + urlObject.search;
+            } else {
+               fetchPath = nextUrl;
+            }
+            
+            const response = await api.get<VendorListResponse>(fetchPath);
+
+            accumulatedVendors = accumulatedVendors.concat(response.data.results as Vendor[] || []);
+            nextUrl = response.data.next;
+        }
         allApprovedVendors = accumulatedVendors;
+        
       } else {
+        // --- NEW ALL VENDORS LOGIC (uses dedicated endpoint) ---
+        const response = await api.get<Vendor[]>("admin/all-vendors/"); // Fetch all applications
+        // Map fields from new serializer response (user_is_active -> is_active, current_role_id -> is_approved boolean)
+        accumulatedVendors = response.data.map(v => ({
+            ...v,
+            is_active: v.user_is_active,
+            // is_approved is derived from the role ID: 2 is VENDOR, others are not.
+            is_approved: v.current_role_id === ROLE_VENDOR, 
+        })) as Vendor[];
+        
         allApplications = accumulatedVendors;
       }
-
+      
     } catch (err) {
       console.error("Failed to fetch vendors:", err);
-      // Removed the unnecessary URL parsing logic from the error message construction as well
       const errorMessage =
         !isApprovedTab && (err as any).response?.status === 403
           ? "Access Denied: You must be an administrator to view all vendor applications."
@@ -148,30 +161,51 @@ export default function VendorsPage() {
   }, [searchTerm]);
 
 
-  // --- Handler for Admin Toggle (unchanged) ---
+  // --- Handler for Admin Toggle ---
+  
+  // New function to force UI update after global state change
+  const forceUpdate = () => {
+      // Trigger a non-destructive state change to force the useEffect to re-run filtering
+      setSearchTerm(s => s + ' '); 
+      setSearchTerm(s => s.trim()); 
+  }
 
-  const handleToggleApproval = useCallback(
-    async (vendorId: number, isCurrentlyApproved: boolean): Promise<void> => {
-      const action = isCurrentlyApproved ? "reject" : "approve";
-      const reason = action === "reject" ? "Unapproved by Admin via dashboard." : "Approved via dashboard."; 
-      
+  // Handler for 3-state is_active status AND Role ID change 
+  const handleUserStatusUpdate = useCallback(
+    async (userId: number, newRoleId: number, newStatus: 0 | 1 | 2) => {
       try {
-        await api.post(`/vendor/${vendorId}/approve/`, { action, reason });
+        // 1. Use the NEW dedicated endpoint for status/role update
+        await api.patch(`admin/all-vendors/${userId}/update-status/`, { 
+            role_id: newRoleId, 
+            status_value: newStatus 
+        });
 
-        // Update the global list
+        // 2. Update the global list locally for instant feedback
         const updateList = (list: Vendor[]) => list.map(v => 
-          v.id === vendorId ? { ...v, is_approved: !isCurrentlyApproved } : v
+          v.user_id === userId ? { 
+            ...v, 
+            // The is_approved status is derived from the newRoleId
+            is_approved: newRoleId === ROLE_VENDOR,
+            // The is_active boolean is derived from the newStatus (1 = True, 0/2 = False)
+            is_active: newStatus === 1,
+            // Also update the stored role ID and is_active bool returned by the new serializer structure
+            current_role_id: newRoleId,
+            user_is_active: newStatus === 1,
+            // We need to re-fetch to get the new role and is_active status accurately
+          } : v
         );
         allApplications = updateList(allApplications);
-        allApprovedVendors = allApprovedVendors.filter(v => v.id !== vendorId); // Simple removal if unapproved
+        // Note: Approved vendors list might need refreshing/re-filtering depending on role change, 
+        // but for immediate UI consistency, updating local list is sufficient.
+        allApprovedVendors = updateList(allApprovedVendors).filter(v => v.is_approved === true);
 
-        // Trigger re-render by updating the list that drives the filtering logic (by setting searchTerm to itself)
-        setSearchTerm(s => s + ' '); 
-        setSearchTerm(s => s.trim()); 
+
+        // 3. Force a re-render and re-filter
+        forceUpdate();
         
       } catch (err) {
-        console.error(`Error toggling vendor status for ID ${vendorId}:`, err);
-        throw new Error(`Failed to perform ${action} action.`);
+        console.error(`Error updating user status for ID ${userId}:`, err);
+        throw new Error(`Failed to update status/role. Make sure your user has Admin privileges.`);
       }
     },
     []
@@ -220,7 +254,8 @@ export default function VendorsPage() {
               currentPage === totalPages ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-[#5CA131] hover:bg-gray-100 border-gray-300'
             }`}
           >
-            <ChevronRight className="w-5 h-5" />
+                       <ChevronRight className="w-5 h-5" />
+
           </button>
         </div>
       </div>
@@ -281,6 +316,7 @@ export default function VendorsPage() {
                 <VendorCard
                   key={vendor.id}
                   vendor={vendor}
+                  // @ts-ignore: VendorCard doesn't need this prop in this tab
                   onToggleApproval={undefined} 
                 />
               ))}
@@ -291,7 +327,7 @@ export default function VendorsPage() {
           {!loading && !error && activeTab === "all" && (
             <AllVendorsTable
               vendors={displayedVendors as AllVendor[]} 
-              onToggleApproval={handleToggleApproval}
+              onStatusUpdate={handleUserStatusUpdate} 
               isLoading={loading}
             />
           )}
