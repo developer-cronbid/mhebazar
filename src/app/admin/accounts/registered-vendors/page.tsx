@@ -63,7 +63,7 @@ export default function VendorsPage() {
           vendor.company_name?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.email?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.full_name?.toLowerCase().includes(lowerCaseSearch) ||
-          vendor.company_phone?.includes(lowerCaseSearch) // Search on new fields too
+          (vendor.company_phone && vendor.company_phone.includes(lowerCaseSearch)) // Search on new fields too
         )
       : sourceList;
 
@@ -114,6 +114,7 @@ export default function VendorsPage() {
                fetchPath = nextUrl;
             }
             
+            // NOTE: Using VendorListResponse type which expects "results" array
             const response = await api.get<VendorListResponse>(fetchPath);
 
             accumulatedVendors = accumulatedVendors.concat(response.data.results as Vendor[] || []);
@@ -123,7 +124,9 @@ export default function VendorsPage() {
         
       } else {
         // --- NEW ALL VENDORS LOGIC (uses dedicated endpoint) ---
-        const response = await api.get<Vendor[]>("admin/all-vendors/"); // Fetch all applications
+        // The new dedicated endpoint returns a flat array (AllVendor[]) directly, not wrapped in {results: []}
+        const response = await api.get<AllVendor[]>("admin/all-vendors/"); 
+        
         // Map fields from new serializer response (user_is_active -> is_active, current_role_id -> is_approved boolean)
         accumulatedVendors = response.data.map(v => ({
             ...v,
@@ -139,7 +142,7 @@ export default function VendorsPage() {
       console.error("Failed to fetch vendors:", err);
       const errorMessage =
         !isApprovedTab && (err as any).response?.status === 403
-          ? "Access Denied: You must be an administrator to view all vendor applications."
+          ? "Access Denied: You must be an administrator to view all vendor applications. Check your user role and JWT token."
           : "Failed to load vendors. Please try again.";
       setError(errorMessage);
     } finally {
@@ -175,6 +178,7 @@ export default function VendorsPage() {
     async (userId: number, newRoleId: number, newStatus: 0 | 1 | 2) => {
       try {
         // 1. Use the NEW dedicated endpoint for status/role update
+        // We use the correct URL format: admin/all-vendors/{user_id}/update-status/
         await api.patch(`admin/all-vendors/${userId}/update-status/`, { 
             role_id: newRoleId, 
             status_value: newStatus 
@@ -195,9 +199,7 @@ export default function VendorsPage() {
           } : v
         );
         allApplications = updateList(allApplications);
-        // Note: Approved vendors list might need refreshing/re-filtering depending on role change, 
-        // but for immediate UI consistency, updating local list is sufficient.
-        allApprovedVendors = updateList(allApprovedVendors).filter(v => v.is_approved === true);
+        allApprovedVendors = updateList(allApprovedVendors).filter(v => v.current_role_id === ROLE_VENDOR);
 
 
         // 3. Force a re-render and re-filter
@@ -254,8 +256,7 @@ export default function VendorsPage() {
               currentPage === totalPages ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-[#5CA131] hover:bg-gray-100 border-gray-300'
             }`}
           >
-                       <ChevronRight className="w-5 h-5" />
-
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
       </div>
