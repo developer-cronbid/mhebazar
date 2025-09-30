@@ -1,7 +1,7 @@
 // page.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 // VendorCard is assumed to be present at this path
 import VendorCard from "@/components/vendor-listing/VendorCard"; 
 // AllVendor type is imported from the other component
@@ -27,6 +27,7 @@ interface VendorListResponse {
 }
 
 // Global lists to store all fetched vendors for client-side operations
+// NOTE: Using global vars for large, static datasets is acceptable for caching.
 var allApprovedVendors: Vendor[] = [];
 var allApplications: Vendor[] = [];
 
@@ -45,12 +46,10 @@ const sortVendors = (vendors: Vendor[], field: string, direction: 'asc' | 'desc'
                 valB = b.brand || '';
                 break;
             case 'full_name':
-                // Sort by Applicant Name (or username as fallback)
                 valA = a.full_name || a.username || '';
                 valB = b.full_name || b.username || '';
                 break;
             case 'application_date':
-                // Sort by Date (milliseconds)
                 valA = new Date(a.application_date).getTime();
                 valB = new Date(b.application_date).getTime();
                 break;
@@ -83,19 +82,18 @@ export default function VendorsPage() {
   const [totalFilteredCount, setTotalFilteredCount] = useState(0); 
 
   // --- Sorting State ---
-  // Default sort by Applied On (application_date) descending (newest first)
   const [sortField, setSortField] = useState<string>('application_date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  // State to force re-filter when global data changes (since we use global var)
+  const [dataVersion, setDataVersion] = useState(0);
 
 
-  // --- Client-Side Filter/Pagination Logic ---
+  // --- Client-Side Filter/Sort Logic (useMemo for efficiency and stability) ---
   
-  const clientFilterLogic = useCallback(() => {
-    
-    // 1. Select Source List
+  const filteredAndSortedVendors = useMemo(() => {
     const sourceList = activeTab === "approved" ? allApprovedVendors : allApplications;
     
-    // 2. Filtering
+    // 1. Filtering
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
     let filtered = lowerCaseSearch
       ? sourceList.filter(vendor => 
@@ -107,49 +105,43 @@ export default function VendorsPage() {
         )
       : sourceList;
       
-    // 3. Sorting (NEW FEATURE)
+    // 2. Sorting
     filtered = sortVendors(filtered, sortField, sortDirection);
+    
+    return filtered;
+  }, [activeTab, searchTerm, sortField, sortDirection, dataVersion]); // dataVersion added to track global var changes
 
-    // 4. Pagination
+
+  // --- Pagination Logic (useEffect) ---
+
+  useEffect(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+    const paginated = filteredAndSortedVendors.slice(startIndex, startIndex + PAGE_SIZE);
 
     setDisplayedVendors(paginated);
-    setTotalFilteredCount(filtered.length);
+    setTotalFilteredCount(filteredAndSortedVendors.length);
+  }, [filteredAndSortedVendors, currentPage]);
 
-  }, [activeTab, searchTerm, currentPage, sortField, sortDirection]);
-
-  
-  useEffect(() => {
-    // This effect runs whenever sorting, pagination, or global data changes
-    clientFilterLogic();
-  }, [clientFilterLogic, allApprovedVendors.length, allApplications.length]); 
 
   // --- Handlers ---
   
-  // FIX: Dedicated handler for search input change
+  // FIX: Dedicated handler for search input change (stable cursor)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newSearchTerm = e.target.value;
-      // 1. Update search term state immediately (Keeps cursor stable)
       setSearchTerm(newSearchTerm);
-
-      // 2. Reset page to 1 if the search term changes significantly
-      if (newSearchTerm.length === 0 || searchTerm.length === 0) {
-          setCurrentPage(1);
-      }
-      
-      // The main useEffect handles the filtering
+      // Reset page to 1 if search term changes (to start filtering from the beginning)
+      setCurrentPage(1); 
   };
 
-  // NEW: Handler for column sorting
+  // Handler for column sorting
   const handleSortChange = (field: string) => {
     if (field === sortField) {
         setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
         setSortField(field);
-        setSortDirection('desc'); // Default to descending (newest/highest first)
+        setSortDirection('desc');
     }
-    setCurrentPage(1); // Reset pagination on sort change
+    setCurrentPage(1); 
   };
 
 
@@ -195,12 +187,12 @@ export default function VendorsPage() {
           allNextUrl = cleanUrl(response.data.next); 
       }
       
-      // Store accumulated data globally
+      // Store accumulated data globally (This mutation triggers the useMemo/useEffect chain)
       allApprovedVendors = accumulatedApproved;
       allApplications = accumulatedAll;
       
-      // Initialize filtering and sorting
-      clientFilterLogic();
+      // Update version to confirm data loaded
+      setDataVersion(v => v + 1);
       setCurrentPage(1);
 
     } catch (err) {
@@ -213,7 +205,7 @@ export default function VendorsPage() {
     } finally {
       setLoading(false);
     }
-  }, [clientFilterLogic]); 
+  }, []); 
 
   useEffect(() => {
     // Initial fetch
@@ -225,7 +217,7 @@ export default function VendorsPage() {
   useEffect(() => {
     setSearchTerm('');
     setCurrentPage(1);
-    setSortField('application_date'); // Reset sorting on tab switch
+    setSortField('application_date');
     setSortDirection('desc');
   }, [activeTab]);
 
@@ -234,8 +226,8 @@ export default function VendorsPage() {
   
   // New function to force UI update after global state change
   const forceUpdate = () => {
-      // Triggering a change in currentPage to force the main useEffect to run the filter logic
-      setCurrentPage(p => p); 
+      // Increment data version to force the useMemo/useEffect chain to run again
+      setDataVersion(v => v + 1); 
   }
 
   // Helper function to update lists locally after API action
@@ -266,7 +258,7 @@ export default function VendorsPage() {
         ); 
 
         // Trigger re-render
-        forceUpdate();
+        forceUpdate(); // Force a re-filter and re-display
         
       } catch (err) {
         console.error(`Error toggling vendor status for ID ${vendorId}:`, err);
