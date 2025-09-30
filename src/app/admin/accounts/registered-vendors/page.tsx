@@ -34,7 +34,7 @@ var allApplications: Vendor[] = [];
 const ROLE_VENDOR = 2;
 
 export default function VendorsPage() {
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 10; // This is the page size for client-side display/pagination
   
   const [activeTab, setActiveTab] = useState<"approved" | "all">("approved");
   const [loading, setLoading] = useState(true);
@@ -49,8 +49,9 @@ export default function VendorsPage() {
 
   // --- Client-Side Filter/Pagination Logic ---
   
-  const calculateClientFiltering = useCallback(() => {
-    const sourceList = activeTab === "approved" ? allApprovedVendors : allApplications;
+  const calculateClientFiltering = useCallback((approvedVendors: Vendor[] = allApprovedVendors, allVendors: Vendor[] = allApplications) => {
+    // FIX: Use the latest global lists or provided lists
+    const sourceList = activeTab === "approved" ? approvedVendors : allVendors;
     
     // 1. Filtering
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
@@ -59,7 +60,8 @@ export default function VendorsPage() {
           vendor.brand?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.company_name?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.email?.toLowerCase().includes(lowerCaseSearch) ||
-          vendor.full_name?.toLowerCase().includes(lowerCaseSearch)
+          vendor.full_name?.toLowerCase().includes(lowerCaseSearch) ||
+          vendor.username?.toLowerCase().includes(lowerCaseSearch) // Added username search
         )
       : sourceList;
 
@@ -73,47 +75,42 @@ export default function VendorsPage() {
 
   
   useEffect(() => {
+    // This effect runs whenever global data (via forceUpdate) or filters change
     const { paginated, filteredCount } = calculateClientFiltering();
     setDisplayedVendors(paginated);
     setTotalFilteredCount(filteredCount);
-  }, [calculateClientFiltering]);
+  }, [calculateClientFiltering, allApprovedVendors.length, allApplications.length]); // Added lengths to track global list changes
 
   // --- Data Fetching (Fetch ALL pages for client-side search) ---
 
-
-  const fetchData = useCallback(async (tab: "approved" | "all") => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    // Skip API call if data is already fetched
-    if (allApprovedVendors.length > 0 && allApplications.length > 0) {
-      setLoading(false);
-      // Trigger update of displayed list if data is already present
-      setDisplayedVendors(calculateClientFiltering().paginated);
-      return;
-    }
-
     // Helper function to ensure URL is HTTPS for production and remove base path
+    // FIX: Removed page_size=50 handling here. Cleaned URL path only.
     const cleanUrl = (url: string | null): string | null => {
         if (!url) return null;
         let cleaned = url;
         
-        // **FIX 3: Force HTTPS in production environment for absolute URLs**
+        // FIX 2: Force HTTPS in production environment for absolute URLs
         if (process.env.NODE_ENV === "production" && cleaned.startsWith('http://')) {
             cleaned = cleaned.replace('http://', 'https://');
         }
 
-        // Remove the base API URL (e.g., 'https://api.mhebazar.in/api/')
-        // We only want the path and query (e.g., 'vendor/?page_size=50')
-        if (cleaned.includes('/api/')) {
-            cleaned = cleaned.substring(cleaned.indexOf('/api/') + 5);
+        // Remove the base API URL (e.g., 'http://localhost:8000/api/' or 'https://api.mhebazar.in/api/')
+        // We only want the path and query (e.g., 'vendor/?page=2')
+        const apiIndex = cleaned.indexOf('/api/');
+        if (apiIndex !== -1) {
+             cleaned = cleaned.substring(apiIndex + 5);
         }
         return cleaned;
     };
     
     try {
-      let approvedNextUrl: string | null = "vendor/approved/?page_size=50";
-      let allNextUrl: string | null = "vendor/?page_size=50"; 
+      // Use initial relative paths without explicit page_size
+      let approvedNextUrl: string | null = "vendor/approved/";
+      let allNextUrl: string | null = "vendor/"; 
       
       let accumulatedApproved: Vendor[] = [];
       let accumulatedAll: Vendor[] = [];
@@ -122,20 +119,25 @@ export default function VendorsPage() {
       while (approvedNextUrl) {
           const response = await api.get<VendorListResponse>(approvedNextUrl);
           accumulatedApproved = accumulatedApproved.concat(response.data.results as Vendor[] || []);
-          approvedNextUrl = cleanUrl(response.data.next); // **FIXED: Clean URL for next page**
+          approvedNextUrl = cleanUrl(response.data.next); // FIXED: Clean URL for next page
       }
       
       // Fetch ALL applications (for admin tab)
       while (allNextUrl) {
           const response = await api.get<VendorListResponse>(allNextUrl);
           accumulatedAll = accumulatedAll.concat(response.data.results as Vendor[] || []);
-          allNextUrl = cleanUrl(response.data.next); // **FIXED: Clean URL for next page**
+          allNextUrl = cleanUrl(response.data.next); // FIXED: Clean URL for next page
       }
       
       // Store accumulated data globally
       allApprovedVendors = accumulatedApproved;
       allApplications = accumulatedAll;
       
+      // FIX 3: Manually trigger client filtering after data fetch to update UI immediately
+      const { paginated, filteredCount } = calculateClientFiltering(accumulatedApproved, accumulatedAll);
+      setDisplayedVendors(paginated);
+      setTotalFilteredCount(filteredCount);
+
     } catch (err) {
       console.error("Failed to fetch vendors:", err);
       const errorMessage =
@@ -146,14 +148,21 @@ export default function VendorsPage() {
     } finally {
       setLoading(false);
     }
-  }, [calculateClientFiltering]); // Keep dependencies clean
+  }, [calculateClientFiltering]); // Dependencies updated
+
+  useEffect(() => {
+    // FIX 1: Run fetchData on initial component mount
+    fetchData(); 
+  }, [fetchData]);
+
 
   useEffect(() => {
     // Reset page and refetch data when tab changes
     setSearchTerm('');
     setCurrentPage(1);
-    fetchData(activeTab);
-  }, [activeTab, fetchData]);
+    // Data is already fetched globally, just force a local update
+    forceUpdate(); 
+  }, [activeTab]);
 
 
   // Reset page after search
@@ -289,7 +298,7 @@ export default function VendorsPage() {
 
         {/* Content Area */}
         <div className="min-h-[400px]">
-          {loading && (
+          {loading && displayedVendors.length === 0 && ( // Show loading only on initial load or if list is empty
             <div className="flex justify-center items-center h-full pt-20">
               <Loader2 className="w-8 h-8 animate-spin text-[#5CA131]" />
               <span className="ml-3 text-lg text-gray-600">Loading initial data...</span>
