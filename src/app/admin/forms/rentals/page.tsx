@@ -12,6 +12,7 @@ import { ImageIcon, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import rentData from '@/data/rentData.json';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 // Define TypeScript interfaces based on your API response
 interface Image {
@@ -259,7 +260,20 @@ const RentalsTable = () => {
           );
         },
       },
-      { id: 'product_name', accessorFn: row => formatProductName(row.product_details), header: 'Product Name' },
+      { 
+        id: 'product_name', 
+        accessorFn: row => formatProductName(row.product_details), 
+        header: 'Product Name',
+        cell: ({ row }) => (
+          <Link 
+            href={`/products-details/${row.original.product_details.id}`}
+            onClick={(e) => e.stopPropagation()} // Prevent sheet from opening
+            className="text-blue-600 hover:underline"
+          >
+            {formatProductName(row.original.product_details)}
+          </Link>
+        )
+      },
       { accessorKey: 'user_name', header: 'Requester', enableSorting: false },
       { accessorKey: 'start_date', header: 'Start Date', cell: info => new Date(info.getValue() as string).toLocaleDateString(), enableSorting: false },
       { accessorKey: 'end_date', header: 'End Date', cell: info => new Date(info.getValue() as string).toLocaleDateString(), enableSorting: false },

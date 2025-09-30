@@ -12,6 +12,7 @@ import { QuoteDetailsSheet } from './quotesDetails';
 import { ImageIcon, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import quoteData from '@/data/quoteData.json';
+import Link from 'next/link';
 
 // Interfaces for data structure
 interface Image {
@@ -247,8 +248,8 @@ const QuotesTable = () => {
   };
 
   // Define table columns
-  const columns = useMemo<ColumnDef<Quote>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<Quote>[]>
+    (() => [
       {
         header: 'Sr. No.',
         cell: info => info.row.index + 1 + (page - 1) * pageSize,
@@ -280,6 +281,15 @@ const QuotesTable = () => {
         id: 'product_name',
         accessorFn: row => formatProductName(row.product_details),
         header: 'Product Name',
+        cell: ({ row }) => (
+          <Link
+            href={`/products-details/${row.original.product_details.id}`}
+            onClick={(e) => e.stopPropagation()} // Prevent sheet from opening
+            className="text-blue-600 hover:underline"
+          >
+            {formatProductName(row.original.product_details)}
+          </Link>
+        )
       },
       {
         accessorFn: row => row.product_details.user_name,
