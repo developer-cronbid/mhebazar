@@ -1,7 +1,10 @@
-// api.ts - Fixed Axios instance with improved token handling
+// api.ts - Replace your existing api.ts content with this (focus on interceptor)
+
 import axios, { AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
+// **FIX 1: Ensure API_BASE_URL uses HTTPS in production environment if not already.**
+// We'll rely on NEXT_PUBLIC_API_BASE_URL but enforce HTTPS correction later if needed.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://mheback.onrender.com/api";
 
 const api: AxiosInstance = axios.create({
@@ -15,6 +18,14 @@ const api: AxiosInstance = axios.create({
 // REQUEST INTERCEPTOR
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // **FIX 2: Forcing all requests originating from this axios instance to HTTPS.**
+    // This is necessary if the baseURL sometimes defaults to HTTP in dev or through environment configuration.
+    if (process.env.NODE_ENV === "production" && config.url && config.url.startsWith('http://')) {
+        config.url = config.url.replace('http://', 'https://');
+    } else if (process.env.NODE_ENV === "production" && config.baseURL && config.baseURL.startsWith('http://')) {
+        config.baseURL = config.baseURL.replace('http://', 'https://');
+    }
+    
     const token = Cookies.get("access_token");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -51,13 +62,12 @@ api.interceptors.response.use(
           { refresh },
           { withCredentials: true }
         );
-
+        // ... (rest of the refresh logic remains the same)
         const newAccessToken = refreshResponse.data?.access;
-        const newRefreshToken = refreshResponse.data?.refresh; // Some backends return new refresh token
+        const newRefreshToken = refreshResponse.data?.refresh; 
 
         if (newAccessToken) {
-          // Set token expiry based on remember me preference
-          const tokenExpiry = isRemembered ? 7 : undefined; // 7 days or session
+          const tokenExpiry = isRemembered ? 7 : undefined;
 
           Cookies.set("access_token", newAccessToken, {
             expires: tokenExpiry,
@@ -66,7 +76,6 @@ api.interceptors.response.use(
             path: "/",
           });
 
-          // Update refresh token if provided
           if (newRefreshToken) {
             Cookies.set("refresh_token", newRefreshToken, {
               expires: isRemembered ? 7 : undefined,
@@ -76,7 +85,6 @@ api.interceptors.response.use(
             });
           }
 
-          // Update request and retry
           api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
@@ -92,14 +100,13 @@ api.interceptors.response.use(
   }
 );
 
-// Helper functions
+// Helper functions (keep these as they are)
 const clearAllTokens = () => {
   Cookies.remove("access_token", { path: "/" });
   Cookies.remove("refresh_token", { path: "/" });
   Cookies.remove("user_role", { path: "/" });
   Cookies.remove("remember_me", { path: "/" });
 
-  // Clear from localStorage as fallback
   if (typeof window !== "undefined") {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");

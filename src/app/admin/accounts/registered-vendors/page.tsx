@@ -80,19 +80,38 @@ export default function VendorsPage() {
 
   // --- Data Fetching (Fetch ALL pages for client-side search) ---
 
+
   const fetchData = useCallback(async (tab: "approved" | "all") => {
     setLoading(true);
     setError(null);
-    const isApprovedTab = tab === "approved";
 
     // Skip API call if data is already fetched
-    if (isApprovedTab && allApprovedVendors.length > 0 && allApplications.length > 0) {
+    if (allApprovedVendors.length > 0 && allApplications.length > 0) {
       setLoading(false);
-      return; 
+      // Trigger update of displayed list if data is already present
+      setDisplayedVendors(calculateClientFiltering().paginated);
+      return;
     }
 
+    // Helper function to ensure URL is HTTPS for production and remove base path
+    const cleanUrl = (url: string | null): string | null => {
+        if (!url) return null;
+        let cleaned = url;
+        
+        // **FIX 3: Force HTTPS in production environment for absolute URLs**
+        if (process.env.NODE_ENV === "production" && cleaned.startsWith('http://')) {
+            cleaned = cleaned.replace('http://', 'https://');
+        }
+
+        // Remove the base API URL (e.g., 'https://api.mhebazar.in/api/')
+        // We only want the path and query (e.g., 'vendor/?page_size=50')
+        if (cleaned.includes('/api/')) {
+            cleaned = cleaned.substring(cleaned.indexOf('/api/') + 5);
+        }
+        return cleaned;
+    };
+    
     try {
-      // Use path relative to /api/
       let approvedNextUrl: string | null = "vendor/approved/?page_size=50";
       let allNextUrl: string | null = "vendor/?page_size=50"; 
       
@@ -103,14 +122,14 @@ export default function VendorsPage() {
       while (approvedNextUrl) {
           const response = await api.get<VendorListResponse>(approvedNextUrl);
           accumulatedApproved = accumulatedApproved.concat(response.data.results as Vendor[] || []);
-          approvedNextUrl = response.data.next;
+          approvedNextUrl = cleanUrl(response.data.next); // **FIXED: Clean URL for next page**
       }
       
       // Fetch ALL applications (for admin tab)
       while (allNextUrl) {
           const response = await api.get<VendorListResponse>(allNextUrl);
           accumulatedAll = accumulatedAll.concat(response.data.results as Vendor[] || []);
-          allNextUrl = response.data.next;
+          allNextUrl = cleanUrl(response.data.next); // **FIXED: Clean URL for next page**
       }
       
       // Store accumulated data globally
@@ -120,14 +139,14 @@ export default function VendorsPage() {
     } catch (err) {
       console.error("Failed to fetch vendors:", err);
       const errorMessage =
-        !isApprovedTab && (err as any).response?.status === 403
+        (err as any).response?.status === 403
           ? "Access Denied: You must be an administrator to view all vendor applications."
           : "Failed to load vendors. Please try again.";
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [calculateClientFiltering]); // Keep dependencies clean
 
   useEffect(() => {
     // Reset page and refetch data when tab changes
