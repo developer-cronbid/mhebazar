@@ -18,6 +18,12 @@ const TYPE_COLORS = {
   attachments: "bg-pink-500",
 };
 
+const stripHtmlTags = (html: string) => {
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
+
 export default function ProductDetails() {
   const params = useParams();
   const [product, setProduct] = useState<Product | null>(null);
@@ -134,7 +140,7 @@ export default function ProductDetails() {
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-lg font-semibold mb-4">Description</h2>
               <p className="text-gray-600 whitespace-pre-wrap">
-                {product.description || "No description provided"}
+                {product.description ? stripHtmlTags(product.description) : "No description provided"}
               </p>
             </div>
           </div>

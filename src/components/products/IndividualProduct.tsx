@@ -1131,12 +1131,9 @@ export default function ProductSection({ productId }: ProductSectionProps) {
           <div className="pt-6 border-t border-gray-200">
             <p className="text-lg md:text-2xl font-bold">Product Details</p>
             <div className="relative">
-              <div
-                className="line-clamp-4 text-sm md:text-base"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(data.description),
-                }}
-              ></div>
+              <div className="line-clamp-4 text-sm md:text-base">
+                {data.description ? DOMPurify.sanitize(data.description, { ALLOWED_TAGS: [] }) : ''}
+              </div>
               <button
                 onClick={() => {
                   setOpenAccordion('desc');
@@ -1151,49 +1148,66 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 <ChevronDown className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
             </div>
-            <Dialog>
-              <DialogTrigger asChild disabled={!data.is_active}>
-                <motion.button
-                  whileHover={{ x: data.is_active ? 5 : 0 }}
-                  className="underline cursor-pointer font-semibold text-left disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline text-xl mt-4"
-                  aria-label={formButtonText}
-                  disabled={!data.is_active}
-                >
-                  {formButtonText}
-                </motion.button>
-              </DialogTrigger>
-              <DialogContent className="w-full max-w-2xl">
-                {isRentalOrUsed ? (
+            <div className="flex gap-4 mt-4">
+              <Dialog>
+                <DialogTrigger asChild disabled={!data.is_active}>
+                  <motion.button
+                    whileHover={{ x: data.is_active ? 5 : 0 }}
+                    className="underline cursor-pointer font-semibold text-left disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline text-xl"
+                    aria-label={formButtonText}
+                    disabled={!data.is_active}
+                  >
+                    {formButtonText}
+                  </motion.button>
+                </DialogTrigger>
+                <DialogContent className="w-full max-w-2xl">
+                  {isRentalOrUsed ? (
+                    <RentalForm
+                      productId={data.id}
+                      productDetails={{
+                        image: data.images[0]?.image || data.category_details?.cat_image || "/no-product.jpg",
+                        title: data.name,
+                        description: data.description,
+                        price: data.price,
+                        stock_quantity: data.stock_quantity,
+                      }}
+                      onClose={() => document.querySelector<HTMLButtonElement>("[data-dialog-close]")?.click()}
+                    />
+                  ) : (
+                    <QuoteForm
+                      product={data}
+                      onClose={() => document.querySelector<HTMLButtonElement>("[data-dialog-close]")?.click()}
+                    />
+                  )}
+                </DialogContent>
+              </Dialog>
+
+              <Dialog>
+                <DialogTrigger asChild disabled={!data.is_active}>
+                  <motion.button
+                    whileHover={{ x: data.is_active ? 5 : 0 }}
+                    className="underline cursor-pointer font-semibold text-left disabled:cursor-not-allowed disabled:text-gray-400 disabled:no-underline text-xl"
+                    aria-label="Rent This"
+                    disabled={!data.is_active}
+                  >
+                    Rent This Instead
+                  </motion.button>
+                </DialogTrigger>
+                <DialogContent className="w-full max-w-2xl">
                   <RentalForm
                     productId={data.id}
                     productDetails={{
-                      image:
-                        data.images[0]?.image ||
-                        data.category_details?.cat_image ||
-                        "/no-product.jpg",
+                      image: data.images[0]?.image || data.category_details?.cat_image || "/no-product.jpg",
                       title: data.name,
                       description: data.description,
                       price: data.price,
                       stock_quantity: data.stock_quantity,
                     }}
-                    onClose={() =>
-                      document
-                        .querySelector<HTMLButtonElement>("[data-dialog-close]")
-                        ?.click()
-                    }
+                    onClose={() => document.querySelector<HTMLButtonElement>("[data-dialog-close]")?.click()}
                   />
-                ) : (
-                  <QuoteForm
-                    product={data}
-                    onClose={() =>
-                      document
-                        .querySelector<HTMLButtonElement>("[data-dialog-close]")
-                        ?.click()
-                    }
-                  />
-                )}
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
       </div>
@@ -1225,11 +1239,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 transition={{ duration: 0.3 }}
                 className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line overflow-hidden"
               >
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(data.description),
-                  }}
-                />
+                {DOMPurify.sanitize(data.description, { ALLOWED_TAGS: [] })}
               </motion.div>
             )}
           </AnimatePresence>
