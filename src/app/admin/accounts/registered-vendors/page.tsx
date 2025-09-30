@@ -49,66 +49,106 @@ export default function VendorsPage() {
 
   // --- Client-Side Filter/Pagination Logic ---
   
-  const calculateClientFiltering = useCallback((approvedVendors: Vendor[] = allApprovedVendors, allVendors: Vendor[] = allApplications) => {
-    // FIX: Use the latest global lists or provided lists
-    const sourceList = activeTab === "approved" ? approvedVendors : allVendors;
+  // Renamed to clientFilterLogic to clearly separate it from state setting
+  const clientFilterLogic = useCallback((
+    search: string, 
+    pageToUse: number, 
+    activeTabToUse: "approved" | "all", 
+    approvedVendors: Vendor[], 
+    allVendors: Vendor[]
+  ) => {
+    
+    const sourceList = activeTabToUse === "approved" ? approvedVendors : allVendors;
     
     // 1. Filtering
-    const lowerCaseSearch = searchTerm.toLowerCase().trim();
+    const lowerCaseSearch = search.toLowerCase().trim();
     const filtered = lowerCaseSearch
       ? sourceList.filter(vendor => 
           vendor.brand?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.company_name?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.email?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.full_name?.toLowerCase().includes(lowerCaseSearch) ||
-          vendor.username?.toLowerCase().includes(lowerCaseSearch) // Added username search
+          vendor.username?.toLowerCase().includes(lowerCaseSearch)
         )
       : sourceList;
 
     // 2. Pagination
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const startIndex = (pageToUse - 1) * PAGE_SIZE;
     const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
 
     return { paginated, filteredCount: filtered.length };
 
-  }, [activeTab, searchTerm, currentPage]);
+  }, []);
 
-  
-  useEffect(() => {
-    // This effect runs whenever global data (via forceUpdate) or filters change
-    const { paginated, filteredCount } = calculateClientFiltering();
+  // Function that runs the filtering logic and updates state
+  const runClientFiltering = useCallback((resetPage: boolean = false) => {
+    const pageToUse = resetPage ? 1 : currentPage;
+    
+    const { paginated, filteredCount } = clientFilterLogic(
+        searchTerm, 
+        pageToUse, 
+        activeTab, 
+        allApprovedVendors, 
+        allApplications
+    );
+    
+    // Only reset currentPage if explicitly asked (e.g., after search or tab switch)
+    if (resetPage) {
+        setCurrentPage(1);
+    }
+
     setDisplayedVendors(paginated);
     setTotalFilteredCount(filteredCount);
-  }, [calculateClientFiltering, allApprovedVendors.length, allApplications.length]); // Added lengths to track global list changes
 
+  }, [searchTerm, currentPage, activeTab, clientFilterLogic]);
+  
+  
+  // FIX: Separate hook for search input handling to prevent cursor glitch
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newSearchTerm = e.target.value;
+      // 1. Update search term state immediately (keeps cursor stable)
+      setSearchTerm(newSearchTerm);
+
+      // 2. Reset page to 1 if the search term changes significantly
+      // We check if the search term is now empty OR if we are switching from empty to non-empty
+      if (newSearchTerm.length === 0 || searchTerm.length === 0) {
+          setCurrentPage(1);
+      }
+      
+      // 3. The runClientFiltering will be handled by the effect below.
+  };
+
+  
+  // 🔴 FIX 1: Run filtering logic ONLY when pagination/tab/search is finalized
+  useEffect(() => {
+    // This effect runs whenever searchTerm, currentPage, or activeTab changes, 
+    // ensuring the displayed data is always correct.
+    runClientFiltering();
+  }, [searchTerm, currentPage, activeTab, runClientFiltering]);
+  
+  
   // --- Data Fetching (Fetch ALL pages for client-side search) ---
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
-    // Helper function to ensure URL is HTTPS for production and remove base path
-    // FIX: Removed page_size=50 handling here. Cleaned URL path only.
     const cleanUrl = (url: string | null): string | null => {
         if (!url) return null;
         let cleaned = url;
         
-        // FIX 2: Force HTTPS in production environment for absolute URLs
         if (process.env.NODE_ENV === "production" && cleaned.startsWith('http://')) {
             cleaned = cleaned.replace('http://', 'https://');
         }
 
-        // Remove the base API URL (e.g., 'http://localhost:8000/api/' or 'https://api.mhebazar.in/api/')
-        // We only want the path and query (e.g., 'vendor/?page=2')
         const apiIndex = cleaned.indexOf('/api/');
         if (apiIndex !== -1) {
-             cleaned = cleaned.substring(apiIndex + 5);
+             cleaned = cleaned.substring(cleaned.indexOf('/api/') + 5);
         }
         return cleaned;
     };
     
     try {
-      // Use initial relative paths without explicit page_size
       let approvedNextUrl: string | null = "vendor/approved/";
       let allNextUrl: string | null = "vendor/"; 
       
@@ -119,24 +159,25 @@ export default function VendorsPage() {
       while (approvedNextUrl) {
           const response = await api.get<VendorListResponse>(approvedNextUrl);
           accumulatedApproved = accumulatedApproved.concat(response.data.results as Vendor[] || []);
-          approvedNextUrl = cleanUrl(response.data.next); // FIXED: Clean URL for next page
+          approvedNextUrl = cleanUrl(response.data.next); 
       }
       
       // Fetch ALL applications (for admin tab)
       while (allNextUrl) {
           const response = await api.get<VendorListResponse>(allNextUrl);
           accumulatedAll = accumulatedAll.concat(response.data.results as Vendor[] || []);
-          allNextUrl = cleanUrl(response.data.next); // FIXED: Clean URL for next page
+          allNextUrl = cleanUrl(response.data.next); 
       }
       
       // Store accumulated data globally
       allApprovedVendors = accumulatedApproved;
       allApplications = accumulatedAll;
       
-      // FIX 3: Manually trigger client filtering after data fetch to update UI immediately
-      const { paginated, filteredCount } = calculateClientFiltering(accumulatedApproved, accumulatedAll);
+      // Manually trigger client filtering after data fetch (resets page to 1)
+      const { paginated, filteredCount } = clientFilterLogic("", 1, activeTab, accumulatedApproved, accumulatedAll);
       setDisplayedVendors(paginated);
       setTotalFilteredCount(filteredCount);
+      setCurrentPage(1); // Set page state after data loads
 
     } catch (err) {
       console.error("Failed to fetch vendors:", err);
@@ -148,37 +189,28 @@ export default function VendorsPage() {
     } finally {
       setLoading(false);
     }
-  }, [calculateClientFiltering]); // Dependencies updated
+  }, [activeTab, clientFilterLogic]); 
 
   useEffect(() => {
-    // FIX 1: Run fetchData on initial component mount
+    // Initial fetch
     fetchData(); 
   }, [fetchData]);
 
 
+  // Handle Tab Switch
   useEffect(() => {
-    // Reset page and refetch data when tab changes
+    // This effect runs when activeTab changes. It resets search/page, and runClientFiltering handles the update.
     setSearchTerm('');
-    setCurrentPage(1);
-    // Data is already fetched globally, just force a local update
-    forceUpdate(); 
+    // currentPage reset is handled by the synchronous setting in handleSearchChange
   }, [activeTab]);
-
-
-  // Reset page after search
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
 
 
   // --- Handler for Admin Toggle ---
   
   // New function to force UI update after global state change
   const forceUpdate = () => {
-      // Trigger a non-destructive state change to force the useEffect to re-run filtering
-      // This is necessary because global array changes don't trigger re-render
-      setSearchTerm(s => s + ' '); 
-      setSearchTerm(s => s.trim()); 
+      // Trigger a change in currentPage to force the main useEffect to run the filter logic
+      setCurrentPage(p => p); 
   }
 
   // Helper function to update lists locally after API action
@@ -198,15 +230,12 @@ export default function VendorsPage() {
       const reason = action === "reject" ? "Unapproved by Admin via dashboard." : "Approved via dashboard."; 
       
       try {
-        // Use the existing /vendor/{id}/approve/ endpoint
         await api.post(`vendor/${vendorId}/approve/`, { action, reason }); 
 
         const newIsApproved = !isCurrentlyApproved;
         
         // Update the global lists locally for instant feedback
         allApplications = updateVendorInList(allApplications, vendorId, newIsApproved);
-        
-        // Approved list only keeps approved vendors
         allApprovedVendors = updateVendorInList(allApprovedVendors, vendorId, newIsApproved).filter(v => 
             v.is_approved === true
         ); 
@@ -289,7 +318,7 @@ export default function VendorsPage() {
                 type="text"
                 placeholder={`Search ${activeTab === "approved" ? "approved" : "all"} vendors by name, brand, or email...`}
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange} // FIX: Using the dedicated handler
                 className="w-full p-3 outline-none text-gray-700"
                 disabled={loading}
             />
@@ -298,7 +327,7 @@ export default function VendorsPage() {
 
         {/* Content Area */}
         <div className="min-h-[400px]">
-          {loading && displayedVendors.length === 0 && ( // Show loading only on initial load or if list is empty
+          {loading && displayedVendors.length === 0 && ( 
             <div className="flex justify-center items-center h-full pt-20">
               <Loader2 className="w-8 h-8 animate-spin text-[#5CA131]" />
               <span className="ml-3 text-lg text-gray-600">Loading initial data...</span>
