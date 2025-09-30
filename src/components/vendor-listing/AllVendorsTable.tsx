@@ -2,14 +2,12 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle, XCircle, Loader2, Mail, Calendar, Eye, User, Briefcase, MoreVertical } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, Mail, Calendar, Eye, User, Briefcase, MoreVertical, ChevronUp, ChevronDown } from "lucide-react";
 import Link from "next/link";
 // Assuming Dropdown components are mocked or imported correctly
 
 // --- Dropdown Menu Components (Mocked or Imported) ---
-// Note: Keeping the mock components as per your original file structure.
 const DropdownMenu = ({ children }: { children: React.ReactNode }) => <div className="relative inline-block text-left w-full">{children}</div>;
-// FIX: Add onClick handler to DropdownMenuTrigger to control state
 const DropdownMenuTrigger = ({ children, onClick }: { children: React.ReactNode, onClick: () => void }) => <div className="cursor-pointer" onClick={onClick}>{children}</div>;
 const DropdownMenuContent = ({ children }: { children: React.ReactNode }) => <div className="absolute right-0 z-20 w-56 mt-2 origin-top-right bg-white rounded-md shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none p-1">{children}</div>;
 const DropdownMenuItem = ({ children, onClick, className, disabled }: { children: React.ReactNode, onClick: () => void, className?: string, disabled?: boolean }) => (
@@ -36,13 +34,17 @@ export type AllVendor = {
   company_email: string;
   brand: string;
   is_approved: boolean; 
-  application_date: string;
+  application_date: string; // The field used for sorting by date
 };
 
 type AllVendorsTableProps = {
   vendors: AllVendor[];
   onToggleApproval: (vendorId: number, isCurrentlyApproved: boolean) => Promise<void>;
   isLoading: boolean;
+  // NEW Sorting Props
+  sortField: string;
+  sortDirection: 'asc' | 'desc';
+  handleSortChange: (field: string) => void;
 };
 
 const formatDate = (dateString: string) => {
@@ -53,41 +55,58 @@ const formatDate = (dateString: string) => {
   });
 };
 
-// --- Row Component with Dropdown Menu ---
+// --- Sortable Header Component ---
+const SortableHeader = ({ field, label, currentField, currentDirection, onSortChange, align = 'left' }: { 
+    field: string, 
+    label: string, 
+    currentField: string, 
+    currentDirection: 'asc' | 'desc', 
+    onSortChange: (field: string) => void,
+    align?: 'left' | 'center' | 'right'
+}) => {
+    const isCurrent = currentField === field;
+    // Use imported ChevronUp/Down
+    const Icon = isCurrent ? (currentDirection === 'desc' ? ChevronDown : ChevronUp) : ChevronDown;
+    const justifyClass = align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
 
+    return (
+        <th 
+            className={`p-4 text-${align} text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors w-1/4`}
+            onClick={() => onSortChange(field)}
+        >
+            <div className={`flex items-center ${justifyClass} space-x-1`}>
+                <span>{label}</span>
+                <Icon className={`w-3 h-3 ${isCurrent ? 'text-gray-900' : 'text-gray-400'}`} />
+            </div>
+        </th>
+    );
+};
+
+
+// --- Row Component with Dropdown Menu ---
 const VendorRow = ({ vendor, onToggleApproval }: { 
     vendor: AllVendor; 
     onToggleApproval: AllVendorsTableProps['onToggleApproval'];
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isTogglingApproval, setIsTogglingApproval] = useState(false); // Local loading state
+  const [isTogglingApproval, setIsTogglingApproval] = useState(false);
   
-  // Destructure only the fields available in your simplified model/serializer
   const { id, user_id, company_name, brand, email, full_name, is_approved, application_date, username } = vendor;
 
-  // --- APPROVAL TOGGLE (Role Change via /vendor/{id}/approve/) ---
   const handleToggleApproval = async () => {
     if (isTogglingApproval) return;
     setIsTogglingApproval(true);
-    // Don't close the menu until the action is finished, so the loader is visible
-    // setIsMenuOpen(false); // Removed for better UX with loader
     
     try {
-      // The promise resolves successfully, which triggers forceUpdate in page.tsx
       await onToggleApproval(id, is_approved);
-      
-      // If successful, close the menu (the row will be re-rendered anyway)
       setIsMenuOpen(false);
-      
     } catch (error) {
       console.error("Toggle approval failed:", error);
-      // Show error message (Optional: you might want to display a toast here)
     } finally {
       setIsTogglingApproval(false);
     }
   };
   
-  // Admin link for View Products 
   const vendorSlug = createSlug(brand);
   const adminHref = `/admin/accounts/registered-vendors/${vendorSlug}/?user=${user_id}`;
 
@@ -119,7 +138,7 @@ const VendorRow = ({ vendor, onToggleApproval }: {
       </td>
 
       {/* Application Date */}
-      <td className="p-4 text-sm text-gray-700 hidden lg:table-cell">
+      <td className="p-4 text-sm text-gray-700 hidden lg:table-cell text-center">
         <div className="flex items-center space-x-2 justify-center">
             <Calendar className="w-4 h-4 text-gray-500" />
             <span>{formatDate(application_date)}</span>
@@ -184,7 +203,7 @@ const VendorRow = ({ vendor, onToggleApproval }: {
 };
 
 
-export default function AllVendorsTable({ vendors, onToggleApproval, isLoading }: AllVendorsTableProps) {
+export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, sortField, sortDirection, handleSortChange }: AllVendorsTableProps) {
   if (isLoading) {
     return null; 
   }
@@ -195,15 +214,30 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading }
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-100 border-b border-gray-200">
                     <tr>
-                        <th className="p-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider w-1/4">
-                            Brand / Company
-                        </th>
-                        <th className="p-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider hidden sm:table-cell w-1/4">
-                            Applicant / Email
-                        </th>
-                        <th className="p-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-[120px]">
-                            Applied On
-                        </th>
+                        <SortableHeader 
+                            field="brand" 
+                            label="Brand / Company" 
+                            currentField={sortField} 
+                            currentDirection={sortDirection} 
+                            onSortChange={handleSortChange}
+                            align="left"
+                        />
+                        <SortableHeader 
+                            field="full_name" 
+                            label="Applicant / Email" 
+                            currentField={sortField} 
+                            currentDirection={sortDirection} 
+                            onSortChange={handleSortChange}
+                            align="left"
+                        />
+                        <SortableHeader 
+                            field="application_date" 
+                            label="Applied On" 
+                            currentField={sortField} 
+                            currentDirection={sortDirection} 
+                            onSortChange={handleSortChange}
+                            align="center"
+                        />
                         <th className="p-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider w-[180px]">
                             Approval Status
                         </th>

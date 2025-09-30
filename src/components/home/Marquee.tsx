@@ -54,7 +54,7 @@ const VendorMarquee = () => {
 
   const fetchVendors = useCallback(async () => {
     try {
-      const vendorsResponse = await api.get('/vendor/');
+      const vendorsResponse = await api.get('/vendor/approved/');
       const vendorsData = vendorsResponse.data.results;
 
       // Use Promise.all to fetch all user data concurrently

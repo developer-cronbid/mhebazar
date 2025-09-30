@@ -33,8 +33,44 @@ var allApplications: Vendor[] = [];
 // Role IDs
 const ROLE_VENDOR = 2;
 
+// --- Helper Functions ---
+const sortVendors = (vendors: Vendor[], field: string, direction: 'asc' | 'desc'): Vendor[] => {
+    return [...vendors].sort((a, b) => {
+        let valA: any;
+        let valB: any;
+
+        switch (field) {
+            case 'brand':
+                valA = a.brand || '';
+                valB = b.brand || '';
+                break;
+            case 'full_name':
+                // Sort by Applicant Name (or username as fallback)
+                valA = a.full_name || a.username || '';
+                valB = b.full_name || b.username || '';
+                break;
+            case 'application_date':
+                // Sort by Date (milliseconds)
+                valA = new Date(a.application_date).getTime();
+                valB = new Date(b.application_date).getTime();
+                break;
+            default:
+                return 0;
+        }
+
+        if (typeof valA === 'string') {
+            const comparison = valA.localeCompare(valB, undefined, { sensitivity: 'base' });
+            return direction === 'asc' ? comparison : -comparison;
+        } else {
+            const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
+            return direction === 'asc' ? comparison : -comparison;
+        }
+    });
+};
+
+
 export default function VendorsPage() {
-  const PAGE_SIZE = 10; // This is the page size for client-side display/pagination
+  const PAGE_SIZE = 10;
   
   const [activeTab, setActiveTab] = useState<"approved" | "all">("approved");
   const [loading, setLoading] = useState(true);
@@ -46,23 +82,22 @@ export default function VendorsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalFilteredCount, setTotalFilteredCount] = useState(0); 
 
+  // --- Sorting State ---
+  // Default sort by Applied On (application_date) descending (newest first)
+  const [sortField, setSortField] = useState<string>('application_date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
 
   // --- Client-Side Filter/Pagination Logic ---
   
-  // Renamed to clientFilterLogic to clearly separate it from state setting
-  const clientFilterLogic = useCallback((
-    search: string, 
-    pageToUse: number, 
-    activeTabToUse: "approved" | "all", 
-    approvedVendors: Vendor[], 
-    allVendors: Vendor[]
-  ) => {
+  const clientFilterLogic = useCallback(() => {
     
-    const sourceList = activeTabToUse === "approved" ? approvedVendors : allVendors;
+    // 1. Select Source List
+    const sourceList = activeTab === "approved" ? allApprovedVendors : allApplications;
     
-    // 1. Filtering
-    const lowerCaseSearch = search.toLowerCase().trim();
-    const filtered = lowerCaseSearch
+    // 2. Filtering
+    const lowerCaseSearch = searchTerm.toLowerCase().trim();
+    let filtered = lowerCaseSearch
       ? sourceList.filter(vendor => 
           vendor.brand?.toLowerCase().includes(lowerCaseSearch) ||
           vendor.company_name?.toLowerCase().includes(lowerCaseSearch) ||
@@ -71,63 +106,54 @@ export default function VendorsPage() {
           vendor.username?.toLowerCase().includes(lowerCaseSearch)
         )
       : sourceList;
+      
+    // 3. Sorting (NEW FEATURE)
+    filtered = sortVendors(filtered, sortField, sortDirection);
 
-    // 2. Pagination
-    const startIndex = (pageToUse - 1) * PAGE_SIZE;
+    // 4. Pagination
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
     const paginated = filtered.slice(startIndex, startIndex + PAGE_SIZE);
 
-    return { paginated, filteredCount: filtered.length };
-
-  }, []);
-
-  // Function that runs the filtering logic and updates state
-  const runClientFiltering = useCallback((resetPage: boolean = false) => {
-    const pageToUse = resetPage ? 1 : currentPage;
-    
-    const { paginated, filteredCount } = clientFilterLogic(
-        searchTerm, 
-        pageToUse, 
-        activeTab, 
-        allApprovedVendors, 
-        allApplications
-    );
-    
-    // Only reset currentPage if explicitly asked (e.g., after search or tab switch)
-    if (resetPage) {
-        setCurrentPage(1);
-    }
-
     setDisplayedVendors(paginated);
-    setTotalFilteredCount(filteredCount);
+    setTotalFilteredCount(filtered.length);
 
-  }, [searchTerm, currentPage, activeTab, clientFilterLogic]);
+  }, [activeTab, searchTerm, currentPage, sortField, sortDirection]);
+
   
+  useEffect(() => {
+    // This effect runs whenever sorting, pagination, or global data changes
+    clientFilterLogic();
+  }, [clientFilterLogic, allApprovedVendors.length, allApplications.length]); 
+
+  // --- Handlers ---
   
-  // FIX: Separate hook for search input handling to prevent cursor glitch
+  // FIX: Dedicated handler for search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newSearchTerm = e.target.value;
-      // 1. Update search term state immediately (keeps cursor stable)
+      // 1. Update search term state immediately (Keeps cursor stable)
       setSearchTerm(newSearchTerm);
 
       // 2. Reset page to 1 if the search term changes significantly
-      // We check if the search term is now empty OR if we are switching from empty to non-empty
       if (newSearchTerm.length === 0 || searchTerm.length === 0) {
           setCurrentPage(1);
       }
       
-      // 3. The runClientFiltering will be handled by the effect below.
+      // The main useEffect handles the filtering
   };
 
-  
-  // 🔴 FIX 1: Run filtering logic ONLY when pagination/tab/search is finalized
-  useEffect(() => {
-    // This effect runs whenever searchTerm, currentPage, or activeTab changes, 
-    // ensuring the displayed data is always correct.
-    runClientFiltering();
-  }, [searchTerm, currentPage, activeTab, runClientFiltering]);
-  
-  
-  // --- Data Fetching (Fetch ALL pages for client-side search) ---
+  // NEW: Handler for column sorting
+  const handleSortChange = (field: string) => {
+    if (field === sortField) {
+        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+        setSortField(field);
+        setSortDirection('desc'); // Default to descending (newest/highest first)
+    }
+    setCurrentPage(1); // Reset pagination on sort change
+  };
+
+
+  // --- Data Fetching ---
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -162,7 +188,7 @@ export default function VendorsPage() {
           approvedNextUrl = cleanUrl(response.data.next); 
       }
       
-      // Fetch ALL applications (for admin tab)
+      // Fetch ALL applications
       while (allNextUrl) {
           const response = await api.get<VendorListResponse>(allNextUrl);
           accumulatedAll = accumulatedAll.concat(response.data.results as Vendor[] || []);
@@ -173,11 +199,9 @@ export default function VendorsPage() {
       allApprovedVendors = accumulatedApproved;
       allApplications = accumulatedAll;
       
-      // Manually trigger client filtering after data fetch (resets page to 1)
-      const { paginated, filteredCount } = clientFilterLogic("", 1, activeTab, accumulatedApproved, accumulatedAll);
-      setDisplayedVendors(paginated);
-      setTotalFilteredCount(filteredCount);
-      setCurrentPage(1); // Set page state after data loads
+      // Initialize filtering and sorting
+      clientFilterLogic();
+      setCurrentPage(1);
 
     } catch (err) {
       console.error("Failed to fetch vendors:", err);
@@ -189,7 +213,7 @@ export default function VendorsPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, clientFilterLogic]); 
+  }, [clientFilterLogic]); 
 
   useEffect(() => {
     // Initial fetch
@@ -199,17 +223,18 @@ export default function VendorsPage() {
 
   // Handle Tab Switch
   useEffect(() => {
-    // This effect runs when activeTab changes. It resets search/page, and runClientFiltering handles the update.
     setSearchTerm('');
-    // currentPage reset is handled by the synchronous setting in handleSearchChange
+    setCurrentPage(1);
+    setSortField('application_date'); // Reset sorting on tab switch
+    setSortDirection('desc');
   }, [activeTab]);
 
 
-  // --- Handler for Admin Toggle ---
+  // --- Toggle Approval Logic ---
   
   // New function to force UI update after global state change
   const forceUpdate = () => {
-      // Trigger a change in currentPage to force the main useEffect to run the filter logic
+      // Triggering a change in currentPage to force the main useEffect to run the filter logic
       setCurrentPage(p => p); 
   }
 
@@ -318,7 +343,7 @@ export default function VendorsPage() {
                 type="text"
                 placeholder={`Search ${activeTab === "approved" ? "approved" : "all"} vendors by name, brand, or email...`}
                 value={searchTerm}
-                onChange={handleSearchChange} // FIX: Using the dedicated handler
+                onChange={handleSearchChange} 
                 className="w-full p-3 outline-none text-gray-700"
                 disabled={loading}
             />
@@ -367,6 +392,9 @@ export default function VendorsPage() {
               vendors={displayedVendors as AllVendor[]} 
               onToggleApproval={handleToggleApproval} 
               isLoading={loading}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              handleSortChange={handleSortChange}
             />
           )}
         </div>
