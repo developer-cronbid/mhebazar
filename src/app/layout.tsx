@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import Loading from "./loading";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
+import Script from "next/script";
 // import WhatsAppChat from "@/components/elements/WhatsAppChat";
 
 // Import Inter font
@@ -19,7 +20,8 @@ const inter = Inter({
 const FAVICON_VERSION = "v1.2";
 
 export const metadata: Metadata = {
-  title: "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
+  title:
+    "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
   description:
     "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
   icons: {
@@ -28,9 +30,7 @@ export const metadata: Metadata = {
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
-    apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180" },
-    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
   viewport: {
     width: "device-width",
@@ -49,8 +49,26 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         <link rel="preconnect" href="https://api.mhebazar.in" />
+        {/* Microsoft Clarity Tracking Script */}
+        <Script
+          id="clarity-script"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+              })(window, document, "clarity", "script", "tkd3v3kvbs");
+            `,
+          }}
+        />
       </head>
       <body className="antialiased font-sans">
         <Toaster
