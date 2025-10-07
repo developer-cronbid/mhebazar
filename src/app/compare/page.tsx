@@ -1,19 +1,27 @@
-// src/app/compare/page.tsx
+/**
+ * @fileoverview Robust component for comparing up to 4 products in Next.js 15 (TSX).
+ * FINAL FIX: Incorporates a robust data parsing mechanism to handle the structured
+ * array data even if it arrives as a single string, ensuring clean, stacked key-value pairs
+ * in the comparison table. Also enforces strict vertical alignment (align-top) in the table cells.
+ */
 "use client";
-import React, { useState, ChangeEvent, useEffect, useCallback } from "react";
-import Breadcrumb from "@/components/elements/Breadcrumb";
-import { ProductCardContainer } from "@/components/elements/Product";
-import { Plus, X } from "lucide-react";
-import Image from "next/image";
-import api from "@/lib/api";
+import React, { useState, ChangeEvent, useEffect, useCallback, useMemo } from "react";
+import { Plus, X, Star, Loader2, Maximize2 } from "lucide-react";
+import Image from "next/image"; 
+import Link from "next/link"; 
+// Assuming these imports are correctly set up
+// Ensure you have these components/utilities in your project structure
+import api from "@/lib/api"; 
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button"; 
+import { Card, CardContent } from "@/components/ui/card"; 
 
-// Define the Product type based on the API response structure
-type Product = {
+// --- 1. TYPE DEFINITIONS ---
+type ApiProduct = {
   id: number;
   name: string;
-  description: string;
-  price: string;
+  description: string | null;
+  price: string | number; 
   direct_sale: boolean;
   is_active: boolean;
   hide_price: boolean;
@@ -21,76 +29,147 @@ type Product = {
   images: { id: number; image: string }[];
   category_name: string;
   subcategory_name: string | null;
-  manufacturer: string;
-  model: string;
+  manufacturer: string | null;
+  model: string | null;
+  user_name: string | null;
   average_rating: number | null;
-  type: string;
-  product_details: Record<string, string | number | null>; // Added dynamic product_details
+  type: string[] | string; 
+  product_details: Record<string, string | number | boolean | null | Array<string>>; 
 };
 
-// Define a type for the product data as stored in local storage for comparison
 type CompareProduct = {
   id: number;
   image: string;
   title: string;
-  subtitle: string | null | undefined;
   price: string | number;
   currency: string;
-  directSale: boolean;
-  is_active: boolean;
   hide_price: boolean;
-  stock_quantity: number;
   category_name: string;
-  ratings: number; // Mapped from average_rating
-  ratingsCount: number; // Placeholder, not in API
-  soldBy: string; // Placeholder
-  brand: string; // Mapped from manufacturer
-  type: string;
-  category_id: number;
-  pageUrlType: string;
-  model: string;
-  manufacturer: string
-  user_name: string;
-  product_details: Record<string, string | number | null>; // Added dynamic product_details
+  manufacturer: string | null;
+  model: string | null;
+  average_rating: number | null;
+  stock_quantity: number;
+  product_details: Record<string, string | number | boolean | null | Array<string>>;
 };
 
-// Static table fields for common product attributes
-const staticTableFields = [
-  { label: "Price", key: "price", isCurrency: true },
-  { label: "Customer Ratings", key: "ratings", isRating: true },
-  { label: "Sold by", key: "soldBy" },
-  { label: "Brand", key: "brand" },
-  { label: "Category", key: "category_name" },
-  { label: "Subcategory", key: "subcategory_name" },
-  { label: "Manufacturer", key: "manufacturer" },
-  { label: "Model", key: "model" },
-];
+interface ComparisonField {
+  label: string;
+  key: string; 
+  isCurrency?: boolean;
+  isRating?: boolean;
+  isBoolean?: boolean;
+  isStructuredArray?: boolean; 
+}
 
-const maxColumns = 4;
+// --- 2. CONSTANTS & UTILITIES ---
+const MAX_COLUMNS = 4;
 const COMPARE_KEY = 'mhe_compare_products';
+
+// Helper: Safely retrieve product value 
+const getProductValue = (product: CompareProduct, key: string): string | number | boolean | null | Array<string> => {
+    if (key in product) {
+        return product[key as keyof CompareProduct];
+    }
+    return product.product_details?.[key] ?? null;
+};
+
+/**
+ * CORE FIX: Forcefully parses the structured data string into an array of strings.
+ * Handles cases where the API returns ["Brand: X", "Part: Y"] as a single string.
+ */
+const parseStructuredArray = (data: Array<string> | string | null | undefined): Array<string> => {
+    if (Array.isArray(data)) {
+        return data.filter(d => typeof d === 'string' && d.trim().length > 0);
+    }
+    
+    if (typeof data === 'string') {
+        const trimmedData = data.trim();
+        
+        // 1. Attempt JSON parsing (handles strings that look like valid JSON arrays)
+        if (trimmedData.startsWith('[') && trimmedData.endsWith(']')) {
+            try {
+                const jsonParse = JSON.parse(trimmedData);
+                if (Array.isArray(jsonParse)) {
+                    return jsonParse.filter(item => typeof item === 'string');
+                }
+            } catch (e) {
+                // If JSON.parse fails, it's likely the unquoted list format.
+                
+                // 2. Fallback for unquoted or quoted strings that just need splitting
+                // Strip outer brackets and attempt to split by common array delimiters
+                const cleanedString = trimmedData.replace(/^\[|\]$/g, '');
+                
+                // Best effort split: assumes content is structured like "Item 1", "Item 2" or Item 1, Item 2
+                return cleanedString.split(/,\s*(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+                    .map(item => item.replace(/"/g, '').trim()) // Remove internal quotes
+                    .filter(item => item.length > 0);
+            }
+        }
+    }
+    return [];
+};
+
 
 const ComparePage = () => {
   const [products, setProducts] = useState<CompareProduct[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [searchResults, setSearchResults] = useState<ApiProduct[]>([]);
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [dynamicProductDetailsKeys, setDynamicProductDetailsKeys] = useState<string[]>([]);
 
-  // Function to collect unique product_details keys from all products in comparison
-  const collectDynamicProductDetailsKeys = useCallback((currentProducts: CompareProduct[]) => {
+  // --- 3. DYNAMIC DATA PROCESSING ---
+
+  const dynamicProductDetailsKeys: string[] = useMemo(() => {
     const uniqueKeys = new Set<string>();
-    currentProducts.forEach(product => {
+    products.forEach(product => {
       if (product.product_details) {
-        Object.keys(product.product_details).forEach(key => uniqueKeys.add(key));
+        Object.keys(product.product_details).forEach(key => {
+            if (key && !key.toLowerCase().includes('meta_')) {
+                uniqueKeys.add(key);
+            }
+        });
       }
     });
-    // Sort keys alphabetically for consistent display
-    setDynamicProductDetailsKeys(Array.from(uniqueKeys).sort());
+    return Array.from(uniqueKeys).sort();
+  }, [products]);
+
+
+  const allTableFields: ComparisonField[] = useMemo(() => {
+    const staticFields: ComparisonField[] = [
+      { label: "Price", key: "price", isCurrency: true },
+      { label: "Rating", key: "average_rating", isRating: true },
+      { label: "Category", key: "category_name" },
+      { label: "Manufacturer", key: "manufacturer" },
+      { label: "Model", key: "model" },
+      { label: "In Stock", key: "stock_quantity" }, 
+    ];
+
+    const dynamicFields: ComparisonField[] = dynamicProductDetailsKeys.map(key => {
+        const isArrayData = products.some(p => {
+             const value = getProductValue(p, key);
+             // Use the parser defensively here to determine if this is a structured field
+             return parseStructuredArray(value).length > 0;
+        });
+
+        return {
+          label: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+          key: key,
+          isStructuredArray: isArrayData,
+        };
+    });
+
+    return [...staticFields, ...dynamicFields];
+  }, [dynamicProductDetailsKeys, products]);
+
+
+  // --- 4. HANDLERS (Unchanged logic) ---
+  const saveToLocalStorage = useCallback((updatedProducts: CompareProduct[]) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(COMPARE_KEY, JSON.stringify(updatedProducts));
+    }
   }, []);
 
-  // Load products from local storage on component mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -98,30 +177,19 @@ const ComparePage = () => {
         if (storedProducts.length > 0) {
           setProducts(storedProducts);
           setSelectedCategory(storedProducts[0].category_name);
-          collectDynamicProductDetailsKeys(storedProducts);
         }
       } catch (error) {
         console.error("Failed to parse products from local storage:", error);
-        localStorage.removeItem(COMPARE_KEY); // Clear invalid data
-        setProducts([]);
-        setSelectedCategory(null);
+        localStorage.removeItem(COMPARE_KEY);
       }
     }
-  }, [collectDynamicProductDetailsKeys]);
+  }, []);
 
-  // Update dynamic keys whenever 'products' state changes
-  useEffect(() => {
-    collectDynamicProductDetailsKeys(products);
-  }, [products, collectDynamicProductDetailsKeys]);
-
-
-  // Handle adding a product from the modal to the comparison list
-  const handleAddProduct = (product: Product) => {
+  const handleAddProduct = (product: ApiProduct) => {
     if (products.some((p) => p.id === product.id)) {
-      toast.info("This product is already in your comparison list.");
+      toast.info("This product is already in comparison.");
       return;
     }
-
     if (selectedCategory && product.category_name !== selectedCategory) {
       toast.error(`Only products from the "${selectedCategory}" category can be compared together.`);
       return;
@@ -129,53 +197,51 @@ const ComparePage = () => {
 
     const newCompareProduct: CompareProduct = {
       id: product.id,
-      image: product.images[0]?.image || "/images/placeholder.jpg",
+      image: product.images?.[0]?.image || "/images/placeholder.jpg",
       title: product.name,
-      subtitle: product.subcategory_name || product.description || '', // Ensure string fallback
       price: product.price,
       currency: "₹",
-      directSale: product.direct_sale,
-      is_active: product.is_active,
       hide_price: product.hide_price,
-      stock_quantity: product.stock_quantity,
       category_name: product.category_name,
       manufacturer: product.manufacturer,
       model: product.model,
-      ratings: product.average_rating || 0,
-      ratingsCount: 0, // Placeholder
-      soldBy: "N/A", // Placeholder
-      brand: product.manufacturer,
-      type: product.type,
-      product_details: product.product_details || {}, // Ensure product_details is an object
+      average_rating: product.average_rating || null,
+      stock_quantity: product.stock_quantity, 
+      product_details: product.product_details || {},
     };
 
-    const updatedProducts = [...products, newCompareProduct];
+    const updatedProducts = [...products, newCompareProduct].slice(0, MAX_COLUMNS);
     setProducts(updatedProducts);
-    localStorage.setItem(COMPARE_KEY, JSON.stringify(updatedProducts));
-    setSelectedCategory(newCompareProduct.category_name);
+    saveToLocalStorage(updatedProducts);
+    
+    if (!selectedCategory) {
+        setSelectedCategory(newCompareProduct.category_name);
+    }
+
     setShowModal(false);
     setSearch("");
     setSearchResults([]);
     toast.success(`${product.name} added to comparison!`);
   };
-
-  // Handle removing a product from the comparison list
+  
   const handleRemoveProduct = (id: number) => {
     const updatedProducts = products.filter((product) => product.id !== id);
     setProducts(updatedProducts);
-    localStorage.setItem(COMPARE_KEY, JSON.stringify(updatedProducts));
+    saveToLocalStorage(updatedProducts);
+    
     if (updatedProducts.length === 0) {
-      setSelectedCategory(null); // Reset category if no products are left
+      setSelectedCategory(null);
+    } else if (selectedCategory && updatedProducts.length > 0 && selectedCategory !== updatedProducts[0].category_name) {
+      setSelectedCategory(updatedProducts[0].category_name);
     }
     toast.info("Product removed from comparison.");
   };
 
-  // Handle search input change and fetch results from API
   const handleSearch = useCallback(async (e: ChangeEvent<HTMLInputElement>) => {
     const searchTerm = e.target.value;
     setSearch(searchTerm);
 
-    if (searchTerm.length < 2) { // Only search if at least 2 characters
+    if (searchTerm.length < 2) {
       setSearchResults([]);
       setLoadingSearch(false);
       return;
@@ -183,12 +249,13 @@ const ComparePage = () => {
 
     setLoadingSearch(true);
     try {
-      const response = await api.get<{ results: Product[] }>(`/products/`, {
+      const response = await api.get<{ results: ApiProduct[] }>(`/products/`, {
         params: {
           search: searchTerm,
-          // Only filter by category if a category is already selected in comparison
-          category_name: selectedCategory || undefined,
-          is_active: true, // Only search for active products
+          category_name: selectedCategory || undefined, 
+          is_active: true,
+          status: 'approved',
+          page_size: 10,
         },
       });
       setSearchResults(response.data.results);
@@ -201,219 +268,416 @@ const ComparePage = () => {
     }
   }, [selectedCategory]);
 
-  const displayProducts = products.slice(0, maxColumns);
 
-  // Combine static and dynamic table fields
-  const allTableFields = [
-    ...staticTableFields,
-    ...dynamicProductDetailsKeys.map(key => ({ label: key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), key: `product_details.${key}` }))
-  ];
+  const displayProducts = products.slice(0, MAX_COLUMNS);
+
+  const productSlugify = (name: string) => {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  };
+  
+  // --- 5. REFINED RENDER COMPONENTS ---
+
+  const RatingDisplay = ({ rating }: { rating: number | null }) => {
+    const numericRating = typeof rating === 'number' ? rating : 0;
+    if (numericRating <= 0) return <span className="text-gray-400 text-sm font-light">N/A</span>;
+    
+    const filledStars = Math.round(numericRating);
+    return (
+      <span className="flex items-center text-sm gap-1 justify-center">
+        <span className="font-semibold text-yellow-600">{numericRating.toFixed(1)}</span>
+        <span className="flex">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star
+              key={i}
+              className={`w-4 h-4 transition-colors ${i < filledStars ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+            />
+          ))}
+        </span>
+      </span>
+    );
+  };
+  
+  const StatusDisplay = ({ value, label }: { value: string | number | boolean | null, label: string }) => {
+      let displayValue: React.ReactNode = <span className="text-gray-400 text-sm font-light">N/A</span>;
+      
+      if (label === 'In Stock') {
+          const stock = Number(value);
+          if (stock > 0) {
+              displayValue = <span className="text-green-600 font-semibold">Available ({stock})</span>;
+          } else if (stock === 0) {
+              displayValue = <span className="text-red-600 font-semibold">Out of Stock</span>;
+          }
+      } else if (typeof value === 'boolean') {
+          if (value === true) {
+              displayValue = <span className="text-blue-600 font-semibold">Yes</span>;
+          } else if (value === false) {
+              displayValue = <span className="text-red-600 font-semibold">No</span>;
+          }
+      } else if (value !== null && value !== undefined && String(value).trim() !== "") {
+          displayValue = <span className="text-gray-700 break-words font-normal">{String(value)}</span>;
+      }
+      
+      return displayValue;
+  }
+
+  /**
+   * Final Component Fix: Renders the destructured key-value pairs vertically.
+   */
+  const ArrayDetailsDisplay = ({ data }: { data: Array<string> | string | null | undefined }) => {
+    // Pass the raw data through the robust parser
+    const details = parseStructuredArray(data);
+
+    if (details.length === 0) {
+      return <span className="text-gray-400 text-sm font-light">N/A</span>;
+    }
+
+    return (
+      // Enforce column layout for stacking with tight spacing, centered within the TD but contents aligned left
+      <div className="flex flex-col items-start space-y-1 py-1 px-1 w-full max-w-[95%] mx-auto text-left">
+        {details.map((detail, index) => {
+            const parts = detail.split(':').map(s => s.trim());
+            const label = parts[0]; 
+            const content = parts.slice(1).join(': '); 
+
+            // Only show if there is clear content after the first colon
+            if (!content) return null;
+
+            return (
+                <div key={index} className="text-xs w-full pb-1 border-b border-gray-100 last:border-b-0 text-left">
+                    {/* Label (Key) is font-medium */}
+                    <span className="font-medium text-gray-700">{label}:</span>{' '}
+                    {/* Content (Value) is font-normal/regular, breaks onto new line if needed */}
+                    <span className="text-gray-600 font-normal break-words block sm:inline-block mt-0.5 sm:mt-0">{content}</span>
+                </div>
+            );
+        })}
+      </div>
+    );
+  };
+
 
   return (
     <>
-      <div className="w-full px-4 sm:px-6 lg:px-8 pt-6">
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "/" },
-            { label: "Compare", href: "/compare" },
-          ]}
-        />
-      </div>
-
-      <div className="w-full px-4 sm:px-6 lg:px-8 mt-4 mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Compare Products</h2>
-      </div>
-
-      <div className="w-full px-4 sm:px-6 lg:px-8 mb-10 overflow-x-auto">
-        <div className="flex flex-nowrap gap-3 sm:gap-4 lg:gap-6 pb-2 justify-start min-w-max">
-          {displayProducts.map((product) => (
-            <div key={product.id} className="flex-shrink-0 relative w-64 sm:w-72 lg:w-80">
-              <ProductCardContainer
-                id={product.id}
-                image={product.image}
-                title={product.title}
-                subtitle={product.subtitle}
-                price={product.price}
-                currency={product.currency}
-                directSale={product.directSale}
-                is_active={product.is_active}
-                hide_price={product.hide_price}
-                stock_quantity={product.stock_quantity}
-                type={product.type}
-                category_id={product.category_id}
-                pageUrlType={product.pageUrlType}
-                model={product.model}
-                manufacturer={product.manufacturer}
-                user_name={product.user_name}
-              />
-              <button
-                onClick={() => handleRemoveProduct(product.id)}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 shadow-md hover:bg-red-600 transition-colors z-10"
-                aria-label={`Remove ${product.title} from comparison`}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-          {displayProducts.length < maxColumns && (
-            <div
-              onClick={() => setShowModal(true)}
-              className="flex-shrink-0 w-64 sm:w-72 lg:w-80 h-80 sm:h-96 bg-white border-2 border-dashed border-gray-300 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-green-500 transition-all duration-200 p-4"
-              tabIndex={0}
-              role="button"
-              aria-label="Add Product to Compare"
-            >
-              <Plus className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-green-500 mb-3" />
-              <span className="text-green-600 font-semibold text-base sm:text-lg text-center">Add Product</span>
-              {selectedCategory && (
-                <span className="text-gray-500 text-xs sm:text-sm mt-1 text-center px-2">(Only &quot;{selectedCategory}&quot; products)</span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {products.length > 0 && (
-        <div className="w-full px-4 sm:px-6 lg:px-8 mb-10">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-xs sm:text-sm divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="py-3 sm:py-4 px-2 sm:px-4 text-left font-semibold text-gray-700 w-32 sm:w-44 rounded-tl-xl sticky left-0 bg-gray-50 z-10 border-r border-gray-200">
-                      {/* Empty for row labels */}
-                    </th>
-                    {Array.from({ length: maxColumns }).map((_, idx) => (
-                      <th
-                        key={idx}
-                        className={`py-3 sm:py-4 px-2 sm:px-4 text-center font-semibold text-gray-700 min-w-[200px] sm:min-w-[240px] lg:min-w-[280px] ${idx === maxColumns - 1 ? "rounded-tr-xl" : ""
-                          }`}
-                      >
-                        {displayProducts[idx]?.title ? (
-                          <span className="block text-gray-900 font-semibold text-xs sm:text-sm lg:text-base px-1 sm:px-2 leading-tight truncate">
-                            {displayProducts[idx].title}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">---</span>
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {allTableFields.map((field) => ( // Use allTableFields here
-                    <tr key={field.key} className="border-t last:border-b">
-                      <td className="py-3 sm:py-4 px-2 sm:px-4 font-medium text-gray-700 sticky left-0 bg-gray-50 z-10 whitespace-nowrap text-xs sm:text-sm border-r border-gray-200">
-                        <span className="block leading-tight">{field.label}</span>
-                      </td>
-                      {Array.from({ length: maxColumns }).map((_, idx) => {
-                        const product = displayProducts[idx];
-                        if (!product)
-                          return (
-                            <td
-                              key={idx}
-                              className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-400"
-                            >
-                              ----
-                            </td>
-                          );
-
-                        let value: unknown;
-                        if (field.key.startsWith('product_details.')) {
-                          const detailKey = field.key.split('.')[1];
-                          value = product.product_details?.[detailKey];
-                        } else {
-                          value = product[field.key as keyof CompareProduct];
-                        }
-
-                        if (field.isCurrency)
-                          return (
-                            <td
-                              key={idx}
-                              className="py-3 sm:py-4 px-2 sm:px-4 text-center font-semibold text-green-600"
-                            >
-                              <span className="block leading-tight text-xs sm:text-sm">
-                                {product.hide_price ? (
-                                  <>
-                                    {product.currency} *******
-                                  </>
-                                ) : (
-                                  <>
-                                    {product.currency} {typeof product.price === "number" ? product.price.toLocaleString("en-IN") : product.price}
-                                  </>
-                                )}
-                              </span>
-                            </td>
-                          );
-                        if (field.isRating)
-                          return (
-                            <td key={idx} className="py-3 sm:py-4 px-2 sm:px-4 text-center">
-                              <span className="inline-flex flex-col sm:flex-row items-center gap-1">
-                                <span className="text-xs sm:text-sm">
-                                  {product.ratings > 0 ? product.ratings.toFixed(1) : 'N/A'}
-                                </span>
-                                {product.ratings > 0 && (
-                                  <span className="text-yellow-400 flex">
-                                    {Array.from({ length: 5 }).map((_, i) => (
-                                      <svg
-                                        key={i}
-                                        className={`inline w-3 h-3 sm:w-4 sm:h-4 ${i < Math.round(product.ratings)
-                                          ? "fill-yellow-400"
-                                          : "fill-gray-200"
-                                          }`}
-                                        viewBox="0 0 20 20"
-                                      >
-                                        <polygon points="9.9,1.1 12.3,6.7 18.4,7.5 13.7,11.8 15,17.8 9.9,14.7 4.8,17.8 6.1,11.8 1.4,7.5 7.5,6.7" />
-                                      </svg>
-                                    ))}
-                                  </span>
-                                )}
-                                {product.ratingsCount > 0 && (
-                                  <span className="text-gray-500 text-xs">
-                                    ({product.ratingsCount})
-                                  </span>
-                                )}
-                              </span>
-                            </td>
-                          );
-                        return (
-                          <td
-                            key={idx}
-                            className="py-3 sm:py-4 px-2 sm:px-4 text-center text-gray-700"
-                          >
-                            <span className="block leading-tight text-xs sm:text-sm break-words">
-                              {value ? String(value) : "----"}
-                            </span>
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      <div className="min-h-screen bg-white pb-20"> {/* Changed bg to white */}
+        {/* Header Section */}
+        <div className="w-full px-6 lg:px-12 pt-8 pb-6 bg-white border-b border-gray-100">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-xl font-bold text-gray-900">
+              Product Comparison {selectedCategory && 
+                <span className="text-[#5CA131]">({selectedCategory})</span>
+              }
+            </h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Comparing {products.length} out of {MAX_COLUMNS} products
+            </p>
           </div>
         </div>
-      )}
-      {products.length === 0 && (
-        <div className="text-center text-gray-500 py-10 px-4">
-          <p className="text-base sm:text-lg mb-4">No products selected for comparison yet.</p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-md shadow-sm text-white bg-[#5CA131] hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-          >
-            <Plus className="-ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-            Add First Product
-          </button>
-        </div>
-      )}
 
-      {/* Add Product Modal */}
+        {/* Product Cards Section - Updated styling */}
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 my-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: MAX_COLUMNS }).map((_, idx) => {
+              const product = displayProducts[idx];
+              
+              if (product) {
+                const productUrl = `/product/${productSlugify(product.title)}-${product.id}`;
+                return (
+                  <Card 
+                    key={product.id} 
+                    className="relative bg-white rounded-lg border border-gray-200 hover:border-[#5CA131] transition-all duration-300"
+                  >
+                    <button
+                      onClick={() => handleRemoveProduct(product.id)}
+                      className="absolute top-2 right-2 bg-white text-gray-400 rounded-full p-1.5 hover:text-red-500 transition-colors z-10 border border-gray-200"
+                      aria-label={`Remove ${product.title} from comparison`}
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <CardContent className="p-4">
+                      <Link href={productUrl} className="block text-center">
+                        <div className="w-full h-40 relative flex items-center justify-center bg-gray-50 rounded mb-3">
+                          <Image
+                            src={product.image || "/images/placeholder.jpg"}
+                            alt={product.title}
+                            width={160}
+                            height={160}
+                            className="object-contain max-h-[160px]"
+                            priority={idx === 0}
+                          />
+                        </div>
+                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2 min-h-[40px] hover:text-[#5CA131]">
+                          {product.title}
+                        </h3>
+                      </Link>
+                      <div className="mt-3 text-center">
+                        <p className="text-lg font-semibold text-[#5CA131]">
+                          {product.hide_price ? (
+                            <span className="text-gray-500 text-sm">Request Quote</span>
+                          ) : (
+                            `${product.currency} ${Number(product.price).toLocaleString('en-IN')}`
+                          )}
+                        </p>
+                        <RatingDisplay rating={product.average_rating} />
+                        <Button 
+                          variant="default"
+                          className="w-full mt-3 bg-[#5CA131] hover:bg-[#4c8728] text-white text-sm font-medium"
+                          asChild
+                        >
+                          <Link href={productUrl}>View Details</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              }
+
+              // Add Product Placeholder - Updated styling
+              return (
+                <div
+                  key={idx}
+                  onClick={() => { if (displayProducts.length < MAX_COLUMNS) setShowModal(true); }}
+                  className={`relative rounded-lg flex flex-col items-center justify-center p-4 min-h-[320px] ${
+                    displayProducts.length < MAX_COLUMNS 
+                      ? 'cursor-pointer border-2 border-dashed border-[#5CA131] hover:bg-green-50'
+                      : 'cursor-not-allowed border-2 border-dashed border-gray-200'
+                  }`}
+                >
+                  {displayProducts.length < MAX_COLUMNS ? (
+                    <>
+                      <Plus className="w-10 h-10 text-[#5CA131] mb-2" />
+                      <span className="text-[#5CA131] font-medium text-center">Add Product</span>
+                      {selectedCategory && (
+                        <span className="text-gray-400 text-xs mt-1 text-center">{selectedCategory}</span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <Maximize2 className="w-10 h-10 text-gray-300 mb-2" />
+                      <span className="text-gray-400 font-medium text-center">Maximum {MAX_COLUMNS} Products</span>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Comparison Table Section - Updated styling */}
+        {products.length > 0 && (
+          <div className="max-w-7xl mx-auto px-6 lg:px-12 mt-8">
+            <div className="bg-white rounded-lg border border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-gray-100">
+                    {allTableFields.map((field) => {
+                        if (field.key.includes('meta_')) return null; 
+                          
+                        const hasRelevantData = displayProducts.some(product => {
+                            const value = getProductValue(product, field.key);
+                            if (Array.isArray(value)) return value.length > 0;
+                            return value !== null && value !== undefined && String(value).trim() !== '' && String(value).trim().toUpperCase() !== 'N/A';
+                        });
+                        
+                        if (!hasRelevantData) return null;
+
+                        return (
+                          <tr key={field.key} className="transition-colors hover:bg-gray-50">
+                            {/* Row Label (Sticky Column) - Min-width increased for better label readability */}
+                            <td 
+                              className="py-4 px-4 font-semibold text-gray-800 sticky left-0 bg-gray-100 z-10 whitespace-nowrap min-w-[200px] border-r border-gray-200 text-left"
+                            >
+                              {field.label}
+                            </td>
+                            
+                            {/* Product Data Cells */}
+                            {Array.from({ length: MAX_COLUMNS }).map((_, idx) => {
+                              const product = displayProducts[idx];
+                              
+                              if (!product) return <td key={idx} className="py-4 px-4 text-center text-gray-400 font-light border-x border-gray-100">N/A</td>;
+
+                              const value = getProductValue(product, field.key);
+                              
+                              // Specific types
+                              if (field.isCurrency) {
+                                return (
+                                  <td key={idx} className="py-4 px-4 text-center font-extrabold border-x border-gray-100 align-middle">
+                                    {product.hide_price ? (
+                                      <span className="text-gray-400 text-sm font-medium">Request Quote</span>
+                                    ) : (
+                                      <span className="text-green-600 text-lg">{product.currency} {Number(product.price).toLocaleString('en-IN')}</span>
+                                    )}
+                                  </td>
+                                );
+                              }
+                              if (field.isRating) {
+                                return (
+                                  <td key={idx} className="py-4 px-4 text-center border-x border-gray-100 align-middle">
+                                    <RatingDisplay rating={product.average_rating} />
+                                  </td>
+                                );
+                              }
+                              if (field.key === 'stock_quantity' || field.isBoolean) {
+                                  return (
+                                      <td key={idx} className="py-4 px-4 text-center border-x border-gray-100 align-middle">
+                                          <StatusDisplay value={value} label={field.label} />
+                                      </td>
+                                  );
+                              }
+                              
+                              // ✅ Final Structured Array Rendering
+                              if (field.isStructuredArray) {
+                                  return (
+                                      // CRUCIAL: Use align-top for clean stacked list presentation
+                                      <td key={idx} className="py-2 px-4 max-w-[300px] border-x border-gray-100 align-top">
+                                          {/* Pass the potentially single-string value into the robust parser */}
+                                          <ArrayDetailsDisplay data={value} />
+                                      </td>
+                                  );
+                              }
+
+                              // Default rendering for generic text/number product details
+                              return (
+                                <td
+                                  key={idx}
+                                  className="py-4 px-4 text-center text-gray-700 max-w-[250px] border-x border-gray-100 align-middle"
+                                >
+                                  <span className="block leading-tight break-words text-wrap text-sm font-normal px-1">
+                                    {value !== null && value !== undefined && String(value).trim() !== "" ? String(value) : "N/A"}
+                                  </span>
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State - Updated styling */}
+        {products.length === 0 && (
+          <div className="max-w-7xl mx-auto px-6 lg:px-12">
+            <div className="text-center py-16">
+              <p className="text-lg font-medium mb-4 text-gray-600">
+                Select products to start comparison
+              </p>
+              <Button
+                onClick={() => setShowModal(true)}
+                className="inline-flex items-center px-6 py-2 text-sm font-medium rounded-md 
+                          text-white bg-[#5CA131] hover:bg-[#4c8728]"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Product
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Modal - Updated styling */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+            <div className="bg-white rounded-lg w-full max-w-lg overflow-hidden">
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="text-lg font-medium">Select Product to Compare</h3>
+                <button
+                  onClick={() => {
+                    setShowModal(false);
+                    setSearch("");
+                    setSearchResults([]);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="p-4">
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={search}
+                  onChange={handleSearch}
+                  className="w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#5CA131]"
+                />
+                
+                <div className="mt-4 max-h-[400px] overflow-y-auto">
+                  {loadingSearch ? (
+                    <div className="text-center py-8 text-gray-500 flex justify-center items-center">
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" /> <span className="font-light">Searching...</span>
+                    </div>
+                  ) : searchResults.length === 0 && search.length > 1 ? (
+                    <div className="text-gray-400 text-center py-8 font-light">
+                      No approved products found matching your search term.
+                    </div>
+                  ) : searchResults.length === 0 && search.length <= 1 ? (
+                    <div className="text-gray-400 text-center py-8 font-light">
+                      Start typing to see product suggestions.
+                    </div>
+                  ) : (
+                    searchResults.map((product) => {
+                        const isInvalidCategory = selectedCategory && product.category_name !== selectedCategory;
+                        
+                        return (
+                            <div
+                                key={product.id}
+                                className={`flex items-center p-3 rounded-lg border transition-colors duration-200 ${
+                                    isInvalidCategory
+                                        ? "bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed"
+                                        : "hover:bg-green-50 border-green-200 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                                if (!isInvalidCategory) {
+                                    handleAddProduct(product);
+                                } else {
+                                    toast.error(`Cannot add. Must be from the "${selectedCategory}" category.`);
+                                }
+                            }}
+                            tabIndex={0}
+                            role="button"
+                            aria-label={`Add ${product.name}`}
+                        >
+                            <div className="w-16 h-16 relative flex-shrink-0 border border-gray-200 rounded-md overflow-hidden mr-3 bg-white">
+                                <Image
+                                    src={product.images?.[0]?.image || "/images/placeholder.jpg"}
+                                    alt={product.name}
+                                    fill
+                                    className="object-contain p-1"
+                                    sizes="64px"
+                                />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 text-base truncate">
+                                    {product.name}
+                                </div>
+                                <div className="text-xs text-gray-500 font-light mt-1">
+                                    Category: <span className="font-normal text-gray-700">{product.category_name}</span>
+                                </div>
+                                <div className="text-xs text-gray-500 font-light truncate">
+                                    {product.manufacturer} {product.model && `/ ${product.model}`}
+                                </div>
+                            </div>
+                            <Plus className={`w-5 h-5 ml-2 flex-shrink-0 ${isInvalidCategory ? 'text-gray-400' : 'text-green-500'}`} />
+                        </div>
+                        );
+                    })
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Modal - Improved styling and positioning */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-xs sm:max-w-md lg:max-w-lg p-4 sm:p-6 relative border border-gray-200 transform scale-100 opacity-100 animate-fade-in-up max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6 relative border border-gray-200 
+                          max-h-[90vh] flex flex-col animate-in fade-in duration-200">
             <button
-              className="absolute top-2 sm:top-3 right-2 sm:right-3 text-gray-400 hover:text-gray-700 text-2xl sm:text-3xl focus:outline-none z-10"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors focus:outline-none z-10"
               onClick={() => {
                 setShowModal(false);
                 setSearch("");
@@ -422,80 +686,90 @@ const ComparePage = () => {
               aria-label="Close"
               tabIndex={0}
             >
-              &times;
+              <X className="w-6 h-6" />
             </button>
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 sm:mb-4 text-gray-900 text-center pr-8">
-              Add Product to Compare
+            
+            <h3 className="text-2xl font-bold mb-4 text-gray-900 pr-8">
+              Select Product to Compare
             </h3>
+            
             {selectedCategory && (
-              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 text-center px-2">
-                Only products from the &quot;<span className="font-semibold">{selectedCategory}</span>&quot; category can be added.
-              </p>
+              <div className="bg-green-50 border-l-4 border-green-500 text-green-700 p-3 mb-4 rounded-md text-sm">
+                <p>
+                    <span className="font-semibold">Constraint:</span> Only products from the <span className="font-bold">"{selectedCategory}"</span> category can be added.
+                </p>
+              </div>
             )}
+            
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder="Search by name, model, or manufacturer..."
               value={search}
               onChange={handleSearch}
-              className="w-full border border-gray-300 rounded-md px-3 sm:px-4 py-2 mb-3 sm:mb-4 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
+              className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 text-base shadow-sm"
               aria-label="Search products"
             />
-            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pr-1 sm:pr-2 min-h-0">
+            
+            <div className="flex-1 overflow-y-auto mt-4 space-y-3 pr-2 min-h-[150px] max-h-[60vh]">
               {loadingSearch ? (
-                <div className="text-center py-8 text-gray-500 text-sm sm:text-base">Loading products...</div>
+                <div className="text-center py-8 text-gray-500 flex justify-center items-center">
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" /> <span className="font-light">Searching...</span>
+                </div>
               ) : searchResults.length === 0 && search.length > 1 ? (
-                <div className="text-gray-400 text-center py-8 text-sm sm:text-base">
-                  No products found matching your search.
+                <div className="text-gray-400 text-center py-8 font-light">
+                  No approved products found matching your search term.
                 </div>
               ) : searchResults.length === 0 && search.length <= 1 ? (
-                <div className="text-gray-400 text-center py-8 text-sm sm:text-base">
-                  Start typing to search for products.
+                <div className="text-gray-400 text-center py-8 font-light">
+                  Start typing to see product suggestions.
                 </div>
               ) : (
-                searchResults.map((product) => (
-                  <div
-                    key={product.id}
-                    className={`flex items-center gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 rounded-lg cursor-pointer transition-colors duration-200 my-2
-                      ${product.category_name !== selectedCategory && selectedCategory !== null
-                        ? "bg-gray-100 opacity-60 cursor-not-allowed"
-                        : "hover:bg-green-50"
-                      }`}
-                    onClick={() => {
-                      if (product.category_name === selectedCategory || selectedCategory === null) {
-                        handleAddProduct(product);
-                      } else {
-                        toast.error(`This product is from a different category (${product.category_name}).`);
-                      }
-                    }}
-                    tabIndex={0}
-                    role="button"
-                    aria-label={`Add ${product.name}`}
-                  >
-                    <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 relative flex-shrink-0 border border-gray-200 rounded-md overflow-hidden">
-                      <Image
-                        src={product.images[0]?.image || "/images/placeholder.jpg"}
-                        alt={product.name}
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 640px) 48px, (max-width: 1024px) 56px, 64px"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                        {product.name}
-                      </div>
-                      <div className="text-xs sm:text-sm text-gray-500 truncate">
-                        {product.subcategory_name || product.description || 'N/A'}
-                      </div>
-                      {product.category_name && (
-                        <div className="text-xs text-gray-400 mt-1 truncate">Category: {product.category_name}</div>
-                      )}
-                    </div>
-                    <span className="text-green-600 font-semibold flex-shrink-0 text-xs sm:text-sm lg:text-base">
-                      {product.hide_price ? "₹ *******" : `₹ ${product.price}`}
-                    </span>
-                  </div>
-                ))
+                searchResults.map((product) => {
+                    const isInvalidCategory = selectedCategory && product.category_name !== selectedCategory;
+                    
+                    return (
+                        <div
+                            key={product.id}
+                            className={`flex items-center p-3 rounded-lg border transition-colors duration-200 ${
+                                isInvalidCategory
+                                    ? "bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed"
+                                    : "hover:bg-green-50 border-green-200 cursor-pointer"
+                            }`}
+                            onClick={() => {
+                                if (!isInvalidCategory) {
+                                    handleAddProduct(product);
+                                } else {
+                                    toast.error(`Cannot add. Must be from the "${selectedCategory}" category.`);
+                                }
+                            }}
+                            tabIndex={0}
+                            role="button"
+                            aria-label={`Add ${product.name}`}
+                        >
+                            <div className="w-16 h-16 relative flex-shrink-0 border border-gray-200 rounded-md overflow-hidden mr-3 bg-white">
+                                <Image
+                                    src={product.images?.[0]?.image || "/images/placeholder.jpg"}
+                                    alt={product.name}
+                                    fill
+                                    className="object-contain p-1"
+                                    sizes="64px"
+                                />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="font-medium text-gray-900 text-base truncate">
+                                    {product.name}
+                                </div>
+                                <div className="text-xs text-gray-500 font-light mt-1">
+                                    Category: <span className="font-normal text-gray-700">{product.category_name}</span>
+                                </div>
+                                <div className="text-xs text-gray-500 font-light truncate">
+                                    {product.manufacturer} {product.model && `/ ${product.model}`}
+                                </div>
+                            </div>
+                            <Plus className={`w-5 h-5 ml-2 flex-shrink-0 ${isInvalidCategory ? 'text-gray-400' : 'text-green-500'}`} />
+                        </div>
+                    );
+                })
               )}
             </div>
           </div>

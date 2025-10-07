@@ -72,9 +72,20 @@ const RAZORPAY_KEY_ID = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAddress, phoneNumber }: PaymentStepProps) {
   const { user } = useUser();
   const router = useRouter();
-  const [selectedPayment, setSelectedPayment] = useState<string>('cod');
+  
+  // 1. HARDCODE SELECTION: Initialize with 'razorpay' and remove setSelectedPayment logic
+  const [selectedPayment, setSelectedPayment] = useState<string>('razorpay'); 
+  
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
   const [cartItems, setCartItems] = useState<CartItemApi[]>([]);
+
+  // Effect to ensure Razorpay is always selected (optional, but good practice)
+  useEffect(() => {
+    // If the component somehow loses the selection, force it back to 'razorpay'
+    if (selectedPayment !== 'razorpay') {
+      setSelectedPayment('razorpay');
+    }
+  }, [selectedPayment]);
 
   useEffect(() => {
     console.log("Loading Razorpay SDK script...");
@@ -109,21 +120,15 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
     fetchCartItems();
   }, [fetchCartItems]);
 
+  // 2. PAYMENT METHOD ARRAY: Removed the 'cod' option
   const paymentMethods: PaymentMethod[] = [
     {
       id: 'razorpay',
       type: 'card',
-      name: 'Pay Online (Razorpay)',
+      name: 'Online Payment (Secure)',
       icon: <CreditCard className="w-5 h-5" />,
-      description: 'Secure payment via Razorpay'
+      description: 'Instant, secure payment via Razorpay gateway.'
     },
-    // {
-    //   id: 'cod',
-    //   type: 'cod',
-    //   name: 'Cash on Delivery',
-    //   icon: <Truck className="w-5 h-5" />,
-    //   description: 'Pay when your order is delivered'
-    // }
   ];
 
   const formatPrice = (price: number) => `₹ ${price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -133,6 +138,12 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
       toast.error("User not logged in. Please log in to place an order.");
       return;
     }
+    // Since selectedPayment is hardcoded to 'razorpay', we skip the COD check
+    if (selectedPayment !== 'razorpay') {
+        toast.error("Invalid payment method selected. Please refresh.");
+        return;
+    }
+    
     if (cartItems.length === 0 || cartTotal <= 0) {
       toast.error("Your cart is empty or total is invalid.");
       return;
@@ -145,97 +156,89 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
     setIsProcessingOrder(true);
     try {
       console.log("Attempting to create order from cart on backend...");
-      // Reverted: Do not send payment_method to create_from_cart
       const orderResponse = await api.post('/orders/create_from_cart/', {
         shipping_address: shippingAddress,
         phone_number: phoneNumber,
-        // payment_method: selectedPayment, // Removed this line as backend's create_from_cart doesn't use it.
       });
       const createdOrder = orderResponse.data;
       const orderId = createdOrder.id;
       const orderNumber = createdOrder.order_number;
       console.log("Order successfully created on MHE backend:", createdOrder);
 
-      if (selectedPayment === 'cod') {
-        // For COD, the order is considered placed and confirmed immediately by backend's create_from_cart
-        toast.success(`Order ${orderNumber} placed successfully with Cash on Delivery!`);
-        router.push('/account/orders'); // Redirect immediately for COD
-        onComplete();
-      } else if (selectedPayment === 'razorpay') {
-        if (!RAZORPAY_KEY_ID) {
-            toast.error("Razorpay Key ID is not configured. Please check environment variables and restart server.");
-            setIsProcessingOrder(false);
-            return;
-        }
-
-        console.log("Attempting to create Razorpay order on backend...");
-        const razorpayOrderCreationResponse = await api.post('/payments/create_razorpay_order/', {
-          order_id: orderId,
-        });
-        const razorpayOrderDetails = razorpayOrderCreationResponse.data;
-        console.log("Razorpay order successfully created on backend:", razorpayOrderDetails);
-
-        if (typeof window.Razorpay === 'undefined') {
-          toast.error("Razorpay SDK not loaded. Please try again after a moment.");
+      // --- Payment Initiation Logic (Always Razorpay now) ---
+      if (!RAZORPAY_KEY_ID) {
+          toast.error("Razorpay Key ID is not configured. Please check environment variables and restart server.");
           setIsProcessingOrder(false);
           return;
-        }
-
-        const options = {
-          key: RAZORPAY_KEY_ID,
-          amount: razorpayOrderDetails.amount,
-          currency: razorpayOrderDetails.currency,
-          name: "MHE Bazar",
-          description: `Payment for Order #${orderNumber}`,
-          order_id: razorpayOrderDetails.razorpay_order_id,
-          handler: async (response: {
-            razorpay_payment_id: string;
-            razorpay_order_id: string;
-            razorpay_signature: string;
-          }) => {
-            console.log("Razorpay handler response received:", response);
-            try {
-              console.log("Attempting to verify payment on backend...");
-              const verificationResponse = await api.post(`/payments/verify_payment/`, {
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-              });
-              console.log("Payment verification backend response:", verificationResponse.data);
-
-              toast.success(`Payment successful! Order ${orderNumber} confirmed.`);
-              router.push('/account/orders'); // Redirect to orders page
-              onComplete();
-            } catch (error) {
-              console.error("Payment verification failed:", error);
-              if (axios.isAxiosError(error) && error.response) {
-                toast.error(error.response.data?.error || `Payment verification failed: ${error.response.statusText}`);
-              } else {
-                toast.error("Payment verification failed. Please contact support.");
-              }
-            } finally {
-                setIsProcessingOrder(false);
-            }
-          },
-          prefill: {
-            name: user?.full_name || user?.username || '',
-            email: user?.email || '',
-            contact: user?.phone || phoneNumber || '',
-          },
-          theme: {
-            color: "#16A34A",
-          },
-          modal: {
-            ondismiss: () => {
-              toast.info('Payment window closed. If payment was made, check My Orders for status.');
-              setIsProcessingOrder(false);
-            },
-          },
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.open();
       }
+
+      console.log("Attempting to create Razorpay order on backend...");
+      const razorpayOrderCreationResponse = await api.post('/payments/create_razorpay_order/', {
+        order_id: orderId,
+      });
+      const razorpayOrderDetails = razorpayOrderCreationResponse.data;
+      console.log("Razorpay order successfully created on backend:", razorpayOrderDetails);
+
+      if (typeof window.Razorpay === 'undefined') {
+        toast.error("Razorpay SDK not loaded. Please try again after a moment.");
+        setIsProcessingOrder(false);
+        return;
+      }
+
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: razorpayOrderDetails.amount,
+        currency: razorpayOrderDetails.currency,
+        name: "MHE Bazar",
+        description: `Payment for Order #${orderNumber}`,
+        order_id: razorpayOrderDetails.razorpay_order_id,
+        handler: async (response: {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }) => {
+          console.log("Razorpay handler response received:", response);
+          try {
+            console.log("Attempting to verify payment on backend...");
+            const verificationResponse = await api.post(`/payments/verify_payment/`, {
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            console.log("Payment verification backend response:", verificationResponse.data);
+
+            toast.success(`Payment successful! Order ${orderNumber} confirmed.`);
+            router.push('/account/orders'); // Redirect to orders page
+            onComplete();
+          } catch (error) {
+            console.error("Payment verification failed:", error);
+            if (axios.isAxiosError(error) && error.response) {
+              toast.error(error.response.data?.error || `Payment verification failed: ${error.response.statusText}`);
+            } else {
+              toast.error("Payment verification failed. Please contact support.");
+            }
+          } finally {
+              setIsProcessingOrder(false);
+          }
+        },
+        prefill: {
+          name: user?.full_name || user?.username || '',
+          email: user?.email || '',
+          contact: user?.phone || phoneNumber || '',
+        },
+        theme: {
+          color: "#16A34A",
+        },
+        modal: {
+          ondismiss: () => {
+            toast.info('Payment window closed. If payment was made, check My Orders for status.');
+            setIsProcessingOrder(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error: unknown) {
       console.error("Error during order placement or payment initiation:", error);
       if (axios.isAxiosError(error) && error.response) {
@@ -263,27 +266,30 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
             <CreditCard className="w-5 h-5 mr-2" />
             Payment Method
           </h2>
-
-          <RadioGroup value={selectedPayment} onValueChange={setSelectedPayment}>
+          
+          {/* 3. DISABLE SELECTION: Remove onValueChange handler */}
+          <RadioGroup value={selectedPayment}> 
             <div className="space-y-4">
               {paymentMethods.map((method) => (
                 <motion.div
                   key={method.id}
-                  whileHover={{ scale: 1.01 }}
+                  whileHover={{ scale: 1.00 }} // Disabled hover effect for fixed selection
                   className="relative"
                 >
-                  <Card className={`cursor-pointer transition-all ${
-                    selectedPayment === method.id ? 'ring-2 ring-green-600 border-green-600' : ''
+                  <Card className={`cursor-default transition-all ${
+                    // Always show as selected
+                    'ring-2 ring-green-600 border-green-600'
                   }`}>
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
-                        <RadioGroupItem value={method.id} id={method.id} />
+                        {/* 3. DISABLE SELECTION: Set RadioGroupItem to disabled */}
+                        <RadioGroupItem value={method.id} id={method.id} disabled />
                         <div className="flex items-center space-x-3 flex-1">
                           <div className="p-2 bg-gray-100 rounded-lg">
                             {method.icon}
                           </div>
                           <div>
-                            <Label htmlFor={method.id} className="text-base font-medium cursor-pointer">
+                            <Label htmlFor={method.id} className="text-base font-medium cursor-default">
                               {method.name}
                             </Label>
                             {method.description && (
@@ -298,9 +304,10 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
               ))}
             </div>
           </RadioGroup>
+          <p className="text-sm text-red-500 mt-2">Only online payment is available for this order.</p>
         </div>
 
-        {/* Order Summary */}
+        {/* Order Summary (No changes needed here) */}
         <div className="lg:col-span-1">
           <Card>
             <CardContent className="p-6">
@@ -327,7 +334,7 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
                           <p className="text-sm font-medium text-gray-800 line-clamp-2">{item.product_details.name}</p>
                           <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
                           {!item.product_details.hide_price && (
-                             <p className="text-sm font-semibold text-green-700">{formatPrice(item.total_price)}</p>
+                              <p className="text-sm font-semibold text-green-700">{formatPrice(item.total_price)}</p>
                           )}
                         </div>
                       </div>
