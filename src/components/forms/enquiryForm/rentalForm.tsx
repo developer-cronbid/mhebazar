@@ -35,7 +35,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
     fullName: '',
     email: '',
     phone: '',
-    address: '',
+    address: '', // Already exists
   });
 
   // selected country dial code, e.g. "+1"
@@ -58,6 +58,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
     // fall back to US if present, else first in list
     const userCca2 = (user as any)?.country || (user as any)?.country_code || '';
     const foundByUser = countrycode.find((c: any) => c.cca2 === userCca2);
+    // ORIGINAL LOGIC: The original code was using 'IN' as a fallback, which is India. I'll keep it.
     const foundUS = countrycode.find((c: any) => c.cca2 === 'IN');
     const defaultCountry = foundByUser || foundUS || countrycode[0];
     const getDialFromCountry = (c: any) => {
@@ -80,10 +81,11 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
-    if (!user) {
-      toast.error("You must be logged in to submit a rental request.")
-      return
-    }
+    // --- REMOVED: Login check has been removed as requested ---
+    // if (!user) {
+    //   toast.error("You must be logged in to submit a rental request.")
+    //   return
+    // }
 
     if (!startDate || !endDate) {
       toast.error("Please select both start and end dates.")
@@ -95,9 +97,9 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
       return
     }
 
-    // Validate contact info
-    if (!contactInfo.fullName || !contactInfo.email || !contactInfo.phone) {
-      toast.error("Please fill in your name, email, and phone number.");
+    // --- UPDATED: Address is now required ---
+    if (!contactInfo.fullName || !contactInfo.email || !contactInfo.phone || !contactInfo.address) {
+      toast.error("Please fill in your name, email, phone number, and address.");
       return;
     }
 
@@ -120,7 +122,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
         full_name: contactInfo.fullName,
         email: contactInfo.email,
         phone: fullPhone,
-        address: contactInfo.address,
+        address: contactInfo.address, // Address already exists and is now mandatory
       }
 
       await api.post("/rentals/", rentalPayload)
@@ -143,8 +145,18 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
     } catch (error: unknown) {
       console.error("Error submitting rental form:", error)
       if (axios.isAxiosError(error) && error.response) {
-        const errorMessages = Object.values(error.response.data).flat().join(". ")
-        toast.error(`Failed to submit rental request: ${errorMessages || error.response.statusText || "Unknown error"}`)
+        // --- IMPROVEMENT: Clearer error message for the user ---
+        const errorData = error.response.data;
+        let errorMessages = "Unknown error occurred.";
+        if (typeof errorData === 'object' && errorData !== null) {
+            errorMessages = Object.values(errorData).flat().join(". ") || error.response.statusText;
+        } else if (typeof errorData === 'string') {
+            errorMessages = errorData;
+        } else {
+            errorMessages = error.response.statusText || "Unknown error";
+        }
+        toast.error(`Failed to submit rental request: ${errorMessages}`);
+        // --------------------------------------------------------
       } else {
         toast.error("An unexpected error occurred. Please try again.")
       }
@@ -158,7 +170,7 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
       <div className="w-full mx-auto">
         <Card className="border-none shadow-none">
           <CardContent className=" bg-white">
-            {/* Product Information */}
+            {/* Product Information - kept for context */}
             <div className="flex flex-col-reverse items-center justify-center gap-6 lg:gap-8 mb-8">
               <div className="w-full lg:w-1/2 xl:w-2/5">
                 <div className="relative w-full h-48 sm:h-64 lg:h-72 rounded-lg shadow-sm overflow-hidden">
@@ -174,33 +186,9 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
                   {productDetails.title}
                 </h2>
-                {/* <div className="space-y-2 text-sm sm:text-base text-gray-600">
-                  <p>
-                    <span className="font-medium">In Stock:</span> {productDetails.stock_quantity ?? "N/A"}
-                  </p>
-                  {productDetails.price !== "0.00" && (
-                    <p className="text-lg font-semibold text-green-600">
-                      ₹
-                      {typeof productDetails.price === "number"
-                        ? productDetails.price.toLocaleString("en-IN")
-                        : productDetails.price}
-                      <span className="text-sm font-normal text-gray-500"> / day</span>
-                    </p>
-                  )}
-                </div> */}
+                {/* ... */}
               </div>
             </div>
-
-            {/* Product Description */}
-            {/* <div className="mb-8 prose prose-sm sm:prose-base max-w-none text-gray-600 leading-relaxed">
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(
-                    productDetails.description || "No description available."
-                  )
-                }}
-              />
-            </div> */}
 
             {/* Rental Form */}
             <div className="space-y-6">
@@ -250,8 +238,11 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                       type="text"
                       value={contactInfo.address}
                       onChange={handleContactChange}
+                      // --- UPDATED: Address is now required ---
+                      required
                       className="h-12 text-sm"
-                      placeholder="Address (optional)"
+                      placeholder="Address *"
+                      // ----------------------------------------
                     />
                   </div>
                 </div>

@@ -19,7 +19,10 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
     companyName: '',
     email: '',
     phone: '',
-    message: ''
+    message: '',
+    // --- ADDED: Address field for Quote ---
+    address: ''
+    // -------------------------------------
   });
 
   // store selected country dial code (e.g. "+1")
@@ -41,6 +44,9 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
         fullName: user.full_name || '',
         email: user.email || '',
         phone: user.phone || '',
+        // --- ADDED: Prefill address if available ---
+        address: user.address?.address || '',
+        // ------------------------------------------
         // The company name is not available in the user object, so we leave it empty.
         // The address is also not a direct field, so we'll just log it.
       }));
@@ -63,7 +69,9 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
   };
 
   const validateForm = () => {
-    const requiredFields = ['fullName', 'companyName', 'email', 'phone'];
+    // --- UPDATED: 'address' is now a required field ---
+    const requiredFields = ['fullName', 'companyName', 'email', 'phone', 'address'];
+    // --------------------------------------------------
     for (const field of requiredFields) {
       if (!formData[field].trim()) {
         return false;
@@ -74,6 +82,8 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
   };
 
   const handleSubmit = async () => {
+    // --- REMOVED: Login check has been removed as requested ---
+
     if (!validateForm()) {
       toast.error('Please fill in all required fields with valid information.');
       return;
@@ -89,9 +99,16 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
       const dial = selectedDialCode || '';
       const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
       const fullPhone = `${normalizedDial}${localNumber}`;
+      
+      // --- ADDED: Append Address to Message ---
+      const addressString = `Delivery Address: ${formData.address.trim()}`;
+      const finalMessage = formData.message.trim() ? `${formData.message.trim()}\n\n---\n${addressString}` : addressString;
+      // ---------------------------------------
 
       const quotePayload: Record<string, any> = {
-        message: formData.message,
+        // --- UPDATED: Use finalMessage which includes the address ---
+        message: finalMessage,
+        // -----------------------------------------------------------
         full_name: formData.fullName,
         email: formData.email,
         // send concatenated international number
@@ -110,7 +127,10 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
         companyName: '',
         email: '',
         phone: '',
-        message: ''
+        message: '',
+        // --- ADDED: Reset address ---
+        address: ''
+        // --------------------------
       });
 
       // Close form after success
@@ -147,7 +167,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
       <div className="w-full mx-auto">
         <Card className="border-none">
           <CardContent className=" bg-white">
-            {/* Product Information */}
+            {/* Product Information - kept for context */}
             <div className="flex flex-col-reverse justify-center items-center gap-6 lg:gap-8 mb-8">
               <div className="w-full lg:w-1/2 xl:w-2/5">
                 <img
@@ -161,19 +181,10 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                   {product?.title || product?.name || "Product"}
                 </h2>
                 <div className="space-y-2 text-sm sm:text-base text-gray-600">
-                  {/* <p>
-                    <span className="font-medium">Qty:</span> {product?.stock_quantity || 0}
-                  </p> */}
+                  {/* ... */}
                 </div>
               </div>
             </div>
-
-            {/* Product Description */}
-            {/* <div className="mb-8">
-              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product?.subtitle || product?.description || "No description available.") }} />
-              </p>
-            </div> */}
 
             {/* Quote Form */}
             <div className="space-y-6">
@@ -188,6 +199,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleInputChange}
+                      required
                       className="h-12 text-sm"
                       placeholder="Full name *"
                     />
@@ -197,6 +209,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                       name="companyName"
                       value={formData.companyName}
                       onChange={handleInputChange}
+                      required
                       className="h-12 text-sm"
                       placeholder="Company name *"
                     />
@@ -211,6 +224,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                       type="email"
                       value={formData.email}
                       onChange={handleInputChange}
+                      required
                       className="h-12 text-sm"
                       placeholder="Email *"
                     />
@@ -237,12 +251,27 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                         type="tel"
                         value={formData.phone}
                         onChange={handleInputChange}
+                        required
                         className="h-12 text-sm flex-1"
                         placeholder="Phone *"
                       />
                     </div>
                   </div>
                 </div>
+
+                {/* --- ADDED: Address Field --- */}
+                <div>
+                  <Input
+                    name="address"
+                    type="text"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    required
+                    className="h-12 text-sm"
+                    placeholder="Delivery Address *"
+                  />
+                </div>
+                {/* ---------------------------- */}
 
                 {/* Message */}
                 <div>
