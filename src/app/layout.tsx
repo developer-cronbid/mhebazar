@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -7,65 +8,47 @@ import Loading from "./loading";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
-import { headers } from "next/headers";
+import Canonical from "@/components/Canonical"; // <-- import your Canonical component
 
-// Font
+// Import Inter font
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
 });
 
-// ✅ Dynamically generate metadata for each page (SSR, no "use client")
-export async function generateMetadata(): Promise<Metadata> {
-  const baseUrl = "https://www.mhebazar.in";
-  const headersList = headers();
-  const currentPath = (await headersList).get("x-invoke-path") || "/";
+// Favicon version for cache busting
+const FAVICON_VERSION = "v1.2";
 
-  // Safely build canonical URL
-  const canonicalUrl = `${baseUrl}${currentPath === "/" ? "" : currentPath}`;
+export const metadata: Metadata = {
+  title:
+    "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
+  description:
+    "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
+  icons: {
+    icon: [
+      { url: "/favicon-32x32.png", sizes: "any" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
+};
 
-  return {
-    title:
-      "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
-    description:
-      "MHE Bazar is a leading supplier of material handling equipment like forklifts, scissor lifts, and reach trucks. Rentals, sales, and maintenance are available in India.",
-    alternates: {
-      canonical: canonicalUrl, // ✅ Auto per-page canonical
-    },
-    icons: {
-      icon: [
-        { url: "/favicon-32x32.png", sizes: "any" },
-        { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-        { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      ],
-      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
-    },
-    viewport: {
-      width: "device-width",
-      initialScale: 1,
-      maximumScale: 1,
-    },
-  };
-}
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://api.mhebazar.in" />
-
+        
         {/* Microsoft Clarity Tracking Script */}
         <Script
           id="clarity-script"
@@ -80,8 +63,13 @@ export default function RootLayout({
             `,
           }}
         />
+        
+        {/* CRITICAL FIX: The Canonical component now renders the <link> tag directly into <head> */}
+        <Canonical /> 
+        
       </head>
       <body className="antialiased font-sans">
+
         <Toaster
           position="top-right"
           richColors
@@ -94,6 +82,7 @@ export default function RootLayout({
             },
           }}
         />
+
         <UserProvider>
           <SiteLayout>
             <Suspense fallback={<Loading />}>{children}</Suspense>
