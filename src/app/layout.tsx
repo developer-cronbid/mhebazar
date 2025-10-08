@@ -1,5 +1,4 @@
-// app/layout.tsx
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import SiteLayout from "@/components/layout/SiteLayout";
@@ -8,7 +7,7 @@ import Loading from "./loading";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
-import Canonical from "@/components/Canonical"; // <-- import your Canonical component
+import Canonical from "@/components/Canonical";
 
 // Import Inter font
 const inter = Inter({
@@ -33,12 +32,16 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
 };
+
+// --- FIX 1: Move viewport config from 'metadata' to the dedicated 'viewport' export ---
+// This permanently addresses the 'Unsupported metadata viewport' warning.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+// -----------------------------------------------------------------------------------
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -64,8 +67,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         
-        {/* CRITICAL FIX: The Canonical component now renders the <link> tag directly into <head> */}
-        <Canonical /> 
+        {/* ----------------------------------------------------------- */}
+        {/* FIX 2: Canonical tag is wrapped in Suspense, allowing useSearchParams/usePathname to resolve. */}
+        {/* The combined fix in Canonical.tsx and this Suspense wrapper resolves the rendering issue across all routes. */}
+        <Suspense>
+          <Canonical />
+        </Suspense> 
+        {/* ----------------------------------------------------------- */}
         
       </head>
       <body className="antialiased font-sans">
