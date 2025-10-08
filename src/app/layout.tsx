@@ -7,7 +7,7 @@ import Loading from "./loading";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
-import Canonical from "@/components/Canonical";
+import Canonical from "@/components/Canonical"; // Assuming this is the correct path
 
 // Import Inter font
 const inter = Inter({
@@ -67,9 +67,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         
-        {/* ----------------------------------------------------------- */}
-        {/* FIX 2: Canonical tag is wrapped in Suspense, allowing useSearchParams/usePathname to resolve. */}
-        {/* The combined fix in Canonical.tsx and this Suspense wrapper resolves the rendering issue across all routes. */}
+        {/* MANDATORY FIX: Canonical tags must be wrapped in Suspense.
+            This allows client-side hooks (usePathname, useSearchParams) to resolve
+            in a component rendered in the static RootLayout's <head>.
+        */}
         <Suspense>
           <Canonical />
         </Suspense> 

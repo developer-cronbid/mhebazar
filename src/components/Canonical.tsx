@@ -1,42 +1,42 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
 
+/**
+ * Canonical Component
+ * Generates and inserts the <link rel="canonical" href="..."> tag into the document's head.
+ * This component is used in the RootLayout and is wrapped in <Suspense>
+ * to allow client-side hooks like usePathname to function correctly within the head.
+ * * NOTE: The BASE_URL must be set to your production domain.
+ */
 export default function Canonical() {
   const pathname = usePathname();
-  // Using useSearchParams is problematic on 404 pages. 
-  // We will try to access it, but wrap the call in a try/catch or assume no params on non-page routes.
   const searchParams = useSearchParams();
 
   // Define the base production URL.
+  // UPDATE THIS IF YOUR DOMAIN CHANGES
   const BASE_URL = "https://www.mhebazar.in"; 
 
-  // --- 1. Construct the Canonical URL ---
-
-  // Handle URL path: Clean trailing slash if it exists AND the path is not just "/"
-  let path = pathname; 
-  if (path.length > 1 && path.endsWith('/')) {
-    path = path.slice(0, -1);
-  }
-  
-  // Handle query parameters: Safely access searchParams
-  // We check if searchParams exists and if it can be converted to a string.
-  let query = '';
-  try {
-    if (searchParams) {
-      query = searchParams.toString();
+  const canonicalUrl = useMemo(() => {
+    // 1. Handle URL path: Clean trailing slash if it exists AND the path is not just "/"
+    let path = pathname || "/"; 
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.slice(0, -1);
     }
-  } catch (e) {
-    // This catch handles the error that happens specifically on the /_not-found page, 
-    // ensuring the component doesn't crash the entire head render.
-    console.warn("Canonical component skipped query params due to rendering error.");
-  }
+    
+    // 2. Handle query parameters
+    let query = searchParams ? searchParams.toString() : '';
 
-  // Construct the final path
-  const fullPath = query ? `${path}?${query}` : path;
-  const canonicalUrl = `${BASE_URL}${fullPath}`;
+    // 3. Construct the full URL
+    const fullPath = query ? `${path}?${query}` : path;
+    return `${BASE_URL}${fullPath}`;
+    
+  }, [pathname, searchParams]);
 
-  // --- 2. Render the Tag ---
+
+  // 4. Render the Tag
+  // The 'key' attribute prevents React from warning about duplicate links on re-render.
   return (
     <link 
       rel="canonical" 
