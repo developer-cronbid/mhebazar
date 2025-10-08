@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 
 // **FIX 1: Ensure API_BASE_URL uses HTTPS in production environment if not already.**
 // We'll rely on NEXT_PUBLIC_API_BASE_URL but enforce HTTPS correction later if needed.
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://mheback.onrender.com/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.mhebazar.com/api";
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,

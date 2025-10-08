@@ -73,7 +73,6 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
   const { user } = useUser();
   const router = useRouter();
   
-  // 1. HARDCODE SELECTION: Initialize with 'razorpay' and remove setSelectedPayment logic
   const [selectedPayment, setSelectedPayment] = useState<string>('razorpay'); 
   
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
@@ -119,8 +118,26 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
   useEffect(() => {
     fetchCartItems();
   }, [fetchCartItems]);
+  
+  // Effect for loading Razorpay SDK (copied from provided file)
+  useEffect(() => {
+    console.log("Loading Razorpay SDK script...");
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => console.log("Razorpay SDK loaded successfully.");
+    script.onerror = (e) => console.error("Failed to load Razorpay SDK script:", e);
+    document.body.appendChild(script);
 
-  // 2. PAYMENT METHOD ARRAY: Removed the 'cod' option
+    return () => {
+      console.log("Cleaning up Razorpay SDK script.");
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
+
   const paymentMethods: PaymentMethod[] = [
     {
       id: 'razorpay',
@@ -138,11 +155,6 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
       toast.error("User not logged in. Please log in to place an order.");
       return;
     }
-    // Since selectedPayment is hardcoded to 'razorpay', we skip the COD check
-    if (selectedPayment !== 'razorpay') {
-        toast.error("Invalid payment method selected. Please refresh.");
-        return;
-    }
     
     if (cartItems.length === 0 || cartTotal <= 0) {
       toast.error("Your cart is empty or total is invalid.");
@@ -154,20 +166,22 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
     }
 
     setIsProcessingOrder(true);
+    let createdOrder = null;
+
     try {
       console.log("Attempting to create order from cart on backend...");
       const orderResponse = await api.post('/orders/create_from_cart/', {
         shipping_address: shippingAddress,
         phone_number: phoneNumber,
       });
-      const createdOrder = orderResponse.data;
+      createdOrder = orderResponse.data;
       const orderId = createdOrder.id;
       const orderNumber = createdOrder.order_number;
       console.log("Order successfully created on MHE backend:", createdOrder);
 
-      // --- Payment Initiation Logic (Always Razorpay now) ---
+      // --- Payment Initiation Logic ---
       if (!RAZORPAY_KEY_ID) {
-          toast.error("Razorpay Key ID is not configured. Please check environment variables and restart server.");
+          toast.error("Razorpay Key ID is not configured. Please check environment variables.");
           setIsProcessingOrder(false);
           return;
       }
@@ -187,7 +201,7 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
 
       const options = {
         key: RAZORPAY_KEY_ID,
-        amount: razorpayOrderDetails.amount,
+        amount: razorpayOrderDetails.amount * 100, // Amount should be in paise/cents
         currency: razorpayOrderDetails.currency,
         name: "MHE Bazar",
         description: `Payment for Order #${orderNumber}`,
@@ -198,6 +212,8 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
           razorpay_signature: string;
         }) => {
           console.log("Razorpay handler response received:", response);
+          setIsProcessingOrder(true); // Re-enable processing indicator during verification
+          
           try {
             console.log("Attempting to verify payment on backend...");
             const verificationResponse = await api.post(`/payments/verify_payment/`, {
@@ -208,14 +224,14 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
             console.log("Payment verification backend response:", verificationResponse.data);
 
             toast.success(`Payment successful! Order ${orderNumber} confirmed.`);
-            router.push('/account/orders'); // Redirect to orders page
-            onComplete();
+            onComplete(); // Clear localStorage and finalize flow
+            router.push(`/account/orders?order_id=${orderNumber}`); // ✅ FIX: Redirect ONLY ON SUCCESS
           } catch (error) {
             console.error("Payment verification failed:", error);
             if (axios.isAxiosError(error) && error.response) {
-              toast.error(error.response.data?.error || `Payment verification failed: ${error.response.statusText}`);
+              toast.error(error.response.data?.error || `Payment failed: ${error.response.statusText}. Please check My Orders.`);
             } else {
-              toast.error("Payment verification failed. Please contact support.");
+              toast.error("Payment verification failed. Please check My Orders for the status.");
             }
           } finally {
               setIsProcessingOrder(false);
@@ -224,14 +240,15 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
         prefill: {
           name: user?.full_name || user?.username || '',
           email: user?.email || '',
-          contact: user?.phone || phoneNumber || '',
+          contact: phoneNumber || '', // ✅ FIX: Use validated phone number from AddressStep
         },
         theme: {
           color: "#16A34A",
         },
         modal: {
           ondismiss: () => {
-            toast.info('Payment window closed. If payment was made, check My Orders for status.');
+            // ✅ FIX: Notify user on payment window closure. Status remains pending/failed on backend.
+            toast.warning('Payment process cancelled or window closed. Check My Orders for order status.');
             setIsProcessingOrder(false);
           },
         },
@@ -242,14 +259,27 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
     } catch (error: unknown) {
       console.error("Error during order placement or payment initiation:", error);
       if (axios.isAxiosError(error) && error.response) {
-        toast.error(error.response.data?.error || error.response.data?.message || `Failed to place order: ${error.response.statusText}`);
+        // Use the error message from the backend if available
+        const errorMessage = error.response.data?.error || error.response.data?.message || `Failed to place order: ${error.response.statusText}`;
+        toast.error(errorMessage);
+        
+        // If order creation failed (400), no order was created, so no need to clean up payment
+        // If razorpay order creation failed (400/500), the pending payment is still on backend.
       } else {
         toast.error("An unexpected error occurred while placing the order.");
       }
     } finally {
-      setIsProcessingOrder(false);
+      // If payment window opens, we stop processing here. If it fails, we set it back to false.
+      // We only set it to false if the payment process did NOT successfully open the Razorpay window.
+      // Since rzp.open() is successful, we let the handler/ondismiss manage the final state.
+      // If error occurred BEFORE rzp.open(), we set to false here.
+      if (!window.Razorpay) {
+         setIsProcessingOrder(false); 
+      }
     }
   };
+  
+  // ... (Rest of the PaymentStep component JSX remains the same) ...
 
   return (
     <motion.div
@@ -267,13 +297,12 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
             Payment Method
           </h2>
           
-          {/* 3. DISABLE SELECTION: Remove onValueChange handler */}
           <RadioGroup value={selectedPayment}> 
             <div className="space-y-4">
               {paymentMethods.map((method) => (
                 <motion.div
                   key={method.id}
-                  whileHover={{ scale: 1.00 }} // Disabled hover effect for fixed selection
+                  whileHover={{ scale: 1.00 }} 
                   className="relative"
                 >
                   <Card className={`cursor-default transition-all ${
@@ -282,7 +311,6 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
                   }`}>
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
-                        {/* 3. DISABLE SELECTION: Set RadioGroupItem to disabled */}
                         <RadioGroupItem value={method.id} id={method.id} disabled />
                         <div className="flex items-center space-x-3 flex-1">
                           <div className="p-2 bg-gray-100 rounded-lg">
@@ -307,7 +335,7 @@ export default function PaymentStep({ onComplete, onBack, cartTotal, shippingAdd
           <p className="text-sm text-red-500 mt-2">Only online payment is available for this order.</p>
         </div>
 
-        {/* Order Summary (No changes needed here) */}
+        {/* Order Summary */}
         <div className="lg:col-span-1">
           <Card>
             <CardContent className="p-6">
