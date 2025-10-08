@@ -101,7 +101,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
       const fullPhone = `${normalizedDial}${localNumber}`;
       
       // --- ADDED: Append Address to Message ---
-      const addressString = `Delivery Address: ${formData.address.trim()}`;
+      const addressString = `Company Address: ${formData.address.trim()}`;
       const finalMessage = formData.message.trim() ? `${formData.message.trim()}\n\n---\n${addressString}` : addressString;
       // ---------------------------------------
 
@@ -268,7 +268,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                     onChange={handleInputChange}
                     required
                     className="h-12 text-sm"
-                    placeholder="Delivery Address *"
+                    placeholder="Company Address *"
                   />
                 </div>
                 {/* ---------------------------- */}
