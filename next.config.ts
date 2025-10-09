@@ -3,14 +3,15 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 
   // 💥 ADD THIS NEW COMPILER BLOCK HERE
+  // 💥 CORRECTED COMPILER BLOCK
     compiler: {
         // Only apply this removal logic when building for production
         removeConsole: process.env.NODE_ENV === 'production'
             ? {
-                // Configure SWC to exclude (i.e., keep) only 'error' and 'warn' calls.
-                // All other console.* methods (log, info, debug, etc.) will be removed.
-                // This is the safest way, as console.error/warn often capture critical, unhandled issues.
-                exclude: ['log','error','warn', 'info', 'debug', 'trace', 'dir', 'dirxml', 'assert', 'count', 'time', 'timeEnd', 'group', 'groupCollapsed', 'groupEnd', 'profile', 'profileEnd', 'table', 'clear', 'timeStamp'],
+                // To remove ALL console calls, including error and warn:
+                // NOTE: This is the MOST aggressive option. 
+                // ONLY use this if you have Sentry/other external error reporting!
+                exclude: ['log', 'info', 'debug', 'trace', 'dir', 'dirxml', 'assert', 'count', 'time', 'timeEnd', 'group', 'groupCollapsed', 'groupEnd', 'profile', 'profileEnd', 'table', 'clear', 'timeStamp', 'error', 'warn'],
             }
             // In development, set it to false to keep all console statements working
             : false,
