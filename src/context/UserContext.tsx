@@ -129,11 +129,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   // Fetch user profile
   const fetchUser = useCallback(async () => {
     try {
-      console.log("[UserContext] Attempting to fetch user profile...");
+      //console.log("[UserContext] Attempting to fetch user profile...");
       const userResponse = await api.get('/users/me/');
       const userData = userResponse.data as User;
       setUser(userData);
-      console.log("[UserContext] User data fetched successfully.");
+      //console.log("[UserContext] User data fetched successfully.");
 
       // Fetch wishlist and cart data after user is set
       await Promise.all([
@@ -141,7 +141,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         fetchCart(userData.id)
       ]);
     } catch (error) {
-      console.error("[UserContext] Failed to fetch user profile:", error);
+      //console.error("[UserContext] Failed to fetch user profile:", error);
       setUser(null);
       setWishlistItems([]);
       setCartItems([]);
@@ -157,16 +157,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     setIsWishlistLoading(true);
     try {
-      console.log("[UserContext] Fetching wishlist...");
+      //console.log("[UserContext] Fetching wishlist...");
       const response = await api.get<{ results: WishlistItemApi[] }>(`/wishlist/?user=${targetUserId}`);
       const wishlistData: WishlistItem[] = response.data.results.map(item => ({
         wishlistItemId: item.id,
         productId: item.product
       }));
       setWishlistItems(wishlistData);
-      console.log(`[UserContext] Wishlist fetched: ${wishlistData.length} items`);
+      //console.log(`[UserContext] Wishlist fetched: ${wishlistData.length} items`);
     } catch (error) {
-      // console.error("[UserContext] Failed to fetch wishlist:", error);
+      // //console.error("[UserContext] Failed to fetch wishlist:", error);
       setWishlistItems([]);
     } finally {
       setIsWishlistLoading(false);
@@ -180,7 +180,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
     setIsCartLoading(true);
     try {
-      console.log("[UserContext] Fetching cart...");
+      //console.log("[UserContext] Fetching cart...");
       const response = await api.get<{ results: CartItemApi[] }>(`/cart/?user=${targetUserId}`);
       const cartData: CartItem[] = response.data.results.map(item => ({
         cartItemId: item.id,
@@ -188,9 +188,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         quantity: item.quantity
       }));
       setCartItems(cartData);
-      console.log(`[UserContext] Cart fetched: ${cartData.length} items`);
+      //console.log(`[UserContext] Cart fetched: ${cartData.length} items`);
     } catch (error) {
-      console.error("[UserContext] Failed to fetch cart:", error);
+      //console.error("[UserContext] Failed to fetch cart:", error);
       setCartItems([]);
     } finally {
       setIsCartLoading(false);
@@ -228,7 +228,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setWishlistItems(prev => [...prev, tempWishlistItem]);
 
     try {
-      console.log(`[UserContext] Adding product ${productId} to wishlist...`);
+      //console.log(`[UserContext] Adding product ${productId} to wishlist...`);
       const response = await api.post(`/wishlist/`, { product: productId });
 
       // Update with real ID
@@ -238,10 +238,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           : item
       ));
 
-      console.log(`[UserContext] Successfully added product ${productId} to wishlist`);
+      //console.log(`[UserContext] Successfully added product ${productId} to wishlist`);
       return true;
     } catch (error) {
-      console.error(`[UserContext] Failed to add product ${productId} to wishlist:`, error);
+      //console.error(`[UserContext] Failed to add product ${productId} to wishlist:`, error);
 
       // Revert optimistic update
       setWishlistItems(prev => prev.filter(item =>
@@ -262,12 +262,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setWishlistItems(prev => prev.filter(item => item.productId !== productId));
 
     try {
-      console.log(`[UserContext] Removing product ${productId} from wishlist...`);
+      //console.log(`[UserContext] Removing product ${productId} from wishlist...`);
       await api.delete(`/wishlist/${wishlistItem.wishlistItemId}/`);
-      console.log(`[UserContext] Successfully removed product ${productId} from wishlist`);
+      //console.log(`[UserContext] Successfully removed product ${productId} from wishlist`);
       return true;
     } catch (error) {
-      console.error(`[UserContext] Failed to remove product ${productId} from wishlist:`, error);
+      //console.error(`[UserContext] Failed to remove product ${productId} from wishlist:`, error);
 
       // Revert optimistic update
       setWishlistItems(prev => [...prev, wishlistItem]);
@@ -281,7 +281,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     // Check if already in cart
     const existingCartItem = cartItems.find(item => item.productId === productId);
     if (existingCartItem) {
-      console.log(`[UserContext] Product ${productId} already in cart`);
+      //console.log(`[UserContext] Product ${productId} already in cart`);
       return true;
     }
 
@@ -294,7 +294,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setCartItems(prev => [...prev, tempCartItem]);
 
     try {
-      console.log(`[UserContext] Adding product ${productId} to cart with quantity ${quantity}...`);
+      //console.log(`[UserContext] Adding product ${productId} to cart with quantity ${quantity}...`);
       const response = await api.post(`/cart/`, { product: productId, quantity });
 
       // Update with real ID
@@ -304,10 +304,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           : item
       ));
 
-      console.log(`[UserContext] Successfully added product ${productId} to cart`);
+      //console.log(`[UserContext] Successfully added product ${productId} to cart`);
       return true;
     } catch (error) {
-      console.error(`[UserContext] Failed to add product ${productId} to cart:`, error);
+      //console.error(`[UserContext] Failed to add product ${productId} to cart:`, error);
 
       // Revert optimistic update
       setCartItems(prev => prev.filter(item =>
@@ -328,12 +328,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setCartItems(prev => prev.filter(item => item.productId !== productId));
 
     try {
-      console.log(`[UserContext] Removing product ${productId} from cart...`);
+      //console.log(`[UserContext] Removing product ${productId} from cart...`);
       await api.delete(`/cart/${cartItem.cartItemId}/`);
-      console.log(`[UserContext] Successfully removed product ${productId} from cart`);
+      //console.log(`[UserContext] Successfully removed product ${productId} from cart`);
       return true;
     } catch (error) {
-      console.error(`[UserContext] Failed to remove product ${productId} from cart:`, error);
+      //console.error(`[UserContext] Failed to remove product ${productId} from cart:`, error);
 
       // Revert optimistic update
       setCartItems(prev => [...prev, cartItem]);
@@ -357,12 +357,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     ));
 
     try {
-      console.log(`[UserContext] Updating cart quantity for product ${productId} to ${newQuantity}...`);
+      //console.log(`[UserContext] Updating cart quantity for product ${productId} to ${newQuantity}...`);
       await api.patch(`/cart/${cartItem.cartItemId}/`, { quantity: newQuantity });
-      console.log(`[UserContext] Successfully updated cart quantity for product ${productId}`);
+      //console.log(`[UserContext] Successfully updated cart quantity for product ${productId}`);
       return true;
     } catch (error) {
-      console.error(`[UserContext] Failed to update cart quantity for product ${productId}:`, error);
+      //console.error(`[UserContext] Failed to update cart quantity for product ${productId}:`, error);
 
       // Revert optimistic update
       setCartItems(prev => prev.map(item =>

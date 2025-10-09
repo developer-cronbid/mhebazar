@@ -8,6 +8,7 @@ import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
 import Canonical from "@/components/Canonical"; // Assuming this is the correct path
+import "@/utils/disableConsole"; // Import the console disabling utility
 
 // Import Inter font
 const inter = Inter({
