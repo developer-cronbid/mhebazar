@@ -166,7 +166,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setWishlistItems(wishlistData);
       console.log(`[UserContext] Wishlist fetched: ${wishlistData.length} items`);
     } catch (error) {
-      console.error("[UserContext] Failed to fetch wishlist:", error);
+      // console.error("[UserContext] Failed to fetch wishlist:", error);
       setWishlistItems([]);
     } finally {
       setIsWishlistLoading(false);

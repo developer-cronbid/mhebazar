@@ -41,9 +41,9 @@ export default function WishlistPage() {
       // Assuming /wishlist/ endpoint returns a list of wishlist items for the logged-in user
       const response = await api.get<ApiResponse<WishlistItemApi>>("/wishlist/");
       setWishlistItems(response.data.results);
-      console.log("Wishlist fetched:", response.data.results);
+      // console.log("Wishlist fetched:", response.data.results);
     } catch (err: unknown) {
-      console.error("Failed to fetch wishlist:", err);
+      // console.error("Failed to fetch wishlist:", err);
       setError("Failed to load your wishlist. Please try again later.");
       toast.error("Failed to load wishlist.");
     } finally {
