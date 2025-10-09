@@ -21,7 +21,7 @@ type SearchBarProps = {
   setSearchQuery: (value: string) => void;
 };
 
-// Interface for the combined suggestion object
+// 💥 REVISED Interface for the combined suggestion object
 interface SearchSuggestion {
   id: string | number; 
   name: string;
@@ -30,6 +30,13 @@ interface SearchSuggestion {
   vendor_slug?: string;
   product_id?: number;
   user_id?: number;
+  // 💥 NEW FIELDS for Product Tag display
+  model?: string;
+  product_tags?: {
+    vendor: string;
+    category: string;
+    subcategory: string;
+  };
 }
 
 
@@ -59,7 +66,8 @@ export default function SearchBar({
 
   // Optimized API call with debouncing
   useEffect(() => {
-    if (searchQuery.length < 2) {
+    // We only perform the fetch if the query is 1 character or longer
+    if (searchQuery.length < 1) { 
       setSuggestions([]);
       setShowSuggestions(false);
       return;
@@ -87,7 +95,7 @@ export default function SearchBar({
         console.error("Failed to fetch universal search results:", error);
         setSuggestions([]);
       }
-    }, 150);
+    }, 100); // 💥 Slightly reduced debounce to 100ms for even faster typing experience
 
     return () => {
       clearTimeout(handler);
@@ -118,7 +126,6 @@ export default function SearchBar({
 
   // Start/stop voice recognition (kept as is)
   const handleMicClick = useCallback((): void => {
-    // ... (voice recognition logic) ...
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       if (typeof toast !== 'undefined' && toast.error) {
         toast.error("Voice search is not supported in this browser.");
@@ -184,7 +191,8 @@ export default function SearchBar({
   );
 
   const hasMore = visibleCount < suggestions.length;
-  const isSearchActive = searchQuery.length > 1;
+  // Changed check to 0 for immediate suggestions on first character
+  const isSearchActive = searchQuery.length >= 1; 
 
   return (
     <div className="relative w-full" ref={searchBarRef}>
@@ -237,8 +245,39 @@ export default function SearchBar({
                     <div className="flex flex-col">
                       <span className="font-medium text-gray-800">
                         {item.name}
+                        {/* Display Model for products */}
+                        {item.type === 'product' && item.model && (
+                            <span className="text-gray-500 text-xs ml-2">({item.model})</span>
+                        )}
                       </span>
+                      
+                      {/* Display Product Tags */}
+                      {item.type === 'product' && item.product_tags && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                              {/* Vendor Tag */}
+                              {item.product_tags.vendor && (
+                                <span className="text-xs text-gray-600 bg-gray-100 px-1 py-0.5 rounded-full">
+                                    {item.product_tags.vendor}
+                                </span>
+                              )}
+                              {/* Category Tag */}
+                              {item.product_tags.category && (
+                                <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded-full">
+                                    {item.product_tags.category}
+                                </span>
+                              )}
+                              {/* Subcategory Tag */}
+                              {item.product_tags.subcategory && (
+                                <span className="text-xs text-purple-600 bg-purple-50 px-1 py-0.5 rounded-full">
+                                    {item.product_tags.subcategory}
+                                </span>
+                              )}
+                          </div>
+                      )}
+
                     </div>
+                    
+                    {/* Display Type Badge */}
                     <span className="text-xs text-green-600 capitalize font-semibold bg-green-50 px-2 py-1 rounded-full">
                       {item.type.replace('_', ' ')}
                     </span>
