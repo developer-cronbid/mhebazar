@@ -22,6 +22,7 @@ import {
   Eye,
   LogIn,
   ChevronDown,
+  Home,
 } from 'lucide-react';
 
 // Shadcn UI Components
@@ -91,6 +92,7 @@ interface Rental {
   full_name: string;
   email: string;
   phone: string;
+  address: string;
   start_date: string;
   end_date: string;
   status: 'pending' | 'approved' | 'rejected';
@@ -403,6 +405,8 @@ const RentalCard = ({ rental, onCustomerClick }: { rental: Rental, onCustomerCli
             )}
             {rental.email && <InfoLine icon={<Mail size={14} />} text={rental.email} />}
             {rental.phone && <InfoLine icon={<Phone size={14} />} text={rental.phone} />}
+            {rental.address && <InfoLine icon={<Home size={14} />} text={rental.address} />}
+
           </div>
           <div className="mb-2 mt-4 font-semibold text-primary">Rental Period:</div>
           <div className="space-y-2">
