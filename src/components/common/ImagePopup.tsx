@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import Image from "next/image";
 
@@ -13,45 +12,51 @@ const ImagePopup = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/20 backdrop-blur-[2px]"
-        >
-          {/* Close Button */}
-          <motion.button
-            onClick={() => setShow(false)}
-            whileHover={{ rotate: 90, scale: 1.1 }}
-            className="absolute top-6 right-6 md:top-10 md:right-10 p-3 rounded-full backdrop-blur-md bg-white/60 hover:bg-white/80 shadow-lg transition-all duration-300"
-          >
-            <X className="w-6 h-6 text-gray-900" />
-          </motion.button>
+  if (!show) return null;
 
-          {/* Image Container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="relative rounded-2xl shadow-2xl"
-          >
-            <Image
-              src="/invite.jpg"
-              alt="Invite"
-              width={800}
-              height={500}
-              priority
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-[0_0_40px_rgba(0,0,0,0.25)]"
-            />
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+      <div className="relative pointer-events-auto animate-scaleIn">
+        {/* Close button */}
+        <button
+          onClick={() => setShow(false)}
+          aria-label="Close popup"
+          className="absolute -top-3 -right-3 bg-black/80 hover:bg-black p-2 rounded-full transition"
+        >
+          <X className="w-4 h-4 text-white" />
+        </button>
+
+        {/* Image */}
+        <Image
+          src="/invite.jpg"
+          alt="Invite"
+          width={700}
+          height={450}
+          priority
+          className="max-w-[90vw] max-h-[85vh] object-contain"
+        />
+      </div>
+
+      {/* Tailwind animation */}
+      <style jsx>{`
+        @keyframes scaleIn {
+          0% {
+            transform: scale(0.5) rotate(-5deg);
+            opacity: 0;
+          }
+          70% {
+            transform: scale(1.05) rotate(2deg);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1) rotate(0deg);
+          }
+        }
+        .animate-scaleIn {
+          animation: scaleIn 0.6s ease-out forwards;
+        }
+      `}</style>
+    </div>
   );
 };
 
