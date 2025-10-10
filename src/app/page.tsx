@@ -10,6 +10,7 @@ import { BlogCarousel } from "@/components/home/BlogCarousal";
 import Link from "next/link";
 import VendorMarquee from "@/components/home/Marquee";
 import SectionWrapper from "@/components/common/SectionWrapper"; // New component for animations
+import ImagePopup from "@/components/common/ImagePopup";
 
 export default async function HomePage() {
   return (
@@ -82,6 +83,10 @@ export default async function HomePage() {
           </SectionWrapper>
         </div>
       </div>
+
+      {/* <ImagePopup /> */}
+
+      <ImagePopup/>
     </>
   );
 }
