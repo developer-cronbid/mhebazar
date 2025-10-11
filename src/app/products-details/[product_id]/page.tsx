@@ -160,7 +160,7 @@ export default function ProductDetails() {
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">Price</dt>
-                  <dd className="text-gray-900">${product.price}</dd>
+                  <dd className="text-gray-900">₹{product.price}</dd>
                 </div>
                 <div>
                   <dt className="text-sm text-gray-500">Stock</dt>

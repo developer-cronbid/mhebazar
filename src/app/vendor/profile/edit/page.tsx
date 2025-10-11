@@ -207,19 +207,27 @@ export default function Frame() {
   const handleSubmit = async () => {
     setIsUploading(true);
     try {
+      // 💥 CRITICAL PAYLOAD FIX: The PATCH to /vendor/{id}/ handles all these fields now.
       const payload = {
-        username: formData.username,
+        username: formData.username,          // Handled by VendorUpdateSerializer.update()
+        description: formData.description,    // Handled by VendorUpdateSerializer.update()
         company_name: formData.companyName,
         company_email: formData.companyEmail,
         company_phone: formData.companyPhone,
         brand: formData.brand,
         gst_no: formData.gstNumber,
         pcode: formData.pcode,
-        description: formData.description,
       };
-      await api.patch(`/vendor/${data?.id}/`, payload);
+      
+      // 1. Update Vendor/User fields (The 403 block)
+      // This PATCH now successfully updates both User (username, description) and Vendor fields.
+      await api.patch(`/vendor/${data?.id}/`, payload); 
+      
+      // 2. Handle Profile Photo (if changed)
       if (profilePhotoFile) {
-        await uploadProfilePhoto();
+        // You are patching the User profile photo directly here, which is fine, 
+        // but it doesn't return the vendor data, so it requires the re-fetch later.
+        await uploadProfilePhoto(); 
       }
 
       let finalBannerImages = bannerImages.filter(b => !b.isNew);
