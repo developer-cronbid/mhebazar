@@ -6,57 +6,85 @@ import Image from "next/image";
 
 const ImagePopup = () => {
   const [show, setShow] = useState(false);
+  const [minimized, setMinimized] = useState(false);
 
   useEffect(() => {
+    // Show popup after 3 seconds
     const timer = setTimeout(() => setShow(true), 3000);
     return () => clearTimeout(timer);
   }, []);
 
-  if (!show) return null;
+  const handleClose = () => {
+    setShow(false);
+    setMinimized(true);
+  };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
-      <div className="relative pointer-events-auto animate-scaleIn">
-        {/* Close button */}
-        <button
-          onClick={() => setShow(false)}
-          aria-label="Close popup"
-          className="absolute -top-3 -right-3 bg-black/80 hover:bg-black p-2 rounded-full transition"
+    <>
+      {/* Full Image Popup */}
+      {show && (
+        // **************************************************************************
+        // *** CRITICAL FIX: Added `bg-transparent` to ensure the overlay is clear.
+        // **************************************************************************
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none bg-transparent">
+          <div className="relative inline-block pointer-events-auto">
+            <button
+              onClick={handleClose}
+              // Close button is now positioned on the corner of the image
+              className="absolute -top-4 -right-4 bg-black/80 hover:bg-black p-1.5 rounded-full z-10 shadow-lg"
+            >
+              <X className="w-5 h-5 text-white" />
+            </button>
+
+            <Image
+              src="/invite.jpg"
+              alt="Invite"
+              width={500}
+              height={450}
+              priority
+              className="max-w-[60vw] max-h-[85vh] rounded-xl "
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Minimized Thumbnail */}
+      {minimized && !show && (
+        <div
+          className="fixed bottom-8 left-8 z-[9999] animate-thumbnailIn cursor-pointer"
+          onClick={() => setShow(true)}
         >
-          <X className="w-4 h-4 text-white" />
-        </button>
+          <Image
+            src="/invite.jpg"
+            alt="Invite Thumbnail"
+            width={100}
+            height={100}
+            className="rounded-xl shadow-lg object-cover"
+          />
+        </div>
+      )}
 
-        {/* Image */}
-        <Image
-          src="/invite.jpg"
-          alt="Invite"
-          width={700}
-          height={450}
-          priority
-          className="max-w-[90vw] max-h-[85vh] object-contain"
-        />
-      </div>
-
-      {/* Tailwind animation */}
+      {/* Animations */}
       <style jsx>{`
-        @keyframes scaleIn {
+        @keyframes thumbnailIn {
           0% {
-            transform: scale(0.5) rotate(-5deg);
+            transform: translateY(-100vh) scale(0.5);
             opacity: 0;
           }
-          70% {
-            transform: scale(1.05) rotate(2deg);
+          60% {
+            transform: translateY(0) scale(1.1);
             opacity: 1;
           }
           100% {
-            transform: scale(1) rotate(0deg);
+            transform: translateY(0) scale(1);
+            opacity: 1;
           }
         }
-        .animate-scaleIn {
-          animation: scaleIn 0.6s ease-out forwards;
+        .animate-thumbnailIn {
+          animation: thumbnailIn 0.7s ease-out forwards;
         }
       `}</style>
-    </div>
+    </>
   );
 };
 
