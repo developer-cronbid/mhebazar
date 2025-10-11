@@ -26,7 +26,7 @@ const ImagePopup = () => {
         // **************************************************************************
         // *** CRITICAL FIX: Added `bg-transparent` to ensure the overlay is clear.
         // **************************************************************************
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none bg-transparent">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none bg-white/30 backdrop-blur-md">
           <div className="relative inline-block pointer-events-auto">
             <button
               onClick={handleClose}
@@ -39,10 +39,10 @@ const ImagePopup = () => {
             <Image
               src="/invite.jpg"
               alt="Invite"
-              width={500}
+              width={450}
               height={450}
               priority
-              className="max-w-[60vw] max-h-[85vh] rounded-xl "
+              className="max-w-[90vw] max-h-[100vh]"
             />
           </div>
         </div>
@@ -59,7 +59,7 @@ const ImagePopup = () => {
             alt="Invite Thumbnail"
             width={100}
             height={100}
-            className="rounded-xl shadow-lg object-cover"
+            className=" shadow-lg object-cover"
           />
         </div>
       )}
