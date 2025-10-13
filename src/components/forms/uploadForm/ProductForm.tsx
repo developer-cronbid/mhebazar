@@ -60,12 +60,14 @@ type Subcategory = {
 }
 
 type ProductImage = {
-    id: number;
-    image: string; // URL path to the image
-    product: number;
+  id: number;
+  image: string; // URL path to the image
+  product: number;
 }
 
 type ProductFormData = {
+  // 💥 ADDED: user field to manage ownership during create/update
+  user: string; 
   category: string;
   subcategory: string;
   name: string;
@@ -101,10 +103,8 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const [defaultCategory, setDefaultCategory] = useState<string>('')
   const [defaultSubcategory, setDefaultSubcategory] = useState<string>('')
   const [imageFiles, setImageFiles] = useState<File[]>([])
-  // ✅ FIX: Added the missing state for the new brochure file
   const [brochureFile, setBrochureFile] = useState<File | null>(null)
   
-  // Adjusted Product type for clarity on images
   const [existingImages, setExistingImages] = useState<ProductImage[]>(
     (product?.images as ProductImage[]) || []
   ); 
@@ -123,6 +123,8 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         category: String(product.category),
         subcategory: product.subcategory ? String(product.subcategory) : '',
         name: product.name,
+        // 💥 CRITICAL FIX: Set original user ID for update (prevents ownership change)
+        user: String(product.user), 
         description: product.description,
         meta_title: product.meta_title,
         meta_description: product.meta_description,
@@ -139,6 +141,8 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
           : product.product_details || {},
       }
       : {
+        // Default values for new product
+        user: '', // Will be set from context below
         direct_sale: true,
         hide_price: false,
         online_payment: false,
@@ -175,6 +179,15 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const [loading, setLoading] = useState(true)
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  // 💥 NEW EFFECT: Set the user ID for NEW products from context
+  useEffect(() => {
+    if (!product && user?.id) {
+      // Set the user ID for creation
+      setValue("user", String(user.id));
+    }
+  }, [user, product, setValue]);
+
 
   // Fetch categories
   useEffect(() => {
@@ -274,7 +287,6 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
       setKeptBrochureUrl(product.brochure);
     }
     if (product?.images) {
-        // Safe type assertion for initial existing images
         setExistingImages(product.images as ProductImage[]); 
     }
   }, [product])
@@ -283,9 +295,16 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     setIsSubmitting(true);
     const formData = new FormData();
 
-    if (user?.id) formData.append("user", String(user.id));
+    // 💥 CRITICAL FIX: Ensure user ID is the FIRST element and always sent.
+    if (data.user) {
+        formData.append("user", data.user); 
+    } else {
+        toast.error("User information is missing. Cannot proceed.");
+        setIsSubmitting(false);
+        return;
+    }
+    
     formData.append('category', data.category);
-    // Send null or empty string if subcategory is not selected/available
     formData.append('subcategory', data.subcategory || ''); 
     formData.append('name', data.name);
     formData.append('description', data.description || '');
@@ -294,7 +313,6 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     formData.append('manufacturer', data.manufacturer || '');
     formData.append('model', data.model || '');
     formData.append('price', data.price);
-    // The DRF view expects a JSON string for the 'type' JSONField
     formData.append('type', JSON.stringify(data.type || [])); 
     formData.append('direct_sale', String(data.direct_sale));
     formData.append('hide_price', String(data.hide_price));
@@ -305,8 +323,9 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     let productId: number | undefined;
 
     try {
-      const method = product ? 'patch' : 'post'; // Use patch for updates to only send partial data
+      const method = product ? 'patch' : 'post'; 
       const url = product ? `/products/${product.id}/` : '/products/';
+      
       const productResponse = await api[method](url, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -321,10 +340,9 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         brochureFormData.append('brochure', brochureFile)
         const brochureUrl = `/products/${productId}/upload_brochure/`
         try {
-          // Use POST for the upload_brochure custom action
           await api.post(brochureUrl, brochureFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
-          setKeptBrochureUrl(brochureFile.name) // Update kept URL locally
-          setBrochureFile(null) // Clear new file state
+          setKeptBrochureUrl(brochureFile.name) 
+          setBrochureFile(null) 
           toast.success("Brochure uploaded successfully")
         } catch (brochureError) {
           console.error("Failed to upload brochure:", brochureError)
@@ -335,15 +353,20 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
       // 2. New Images Upload
       if (imageFiles.length > 0) {
         const imagesFormData = new FormData()
-        // Use 'images' as the key to match ProductViewSet.upload_images
         imageFiles.forEach((img) => imagesFormData.append('images', img)) 
         const imagesUrl = `/products/${productId}/upload_images/`;
         try {
-          // Use POST for the upload_images custom action
           const response = await api.post(imagesUrl, imagesFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
-          // Update the list of existing images with the new ones from the response
-          setExistingImages(prev => [...prev, ...response.data]); 
-          setImageFiles([]); // Clear new file selection state
+          
+          // 💥 FIX: Safely handle response.data, which caused the "not iterable" error
+          const newImagesArray = Array.isArray(response.data) 
+            ? response.data 
+            : (response.data.images && Array.isArray(response.data.images))
+                ? response.data.images
+                : []; 
+          
+          setExistingImages(prev => [...prev, ...newImagesArray]); 
+          setImageFiles([]); 
           toast.success("New images uploaded successfully")
         } catch (imagesError) {
           console.error("Failed to upload images:", imagesError)
@@ -358,7 +381,6 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
           duration: 3000,
         }
       )
-      // Call onSuccess to close the sheet/modal if provided
       if (onSuccess) onSuccess(); 
     } catch (error) {
       console.error(error)
@@ -378,7 +400,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     const file = event.target.files?.[0]
     if (file && file.type === 'application/pdf') {
       setBrochureFile(file)
-      setKeptBrochureUrl(null); // Clear existing brochure link if a new one is selected
+      setKeptBrochureUrl(null); 
     } else {
       setBrochureFile(null);
       toast.warning('Please select a valid PDF file for the brochure.')
@@ -393,7 +415,6 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         toast.warning('Some files were not images and were skipped.')
       }
       setImageFiles(prev => [...prev, ...validImages])
-      // Clear the input value so the same file can be selected again
       event.target.value = ''; 
     }
   }
@@ -412,20 +433,17 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const removeExistingImage = async (imageId: number) => {
     if (!product?.id) return;
 
-    // ✅ FIX: Added Confirmation Prompt
     const confirmation = window.confirm(
       "Warning: This action cannot be reversed. Are you sure you want to permanently delete this image?"
     );
 
     if (!confirmation) {
-      return; // Stop deletion if user cancels
+      return; 
     }
 
     try {
-      // Use the 'delete-images' custom action endpoint and send image_ids in the 'data' payload
       await api.delete(`/products/${product.id}/delete-images/`, { data: { image_ids: [imageId] } })
       
-      // Update local state to remove the image from the display list
       setExistingImages(prev => prev.filter(img => img.id !== imageId)) 
       toast.success('Image removed successfully')
     } catch (error) {
@@ -437,7 +455,6 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const removeExistingBrochure = async () => {
     if (!product?.id) return
     try {
-      // Use the 'delete-brochure' custom action endpoint (DELETE method)
       await api.delete(`/products/${product.id}/delete-brochure/`)
       setKeptBrochureUrl(null);
       toast.success('Brochure removed successfully')
@@ -448,7 +465,6 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   }
 
   const renderDynamicField = (field: ProductDetailField) => {
-    // Corrected dynamic values handling to prevent type errors
     const fieldValue = dynamicValues[field.name];
 
     switch (field.type) {
