@@ -7,17 +7,15 @@ import Loading from "./loading";
 import { Toaster } from "sonner";
 import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
-import Canonical from "@/components/Canonical"; // Assuming this is the correct path
-import "@/utils/disableConsole"; // Import the console disabling utility
+import Canonical from "@/components/Canonical";
+import "@/utils/disableConsole";
 
-// Import Inter font
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
 });
 
-// Favicon version for cache busting
 const FAVICON_VERSION = "v1.2";
 
 export const metadata: Metadata = {
@@ -35,14 +33,11 @@ export const metadata: Metadata = {
   },
 };
 
-// --- FIX 1: Move viewport config from 'metadata' to the dedicated 'viewport' export ---
-// This permanently addresses the 'Unsupported metadata viewport' warning.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
 };
-// -----------------------------------------------------------------------------------
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -52,8 +47,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://api.mhebazar.in" />
-        
-        {/* Microsoft Clarity Tracking Script */}
+
+        {/* ✅ Google Analytics Script */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-QV2CVBNETT"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-QV2CVBNETT');
+            `,
+          }}
+        />
+
+        {/* Microsoft Clarity */}
         <Script
           id="clarity-script"
           strategy="afterInteractive"
@@ -67,16 +81,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             `,
           }}
         />
-        
-        {/* MANDATORY FIX: Canonical tags must be wrapped in Suspense.
-            This allows client-side hooks (usePathname, useSearchParams) to resolve
-            in a component rendered in the static RootLayout's <head>.
-        */}
+
         <Suspense>
           <Canonical />
-        </Suspense> 
-        {/* ----------------------------------------------------------- */}
-        
+        </Suspense>
       </head>
       <body className="antialiased font-sans">
 
