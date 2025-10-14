@@ -84,7 +84,7 @@ export default function SearchBar({
         // Show suggestions if the search is active (query length > 0)
         setShowSuggestions(searchQuery.length > 0); 
       } catch (error) {
-        console.error("Failed to fetch universal search results:", error);
+        // console.error("Failed to fetch universal search results:", error);
         setSuggestions([]);
         setShowSuggestions(searchQuery.length > 0); 
       }
@@ -120,7 +120,7 @@ export default function SearchBar({
       if (typeof toast !== 'undefined' && toast.error) {
         toast.error("Voice search is not supported in this browser.");
       } else {
-        console.error("Voice search is not supported in this browser.");
+        // console.error("Voice search is not supported in this browser.");
       }
       return;
     }

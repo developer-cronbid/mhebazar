@@ -7,7 +7,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useCallback, useEffect, useMemo, JSX } from "react";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card"; // Removed CardContent since it wasn't used
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -16,13 +16,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-// Import the local JSON data for categories
-import categoriesData from "@/data/categories.json";
-
 // --- START: Corrected function and image handling logic ---
 const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
-// Correct way to define a utility function outside of a component.
 const createSlug = (name: string): string => {
   // Convert to lowercase and replace spaces and parentheses with a single hyphen.
   const slug = name.toLowerCase().replace(/[\s()]+/g, '-');
@@ -30,6 +26,7 @@ const createSlug = (name: string): string => {
   // Remove any leading or trailing hyphens that might have been created.
   return slug.replace(/^-+|-+$/g, '');
 };
+
 function getFullImageUrl(imagePath: string | null): string | null {
   if (!imagePath) {
     return null;
@@ -56,7 +53,7 @@ interface Category {
 interface CategoryMenuProps {
   isOpen: boolean;
   onClose: () => void;
-  categories: Category[]; // Add this line
+  categories: Category[];
 }
 
 
@@ -70,8 +67,8 @@ const CategoryIcon = ({ category }: { category: Category }) => {
 
   if (!fullImageUrl || hasError) {
     return (
-      <div className="w-8 h-8 flex items-center justify-center bg-muted rounded-md shrink-0">
-        <Package className="w-4 h-4 text-muted-foreground" />
+      <div className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-md shrink-0">
+        <Package className="w-4 h-4 text-gray-500" />
       </div>
     );
   }
