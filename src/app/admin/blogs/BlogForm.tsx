@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from "sonner";
-import Cookies from 'js-cookie'; // Make sure you have js-cookie installed
+import Cookies from 'js-cookie'; 
 import api from '@/lib/api';
 
 // --- UI Components ---
@@ -15,6 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import dynamic from 'next/dynamic';
+
+// Assuming RichTextEditor is correctly imported here
 const RichTextEditor = dynamic(() => import('./RichTextEditor'), {
   ssr: false,
   loading: () => <div className="p-4 border rounded-md bg-gray-50">Loading Editor...</div>
@@ -29,7 +31,8 @@ export interface BlogData {
   blog_url: string;
   blog_category: string;
   author_name: string;
-  image1?: File | null;
+  // ✅ FIX 1: image1 can be a File (new), a string (old URL), or null.
+  image1?: File | string | null;
 }
 
 export interface BlogCategory {
@@ -38,7 +41,7 @@ export interface BlogCategory {
 }
 
 interface BlogFormProps {
-  formSessionId: number; // Add the new prop
+  formSessionId: number; 
   initialData: BlogData | null;
   categories: BlogCategory[];
   isOpen: boolean;
@@ -60,46 +63,55 @@ const initialFormState: BlogData = {
 const DRAFT_COOKIE_KEY = 'blogDraft';
 
 export default function BlogForm({ formSessionId, initialData, categories, isOpen, onOpenChange, onSuccess }: BlogFormProps) {
+  // Use `initialData` directly as it contains the correct type (including image URL string)
   const [formData, setFormData] = useState<BlogData>(initialFormState);
   const [editorFiles, setEditorFiles] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const isEditMode = !!initialData;
+  // Safely check if we are in edit mode
+  const isEditMode = initialData !== null;
 
   useEffect(() => {
     if (isOpen) {
-      // If editing a saved blog, use its data.
-      if (isEditMode) {
+      if (isEditMode && initialData) {
+        // Use the fetched data for editing
         setFormData(initialData);
       } else {
-        // If creating a new blog, check for a draft in cookies.
+        // Check for draft
         const draft = Cookies.get(DRAFT_COOKIE_KEY);
         if (draft) {
-          toast.info("Loaded a saved draft.");
-          // console.log("LOADING FROM COOKIE:", JSON.parse(draft));
-          setFormData(JSON.parse(draft));
+          try {
+            const draftData = JSON.parse(draft);
+            setFormData(prev => ({ ...initialFormState, ...draftData }));
+            toast.info("Loaded a saved draft.");
+          } catch (e) {
+            console.error("Failed to parse draft:", e);
+            setFormData(initialFormState);
+          }
         } else {
           setFormData(initialFormState);
         }
       }
     } else {
-      // Reset form when the sheet is closed
-      setFormData(initialFormState);
+      // Reset form when the sheet is closed only if not in edit mode
+      // For edit mode, we let the parent component manage the state
       setEditorFiles([]);
     }
   }, [isOpen, initialData, isEditMode]);
 
-  // ✅ HELPER FUNCTION to update state and save draft to cookie
+  // HELPER FUNCTION to update state and save draft to cookie
   const updateAndSaveDraft = (updatedValues: Partial<BlogData>) => {
-    const newFormData = { ...formData, ...updatedValues };
-    setFormData(newFormData);
-    // Only save to cookies if we are in "create" mode (not editing a pre-existing blog)
-    if (!isEditMode) {
-      // We don't save the File object in cookies, so we exclude it.
-      const { image1, ...dataToSave } = newFormData;
-      // console.log("SAVING TO COOKIE:", dataToSave); 
-      Cookies.set(DRAFT_COOKIE_KEY, JSON.stringify(dataToSave), { expires: 1 }); // Expires in 24 hours
-    }
+    setFormData(prev => {
+        const newFormData = { ...prev, ...updatedValues };
+        
+        // Only save to cookies if we are in "create" mode (not editing a pre-existing blog)
+        if (!isEditMode) {
+            // We only save string fields to the cookie, excluding actual File objects.
+            const { image1, ...dataToSave } = newFormData;
+            Cookies.set(DRAFT_COOKIE_KEY, JSON.stringify(dataToSave), { expires: 1 }); 
+        }
+        return newFormData;
+    });
   };
 
 
@@ -115,6 +127,14 @@ export default function BlogForm({ formSessionId, initialData, categories, isOpe
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFormData(prev => ({ ...prev, image1: e.target.files![0] }));
+    } else if (isEditMode) {
+        // If in edit mode and file is cleared, set image1 to null 
+        // to optionally delete the file on the server (if API is designed that way) 
+        // or just keep the old string URL if prev.image1 was a string.
+        // For safety, we set it to null if the user actively clears the input.
+        setFormData(prev => ({ ...prev, image1: null }));
+    } else {
+      setFormData(prev => ({ ...prev, image1: null }));
     }
   };
 
@@ -124,6 +144,8 @@ export default function BlogForm({ formSessionId, initialData, categories, isOpe
 
     let processedHtml = formData.description;
     const finalFiles: File[] = [];
+    
+    // Logic for handling editor images (leaving as is since it wasn't the issue)
     if (editorFiles.length > 0) {
       const tempUrlToFileMap = new Map<string, File>();
       editorFiles.forEach(file => {
@@ -145,28 +167,53 @@ export default function BlogForm({ formSessionId, initialData, categories, isOpe
 
     const data = new FormData();
     Object.entries(formData).forEach(([key, value]) => {
+      // ✅ FIX 3: Exclude image1 from this loop entirely. 
+      // This prevents the old image URL string from being sent as a regular form field.
       if (key !== 'image1' && value !== null && value !== '') {
-        data.append(key, value as string);
+        data.append(key, value as string | Blob);
       }
     });
-    if (formData.image1) data.append('image1', formData.image1);
+
+    // ✅ FIX 4: ONLY append image1 to FormData if it is a new File object.
+    // This solves the "The submitted data was not a file" error.
+    if (formData.image1 instanceof File) {
+        data.append('image1', formData.image1);
+    } 
+    // If formData.image1 is a string (old URL) or null, it is correctly omitted from FormData.
+
     finalFiles.forEach(file => data.append('editor_images', file));
     data.set('description', processedHtml);
 
     try {
-      const url = isEditMode && initialData.blog_url ? `/blogs/${initialData.blog_url}/` : '/blogs/';
+      // Safe access for blog_url in edit mode
+      const url = isEditMode && initialData?.blog_url ? `/blogs/${initialData.blog_url}/` : '/blogs/';
       const method = isEditMode ? 'patch' : 'post';
 
-      await api[method](url, data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      // NOTE: For FormData, the 'Content-Type': 'multipart/form-data' header 
+      // is often set automatically by the browser/axios with the correct boundary. 
+      // If it works without the header, omit it. Keeping it here if your API library 
+      // specifically requires it, but removing it (as done in the previous step) 
+      // is generally the correct approach for FormData.
+      await api[method](url, data, { headers: { 'Content-Type': 'multipart/form-data' } }); 
+      
       toast.success(`Blog ${isEditMode ? 'updated' : 'created'} successfully!`);
 
-      // ✅ Clear the draft from cookies on successful submission
+      // Clear the draft from cookies on successful submission
       Cookies.remove(DRAFT_COOKIE_KEY);
 
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || `Failed to ${isEditMode ? 'update' : 'create'} blog.`);
+      // Improved error message handling
+      const errorData = error.response?.data;
+      let errorMessage = `Failed to ${isEditMode ? 'update' : 'create'} blog.`;
+
+      if (errorData) {
+          // Check for the specific image error or general detail
+          errorMessage = errorData.image1?.[0] || errorData.detail || errorMessage;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -200,7 +247,7 @@ export default function BlogForm({ formSessionId, initialData, categories, isOpe
               </div>
               <div>
                 <Label htmlFor="blog_category">Category</Label>
-                {/* ✅ Use the dedicated handler for select change */}
+                {/* Use the dedicated handler for select change */}
                 <Select name="blog_category" value={String(formData.blog_category)} onValueChange={handleSelectChange} required>
                   <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                   <SelectContent>
@@ -221,19 +268,17 @@ export default function BlogForm({ formSessionId, initialData, categories, isOpe
               <div className='w-full'>
                 <Label htmlFor="image1">Main Blog Image</Label>
                 <Input id="image1" name="image1" type="file" onChange={handleFileChange} accept="image/*" />
-                {isEditMode && <p className="text-xs text-gray-500 mt-1">Leave blank to keep current image.</p>}
+                {isEditMode && <p className="text-xs text-gray-500 mt-1">Leave blank to keep current image. Current URL: {typeof formData.image1 === 'string' && formData.image1 ? 'Yes' : 'No'}</p>}
               </div>
             </div>
 
             <div>
               <Label>Blog Content</Label>
               <RichTextEditor
-                key={formSessionId} // Keep the key from the previous step
+                key={formSessionId} 
                 initialData={formData.description}
                 onFilesChange={(files) => setEditorFiles(files)}
                 onChange={(data) => {
-                  // Only save changes to the cookie if the form is actually open.
-                  // This prevents the final "on-close" event from erasing the data.
                   if (isOpen) {
                     updateAndSaveDraft({ description: data });
                   }
