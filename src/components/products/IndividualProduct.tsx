@@ -744,9 +744,9 @@ export default function ProductSection({ productId }: ProductSectionProps) {
     Array.isArray(data.type) &&
     (data.type.includes("rental") || data.type.includes("used"));
   
-  // ✅ FIX: Allow essential punctuation in the display title
+  // ✅ FIX: Clean the display title to allow all necessary punctuation for UI presentation
   const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${data.model} `
-    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") // Allow . - ( ) / \ *
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") // Allow . - ( ) / \ * and spaces
     .replace(/\s+/g, " ")
     .trim();
 

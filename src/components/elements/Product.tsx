@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useUser } from "@/context/UserContext"; // Make sure useUser is imported
+import { useUser } from "@/context/UserContext"; 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import QuoteForm from "../forms/enquiryForm/quotesForm";
@@ -29,16 +29,26 @@ const imgUrl =
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
-  // Preserve essential punctuation (. - ( ) / \ *) for better readability in the URL slug,
-  // but strip most other special characters.
-  return (text || "")
+  // 1. Convert to lowercase, trim.
+  let slug = (text || '')
     .toString()
     .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\-\.\(\)/\\*]+/g, "-") // Replaces non-allowed chars with a hyphen
-    .replace(/\s+/g, "-")
-    .replace(/--+/g, "-")
-    .replace(/-+$/, "");
+    .trim();
+
+  // 2. Replace unwanted characters with a space first. 
+  // Allowed characters for the URL slug are a-z, 0-9, and period (.).
+  // Everything else (including -, /, (, ), \) is replaced by a space.
+  slug = slug.replace(/[^a-z0-9\.\s]/g, ' ');
+
+  // 3. Collapse multiple spaces into a single hyphen (-).
+  // This is the desired primary separator.
+  slug = slug.replace(/\s+/g, '-');
+
+  // 4. Remove leading/trailing hyphens or periods.
+  slug = slug.replace(/^-+|-+$/g, '');
+  slug = slug.replace(/^\.+|\.+$/g, '');
+
+  return slug;
 };
 
 // Interface for ProductCard display props
@@ -158,12 +168,12 @@ const ProductCard = ({
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
-  // ✅ FIX: Generate slug from the clean title which preserves punctuation
+  // ✅ FIX: Generate slug using the updated slugify logic
   const cleanTitleForSlug = `${(productData.user_name || "").replace("_", " ")} ${
     title || ""
   } ${productData.model || ""}`.trim();
   const productSlug = slugify(cleanTitleForSlug);
-  const productDetailUrl = `/product/${productSlug}-${id}`;
+  const productDetailUrl = `/product/${productSlug}-${id}`; // Use hyphen to separate slug and ID
 
   // Determine button text and form based on page URL type
   const isRentalPage = pageUrlType === "rental";
@@ -223,7 +233,7 @@ const ProductCard = ({
     return differenceInMs <= thirtyDaysInMs;
   };
   
-  // ✅ FIX: Clean the displayed title, allowing punctuation
+  // ✅ FIX: Clean the displayed title, allowing all required punctuation for display
   const displayTitle = `${(productData.user_name || "").replace("_", " ")} ${
     title || ""
   } ${productData.model || ""}`

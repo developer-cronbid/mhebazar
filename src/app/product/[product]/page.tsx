@@ -8,7 +8,7 @@ import VendorProducts from '@/components/elements/VendorFeaturedProducts';
 import CategoryProducts from '@/components/elements/CategoryProducts';
 import styles from './page.module.css';
 
-// Helper function for SEO-friendly slug generation
+// Helper function for SEO-friendly slug generation (Canonical URL)
 const slugify = (text: string): string => {
   // 1. Convert to lowercase, trim.
   let slug = (text || '')
@@ -16,16 +16,17 @@ const slugify = (text: string): string => {
     .toLowerCase()
     .trim();
 
-  // 2. Replace unwanted characters with a space first. 
-  // Allowed characters: letters (a-z), numbers (0-9), period (.), and braces (()).
-  // All others (including -, /) are replaced by a space.
-  slug = slug.replace(/[^a-z0-9\.\(\)\s]/g, ' ');
+  // 2. Replace unwanted characters with a space first.
+  // CRITICAL FIX: Allowed characters for the URL slug are a-z, 0-9, and period (.).
+  // All other characters, including hyphens (-) and braces, are replaced by a space.
+  slug = slug.replace(/[^a-z0-9\.\s]/g, ' ');
 
-  // 3. Collapse multiple spaces into a single period (.)
-  // Using a period as the primary separator as requested, instead of a hyphen.
-  slug = slug.replace(/\s+/g, '.');
+  // 3. FIX: Collapse multiple spaces into a single hyphen (-).
+  // This is the desired primary separator.
+  slug = slug.replace(/\s+/g, '-');
 
-  // 4. Remove leading/trailing periods
+  // 4. Remove leading/trailing hyphens or periods.
+  slug = slug.replace(/^-+|-+$/g, '');
   slug = slug.replace(/^\.+|\.+$/g, '');
 
   return slug;
@@ -37,7 +38,7 @@ export async function generateMetadata({
 }: {
   params: { product: string };
 }) {
-  // Note: The product parameter might contain periods from the new slugify function.
+  // We use the hyphen (-) to reliably split the slug from the product ID.
   const productId = parseInt(params.product.split('-').pop() || '', 10);
 
   // Validate ID early
@@ -75,7 +76,7 @@ export default async function IndividualProductPage({
 }) {
   let productId: number;
   let productSlugFromUrl: string;
-  let separator = '-'; // We assume the ID is still separated by a hyphen from the slug in the URL param.
+  let separator = '-'; // The reliable separator between the slug and the ID in the URL parameter.
 
   // Case 1: Handle old query parameter URLs like /product?id=123
   if (searchParams.id) {
@@ -83,7 +84,8 @@ export default async function IndividualProductPage({
     // Use a placeholder slug for now
     productSlugFromUrl = params.product || 'product';
   } else {
-    // Case 2: Handle slug-based URLs like /product/forklift.123
+    // Case 2: Handle slug-based URLs like /product/forklift-123
+    // We split on the hyphen, assuming it only separates the slug from the ID.
     const parts = params.product.split(separator);
     productId = parseInt(parts.pop() || '', 10);
     productSlugFromUrl = parts.join(separator); // The slug part is everything before the last separator
@@ -107,7 +109,7 @@ export default async function IndividualProductPage({
   const productTitleForSlug = `${productData.user_name || ''} ${productData.name} ${productData.model || ''}`;
   const canonicalProductSlug = slugify(productTitleForSlug);
 
-  // Check if the URL slug matches the canonical slug
+  // If the URL slug doesn't match the canonical slug, redirect to the correct URL
   if (productSlugFromUrl !== canonicalProductSlug) {
     // Redirect to the correct URL with the hyphen separator for the ID
     const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
@@ -116,14 +118,15 @@ export default async function IndividualProductPage({
   
   // If the old query param URL was used, redirect to the new format
   if (searchParams.id) {
+    // Redirect to the correct URL with the hyphen separator for the ID
     const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
     redirect(canonicalUrl);
   }
 
   const { category_name, subcategory_name, name: productName } = productData;
-  // Clean the product name for Breadcrumb display (allowing punctuation)
+  // Clean the product name for Breadcrumb display (allowing all required punctuation)
   const product = productName
-    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") // Keep display title clean but readable
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") 
     .replace(/\s+/g, " ")
     .trim()
   const cat_slug = category_name.toLowerCase().replace(/\s+/g, '-');
@@ -134,7 +137,6 @@ export default async function IndividualProductPage({
       <Breadcrumb
         items={[
           { label: 'Home', href: '/' },
-          // Use original category names in slugs to prevent redirect loops if they contain disallowed characters
           { label: category_name, href: `/${cat_slug}` },
           ...(subcategory_name ? [{ label: subcategory_name, href: `/${cat_slug}/${subcat_slug}` }] : []),
           // Use the canonical slug for the product link
@@ -142,7 +144,6 @@ export default async function IndividualProductPage({
         ]}
       />
 
-      {/* Pass the ID and slug to the client component */}
       <ProductSection productSlug={params.product} productId={productId} />
 
       <div className={styles.animatedSection}>
