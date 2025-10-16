@@ -1,4 +1,4 @@
-// src/components/SearchBar.tsx
+// src/components/SearchBar.tsx - FINAL STABLE CODE
 "use client";
 
 import { Search, Mic } from "lucide-react";
@@ -6,6 +6,8 @@ import { useRef, useState, useEffect, useCallback, JSX, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api"; 
+// You MUST ensure you have a debounce utility available (e.g., install lodash or define one)
+import { debounce } from "lodash"; 
 
 declare const toast: { error: (message: string) => void };
 
@@ -21,7 +23,8 @@ type SearchBarProps = {
 interface SearchSuggestion {
   id: string | number; 
   name: string;
-  type: 'vendor' | 'vendor_category' | 'vendor_subcategory' | 'product' | 'category' | 'subcategory' | 'product_type';
+  // Included 'vendor_product' type for hierarchy
+  type: 'vendor' | 'vendor_category' | 'vendor_product' | 'product' | 'category' | 'subcategory' | 'product_type';
   category_slug?: string;
   subcategory_slug?: string; 
   vendor_slug?: string;
@@ -35,12 +38,12 @@ interface SearchSuggestion {
   };
 }
 
-
 const createSlug = (name: string): string =>
   name?.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "";
 
 const INITIAL_VISIBLE_COUNT = 20;
 const LOAD_MORE_STEP = 30;
+const DEBOUNCE_TIME = 300; // FIX: Stable debounce time (used to be 100)
 
 export default function SearchBar({
   searchQuery,
@@ -57,18 +60,19 @@ export default function SearchBar({
   useEffect(() => {
     setVisibleCount(INITIAL_VISIBLE_COUNT);
   }, [searchQuery]);
-
-  useEffect(() => {
-    if (searchQuery.length < 1) { 
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    const handler = setTimeout(async () => {
+  
+  // 1. Stable debounce function
+  const fetchSuggestions = useCallback(
+    debounce(async (query: string) => {
+      if (query.length < 1) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+      
       try {
         const response = await api.get<SearchSuggestion[]>(
-          `/search/universal/?search=${encodeURIComponent(searchQuery)}`
+          `/search/universal/?search=${encodeURIComponent(query)}`
         );
 
         const newSuggestions: SearchSuggestion[] = response.data || [];
@@ -81,19 +85,32 @@ export default function SearchBar({
         const filteredSuggestions = Array.from(uniqueSuggestionsMap.values());
         
         setSuggestions(filteredSuggestions);
-        // Show suggestions if the search is active (query length > 0)
-        setShowSuggestions(searchQuery.length > 0); 
+        setShowSuggestions(query.length > 0); 
+
       } catch (error) {
-        // console.error("Failed to fetch universal search results:", error);
         setSuggestions([]);
-        setShowSuggestions(searchQuery.length > 0); 
+        setShowSuggestions(query.length > 0); 
       }
-    }, 100); 
+    }, DEBOUNCE_TIME), 
+    [] // Stable function
+  );
+
+  // 2. Main search effect now calls the stable debounced function
+  useEffect(() => {
+    if (searchQuery.length < 1) { 
+        fetchSuggestions.cancel();
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+    }
+    
+    fetchSuggestions(searchQuery);
 
     return () => {
-      clearTimeout(handler);
+        fetchSuggestions.cancel();
     };
-  }, [searchQuery]);
+  }, [searchQuery, fetchSuggestions]);
+
 
   const visibleSuggestions = useMemo(() => {
     return suggestions.slice(0, visibleCount);
@@ -116,11 +133,10 @@ export default function SearchBar({
   }, []);
 
   const handleMicClick = useCallback((): void => {
+    // ... (Voice search logic remains the same) ...
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       if (typeof toast !== 'undefined' && toast.error) {
         toast.error("Voice search is not supported in this browser.");
-      } else {
-        // console.error("Voice search is not supported in this browser.");
       }
       return;
     }
@@ -139,13 +155,8 @@ export default function SearchBar({
         setShowSuggestions(true);
       };
 
-      recognitionRef.current.onerror = (): void => {
-        setListening(false);
-      };
-
-      recognitionRef.current.onend = (): void => {
-        setListening(false);
-      };
+      recognitionRef.current.onerror = (): void => { setListening(false); };
+      recognitionRef.current.onend = (): void => { setListening(false); };
     }
 
     if (!listening) {
@@ -160,22 +171,24 @@ export default function SearchBar({
   const handleSuggestionClick = useCallback(
     (item: SearchSuggestion) => {
       setShowSuggestions(false);
-      setSearchQuery("");
+      // FIX: Set the search query to the item name (do NOT clear it)
+      setSearchQuery(item.name); 
 
       if (item.type === "vendor" && item.vendor_slug) {
         router.push(`/vendor-listing/${item.vendor_slug}`);
       } else if (item.type === "vendor_category" && item.vendor_slug && item.category_slug) {
         router.push(`/vendor-listing/${item.vendor_slug}?page=1&category=${item.category_slug}`);
-      } else if (item.type === "category" && item.name) {
-        router.push(`/${createSlug(item.name)}`);
+      } else if (item.type === "category" && item.category_slug) {
+        router.push(`/${item.category_slug}`);
       } 
-      // CORRECTED ROUTING: /category-slug/subcategory-slug
       else if (item.type === "subcategory" && item.category_slug && item.subcategory_slug) {
         router.push(`/${item.category_slug}/${item.subcategory_slug}`); 
       } 
       else if (item.type === "product_type" && item.category_slug) {
         router.push(`/${item.category_slug}`);
-      } else if (item.type === "product" && item.name && item.product_id) {
+      } 
+      // FIX: Handle both 'product' and the new 'vendor_product' type
+      else if ((item.type === "product" || item.type === "vendor_product") && item.name && item.product_id) {
         router.push(`/product/${createSlug(item.name)}-${item.product_id}`);
       }
     },
@@ -192,7 +205,14 @@ export default function SearchBar({
         placeholder="Search by Products, Categories, Vendors..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        onFocus={() => isSearchActive && setShowSuggestions(true)}
+        // FIX: Re-open on focus only if there are results
+        onFocus={() => isSearchActive && suggestions.length > 0 && setShowSuggestions(true)}
+        onKeyDown={(e) => {
+             if (e.key === 'Enter' && searchQuery.trim()) {
+                router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+                setShowSuggestions(false);
+             }
+          }}
         className="w-full px-4 py-2 pl-12 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base transition-shadow h-10"
         autoComplete="off"
       />
@@ -225,7 +245,7 @@ export default function SearchBar({
             transition={{ duration: 0.15 }}
             className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto no-scrollbar"
           >
-            {visibleSuggestions.length > 0 ? (
+            {suggestions.length > 0 ? (
               <>
                 {visibleSuggestions.map((item) => (
                   <div
@@ -236,12 +256,14 @@ export default function SearchBar({
                     <div className="flex flex-col flex-1 min-w-0">
                       <span className="font-medium text-gray-800 break-words">
                         {item.name}
-                        {item.type === 'product' && item.model && (
+                        {/* Show model for product/vendor_product types */}
+                        {(item.type === 'product' || item.type === 'vendor_product') && item.model && (
                             <span className="text-gray-500 text-xs ml-2">({item.model})</span>
                         )}
                       </span>
                       
-                      {item.type === 'product' && item.product_tags && (
+                      {/* Show product tags for product/vendor_product types */}
+                      {(item.type === 'product' || item.type === 'vendor_product') && item.product_tags && (
                           <div className="flex flex-wrap gap-1 mt-1">
                               {item.product_tags.vendor && (
                                 <span className="text-xs text-gray-600 bg-gray-100 px-1 py-0.5 rounded-full whitespace-nowrap">
@@ -263,6 +285,7 @@ export default function SearchBar({
 
                     </div>
                     
+                    {/* Item Type Tag */}
                     <span className="text-xs text-green-600 capitalize font-semibold bg-green-50 px-2 py-1 rounded-full ml-3 flex-shrink-0">
                       {item.type.replace('_', ' ')}
                     </span>
@@ -277,10 +300,20 @@ export default function SearchBar({
                     Load More ({suggestions.length - visibleCount} remaining)
                   </div>
                 )}
+                
+                 <div 
+                    className="p-3 text-center text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-50 transition border-t"
+                    onClick={() => {
+                        router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+                        setShowSuggestions(false);
+                    }}
+                  >
+                    Search all results for **"{searchQuery}"**
+                  </div>
               </>
             ) : (
                 <div className="p-4 text-center text-gray-400">
-                    {/* Hides "No results found" */}
+                    No perfect matches found. Try refining your search.
                 </div>
             )}
           </motion.div>
