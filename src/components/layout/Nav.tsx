@@ -306,7 +306,7 @@ export default function Navbar(): JSX.Element {
                   </DropdownMenuTrigger>
 
                   {/* Dropdown Menu Content - No major change, standard logic */}
-                  <DropdownMenuContent className="w-64" align="end">
+                  <DropdownMenuContent className="w-64 z-[102]" align="end">
                     {user ? (
                       <>
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
