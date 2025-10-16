@@ -27,7 +27,7 @@ const imgUrl =
   process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL ||
   process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
-// Helper function for SEO-friendly slug
+// Helper function for SEO-friendly slug (URL part - unchanged as requested)
 const slugify = (text: string): string => {
   // 1. Convert to lowercase, trim.
   let slug = (text || '')
@@ -41,7 +41,7 @@ const slugify = (text: string): string => {
   slug = slug.replace(/[^a-z0-9\.\s]/g, ' ');
 
   // 3. Collapse multiple spaces into a single hyphen (-).
-  // This is the desired primary separator.
+  // This is the desired primary separator for URL slugs.
   slug = slug.replace(/\s+/g, '-');
 
   // 4. Remove leading/trailing hyphens or periods.
@@ -168,7 +168,7 @@ const ProductCard = ({
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
-  // ✅ FIX: Generate slug using the updated slugify logic
+  // ✅ Slug: Use the perfect slugify function
   const cleanTitleForSlug = `${(productData.user_name || "").replace("_", " ")} ${
     title || ""
   } ${productData.model || ""}`.trim();
@@ -233,11 +233,12 @@ const ProductCard = ({
     return differenceInMs <= thirtyDaysInMs;
   };
   
-  // ✅ FIX: Clean the displayed title, allowing all required punctuation for display
+  // ✅ FIX: Clean the displayed title, allowing all requested punctuation for UI presentation
   const displayTitle = `${(productData.user_name || "").replace("_", " ")} ${
     title || ""
   } ${productData.model || ""}`
-    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") // Allow . - ( ) / \ *
+    // Allow letters, numbers, spaces, and all requested punctuation marks.
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%]/g, "") 
     .replace(/\s+/g, " ")
     .trim();
 

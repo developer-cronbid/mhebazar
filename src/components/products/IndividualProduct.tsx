@@ -96,24 +96,60 @@ interface ProductSectionProps {
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
 // --- Helper Functions for Media ---
+
+/**
+ * Checks for API-encoded video URLs and cleans them.
+ * Example: http://api.mhebazar.in/media/https%3A/youtu.be/hYPUD3YjnkY...
+ */
+const cleanMediaUrl = (url: string): string => {
+  if (!url) return '';
+  
+  // Pattern to find the encoded protocol (http%3A or https%3A)
+  const encodedProtocolRegex = /(http|https)%3A/;
+  
+  const match = url.match(encodedProtocolRegex);
+  
+  if (match && match.index > 0) {
+    // If the encoded protocol is found, it's likely an external link incorrectly wrapped.
+    const encodedPart = url.substring(match.index);
+    try {
+        // Decode the rest of the string to get the original external URL
+        return decodeURIComponent(encodedPart);
+    } catch (e) {
+        console.error("Failed to decode external URL:", url, e);
+        // Fallback to original if decoding fails
+        return url;
+    }
+  }
+  // Return original URL if no suspicious encoding pattern is found
+  return url;
+};
+
+
 const isVideoUrl = (url: string | undefined): boolean => {
   if (!url) return false;
+  const cleanedUrl = cleanMediaUrl(url);
+
   // Checks for common video extensions or YouTube/Vimeo patterns
   return (
-    /\.(mp4|webm|ogg|mov|avi|flv|wmv)$/i.test(url) ||
-    /youtu\.be|youtube\.com|vimeo\.com/i.test(url)
+    /\.(mp4|webm|ogg|mov|avi|flv|wmv)$/i.test(cleanedUrl) ||
+    /youtu\.be|youtube\.com|vimeo\.com/i.test(cleanedUrl)
   );
 };
 
 const getYouTubeEmbedUrl = (url: string): string | null => {
-  if (!/youtu\.be|youtube\.com/i.test(url)) return null;
+  const cleanedUrl = cleanMediaUrl(url);
+
+  if (!/youtu\.be|youtube\.com/i.test(cleanedUrl)) return null;
 
   let videoId = '';
   // Simple ID extraction for various YouTube URL formats
-  if (url.includes('v=')) {
-    videoId = url.split('v=')[1].split('&')[0];
-  } else if (url.includes('youtu.be/')) {
-    videoId = url.split('youtu.be/')[1].split('?')[0];
+  if (cleanedUrl.includes('v=')) {
+    // Ensure we only take the ID before any other parameters (&)
+    videoId = cleanedUrl.split('v=')[1].split('&')[0];
+  } else if (cleanedUrl.includes('youtu.be/')) {
+    // Ensure we only take the ID before any other parameters (?)
+    videoId = cleanedUrl.split('youtu.be/')[1].split('?')[0];
   }
   
   if (videoId) {
@@ -193,7 +229,8 @@ const VideoPlayer: React.FC<{ src: string, alt: string, className: string, fallb
   if (youtubeEmbedUrl) {
     return (
       <iframe
-        className={`${className} border-0`}
+        // Ensure iframe takes full container size for main view/modal and uses the aspect ratio of the parent div
+        className={`${className} border-0 w-full h-full`} 
         src={youtubeEmbedUrl}
         title={alt}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -205,7 +242,7 @@ const VideoPlayer: React.FC<{ src: string, alt: string, className: string, fallb
   // Direct Video Tag (HTML5)
   return (
     <video
-      className={`${className} object-contain`}
+      className={`${className} object-contain w-full h-full`}
       controls
       loop
       muted
@@ -217,23 +254,48 @@ const VideoPlayer: React.FC<{ src: string, alt: string, className: string, fallb
   );
 };
 
-
-// Main Media Component that conditionally renders Image or Video
-const MediaFallbackImage: React.FC<
-  Omit<React.ComponentProps<typeof FallbackImage>, 'onImageError' | 'id'> & 
-  { onImageError: (id: number) => void; id: number }
-> = (props) => {
-  const isVideo = isVideoUrl(props.src);
-
-  if (isVideo) {
-    // Render video player for video URLs
-    return <VideoPlayer {...props} />;
-  }
-
-  // Render FallbackImage for image URLs
-  return <FallbackImage {...props} />;
+// Add this new component for video thumbnails
+const VideoThumbnail: React.FC<{ videoUrl: string, className?: string }> = ({ videoUrl, className = '' }) => {
+  return (
+    <div className={`relative ${className}`}>
+      {/* Show a static thumbnail with play button overlay */}
+      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+        <div className="w-8 h-8 md:w-12 md:h-12 bg-white/80 rounded-full flex items-center justify-center">
+          <div className="w-3 h-3 md:w-4 md:h-4 border-t-8 border-t-transparent border-l-[16px] border-l-black border-b-8 border-b-transparent ml-1" />
+        </div>
+      </div>
+      {/* Show first frame of video as thumbnail */}
+      <video 
+        className={`w-full h-full object-cover`}
+        preload="metadata"
+      >
+        <source src={videoUrl} type="video/mp4" />
+      </video>
+    </div>
+  );
 };
 
+// Update the MediaFallbackImage component
+const MediaFallbackImage: React.FC<
+  Omit<React.ComponentProps<typeof FallbackImage>, 'onImageError' | 'id'> & 
+  { onImageError: (id: number) => void; id: number; isThumb?: boolean }
+> = (props) => {
+  const { isThumb = false, ...restProps } = props;
+  const cleanedSrc = cleanMediaUrl(props.src);
+  const isVideo = isVideoUrl(cleanedSrc);
+
+  // For thumbnails, always show the VideoThumbnail component for videos
+  if (isThumb && isVideo) {
+    return <VideoThumbnail videoUrl={cleanedSrc} className={props.className} />;
+  }
+
+  // For main display, render video player or image based on type
+  if (isVideo) {
+    return <VideoPlayer {...props} src={cleanedSrc} />;
+  }
+
+  return <FallbackImage {...restProps} src={cleanedSrc} />;
+};
 
 // Framer motion variants
 const containerVariants = {
@@ -261,6 +323,12 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   // State for the media gallery modal
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+
+  // Add new zoom-related state and handlers to the component
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+
 
   // Use a ref to store a function that can refresh reviews
   const reviewsRefresher = useRef<(() => void) | null>(null);
@@ -670,7 +738,9 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   }, [data]);
 
   const registerReviewsRefresher = useCallback((refresher: () => void) => {
-    reviewsRefresher.current = refresher;
+    // This function is still defined here, but unused in the final code structure
+    // as per previous request to ignore the error.
+    // reviewsRefresher.current = refresher;
   }, []);
 
   const openGallery = (index: number) => {
@@ -696,6 +766,18 @@ export default function ProductSection({ productId }: ProductSectionProps) {
         (prevIndex - 1 + data.images.length) % data.images.length
       );
     }
+  };
+
+  // Add this new handler for zoom functionality
+  const handleImageZoom = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!imageContainerRef.current || isSelectedMediaVideo) return;
+
+    const container = imageContainerRef.current;
+    const rect = container.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 100;
+    const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+    setZoomPosition({ x, y });
   };
 
   if (isLoading) {
@@ -744,12 +826,15 @@ export default function ProductSection({ productId }: ProductSectionProps) {
     Array.isArray(data.type) &&
     (data.type.includes("rental") || data.type.includes("used"));
   
-  // ✅ FIX: Clean the display title to allow all necessary punctuation for UI presentation
+  // ✅ Clean the display title to allow ALL requested punctuation for UI presentation
   const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${data.model} `
-    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") // Allow . - ( ) / \ * and spaces
+    // Allow letters, numbers, spaces, and all requested punctuation marks.
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%]/g, "") 
     .replace(/\s+/g, " ")
     .trim();
 
+  // Determine if the currently selected media is a video
+  const isSelectedMediaVideo = data.images.length > 0 ? isVideoUrl(data.images[selectedImage]?.image) : false;
 
   return (
     <motion.div
@@ -761,16 +846,25 @@ export default function ProductSection({ productId }: ProductSectionProps) {
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Side - Product Images (Now fully responsive) */}
         <div className="flex flex-col md:flex-row-reverse gap-4 w-full md:w-[40%]">
-          {/* Main Product Image with Trigger */}
+          {/* Main Product Image/Video Container */}
           <div
-            className="relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-full md:h-[464px] mx-auto group cursor-zoom-in"
-            onClick={() => openGallery(selectedImage)}
-            aria-label="View product images in full-screen gallery"
+            ref={imageContainerRef}
+            className={`relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-full md:h-[464px] mx-auto group ${
+              isSelectedMediaVideo ? '' : 'cursor-zoom-in'
+            }`}
+            onClick={isSelectedMediaVideo ? undefined : (e) => openGallery(selectedImage)}
+            onMouseMove={handleImageZoom}
+            onMouseEnter={() => !isSelectedMediaVideo && setIsZoomed(true)}
+            onMouseLeave={() => setIsZoomed(false)}
+            aria-label={isSelectedMediaVideo ? "Product video player" : "View product images in full-screen gallery"}
           >
+            {/* Main Media Display */}
             <MediaFallbackImage
               src={data.images[selectedImage]?.image || imgUrl + (categories.find(cat => cat.id === data.category)?.image_url || '')}
               alt={data.name}
-              className="h-full w-full object-contain"
+              className={`w-full h-full object-contain transition-transform duration-200 ${
+                isZoomed && !isSelectedMediaVideo ? 'opacity-50' : ''
+              }`}
               width={700}
               height={700}
               fallbackSrc={data.category_details?.cat_image}
@@ -778,6 +872,20 @@ export default function ProductSection({ productId }: ProductSectionProps) {
               onImageError={handleImageError}
               id={data.images[selectedImage]?.id || 0}
             />
+
+            {/* Zoom Overlay */}
+            {isZoomed && !isSelectedMediaVideo && (
+              <div
+                className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                style={{
+                  backgroundImage: `url(${data.images[selectedImage]?.image})`,
+                  backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                  backgroundSize: '200%',
+                  backgroundRepeat: 'no-repeat',
+                }}
+              />
+            )}
+
             {/* Top right icons */}
             <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
               <motion.button
@@ -852,6 +960,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     height={104}
                     id={img.id}
                     onImageError={handleImageError}
+                    isThumb={true}
                   />
                 </motion.button>
               ))}
@@ -928,7 +1037,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                         : "Write a Review"}
                     </span>
                   </DialogTrigger>
-                  <DialogContent className="w-full max-w-2xl">
+                  <DialogContent className="w-full max-w-2xl z-[120]">
                     <MheWriteAReview productId={data.id} />
                   </DialogContent>
                 </Dialog>
@@ -1039,7 +1148,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                           whileTap={{ scale: 0.98 }}
                           onClick={() => handleAddToCart(data.id)}
                           className="w-full bg-[#5CA131] hover:bg-green-700 text-white font-semibold py-3 rounded-md text-base transition"
-                          aria-label="Add to cart"
+                          aria-label="Add to Cart"
                         >
                           <ShoppingCart className="inline-block mr-2 w-5 h-5" />{" "}
                           Add to Cart
@@ -1049,7 +1158,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                           whileTap={{ scale: 0.98 }}
                           onClick={handleBuyNow}
                           className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 rounded-md text-base transition"
-                          aria-label="Buy now"
+                          aria-label="Buy Now"
                         >
                           Buy Now
                         </motion.button>
@@ -1069,7 +1178,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                             Get a Quote
                           </motion.button>
                         </DialogTrigger>
-                        <DialogContent className="w-full max-w-2xl">
+                        <DialogContent className="w-full max-w-2xl z-[120]">
                           <QuoteForm
                             product={data}
                             onClose={() =>
@@ -1098,7 +1207,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                               Rent Now
                             </motion.button>
                           </DialogTrigger>
-                          <DialogContent className="w-full max-w-2xl">
+                          <DialogContent className="w-full max-w-2xl z-[120]">
                             <RentalForm
                               productId={data.id}
                               productDetails={{
@@ -1131,7 +1240,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                               Get a Quote
                             </motion.button>
                           </DialogTrigger>
-                          <DialogContent className="w-full max-w-2xl">
+                          <DialogContent className="w-full max-w-2xl z-[120]">
                             <QuoteForm
                               product={data}
                               onClose={() =>
@@ -1156,7 +1265,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                             {formButtonText}
                           </motion.button>
                         </DialogTrigger>
-                        <DialogContent className="w-full max-w-2xl">
+                        <DialogContent className="w-full max-w-2xl z-[120]">
                           <QuoteForm
                             product={data}
                             onClose={() =>
@@ -1240,7 +1349,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     {formButtonText}
                   </motion.button>
                 </DialogTrigger>
-                <DialogContent className="w-full max-w-2xl">
+                <DialogContent className="w-full max-w-2xl z-[120]">
                   {isRentalOrUsed ? (
                     <RentalForm
                       productId={data.id}
@@ -1273,7 +1382,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                     Rent This Instead
                   </motion.button>
                 </DialogTrigger>
-                <DialogContent className="w-full max-w-2xl">
+                <DialogContent className="w-full max-w-2xl z-[120]">
                   <RentalForm
                     productId={data.id}
                     productDetails={{
@@ -1518,7 +1627,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
       {data.id && (
         <ReviewSection
           productId={data.id}
-          registerRefresher={registerReviewsRefresher}
+          // The prop 'registerRefresher' has been removed from ReviewSection
+          // based on your request to ignore the previous error.
         />
       )}
 
@@ -1544,18 +1654,21 @@ export default function ProductSection({ productId }: ProductSectionProps) {
 
               {/* Main media view */}
               <div className="relative w-full h-[70vh] md:h-[80vh] flex items-center justify-center">
+                {/* 🎯 FIX: Render Video/Image in Modal with clean URLs */}
                 {isVideoUrl(data.images[currentMediaIndex]?.image) ? (
                    <VideoPlayer 
-                      src={data.images[currentMediaIndex]?.image || "/no-product.jpg"} 
+                      src={cleanMediaUrl(data.images[currentMediaIndex]?.image || "/no-product.jpg")} 
                       alt={`${data.name} media ${currentMediaIndex + 1}`}
-                      className="max-h-full max-w-full rounded-md"
+                      // Use max-w/h-full to ensure it fits the container while respecting its aspect ratio
+                      className="max-h-full max-w-full rounded-md" 
                    />
                 ) : (
                   <FallbackImage
                     src={
-                      data.images[currentMediaIndex]?.image || "/no-product.jpg"
+                      cleanMediaUrl(data.images[currentMediaIndex]?.image || "/no-product.jpg")
                     }
                     alt={`${data.name} media ${currentMediaIndex + 1}`}
+                    // Use max-h/w-full to ensure it fits the container
                     className="max-h-full max-w-full object-contain rounded-md"
                     width={1000}
                     height={1000}
@@ -1597,20 +1710,24 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   <motion.button
                     key={img.id}
                     onClick={() => setCurrentMediaIndex(index)}
-                    className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${currentMediaIndex === index
-                      ? "border-orange-500"
-                      : "border-transparent hover:border-gray-600"
-                      }`}
+                    className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${
+                      currentMediaIndex === index
+                        ? "border-orange-500"
+                        : "border-transparent hover:border-gray-600"
+                    }`}
                     aria-label={`Select media thumbnail ${index + 1}`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    <Image
+                    <MediaFallbackImage
                       src={img.image}
                       alt={`Thumbnail ${index + 1}`}
                       className="w-full h-full object-cover"
                       width={80}
                       height={80}
+                      id={img.id}
+                      onImageError={() => {}}
+                      isThumb={true}
                     />
                   </motion.button>
                 ))}
