@@ -22,11 +22,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 // --- Type Definitions ---
-// (Interface definitions for StatsCardProps, VendorApplication, Product, etc. remain the same)
 export interface StatsCardProps {
   icon: string;
   number: string;
@@ -97,27 +96,28 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
   const handleCardClick = () => router.push(link);
 
   return (
+    // ✅ FIX: Removed aspect-square and set a min-height for better responsiveness.
+    // ✅ FIX: Added relative positioning to contain the absolutely positioned arrow.
     <div
-      className="group relative bg-white p-4 md:p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 aspect-square w-full"
+      className="group relative bg-white p-4 md:p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 w-full min-h-[160px]"
       onClick={handleCardClick}
     >
-      {/* Icon Container */}
-      <div>
-        {/* 5. Image size is now responsive. `width` and `height` props on `Image` should match the largest size for optimization. */}
-        <Image src={icon} alt={label} width={80} height={80} className="w-16 h-16 md:w-20 md:h-20" />
+      {/* Icon Container - Placed at the top */}
+      <div className="mb-4">
+        <Image src={icon} alt={label} width={64} height={64} className="w-12 h-12 md:w-16 md:h-16" />
       </div>
 
-      {/* Text content - `mt-auto` pushes this block to the bottom of the card. */}
-      <div className="mt-auto">
-        {/* 6. Font sizes are responsive for better readability. */}
-        <h2 className="text-3xl sm:text-4xl font-bold text-green-600">{number}</h2>
+      {/* Text content - `mt-auto` removed as we use `justify-between` and explicit positioning */}
+      <div>
+        <h2 className="text-3xl sm:text-4xl font-bold text-green-600 pr-10">{number}</h2>
         <p className="text-base md:text-lg text-gray-500">{label}</p>
       </div>
 
-      {/* 7. Chevron icon is now absolutely positioned for a robust and clean layout. */}
-      {/* Its position adjusts with the card's padding. */}
-      <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6">
-        {/* 8. Added a subtle transition effect on hover for better user feedback. */}
+      {/* ✅ FIX: Chevron icon is now absolutely positioned for perfect vertical centering.
+        top-1/2, -translate-y-1/2 centers it vertically.
+        right-3 ensures it stays inside the card padding even on small screens.
+      */}
+      <div className="absolute top-1/2 right-3 transform -translate-y-1/2">
         <ChevronRightIcon className="h-6 w-6 md:h-7 md:w-7 text-green-600 transition-transform duration-300 group-hover:translate-x-1" />
       </div>
     </div>
@@ -232,7 +232,9 @@ const CompleteDashboard = () => {
       await api.post(`/vendor/${vendorId}/approve/`, { action: 'approve' });
       toast.success("Vendor Approved");
       fetchData();
-    } catch (error) {
+    } catch (error)
+    // eslint-disable-next-line no-empty
+    {
       toast.error("Approval Failed");
     } finally {
       setLoadingVendorId(null); // Clear loading state
@@ -276,7 +278,9 @@ const CompleteDashboard = () => {
       toast.success("Product Approved", { description: `${selectedProduct.name} is now live.` });
       setIsProductDetailModalOpen(false);
       fetchData();
-    } catch (error) {
+    } catch (error)
+    // eslint-disable-next-line no-empty
+    {
       toast.error("Approval Failed");
     } finally {
       setIsSubmitting(false);
@@ -314,9 +318,12 @@ const CompleteDashboard = () => {
       {/* Main layout and stats cards remain the same */}
       <div className="overflow-auto bg-gray-50 p-6 sm:p-8 lg:p-10 min-h-screen">
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h2>
+        {/* ✅ Flex layout adjusted for better spacing on large screens */}
         <div className="flex flex-col lg:flex-row gap-10">
+          {/* Main content area */}
           <div className="flex-1 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {/* Stats Cards - Adjusted grid for better flow on all screens */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
               <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://mhebazar.in/admin/forms/quotes" />
               <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://mhebazar.in/admin/forms/direct-buy" />
               <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://mhebazar.in/admin/forms/rentals" />
@@ -326,11 +333,12 @@ const CompleteDashboard = () => {
             <AnalyticsDashboard />
           </div>
 
+          {/* Pending Actions Sidebar */}
           <div className="w-full lg:w-1/3 space-y-8">
             <div>
               <h3 className="text-2xl font-semibold text-gray-800 mb-4">Pending Actions</h3>
-              {isLoading ? <p>Loading...</p> : (vendorApps.length === 0 && totalPendingProducts === 0) ? (
-                <div className="text-center py-10 bg-white rounded-lg border">
+              {isLoading ? <div className='text-center py-10'><Loader2 className='mx-auto h-8 w-8 text-green-600 animate-spin' /> <p className='text-sm text-gray-500 mt-2'>Loading...</p></div> : (vendorApps.length === 0 && totalPendingProducts === 0) ? (
+                <div className="text-center py-10 bg-white rounded-lg border shadow-sm">
                   <Check className="mx-auto h-12 w-12 text-green-500" />
                   <h4 className="mt-3 text-lg font-medium">All Caught Up!</h4>
                   <p className="mt-1 text-sm text-gray-500">No pending items.</p>
@@ -342,11 +350,11 @@ const CompleteDashboard = () => {
             {vendorApps.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg text-blue-700"><Building /> Vendor Applications</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-lg text-blue-700"><Building className='w-5 h-5' /> Vendor Applications</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {vendorApps.map((app) => (
-                    <div key={app.id} className="border rounded-lg p-4 flex items-center justify-between">
+                    <div key={app.id} className="border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
                       <div>
                         <p className="font-semibold">{app.company_name}</p>
                         <p className="text-sm text-gray-500">{app.user_name || app.username}</p>
@@ -369,27 +377,27 @@ const CompleteDashboard = () => {
               </Card>
             )}
 
-            {/* Product Approvals section remains the same */}
+            {/* Product Approvals section */}
             {totalPendingProducts > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-orange-700"><Package /> Product Approvals</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-orange-700"><Package className='w-5 h-5' /> Product Approvals</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {Object.entries(pendingProducts).map(([vendorName, products]) => (
                     <div key={vendorName}>
-                      <h4 className="font-semibold text-gray-700 mb-3">From: {vendorName}</h4>
+                      <h4 className="font-semibold text-gray-700 mb-3 border-b pb-1">From: {vendorName}</h4>
                       <div className="border rounded-lg p-4 space-y-4 bg-white shadow-sm">
                         {products.map(product => (
-                          <div key={product.id} className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded object-contain" />
-                              <div>
-                                <p className="font-medium text-gray-900">{product.name}</p>
+                          <div key={product.id} className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4 min-w-0">
+                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded object-cover border w-12 h-12 flex-shrink-0" />
+                              <div className='min-w-0'>
+                                <p className="font-medium text-gray-900 truncate">{product.name}</p>
                                 <p className="text-sm text-gray-500">{product.category_name}</p>
                               </div>
                             </div>
-                            <Button size="sm" variant="outline" onClick={() => handleOpenProductDetailModal(product)}>
+                            <Button size="sm" variant="outline" onClick={() => handleOpenProductDetailModal(product)} className='flex-shrink-0'>
                               <Info className="w-4 h-4 mr-2" /> Review
                             </Button>
                           </div>
@@ -415,8 +423,8 @@ const CompleteDashboard = () => {
           </DialogHeader>
           <Textarea placeholder="Type reason here..." value={vendorRejectionReason} onChange={(e) => setVendorRejectionReason(e.target.value)} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsVendorRejectModalOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleVendorRejectSubmit} disabled={isSubmitting}>
+            <Button variant="outline" onClick={() => setIsVendorRejectModalOpen(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button variant="destructive" onClick={handleVendorRejectSubmit} disabled={isSubmitting || !vendorRejectionReason.trim()}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Submit Rejection
             </Button>
@@ -435,7 +443,6 @@ const CompleteDashboard = () => {
                   Review the product details below. Submitted by <span className="font-semibold">{selectedProduct.user_name}</span>.
                 </DialogDescription>
               </DialogHeader>
-              {/* The detail display grid remains unchanged */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 py-4">
                 <div className="space-y-2">
                   <h4 className="font-semibold text-lg border-b pb-2 mb-2">Product Information</h4>
@@ -480,7 +487,7 @@ const CompleteDashboard = () => {
                 </div>
               </div>
               <DialogFooter className="pt-4 border-t">
-                <Button variant="outline" onClick={() => setIsProductDetailModalOpen(false)}>Close</Button>
+                <Button variant="outline" onClick={() => setIsProductDetailModalOpen(false)} disabled={isSubmitting}>Close</Button>
                 <div className='flex items-center space-x-2'>
                   <Button variant="destructive" onClick={handleOpenProductRejectModal} disabled={isSubmitting}>
                     <PackageX className="w-4 h-4 mr-2" />
@@ -510,8 +517,8 @@ const CompleteDashboard = () => {
           </DialogHeader>
           <Textarea placeholder="Type reason here..." value={productRejectionReason} onChange={(e) => setProductRejectionReason(e.target.value)} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsProductRejectModalOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleProductRejectSubmit} disabled={isSubmitting}>
+            <Button variant="outline" onClick={() => setIsProductRejectModalOpen(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button variant="destructive" onClick={handleProductRejectSubmit} disabled={isSubmitting || !productRejectionReason.trim()}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Submit Rejection
             </Button>
