@@ -21,9 +21,7 @@ import RentalForm from "../forms/enquiryForm/rentalForm";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import DOMPurify from "dompurify";
 import categories from "@/data/categories.json";
-import ProductDetails from "@/app/products-details/[product_id]/page";
 import { Badge } from "../ui/badge";
-import { prototype } from "events";
 
 const imgUrl =
   process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL ||
@@ -31,12 +29,14 @@ const imgUrl =
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
+  // Preserve essential punctuation (. - ( ) / \ *) for better readability in the URL slug,
+  // but strip most other special characters.
   return (text || "")
     .toString()
     .toLowerCase()
     .trim()
+    .replace(/[^a-z0-9\-\.\(\)/\\*]+/g, "-") // Replaces non-allowed chars with a hyphen
     .replace(/\s+/g, "-")
-    .replace(/[^\w-]+/g, "")
     .replace(/--+/g, "-")
     .replace(/-+$/, "");
 };
@@ -45,7 +45,6 @@ const slugify = (text: string): string => {
 interface ProductCardDisplayProps {
   id: number;
   image: string;
-  // CHANGE 1: Corrected prop name to 'category_id' for type consistency.
   category_id: number | null;
   title: string;
   subtitle: string | null | undefined;
@@ -69,7 +68,6 @@ interface ProductCardDisplayProps {
   onRemoveFromCart: (cartItemId: number) => void;
   productData: Record<string, unknown>;
   productType: string;
-  // New prop to handle dynamic button and form based on URL
   pageUrlType: string;
 }
 
@@ -160,15 +158,17 @@ const ProductCard = ({
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
-  const productSlug = slugify(title || "");
-  const productDetailUrl = `/product/${productSlug}-${id}`; // Change this line
+  // ✅ FIX: Generate slug from the clean title which preserves punctuation
+  const cleanTitleForSlug = `${(productData.user_name || "").replace("_", " ")} ${
+    title || ""
+  } ${productData.model || ""}`.trim();
+  const productSlug = slugify(cleanTitleForSlug);
+  const productDetailUrl = `/product/${productSlug}-${id}`;
 
   // Determine button text and form based on page URL type
   const isRentalPage = pageUrlType === "rental";
   const isUsedPage = pageUrlType === "used";
   const formButtonText = isRentalPage ? "Rent Now" : "Get a Quote";
-
-  console.log(productType);
 
   // Format price with Rupee symbol and handle hidden/zero price
   const displayPrice =
@@ -202,7 +202,6 @@ const ProductCard = ({
     return map;
   }, []);
 
-  // CHANGE 2: Look up the image URL from the map using the category_id.
   const categoryFallbackImage = category_id
     ? categoryImageMap[category_id]
     : null;
@@ -223,8 +222,14 @@ const ProductCard = ({
     // The product is new if it was created within the last 30 days
     return differenceInMs <= thirtyDaysInMs;
   };
-  // console.log(`catId: "${category_id}"`);
-  // console.log(`categoryFallbackImage: "${categoryFallbackImage}"`);
+  
+  // ✅ FIX: Clean the displayed title, allowing punctuation
+  const displayTitle = `${(productData.user_name || "").replace("_", " ")} ${
+    title || ""
+  } ${productData.model || ""}`
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") // Allow . - ( ) / \ *
+    .replace(/\s+/g, " ")
+    .trim();
 
   return (
     <div
@@ -243,7 +248,6 @@ const ProductCard = ({
             className="object-contain w-full h-full transition-transform duration-300 hover:scale-110"
             quality={85}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
-            // Pass the looked-up URL string, not the raw ID.
             fallbackSrc={categoryFallbackImage}
           />
         </Link>
@@ -285,7 +289,6 @@ const ProductCard = ({
           {Array.isArray(productType) &&
             productType.map((type, index) => {
               // CASE 1: Handle the special logic for the 'new' badge.
-              // It only renders if the type is 'new' AND showNewBadge() is true.
               if (type === "new") {
                 return (
                   showNewBadge() && (
@@ -300,7 +303,6 @@ const ProductCard = ({
               }
 
               // CASE 2: Handle all other badge types.
-              // This renders a badge for any other type in the array.
               return (
                 <Badge
                   key={index}
@@ -319,18 +321,14 @@ const ProductCard = ({
         <div className="flex-1">
           <Link href={productDetailUrl}>
             <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-green-700 transition-colors">
-              {`${(productData.user_name || "").replace("_", " ")} ${
-                title || ""
-              } ${productData.model || ""}`
-                .replace(/[^a-zA-Z0-9 \-\.]/g, "")
-                .replace(/\s+/g, " ")
-                .trim()}
+              {displayTitle}
             </h3>
           </Link>
           <p className="text-sm text-gray-500 mb-2 line-clamp-1">
+            {/* ✅ FIX: Sanitize the subtitle/description for display, stripping HTML tags */}
             <span
               dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(subtitle || ""),
+                __html: DOMPurify.sanitize(subtitle || "", { ALLOWED_TAGS: [] }), // Strips all tags for plain text display
               }}
             />
           </p>
@@ -355,7 +353,7 @@ const ProductCard = ({
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons (Remains unchanged) */}
         {directSale ? (
           <div className="flex flex-col gap-2 w-full">
             {isInCart ? (

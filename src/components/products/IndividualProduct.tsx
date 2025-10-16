@@ -95,6 +95,35 @@ interface ProductSectionProps {
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
+// --- Helper Functions for Media ---
+const isVideoUrl = (url: string | undefined): boolean => {
+  if (!url) return false;
+  // Checks for common video extensions or YouTube/Vimeo patterns
+  return (
+    /\.(mp4|webm|ogg|mov|avi|flv|wmv)$/i.test(url) ||
+    /youtu\.be|youtube\.com|vimeo\.com/i.test(url)
+  );
+};
+
+const getYouTubeEmbedUrl = (url: string): string | null => {
+  if (!/youtu\.be|youtube\.com/i.test(url)) return null;
+
+  let videoId = '';
+  // Simple ID extraction for various YouTube URL formats
+  if (url.includes('v=')) {
+    videoId = url.split('v=')[1].split('&')[0];
+  } else if (url.includes('youtu.be/')) {
+    videoId = url.split('youtu.be/')[1].split('?')[0];
+  }
+  
+  if (videoId) {
+    return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=0&rel=0&showinfo=0&controls=1`;
+  }
+  return null;
+};
+// --- End Helper Functions for Media ---
+
+
 // Custom Image component with an error handler to show a fallback and hide the parent element
 const FallbackImage = ({
   src,
@@ -155,6 +184,56 @@ const FallbackImage = ({
     />
   );
 };
+
+// New Video Component
+const VideoPlayer: React.FC<{ src: string, alt: string, className: string, fallbackSrc?: string | null }> = ({ src, alt, className }) => {
+  const youtubeEmbedUrl = getYouTubeEmbedUrl(src);
+  
+  // YouTube iFrame
+  if (youtubeEmbedUrl) {
+    return (
+      <iframe
+        className={`${className} border-0`}
+        src={youtubeEmbedUrl}
+        title={alt}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  }
+  
+  // Direct Video Tag (HTML5)
+  return (
+    <video
+      className={`${className} object-contain`}
+      controls
+      loop
+      muted
+      poster="/video-poster.jpg" // Optional poster image
+    >
+      <source src={src} type="video/mp4" />
+      <p>Your browser does not support the video tag. <a href={src}>Download the video</a> instead.</p>
+    </video>
+  );
+};
+
+
+// Main Media Component that conditionally renders Image or Video
+const MediaFallbackImage: React.FC<
+  Omit<React.ComponentProps<typeof FallbackImage>, 'onImageError' | 'id'> & 
+  { onImageError: (id: number) => void; id: number }
+> = (props) => {
+  const isVideo = isVideoUrl(props.src);
+
+  if (isVideo) {
+    // Render video player for video URLs
+    return <VideoPlayer {...props} />;
+  }
+
+  // Render FallbackImage for image URLs
+  return <FallbackImage {...props} />;
+};
+
 
 // Framer motion variants
 const containerVariants = {
@@ -664,6 +743,13 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   const isRentalOrUsed =
     Array.isArray(data.type) &&
     (data.type.includes("rental") || data.type.includes("used"));
+  
+  // ✅ FIX: Allow essential punctuation in the display title
+  const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${data.model} `
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") // Allow . - ( ) / \ *
+    .replace(/\s+/g, " ")
+    .trim();
+
 
   return (
     <motion.div
@@ -681,7 +767,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
             onClick={() => openGallery(selectedImage)}
             aria-label="View product images in full-screen gallery"
           >
-            <FallbackImage
+            <MediaFallbackImage
               src={data.images[selectedImage]?.image || imgUrl + (categories.find(cat => cat.id === data.category)?.image_url || '')}
               alt={data.name}
               className="h-full w-full object-contain"
@@ -758,7 +844,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   whileTap={{ scale: 0.95 }}
                   aria-label={`Select image ${index + 1}`}
                 >
-                  <FallbackImage
+                  <MediaFallbackImage
                     src={img.image}
                     alt={`${data.name} thumbnail ${index + 1}`}
                     className="w-full h-full object-contain"
@@ -812,14 +898,9 @@ export default function ProductSection({ productId }: ProductSectionProps) {
         <div className="space-y-6 w-full md:w-[60%]">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="w-full lg:w-2/3">
-              {/* Product Title */}
+              {/* Product Title (Now includes punctuation) */}
               <h1 className="text-xl md:text-3xl font-bold text-gray-900 mb-2">
-                {`${data.user_name.replace("_", " ")
-                  } ${data.name} ${data.model} `
-                  .replace(/[^a-zA-Z0-9 \-\.]/g, "") // 🧹 Collapse all whitespace into a single space
-                  .replace(/\s+/g, " ")
-                  .trim() // ✨ Remove any space from the beginning or end
-                }
+                {cleanTitle}
               </h1>
               {/* Rating and Reviews */}
               <div className="flex items-center gap-1 mb-4 flex-wrap">
@@ -1131,9 +1212,8 @@ export default function ProductSection({ productId }: ProductSectionProps) {
           <div className="pt-6 border-t border-gray-200">
             <p className="text-lg md:text-2xl font-bold">Product Details</p>
             <div className="relative">
-              <div className="line-clamp-4 text-sm md:text-base">
-                {data.description ? DOMPurify.sanitize(data.description, { ALLOWED_TAGS: [] }) : ''}
-              </div>
+              {/* ✅ FIX: Render description as HTML output */}
+              <div className="line-clamp-4 text-sm md:text-base prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.description) }} />
               <button
                 onClick={() => {
                   setOpenAccordion('desc');
@@ -1237,10 +1317,10 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line overflow-hidden"
-              >
-                {DOMPurify.sanitize(data.description, { ALLOWED_TAGS: [] })}
-              </motion.div>
+                className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line overflow-hidden prose max-w-none"
+                // ✅ FIX: Render full description as HTML output
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.description) }}
+              />
             )}
           </AnimatePresence>
         </div>
@@ -1417,7 +1497,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                       {data.user_name || "N/A"}
                     </p>
 
-                    {/* Vendor Description */}
+                    {/* ✅ FIX: Render vendor description as HTML output */}
                     {data.user_description ? (
                       <div
                         className="mt-2 text-sm text-gray-700 prose max-w-none"
@@ -1464,20 +1544,28 @@ export default function ProductSection({ productId }: ProductSectionProps) {
 
               {/* Main media view */}
               <div className="relative w-full h-[70vh] md:h-[80vh] flex items-center justify-center">
-                <FallbackImage
-                  src={
-                    data.images[currentMediaIndex]?.image || "/no-product.jpg"
-                  }
-                  alt={`${data.name} media ${currentMediaIndex + 1}`}
-                  className="max-h-full max-w-full object-contain rounded-md"
-                  width={1000}
-                  height={1000}
-                  fallbackSrc={data.category_details?.cat_image}
-                  priority
-                  onImageError={() => {}} // No-op handler since this image is critical
-                  id={data.images[currentMediaIndex]?.id || 0}
-                />
-
+                {isVideoUrl(data.images[currentMediaIndex]?.image) ? (
+                   <VideoPlayer 
+                      src={data.images[currentMediaIndex]?.image || "/no-product.jpg"} 
+                      alt={`${data.name} media ${currentMediaIndex + 1}`}
+                      className="max-h-full max-w-full rounded-md"
+                   />
+                ) : (
+                  <FallbackImage
+                    src={
+                      data.images[currentMediaIndex]?.image || "/no-product.jpg"
+                    }
+                    alt={`${data.name} media ${currentMediaIndex + 1}`}
+                    className="max-h-full max-w-full object-contain rounded-md"
+                    width={1000}
+                    height={1000}
+                    fallbackSrc={data.category_details?.cat_image}
+                    priority
+                    onImageError={() => {}} // No-op handler since this image is critical
+                    id={data.images[currentMediaIndex]?.id || 0}
+                  />
+                )}
+                
                 {/* Navigation arrows */}
                 {data.images.length > 1 && (
                   <>

@@ -10,12 +10,13 @@ import styles from './page.module.css';
 
 // Helper function for SEO-friendly slug generation
 const slugify = (text: string): string => {
+  // ✅ FIX: Allow essential punctuation in the URL slug
   return (text || '')
     .toString()
     .toLowerCase()
     .trim()
+    .replace(/[^a-z0-9\-\.\(\)/\\*]+/g, "-") // Replaces non-allowed chars with a hyphen
     .replace(/\s+/g, '-')
-    .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-')
     .replace(/-+$/, '');
 };
@@ -90,8 +91,9 @@ export default async function IndividualProductPage({
     notFound();
   }
 
-  // Generate the correct, canonical slug from the product name
-  const canonicalProductSlug = slugify(productData.name);
+  // Generate the correct, canonical slug from the product name (including manufacturer/model for accuracy)
+  const productTitleForSlug = `${productData.user_name || ''} ${productData.name} ${productData.model || ''}`;
+  const canonicalProductSlug = slugify(productTitleForSlug);
 
   // If the URL slug doesn't match the canonical slug, redirect to the correct URL
   if (productSlugFromUrl !== canonicalProductSlug) {
@@ -106,7 +108,9 @@ export default async function IndividualProductPage({
   }
 
   const { category_name, subcategory_name, name: productName } = productData;
-  const product = productName.replace(/[^a-zA-Z0-9 \-\.]/g, "")
+  // ✅ FIX: Clean the product name for Breadcrumb display (allowing punctuation)
+  const product = productName
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "")
     .replace(/\s+/g, " ")
     .trim()
   const cat_slug = category_name.toLowerCase().replace(/\s+/g, '-');
@@ -119,10 +123,12 @@ export default async function IndividualProductPage({
           { label: 'Home', href: '/' },
           { label: category_name, href: `/${cat_slug}` },
           ...(subcategory_name ? [{ label: subcategory_name, href: `/${cat_slug}/${subcat_slug}` }] : []),
+          // Use the canonical slug for the product link
           { label: product, href: `/product/${canonicalProductSlug}-${productId}` },
         ]}
       />
 
+      {/* Pass the ID and slug to the client component */}
       <ProductSection productSlug={params.product} productId={productId} />
 
       <div className={styles.animatedSection}>
