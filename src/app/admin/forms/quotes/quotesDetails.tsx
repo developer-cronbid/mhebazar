@@ -18,6 +18,8 @@ import { Loader2, Package, User, ClipboardList, Building } from "lucide-react";
 interface ApiQuote {
   id: number;
   product_details: {
+    category_name: any;
+    subcategory_name: any;
     id: number;
     name: string;
     description: string;
@@ -78,6 +80,16 @@ const DetailRow = ({ label, value }: { label: string; value: React.ReactNode; })
   </div>
 );
 
+const extractCompanyAddress = (message: string): { message: string, address: string | null } => {
+  const addressMatch = message.match(/Company Address:\s*(.+?)(?=\n|$)/);
+  if (addressMatch) {
+    const address = addressMatch[1].trim();
+    const cleanMessage = message.replace(/Company Address:\s*.+?(?=\n|$)/, '').trim();
+    return { message: cleanMessage, address };
+  }
+  return { message, address: null };
+};
+
 // --- Main Component ---
 export const QuoteDetailsSheet = ({
   quote,
@@ -93,6 +105,7 @@ export const QuoteDetailsSheet = ({
     const isApiQuote = (q: Quote): q is ApiQuote => "product_details" in q && q.product_details !== null;
 
     if (isApiQuote(quote)) {
+      const { message, address } = extractCompanyAddress(quote.message);
       return {
         id: quote.id,
         status: quote.status,
@@ -106,7 +119,10 @@ export const QuoteDetailsSheet = ({
         requesterEmail: quote.email,
         requesterPhone: quote.phone,
         requesterLocation: "N/A",
-        message: quote.message || "No message provided.",
+        message,
+        companyAddress: address,
+        category: quote.product_details.category_name,
+        subcategory: quote.product_details.subcategory_name,
         createdAt: quote.created_at,
       };
     } else {
@@ -144,6 +160,7 @@ export const QuoteDetailsSheet = ({
           {/* Product Section */}
           <Section title="Product Information" icon={<Package className="h-5 w-5 text-indigo-600" />}>
             <DetailRow label="Product Name" value={<span className="font-bold">{displayData.productName}</span>} />
+            <DetailRow label="Category" value={`${displayData.category} > ${displayData.subcategory}`} />
             <DetailRow label="Manufacturer/Brand" value={displayData.productManufacturer} />
             <DetailRow label="Model" value={displayData.productModel} />
             <DetailRow label="Price" value={displayData.productPrice} />
@@ -153,12 +170,25 @@ export const QuoteDetailsSheet = ({
           <Section title="Requester Information" icon={<User className="h-5 w-5 text-indigo-600" />}>
             <DetailRow label="Name" value={displayData.requesterName} />
             <DetailRow label="Company" value={displayData.requesterCompany} />
-            <DetailRow label="Email" value={displayData.requesterEmail} />
-            <DetailRow label="Phone" value={displayData.requesterPhone} />
-            <DetailRow label="Location" value={displayData.requesterLocation} />
+            {displayData.companyAddress && (
+              <DetailRow label="Company Address" value={displayData.companyAddress} />
+            )}
+            <DetailRow label="Email" value={
+              <a href={`mailto:${displayData.requesterEmail}`} className="text-blue-600 hover:underline">
+                {displayData.requesterEmail}
+              </a>
+            } />
+            <DetailRow label="Phone" value={
+              <a href={`tel:${displayData.requesterPhone}`} className="text-blue-600 hover:underline">
+                {displayData.requesterPhone}
+              </a>
+            } />
+            {displayData.requesterLocation !== "N/A" && (
+              <DetailRow label="Location" value={displayData.requesterLocation} />
+            )}
           </Section>
 
-          {/* Quote Section */}
+          {/* Quote Details Section */}
           <Section title="Quote Details" icon={<ClipboardList className="h-5 w-5 text-indigo-600" />}>
             <DetailRow
               label="Status"
@@ -178,14 +208,16 @@ export const QuoteDetailsSheet = ({
               }
             />
             <DetailRow label="Requested At" value={new Date(displayData.createdAt).toLocaleString()} />
-            <DetailRow
-              label="Message"
-              value={
-                <p className="whitespace-pre-wrap bg-white p-3 rounded-md border text-sm text-gray-700">
-                  {displayData.message}
-                </p>
-              }
-            />
+            {displayData.message && (
+              <DetailRow
+                label="Message"
+                value={
+                  <p className="whitespace-pre-wrap bg-white p-3 rounded-md border text-sm text-gray-700">
+                    {displayData.message}
+                  </p>
+                }
+              />
+            )}
           </Section>
         </div>
 

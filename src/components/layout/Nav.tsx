@@ -21,11 +21,10 @@ import {
   ShieldCheck,
   UserPlus,
 } from "lucide-react";
-import { useRef, useState, useEffect, JSX, useCallback } from "react";
+import { useRef, useState, useEffect, JSX } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-// Assuming these are client components that handle their own imports/state
 import CategoryMenu from "./NavOptions";
 import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
 import SearchBar from "./SearchBar";
@@ -40,7 +39,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-// Assuming this is a static JSON file that is safe to import directly
 import categoriesData from "@/data/categories.json";
 import {
   Dialog,
@@ -52,7 +50,6 @@ import {
 } from "../ui/dialog";
 import ContactForm from "../forms/publicforms/ContactForm";
 
-// --- TYPE DEFINITIONS ---
 export interface Subcategory {
   id: number;
   name: string;
@@ -65,7 +62,16 @@ export interface Category {
   subcategories: Subcategory[];
 }
 
-export interface UserType { // Renamed to UserType to avoid conflict with the component argument 'user' in the dropdown logic, though in this context it's fine. It's good practice.
+const navigationLinks = [
+  { name: "Rental/Used MHE", href: "/used" },
+  { name: "Attachments", href: "/attachments" },
+  { name: "Spare Parts", href: "/spare-parts" },
+  { name: "Services", href: "/services" },
+  { name: "Training", href: "/training" },
+  { name: "Blogs", href: "/blog" },
+];
+
+export interface User {
   id: number;
   username?: string | { image: string }[];
   email: string;
@@ -76,99 +82,58 @@ export interface UserType { // Renamed to UserType to avoid conflict with the co
   user_banner?: { url: string }[];
 }
 
-// Moved outside the component to prevent recreation on every render
-const navigationLinks = [
-  { name: "Rental/Used MHE", href: "/used" },
-  { name: "Attachments", href: "/attachments" },
-  { name: "Spare Parts", href: "/spare-parts" },
-  { name: "Services", href: "/services" },
-  { name: "Training", href: "/training" },
-  { name: "Blogs", href: "/blog" },
-];
-
-// Reusable slug function (can be moved to a utility file if used elsewhere)
-const createSlug = (name: string): string =>
-  name.toLowerCase().replace(/\s+/g, "-");
-
-
-// --- COMPONENT START ---
 export default function Navbar(): JSX.Element {
-  // Define categories once
+  // Move categories definition to the top with other state declarations
   const categories: Category[] = categoriesData;
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [categoriesOpen, setCategoriesOpen] = useState<boolean>(false);
   const [vendorDrawerOpen, setVendorDrawerOpen] = useState<boolean>(false);
-  const [openCategory, setOpenCategory] = useState<number | null>(null);
-
-  // Use a single ref for the category menu for hover/mouseLeave events
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const categoryMenuRef = useRef<HTMLDivElement>(null);
+
+  const createSlug = (name: string): string =>
+    name.toLowerCase().replace(/\s+/g, "-");
+
+  const [openCategory, setOpenCategory] = useState<number | null>(null);
 
   const { user, isLoading, setUser } = useUser();
   const router = useRouter();
   const pathname = usePathname();
 
-  // Optimized: Use useCallback for event handlers to prevent needless recreations
-  const handleClickOutside = useCallback((event: MouseEvent): void => {
-    if (
-      categoryMenuRef.current &&
-      !categoryMenuRef.current.contains(event.target as Node)
-    ) {
-      setCategoriesOpen(false);
-    }
-  }, []); // Empty dependency array means it only creates once
-
-  const onLogoutClick = useCallback(async () => {
-    await handleLogout(() => setUser(null), router);
-  }, [router, setUser]);
-
-  // Optimized: Use a single useEffect for category menu cleanup
   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent): void => {
+      if (
+        categoryMenuRef.current &&
+        !categoryMenuRef.current.contains(event.target as Node)
+      ) {
+        setCategoriesOpen(false);
+      }
+    };
     if (categoriesOpen) {
       document.addEventListener("mousedown", handleClickOutside);
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [categoriesOpen, handleClickOutside]); // Dependency includes handleClickOutside
+  }, [categoriesOpen]);
 
-  // Optimized: Use a single handler for desktop category menu state
-  const handleCategoryHover = (isEntering: boolean) => {
-    setCategoriesOpen(isEntering);
+  const onLogoutClick = async () => {
+    await handleLogout(() => setUser(null), router);
   };
-
-  // Improved mobile menu item click handler
-  const handleMobileMenuClick = (categoryId?: number) => {
-    setMobileMenuOpen(false);
-    if (categoryId !== undefined) {
-      setOpenCategory(categoryId === openCategory ? null : categoryId);
-    } else {
-      setOpenCategory(null);
-    }
-  };
-
-
-  // Helper for dynamic user profile image source
-  const userProfileImageSrc = Array.isArray(user?.username) && user.username[0]?.image
-    ? user.username[0].image
-    : user?.user_banner?.[0]?.url; // Fallback to user_banner if username is not an array of images
 
   return (
-    // Fixed: Ensure the header is sticky and has a high z-index to avoid layout shift and clipping
-    <header className="bg-white shadow-sm z-[100] sticky top-0" role="banner"> 
-      
-      {/* Top Bar */}
+    <header className="bg-white shadow-sm z-50 sticky top-0">
       <div className="bg-[#5CA131] text-white">
         <div className="max-w-full mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-1 sm:gap-2 py-2">
             <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <Phone className="w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" />
-              <span>+91 73059 50939</span>
+              <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="">+91 73059 50939</span>
             </div>
             <div className="flex items-center gap-4 text-xs sm:text-sm">
-              {/* Optimised: Using a placeholder for LCP/CLS when loading */}
               {isLoading ? (
-                <div className="h-4 w-20 bg-gray-700 animate-pulse rounded text-transparent">Loading...</div>
+                <span>Loading...</span>
               ) : user ? (
                 <span className="font-semibold text-center sm:text-left text-xs sm:text-sm text-nowrap">
                   | Welcome,{" "}
@@ -182,7 +147,7 @@ export default function Navbar(): JSX.Element {
                   <Link href="/login" className="hover:underline">
                     Sign In
                   </Link>
-                  <span className="opacity-50" aria-hidden="true">|</span>
+                  <span className="opacity-50">|</span>
                   <Link href="/register" className="hover:underline">
                     Sign Up
                   </Link>
@@ -193,38 +158,31 @@ export default function Navbar(): JSX.Element {
         </div>
       </div>
 
-      {/* Main Bar */}
       <div className="bg-white">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-2 sm:py-3">
-            {/* Mobile Menu Button - No change needed, functional and small */}
             <button
               className="lg:hidden p-1 sm:p-2 rounded-md text-gray-600 hover:text-gray-900"
               onClick={() => setMobileMenuOpen(true)}
               aria-label="Open navigation menu"
             >
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
 
-            {/* Logo - Priority for LCP */}
             <div className="flex items-center ml-2 sm:ml-5">
-              <Link href="/" className="flex items-center relative shine-effect" aria-label="Home link to MHE BAZAR">
-                {/* CWV Fix: Added sizes property and prioritized loading. width/height are correct. */}
+              <Link href="/" className="flex items-center relative shine-effect">
                 <Image
                   src="/mhe-logo.png"
                   alt="MHE BAZAR Logo"
                   width={120}
                   height={35}
                   className="h-8 sm:h-10 w-auto object-contain"
-                  priority={true}
-                  sizes="(max-width: 640px) 100px, 120px"
+                  priority
                 />
-                {/* Note: shine-overlay should be in your CSS/animations.css */}
-                <span className="shine-overlay" aria-hidden="true"></span>
+                <span className="shine-overlay"></span>
               </Link>
             </div>
 
-            {/* Desktop Search & Brand Link */}
             <div className="hidden md:flex flex-1 max-w-5xl mx-2 sm:mx-8 items-center gap-2 sm:gap-4">
               <SearchBar
                 categories={categories}
@@ -235,93 +193,171 @@ export default function Navbar(): JSX.Element {
                 href="/vendor-listing"
                 className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect hidden sm:block"
               >
-                {/* CWV Fix: Added sizes property and prioritized loading. width/height are correct. */}
-                <Image
+                  <Image
                   src="/brand-image.png"
                   alt="Brand Store"
                   width={120}
                   height={40}
-                  priority={true} // Priority loading as this is above the fold on larger screens
+                  priority
                   className="object-contain"
                   style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
-                  sizes="120px"
                 />
-                <span className="shine-overlay" aria-hidden="true"></span>
+                <span className="shine-overlay"></span>
               </Link>
             </div>
 
-            {/* Right Icons */}
             <div className="flex items-center gap-2 sm:gap-4">
-              {/* Compare */}
               <Link
                 href="/compare"
                 className="hidden sm:flex items-center text-gray-600 hover:text-gray-900 transition"
                 aria-label="Compare Products"
               >
-                <Repeat className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
+                <Repeat className="w-5 h-5 sm:w-6 sm:h-6" />
               </Link>
 
-              {/* Cart - Only render if user is loaded and logged in to save bundle size and initial load time */}
               {!isLoading && user && (
                 <Link
                   href="/cart"
                   className="flex items-center text-gray-600 hover:text-gray-900 transition"
                   aria-label="Cart"
                 >
-                  <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
+                  <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
                 </Link>
               )}
 
-              {/* Profile Dropdown */}
-              <div className="relative">
+              <div className="relative" ref={profileMenuRef}>
                 <DropdownMenu>
-                  {/* CWV Fix: Ensure a proper size placeholder when image is loading or data is missing to prevent CLS */}
                   <DropdownMenuTrigger asChild>
-                    <div
-                      className="flex items-center justify-center w-10 h-10 rounded-full cursor-pointer transition-transform duration-100 ease-in-out hover:scale-105"
-                      aria-label="User profile menu"
-                      // Removed focus:ring styles as DropdownMenu handles focus
-                    >
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                       {isLoading ? (
                         <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
-                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" aria-hidden="true" />
+                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
                         </div>
-                      ) : userProfileImageSrc ? (
-                        /* CWV Fix: Profile Image using lazy loading (not priority) */
-                        <Image
-                          src={userProfileImageSrc}
-                          alt="Profile Avatar"
-                          width={40}
-                          height={40}
-                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-600 shadow-sm object-cover"
-                          loading="lazy" // Optimized: Use lazy loading as this is not above the fold
-                        />
+                      ) : user ? (
+                        <>
+                          {Array.isArray(user.username) &&
+                          user.username[0]?.image ? (
+                            <Image
+                              src={user.username[0].image}
+                              alt="Profile"
+                              width={40}
+                              height={40}
+                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-600 shadow-sm object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center">
+                              <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                            </div>
+                          )}
+                        </>
                       ) : (
-                        /* Default user icon - no image */
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center">
-                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" aria-hidden="true" />
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
                         </div>
                       )}
                     </div>
                   </DropdownMenuTrigger>
 
-                  {/* Dropdown Menu Content - No major change, standard logic */}
-                  <DropdownMenuContent className="w-64 z-[102]" align="end">
+                  <DropdownMenuContent className="w-64" align="end">
                     {user ? (
                       <>
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
                         <DropdownMenuItem asChild>
                           <Link href="/account" className="cursor-pointer">
-                            <User className="mr-2 h-4 w-4 text-green-600" aria-hidden="true" />
+                            <User className="mr-2 h-4 w-4 text-green-600" />
                             <span>My Account</span>
                           </Link>
                         </DropdownMenuItem>
-                        {/* ... other user links ... */}
+                        <DropdownMenuItem asChild>
+                          <Link
+                            href="/account/orders"
+                            className="cursor-pointer"
+                          >
+                            <Package className="mr-2 h-4 w-4 text-green-600" />
+                            <span>My Orders</span>
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                          <Link
+                            href="/account/wishlist"
+                            className="cursor-pointer"
+                          >
+                            <Heart className="mr-2 h-4 w-4 text-green-600" />
+                            <span>Wishlist</span>
+                          </Link>
+                        </DropdownMenuItem>
+
+                        {user.role?.id === 2 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Vendor Panel</DropdownMenuLabel>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href="/vendor/dashboard"
+                                className="cursor-pointer"
+                              >
+                                <LayoutDashboard className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>Dashboard</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href="/vendor/product-list"
+                                className="cursor-pointer"
+                              >
+                                <Tag className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>My Products</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href="/vendor/profile"
+                                className="cursor-pointer"
+                              >
+                                <User className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>Vendor Profile</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href="/vendor/notifications"
+                                className="cursor-pointer"
+                              >
+                                <Bell className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>Notifications</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href="/vendor/enquiry"
+                                className="cursor-pointer"
+                              >
+                                <ClipboardList className="mr-2 h-4 w-4 text-blue-600" />
+                                <span>Enquiries</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+
+                        {user.role?.id === 1 && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Admin Panel</DropdownMenuLabel>
+                            <DropdownMenuItem asChild>
+                              <Link href="/admin" className="cursor-pointer">
+                                <ShieldCheck className="mr-2 h-4 w-4 text-red-600" />
+                                <span>Admin Dashboard</span>
+                              </Link>
+                            </DropdownMenuItem>
+                          </>
+                        )}
+
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={onLogoutClick}
                           className="cursor-pointer text-red-500 focus:text-red-700"
                         >
-                          <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
+                          <LogOut className="mr-2 h-4 w-4" />
                           <span>Logout</span>
                         </DropdownMenuItem>
                       </>
@@ -329,13 +365,13 @@ export default function Navbar(): JSX.Element {
                       <>
                         <DropdownMenuItem asChild>
                           <Link href="/login" className="cursor-pointer">
-                            <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
+                            <LogOut className="mr-2 h-4 w-4" />
                             <span>Sign In</span>
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link href="/register" className="cursor-pointer">
-                            <UserPlus className="mr-2 h-4 w-4" aria-hidden="true" />
+                            <UserPlus className="mr-2 h-4 w-4" />
                             <span>Sign Up</span>
                           </Link>
                         </DropdownMenuItem>
@@ -347,11 +383,9 @@ export default function Navbar(): JSX.Element {
             </div>
           </div>
 
-          {/* Mobile Search & Brand Link - Duplicated from desktop, but necessary for mobile layout */}
           <div className="md:hidden pb-2 sm:pb-3">
             <div className="flex items-center gap-2">
               <SearchBar
-                categories={categories} // Passed for full functionality on mobile
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
               />
@@ -359,35 +393,31 @@ export default function Navbar(): JSX.Element {
                 href="/vendor-listing"
                 className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect"
               >
-                {/* CWV Fix: Added sizes property and prioritized loading. width/height are correct. */}
                 <Image
                   src="/brand-image.png"
                   alt="Brand Store"
                   width={120}
                   height={40}
-                  priority={true} // Priority loading on all screen sizes
+                  priority
                   className="object-contain"
                   style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
-                  sizes="(max-width: 768px) 100px, 120px"
                 />
-                <span className="shine-overlay" aria-hidden="true"></span>
+                <span className="shine-overlay"></span>
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Desktop Navigation Bar (Below Main Bar) */}
-      <nav className="hidden lg:block bg-white border-t border-gray-200" aria-label="Main Navigation">
+      <nav className="hidden lg:block bg-white border-t border-gray-200">
         <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              {/* Categories Menu - Use optimized hover handlers */}
               <div
                 className="relative"
                 ref={categoryMenuRef}
-                onMouseEnter={() => handleCategoryHover(true)}
-                onMouseLeave={() => handleCategoryHover(false)}
+                onMouseEnter={() => setCategoriesOpen(true)}
+                onMouseLeave={() => setCategoriesOpen(false)}
               >
                 <button
                   className={`flex items-center gap-2 px-4 py-3 text-sm transition ${
@@ -395,14 +425,11 @@ export default function Navbar(): JSX.Element {
                       ? "text-gray-900 font-bold"
                       : "text-gray-700 hover:text-gray-900 font-normal"
                   }`}
-                  aria-expanded={categoriesOpen}
-                  aria-controls="category-dropdown"
                 >
-                  <Menu className="w-5 h-5" aria-hidden="true" />
+                  <Menu className="w-5 h-5" />
                   All Categories
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${categoriesOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                  <ChevronDown className="w-4 h-4" />
                 </button>
-                {/* CategoryMenu component should be optimized for CWV (e.g., uses CSS transitions over JS animations if possible) */}
                 <CategoryMenu
                   isOpen={categoriesOpen}
                   onClose={() => setCategoriesOpen(false)}
@@ -410,7 +437,6 @@ export default function Navbar(): JSX.Element {
                 />
               </div>
 
-              {/* Main Links */}
               <div className="flex items-center">
                 {navigationLinks.map((link, index) => (
                   <Link
@@ -428,9 +454,7 @@ export default function Navbar(): JSX.Element {
               </div>
             </div>
 
-            {/* Right side Utility Links */}
             <div className="flex items-center">
-              {/* Help/Contact Dialog - No change needed, Dialogs are usually fine. */}
               <Dialog>
                 <DialogTrigger asChild>
                   <div
@@ -441,13 +465,6 @@ export default function Navbar(): JSX.Element {
                         ? "text-gray-900 font-bold"
                         : "text-gray-600 hover:text-gray-900 font-normal"
                     }`}
-                    // Added onKeyDown for accessibility on a div with role="button"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        // Trigger dialog open via click handler if needed, or rely on DialogTrigger's internal logic
-                      }
-                    }}
                   >
                     <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
                       ?
@@ -465,23 +482,43 @@ export default function Navbar(): JSX.Element {
                 </DialogContent>
               </Dialog>
 
-              {/* Vendor/Price Links */}
               {isLoading ? (
-                <div className="px-4 py-3 text-sm text-gray-600 font-normal h-10 w-32 bg-gray-100 animate-pulse"></div>
-              ) : user?.role?.id === 2 ? (
-                <Link
-                  href="/vendor/dashboard"
-                  className={`flex items-center gap-2 px-4 py-3 transition ${
-                    pathname.includes("/vendor/dashboard")
-                      ? "text-gray-900 font-bold"
-                      : "text-gray-600 hover:text-gray-900 font-normal"
-                  }`}
-                >
-                  <User className="w-5 h-5" aria-hidden="true" />
-                  <span className="text-sm font-normal">
-                    My Vendor Dashboard
-                  </span>
-                </Link>
+                <span className="px-4 py-3 text-sm text-gray-600 font-normal">
+                  {" "}
+                  Loading...
+                </span>
+              ) : user ? (
+                user.role?.id === 2 ? (
+                  <Link
+                    href="/vendor/dashboard"
+                    className={`flex items-center gap-2 px-4 py-3 transition ${
+                      pathname.includes("/vendor/dashboard")
+                        ? "text-gray-900 font-bold"
+                        : "text-gray-600 hover:text-gray-900 font-normal"
+                    }`}
+                  >
+                    <User className="w-5 h-5" />
+                    <span className="text-sm font-normal">
+                      {" "}
+                      My Vendor Dashboard
+                    </span>
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setVendorDrawerOpen(true)}
+                    className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
+                      pathname === "/become-a-vendor"
+                        ? "text-gray-900 font-bold"
+                        : "text-gray-600 hover:text-gray-900 font-normal"
+                    }`}
+                  >
+                    <User className="w-5 h-5" />
+                    <span className="text-sm font-normal">
+                      Become a Vendor
+                    </span>{" "}
+                  </button>
+                )
               ) : (
                 <button
                   type="button"
@@ -492,10 +529,8 @@ export default function Navbar(): JSX.Element {
                       : "text-gray-600 hover:text-gray-900 font-normal"
                   }`}
                 >
-                  <User className="w-5 h-5" aria-hidden="true" />
-                  <span className="text-sm font-normal">
-                    Become a Vendor
-                  </span>
+                  <User className="w-5 h-5" />
+                  <span className="text-sm font-normal">Become a Vendor</span>
                 </button>
               )}
 
@@ -507,36 +542,30 @@ export default function Navbar(): JSX.Element {
                     : "text-gray-600 hover:text-gray-900 font-normal"
                 }`}
               >
-                <Tag className="w-5 h-5" aria-hidden="true" />
-                <span className="text-sm font-normal">Price Plan</span>
+                <Tag className="w-5 h-5" />
+                <span className="text-sm font-normal">Price Plan</span>{" "}
               </Link>
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Menu Drawer - Framer Motion and AnimatePresence are great for user experience (smoothness/perceived performance) */}
-      <AnimatePresence initial={false}>
+      <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 z-[101]" // Increased z-index
-            role="dialog"
-            aria-modal="true"
-            aria-label="Mobile Navigation"
+            className="lg:hidden fixed inset-0 z-50"
           >
-            {/* Overlay */}
             <div
               className="fixed inset-0 bg-black bg-opacity-50"
               onClick={() => setMobileMenuOpen(false)}
             />
-            {/* Drawer */}
             <motion.div
-              initial={{ x: "-100%" }} // Use percentage for better responsiveness
+              initial={{ x: -320 }}
               animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
+              exit={{ x: -320 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               className="fixed top-0 left-0 w-80 max-w-[85vw] h-full bg-white shadow-xl flex flex-col"
             >
@@ -545,32 +574,27 @@ export default function Navbar(): JSX.Element {
                   href="/"
                   className="flex items-center relative shine-effect"
                   onClick={() => setMobileMenuOpen(false)}
-                  aria-label="Home link to MHE BAZAR"
                 >
-                  {/* CWV Fix: Ensure consistent image properties */}
                   <Image
                     src="/mhe-logo.png"
                     alt="MHE BAZAR Logo"
                     width={120}
                     height={32}
                     className="h-8 w-auto object-contain"
-                    priority={true} // Priority loading
-                    sizes="120px"
+                    style={{ maxWidth: 120 }}
+                    priority
                   />
-                  <span className="shine-overlay" aria-hidden="true"></span>
+                  <span className="shine-overlay"></span>
                 </Link>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="p-2 text-gray-500 hover:text-gray-700"
-                  aria-label="Close navigation menu"
                 >
-                  <X className="w-6 h-6" aria-hidden="true" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
 
-              {/* Scrollable Content */}
               <div className="flex-1 flex flex-col overflow-y-auto">
-                {/* Categories */}
                 <div className="border-b border-gray-200">
                   <div className="px-4 py-3 bg-gray-50 text-sm font-semibold text-gray-600 uppercase tracking-wide">
                     Categories
@@ -578,29 +602,28 @@ export default function Navbar(): JSX.Element {
                   {categories?.map((category) => (
                     <div key={category.id} className="border-b border-gray-100">
                       <button
-                        onClick={() => handleMobileMenuClick(category.id)}
+                        onClick={() => {
+                          setOpenCategory(
+                            openCategory === category.id ? null : category.id
+                          );
+                        }}
                         className={`w-full flex justify-between items-center px-6 py-3 text-left transition ${
                           pathname.startsWith(`/${createSlug(category.name)}`)
                             ? "text-gray-900 font-bold"
                             : "text-gray-700 hover:bg-gray-50"
                         }`}
-                        aria-expanded={openCategory === category.id}
-                        aria-controls={`sub-menu-${category.id}`}
                       >
                         <span>{category.name}</span>
                         <ChevronDown
                           className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
                             openCategory === category.id ? "rotate-180" : ""
                           }`}
-                          aria-hidden="true"
                         />
                       </button>
 
-                      {/* Subcategories - Use motion for smooth collapse/expand */}
                       <AnimatePresence>
                         {openCategory === category.id && (
                           <motion.div
-                            id={`sub-menu-${category.id}`}
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
@@ -651,7 +674,6 @@ export default function Navbar(): JSX.Element {
                   ))}
                 </div>
 
-                {/* Navigation Links */}
                 <div className="flex-1">
                   {navigationLinks.map((link, index) => (
                     <Link
@@ -676,16 +698,16 @@ export default function Navbar(): JSX.Element {
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Image
-                      src="/brand-image.png"
-                      alt="Brand Store"
-                      width={120}
-                      height={40}
-                      priority={true}
-                      className="object-contain"
-                      sizes="100vw"
-                    />
-                    <span className="shine-overlay" aria-hidden="true"></span>
+                     <Image
+                  src="/brand-image.png"
+                  alt="Brand Store"
+                  width={120}
+                  height={40}
+                  priority
+                  className="object-contain"
+                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
+                />
+                    <span className="shine-overlay"></span>
                   </Link>
                   <Link
                     href="/contact"
@@ -698,8 +720,6 @@ export default function Navbar(): JSX.Element {
                   >
                     Help
                   </Link>
-
-                  {/* Mobile Vendor/Price Links */}
                   {isLoading ? (
                     <span className="block px-4 py-3 text-gray-700">
                       Loading...

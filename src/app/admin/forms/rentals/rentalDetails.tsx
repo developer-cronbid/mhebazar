@@ -12,6 +12,8 @@ interface Image {
 }
 
 interface ProductDetails {
+  category_name: any;
+  subcategory_name: any;
   name: string;
   user_name: string; // Vendor name
   price?: string | null;
@@ -33,6 +35,9 @@ interface Rental {
   status: 'pending' | 'approved' | 'rejected' | 'returned';
   created_at: string;
   rentbuy?: string | null; // Added rent/buy preference
+  full_name: string;
+  address: string;
+  phone: string;
 }
 
 interface RentalDetailsSheetProps {
@@ -98,6 +103,7 @@ export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, o
             {/* MODIFICATION: Conditionally render fields to avoid showing "N/A" */}
             {rental.product_details.model && <DetailRow label="Model" value={rental.product_details.model} />}
             {rental.product_details.manufacturer && <DetailRow label="Manufacturer" value={rental.product_details.manufacturer} />}
+            <DetailRow label="Category" value={`${rental.product_details.category_name} > ${rental.product_details.subcategory_name}`} />
             {rental.product_details.price && rental.product_details.price !== 'N/A' && (
               <DetailRow label="Price" value={`₹${Number(rental.product_details.price).toLocaleString()} / day`} />
             )}
@@ -137,10 +143,14 @@ export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, o
 
           {/* Requester Section */}
           <Section title="Requester Information" icon={<User className="h-5 w-5 text-gray-600" />}>
-            <DetailRow label="Name" value={rental.user_name} />
-            {/* MODIFICATION: Added Email and Phone Number fields */}
-            {rental.email && <DetailRow label="Email" value={<a href={`mailto:${rental.email}`} className="text-blue-600 hover:underline">{rental.email}</a>} />}
-            {rental.no && <DetailRow label="Phone" value={<a href={`tel:${rental.no}`} className="text-blue-600 hover:underline">{rental.no}</a>} />}
+            <DetailRow label="Full Name" value={rental.full_name || rental.user_name} />
+            {rental.email && <DetailRow label="Email" value={
+              <a href={`mailto:${rental.email}`} className="text-blue-600 hover:underline">{rental.email}</a>
+            } />}
+            {rental.phone && <DetailRow label="Phone" value={
+              <a href={`tel:${rental.phone}`} className="text-blue-600 hover:underline">{rental.phone}</a>
+            } />}
+            {rental.address && <DetailRow label="Address" value={rental.address} />}
           </Section>
         </div>
 

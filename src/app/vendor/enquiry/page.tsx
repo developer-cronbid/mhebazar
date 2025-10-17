@@ -286,6 +286,19 @@ const QuoteCard = ({ quote, onCustomerClick }: { quote: Quote, onCustomerClick: 
 
   const customerName = quote.full_name || quote.user_name;
 
+  // Helper function to extract company address
+  const extractCompanyAddress = (message: string) => {
+    const addressMatch = message.match(/Company Address:\s*(.+?)(?=\n|$)/);
+    if (addressMatch) {
+      const address = addressMatch[1].trim();
+      const cleanMessage = message.replace(/Company Address:\s*.+?(?=\n|$)/, '').trim();
+      return { address, cleanMessage };
+    }
+    return { address: null, cleanMessage: message };
+  };
+
+  const { address, cleanMessage } = extractCompanyAddress(quote.message);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -333,10 +346,11 @@ const QuoteCard = ({ quote, onCustomerClick }: { quote: Quote, onCustomerClick: 
             {quote.email && <InfoLine icon={<Mail size={14} />} text={quote.email} />}
             {quote.phone && <InfoLine icon={<Phone size={14} />} text={quote.phone} />}
             {quote.company_name && <InfoLine icon={<BriefcaseBusiness size={14} />} text={quote.company_name} />}
+            {address && <InfoLine icon={<MapPin size={14} />} text={address} />}
           </div>
           <div className="mb-2 mt-4 font-semibold text-primary">Message:</div>
           <p className="text-sm italic text-muted-foreground">
-            &quot;{quote.message}&quot;
+            &quot;{cleanMessage}&quot;
           </p>
         </CardContent>
         <CardFooter className="flex justify-between bg-muted/40 p-4">
@@ -396,18 +410,18 @@ const RentalCard = ({ rental, onCustomerClick }: { rental: Rental, onCustomerCli
           <div className="space-y-2">
             {customerName && (
               <div 
-                  className='flex items-center text-sm text-muted-foreground cursor-pointer hover:text-primary transition-colors'
-                  onClick={() => onCustomerClick(rental.user)}
+                className='flex items-center text-sm text-muted-foreground cursor-pointer hover:text-primary transition-colors'
+                onClick={() => onCustomerClick(rental.user)}
               >
-                  <div className="mr-2 shrink-0"><User size={14} /></div>
-                  <span className="truncate font-medium">{customerName}</span>
+                <div className="mr-2 shrink-0"><User size={14} /></div>
+                <span className="truncate font-medium">{customerName}</span>
               </div>
             )}
             {rental.email && <InfoLine icon={<Mail size={14} />} text={rental.email} />}
             {rental.phone && <InfoLine icon={<Phone size={14} />} text={rental.phone} />}
             {rental.address && <InfoLine icon={<Home size={14} />} text={rental.address} />}
-
           </div>
+          
           <div className="mb-2 mt-4 font-semibold text-primary">Rental Period:</div>
           <div className="space-y-2">
             <InfoLine
@@ -419,6 +433,7 @@ const RentalCard = ({ rental, onCustomerClick }: { rental: Rental, onCustomerCli
               text={`To: ${formatDate(rental.end_date)}`}
             />
           </div>
+          
           <div className="mb-2 mt-4 font-semibold text-primary">Notes:</div>
           <p className="text-sm italic text-muted-foreground">
             &quot;{rental.notes}&quot;
