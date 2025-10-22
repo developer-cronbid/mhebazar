@@ -4,7 +4,7 @@
 
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -30,6 +30,12 @@ const slugify = (text: string): string => {
     .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-')
     .replace(/-+$/, '')
+}
+
+// NEW: simple HTML detection helper
+const containsHTML = (text?: string) => {
+  if (!text) return false
+  return /<\/?[a-z][\s\S]*>/i.test(text)
 }
 
 type FieldOption = {
@@ -169,6 +175,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const productName = watch('name');
   const productManufacturer = watch('manufacturer');
   const productModel = watch('model');
+  const descriptionValue = watch('description'); // <- new: watch description
   const { user } = useUser();
 
   const hasSelectedRequiredFields = selectedCategoryId &&
@@ -599,6 +606,28 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   }, [brochureFile, keptBrochureUrl]);
 
 
+  // Add ref + state to support contentEditable HTML editing for description
+  const descriptionRef = useRef<HTMLDivElement | null>(null)
+  const [isHtmlMode, setIsHtmlMode] = useState<boolean>(false)
+
+  // Keep isHtmlMode in sync with the description content
+  useEffect(() => {
+    setIsHtmlMode(containsHTML(descriptionValue))
+  }, [descriptionValue])
+
+  // Ensure contentEditable reflects latest description when in HTML mode
+  useEffect(() => {
+    if (isHtmlMode && descriptionRef.current) {
+      descriptionRef.current.innerHTML = descriptionValue || ''
+    }
+  }, [isHtmlMode, descriptionValue])
+
+  // Handler for contentEditable updates -> update react-hook-form value
+  const handleDescriptionInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const html = (e.target as HTMLDivElement).innerHTML
+    setValue('description', html)
+  }
+
   return (
     <div className="overflow-auto bg-white">
       <div className="max-w-md mx-auto bg-white">
@@ -715,11 +744,26 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                 {/* Description */}
                 <div>
                   <Label className="text-sm text-gray-600 mb-1 block">Description</Label>
-                  <Textarea
-                    {...register('description')}
-                    placeholder="Enter product description"
-                    className="border-gray-300 min-h-[80px] text-sm resize-none"
-                  />
+
+                  {isHtmlMode ? (
+                    // Render editable HTML view when HTML is detected
+                    <div
+                      ref={descriptionRef}
+                      contentEditable
+                      suppressContentEditableWarning
+                      onInput={handleDescriptionInput}
+                      aria-label="Product Description (HTML)"
+                      className="border-gray-300 min-h-[80px] text-sm resize-none p-2 rounded"
+                      // initial content is synced via useEffect above
+                    />
+                  ) : (
+                    // Plain textarea when no HTML is present
+                    <Textarea
+                      {...register('description')}
+                      placeholder="Enter product description"
+                      className="border-gray-300 min-h-[80px] text-sm resize-none"
+                    />
+                  )}
                 </div>
 
                 {/* Vendor (Manufacturer) */}
