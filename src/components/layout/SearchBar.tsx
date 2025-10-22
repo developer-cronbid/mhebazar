@@ -1,12 +1,11 @@
-// src/components/SearchBar.tsx - FINAL STABLE CODE
+// src/components/SearchBar.tsx - FULL UNIVERSAL SEARCH WITH ALL TYPES (INCLUDING PRODUCT DETAILS)
 "use client";
 
-import { Search, Mic } from "lucide-react";
-import { useRef, useState, useEffect, useCallback, JSX, useMemo } from "react";
+import { Search, Mic, Tag, Package, Building2, LayoutGrid } from "lucide-react";
+import { useRef, useState, useEffect, useCallback, JSX } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "@/lib/api"; 
-// You MUST ensure you have a debounce utility available (e.g., install lodash or define one)
 import { debounce } from "lodash"; 
 
 declare const toast: { error: (message: string) => void };
@@ -20,30 +19,30 @@ type SearchBarProps = {
   setSearchQuery: (value: string) => void;
 };
 
+// Interface updated to include 'product' and 'product_type' and their specific fields
 interface SearchSuggestion {
   id: string | number; 
   name: string;
-  // Included 'vendor_product' type for hierarchy
-  type: 'vendor' | 'vendor_category' | 'vendor_product' | 'product' | 'category' | 'subcategory' | 'product_type';
-  category_slug?: string;
-  subcategory_slug?: string; 
+  type: 'vendor' | 'category' | 'subcategory' | 'vendor_category' | 'product' | 'product_type'; 
   vendor_slug?: string;
-  product_id?: number;
-  user_id?: number;
-  model?: string;
+  category_slug?: string; 
+  subcategory_slug?: string;
+  
+  // Product specific fields (passed from backend)
+  url?: string; 
+  product_id?: string | number;
   product_tags?: {
-    vendor: string;
-    category: string;
-    subcategory: string;
+    model?: string;
+    vendor?: string;
+    category?: string;
+    subcategory?: string;
   };
 }
 
-const createSlug = (name: string): string =>
-  name?.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "") || "";
-
+// Minimal Constants
 const INITIAL_VISIBLE_COUNT = 20;
-const LOAD_MORE_STEP = 30;
-const DEBOUNCE_TIME = 300; // FIX: Stable debounce time (used to be 100)
+const DEBOUNCE_TIME = 300; 
+
 
 export default function SearchBar({
   searchQuery,
@@ -51,16 +50,11 @@ export default function SearchBar({
 }: SearchBarProps): JSX.Element {
   const [listening, setListening] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
-  const [visibleCount, setVisibleCount] = useState<number>(INITIAL_VISIBLE_COUNT);
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    setVisibleCount(INITIAL_VISIBLE_COUNT);
-  }, [searchQuery]);
-  
   // 1. Stable debounce function
   const fetchSuggestions = useCallback(
     debounce(async (query: string) => {
@@ -71,23 +65,17 @@ export default function SearchBar({
       }
       
       try {
+        // Updated API call reflects the Universal Search endpoint
         const response = await api.get<SearchSuggestion[]>(
           `/search/universal/?search=${encodeURIComponent(query)}`
         );
 
-        const newSuggestions: SearchSuggestion[] = response.data || [];
-        
-        const uniqueSuggestionsMap = new Map<string, SearchSuggestion>();
-        newSuggestions.filter(item => !!item.name).forEach(item => {
-            uniqueSuggestionsMap.set(`${item.type}_${String(item.id)}`, item); 
-        });
-        
-        const filteredSuggestions = Array.from(uniqueSuggestionsMap.values());
-        
-        setSuggestions(filteredSuggestions);
+        setSuggestions(response.data || []);
         setShowSuggestions(query.length > 0); 
 
       } catch (error) {
+        // Assuming 'toast' is available globally
+        // toast.error("Failed to fetch search suggestions.");
         setSuggestions([]);
         setShowSuggestions(query.length > 0); 
       }
@@ -95,7 +83,7 @@ export default function SearchBar({
     [] // Stable function
   );
 
-  // 2. Main search effect now calls the stable debounced function
+  // 2. Main search effect 
   useEffect(() => {
     if (searchQuery.length < 1) { 
         fetchSuggestions.cancel();
@@ -112,14 +100,9 @@ export default function SearchBar({
   }, [searchQuery, fetchSuggestions]);
 
 
-  const visibleSuggestions = useMemo(() => {
-    return suggestions.slice(0, visibleCount);
-  }, [suggestions, visibleCount]);
-
-  const handleLoadMore = useCallback(() => {
-    setVisibleCount(prev => prev + LOAD_MORE_STEP);
-  }, []);
-
+  const visibleSuggestions = suggestions.slice(0, INITIAL_VISIBLE_COUNT); 
+  const isSearchActive = searchQuery.length >= 1; 
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
       if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
@@ -132,8 +115,8 @@ export default function SearchBar({
     };
   }, []);
 
+  // Voice logic remains the same
   const handleMicClick = useCallback((): void => {
-    // ... (Voice search logic remains the same) ...
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       if (typeof toast !== 'undefined' && toast.error) {
         toast.error("Voice search is not supported in this browser.");
@@ -168,47 +151,113 @@ export default function SearchBar({
     }
   }, [listening, setSearchQuery]);
 
+  // *** REDIRECTION LOGIC (UPDATED FOR ALL SIX TYPES) ***
   const handleSuggestionClick = useCallback(
     (item: SearchSuggestion) => {
       setShowSuggestions(false);
-      // FIX: Set the search query to the item name (do NOT clear it)
       setSearchQuery(item.name); 
 
-      if (item.type === "vendor" && item.vendor_slug) {
+      // 1. Product (Specific URL provided by backend)
+      if (item.type === "product" && item.url) {
+        router.push(item.url); // e.g., /product/[slug]-[id]
+      } 
+      // 2. Product Type (Specific URL provided by backend, or base slug)
+      else if (item.type === "product_type" && item.url) {
+        router.push(`/${item.category_slug}`); // e.g., /search?type=new
+      }
+      // 3. Vendor-Category (Vendor Page, filtered by Category)
+      else if (item.type === "vendor_category" && item.vendor_slug && item.category_slug) {
+        router.push(`/vendor-listing/${item.vendor_slug}?category=${item.category_slug}`);
+      } 
+      // 4. Vendor (Generic Vendor Listing)
+      else if (item.type === "vendor" && item.vendor_slug) {
         router.push(`/vendor-listing/${item.vendor_slug}`);
-      } else if (item.type === "vendor_category" && item.vendor_slug && item.category_slug) {
-        router.push(`/vendor-listing/${item.vendor_slug}?page=1&category=${item.category_slug}`);
-      } else if (item.type === "category" && item.category_slug) {
-        router.push(`/${item.category_slug}`);
       } 
+      // 5. Category (Redirects directly to /category-slug)
+      else if (item.type === "category" && item.category_slug) {
+        router.push(`/${item.category_slug}`); 
+      } 
+      // 6. Subcategory (Redirects directly to /category-slug/sub-cat-slug)
       else if (item.type === "subcategory" && item.category_slug && item.subcategory_slug) {
-        router.push(`/${item.category_slug}/${item.subcategory_slug}`); 
+        router.push(`/${item.category_slug}/${item.subcategory_slug}`);
       } 
-      else if (item.type === "product_type" && item.category_slug) {
-        router.push(`/${item.category_slug}`);
-      } 
-      // FIX: Handle both 'product' and the new 'vendor_product' type
-      else if ((item.type === "product" || item.type === "vendor_product") && item.name && item.product_id) {
-        router.push(`/product/${createSlug(item.name)}-${item.product_id}`);
+      // Fallback to general search
+      else {
+        router.push(`/search?q=${encodeURIComponent(item.name)}`);
       }
     },
     [router, setSearchQuery]
   );
+  
+  // Helper component to render badge
+  const TagBadge = ({ label, value, icon: Icon, colorClass }: { label: string, value: string | undefined, icon: any, colorClass: string }) => {
+    if (!value) return null;
+    return (
+      <span className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${colorClass} mr-2 mb-1`}>
+        <Icon className="w-3 h-3 mr-1 opacity-70" />
+        {label}: <span className="ml-1 font-semibold">{value}</span>
+      </span>
+    );
+  };
+  
+  // Helper component to render a suggestion item
+  const SuggestionItem = ({ item }: { item: SearchSuggestion }) => {
+    const isProduct = item.type === 'product';
+    const tag = item.type.replace('_', ' ');
 
-  const hasMore = visibleCount < suggestions.length;
-  const isSearchActive = searchQuery.length >= 1; 
+    let badgeClass = 'bg-purple-50 text-purple-600';
+    if (item.type === 'product') badgeClass = 'bg-red-50 text-red-600';
+    else if (item.type === 'product_type') badgeClass = 'bg-pink-50 text-pink-600';
+    else if (item.type === 'vendor_category') badgeClass = 'bg-orange-50 text-orange-600';
+    else if (item.type === 'vendor') badgeClass = 'bg-green-50 text-green-600';
+    else if (item.type === 'category') badgeClass = 'bg-blue-50 text-blue-600';
+
+    return (
+      <div
+        key={item.id} 
+        className={`px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm transition border-b border-gray-100 last:border-b-0 ${isProduct ? 'flex-col items-start' : 'flex-row justify-between items-start'}`}
+        onClick={() => handleSuggestionClick(item)}
+      >
+        <div className={`flex ${isProduct ? 'w-full justify-between mb-1' : 'flex-row flex-1 min-w-0'}`}>
+            <span className="font-medium text-gray-800 break-words flex-1 min-w-0 mr-3">
+              {item.name}
+            </span>
+            {/* Item Type Tag */}
+            <span className={`text-xs capitalize font-semibold px-2 py-1 rounded-full flex-shrink-0 ${badgeClass}`}>
+              {tag} 
+            </span>
+        </div>
+
+        {/* DETAILS SECTION: Model, Vendor, Category for Product suggestions */}
+        {isProduct && item.product_tags && (
+          <div className="flex flex-wrap mt-1">
+            <TagBadge label="Model" value={item.product_tags.model} icon={Tag} colorClass="bg-gray-100 text-gray-700" />
+            <TagBadge label="Vendor" value={item.product_tags.vendor} icon={Building2} colorClass="bg-green-100 text-green-700" />
+            <TagBadge label="Category" value={item.product_tags.category} icon={LayoutGrid} colorClass="bg-blue-100 text-blue-700" />
+            {/* Subcategory is optional but good to include if present */}
+            {item.product_tags.subcategory && (
+                <TagBadge label="Subcategory" value={item.product_tags.subcategory} icon={Package} colorClass="bg-purple-100 text-purple-700" />
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const displayPlaceholder = isSearchActive ? "Refining results..." : "Search Products, Vendors, Categories...";
+
 
   return (
     <div className="relative w-full" ref={searchBarRef}>
       <input
         type="text"
-        placeholder="Search by Products, Categories, Vendors..."
+        placeholder={displayPlaceholder} 
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        // FIX: Re-open on focus only if there are results
         onFocus={() => isSearchActive && suggestions.length > 0 && setShowSuggestions(true)}
         onKeyDown={(e) => {
              if (e.key === 'Enter' && searchQuery.trim()) {
+                // Main search still redirects to the general search page
                 router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
                 setShowSuggestions(false);
              }
@@ -248,58 +297,8 @@ export default function SearchBar({
             {suggestions.length > 0 ? (
               <>
                 {visibleSuggestions.map((item) => (
-                  <div
-                    key={item.id} 
-                    className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-sm flex justify-between items-start transition border-b border-gray-100 last:border-b-0"
-                    onClick={() => handleSuggestionClick(item)}
-                  >
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <span className="font-medium text-gray-800 break-words">
-                        {item.name}
-                        {/* Show model for product/vendor_product types */}
-                        {(item.type === 'product' || item.type === 'vendor_product') && item.model && (
-                            <span className="text-gray-500 text-xs ml-2">({item.model})</span>
-                        )}
-                      </span>
-                      
-                      {/* Show product tags for product/vendor_product types */}
-                      {(item.type === 'product' || item.type === 'vendor_product') && item.product_tags && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                              {item.product_tags.vendor && (
-                                <span className="text-xs text-gray-600 bg-gray-100 px-1 py-0.5 rounded-full whitespace-nowrap">
-                                    Vendor: {item.product_tags.vendor}
-                                </span>
-                              )}
-                              {item.product_tags.category && (
-                                <span className="text-xs text-blue-600 bg-blue-50 px-1 py-0.5 rounded-full whitespace-nowrap">
-                                    Cat: {item.product_tags.category}
-                                </span>
-                              )}
-                              {item.product_tags.subcategory && (
-                                <span className="text-xs text-purple-600 bg-purple-50 px-1 py-0.5 rounded-full whitespace-nowrap">
-                                    Subcat: {item.product_tags.subcategory}
-                                </span>
-                              )}
-                          </div>
-                      )}
-
-                    </div>
-                    
-                    {/* Item Type Tag */}
-                    <span className="text-xs text-green-600 capitalize font-semibold bg-green-50 px-2 py-1 rounded-full ml-3 flex-shrink-0">
-                      {item.type.replace('_', ' ')}
-                    </span>
-                  </div>
+                    <SuggestionItem key={item.id} item={item} />
                 ))}
-                
-                {hasMore && (
-                  <div 
-                    className="p-3 text-center text-sm font-medium text-blue-600 cursor-pointer hover:bg-blue-50 transition"
-                    onClick={handleLoadMore}
-                  >
-                    Load More ({suggestions.length - visibleCount} remaining)
-                  </div>
-                )}
                 
                  <div 
                     className="p-3 text-center text-sm font-medium text-gray-600 cursor-pointer hover:bg-gray-50 transition border-t"
@@ -313,7 +312,7 @@ export default function SearchBar({
               </>
             ) : (
                 <div className="p-4 text-center text-gray-400">
-                    No perfect matches found. Try refining your search.
+                    No matching results found. Try a different query.
                 </div>
             )}
           </motion.div>
