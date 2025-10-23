@@ -82,6 +82,30 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
+                {/* Product JSON-LD Schema */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: `
+              {
+                "@context": "https://schema.org/",
+                "@type": "Product",
+                "name": "{{instance.name}}",
+                "image": "https://{{ request.get_host }}{{instance.list_pic.url}}",
+                "description": "{{instance.About_Tour|striptags}}",
+                "mpn": "",
+                "offers": {
+                  "@type": "AggregateOffer",
+                  "url": "https://{{ request.get_host }}{{ request.path }}",
+                  "priceCurrency": "INR",
+                  "price": "{{instance.price_striked}}"
+                }
+              }
+            `,
+          }}
+        />
+
+
         <Suspense>
           <Canonical />
         </Suspense>
