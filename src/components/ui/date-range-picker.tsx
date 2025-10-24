@@ -23,14 +23,56 @@ export type DateRangePickerProps = {
   date: DateRange | undefined;
   onDateChange: (date: DateRange | undefined) => void;
   className?: string;
+  periodFilter?: string;
 };
 
 export function DateRangePicker({
   date,
   onDateChange,
   className,
+  periodFilter
 }: DateRangePickerProps) {
   const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
+
+  // Update date range when period filter changes
+  React.useEffect(() => {
+    if (!periodFilter || periodFilter === 'all') {
+      onDateChange(undefined);
+      return;
+    }
+
+    const today = new Date();
+    const from = new Date();
+    
+    switch (periodFilter) {
+      case "thisMonth":
+        from.setDate(1);
+        onDateChange({ from, to: today });
+        break;
+      case "lastMonth":
+        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+        onDateChange({ from: lastMonth, to: lastMonthEnd });
+        break;
+      case "last3Months":
+        from.setMonth(today.getMonth() - 3);
+        onDateChange({ from, to: today });
+        break;
+      case "last6Months":
+        from.setMonth(today.getMonth() - 6);
+        onDateChange({ from, to: today });
+        break;
+      case "thisYear":
+        from.setMonth(0, 1);
+        onDateChange({ from, to: today });
+        break;
+      case "lastYear":
+        const lastYear = new Date(today.getFullYear() - 1, 0, 1);
+        const lastYearEnd = new Date(today.getFullYear() - 1, 11, 31);
+        onDateChange({ from: lastYear, to: lastYearEnd });
+        break;
+    }
+  }, [periodFilter, onDateChange]);
 
   // Predefined ranges
   const selectRange = (range: string) => {

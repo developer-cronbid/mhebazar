@@ -15,6 +15,7 @@ import quoteData from '@/data/quoteData.json';
 import Link from 'next/link';
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+import { RequestStats } from "@/components/stats/RequestStats";
 
 // Interfaces for data structure
 interface Image {
@@ -65,6 +66,7 @@ const QuotesTable = () => {
 
   // States for client-side filtering, sorting, pagination
   const [statusFilter, setStatusFilter] = useState('all');
+  const [periodFilter, setPeriodFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [globalFilter, setGlobalFilter] = useState('');
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
@@ -363,82 +365,120 @@ const QuotesTable = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm overflow-auto">
-      <QuoteDetailsSheet
-        quote={selectedQuote}
-        isOpen={isSheetOpen}
-        isUpdating={isUpdating}
-        onOpenChange={setIsSheetOpen}
-        onApprove={() => selectedQuote && handleApproveReject(selectedQuote.id, 'approve')}
-        onReject={() => selectedQuote && handleApproveReject(selectedQuote.id, 'reject')}
-      />
-      {/* Header */}
-      <div className="mb-6 flex justify-between items-center">
+    <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
+      {/* Header with title and export */}
+      <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">All Quote Requests (Live & Archived)</h1>
-          <p className="text-sm text-gray-500 mt-1">Browse and manage all quote requests from users.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Quote Management</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage and track all quote requests</p>
         </div>
-        <Button onClick={handleExportToExcel} disabled={loading || paginatedData.length === 0} className="flex items-center gap-2">
-          <Download size={16} />
-          Export as Excel
-        </Button>
+        <div className="flex items-center gap-4">
+          {/* Entries count and pagination */}
+          <div className="flex items-center gap-4">
+            {!loading && (
+              <span className="text-sm text-gray-600 whitespace-nowrap">
+                {`Showing ${totalQuotes > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalQuotes)} of ${totalQuotes} entries`}
+              </span>
+            )}
+            {!loading && totalPages > 1 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => handlePageChange(page - 1)} 
+                      disabled={page === 1} 
+                      className={page === 1 ? "pointer-events-none opacity-50" : ""} 
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="px-4 py-2">{`Page ${page} of ${totalPages}`}</span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => handlePageChange(page + 1)} 
+                      disabled={page === totalPages} 
+                      className={page === totalPages ? "pointer-events-none opacity-50" : ""} 
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </div>
+          <Button 
+            onClick={handleExportToExcel} 
+            disabled={loading || paginatedData.length === 0} 
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            <Download size={16} />
+            Export Data
+          </Button>
+        </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-4">
-        <div className='flex items-center gap-4 flex-wrap'>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Status</span>
-            <Select value={statusFilter} onValueChange={value => { setStatusFilter(value); setPage(1); }}>
-              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Filter by status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
+      {/* Stats Section */}
+      <RequestStats
+        data={allQuotes}
+        dateField="created_at"
+        periodFilter={periodFilter}
+        onPeriodChange={setPeriodFilter}
+      />
+
+      {/* Filters Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Status</span>
+              <Select value={statusFilter} onValueChange={value => { setStatusFilter(value); setPage(1); }}>
+                <SelectTrigger className="w-[140px]"><SelectValue placeholder="Filter by status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">Sort by</span>
+              <Select
+                value={sortBy[0] ? `${sortBy[0].id}:${sortBy[0].desc}` : 'created_at:true'}
+                onValueChange={value => {
+                  const [id, desc] = value.split(':');
+                  setSortBy([{ id, desc: desc === 'true' }]);
+                }}
+              >
+                <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="created_at:true">Newest First</SelectItem>
+                  <SelectItem value="created_at:false">Oldest First</SelectItem>
+                  <SelectItem value="product_name:false">Product Name (A-Z)</SelectItem>
+                  <SelectItem value="product_name:true">Product Name (Z-A)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Sort by</span>
-            <Select
-              value={sortBy[0] ? `${sortBy[0].id}:${sortBy[0].desc}` : 'created_at:true'}
-              onValueChange={value => {
-                const [id, desc] = value.split(':');
-                setSortBy([{ id, desc: desc === 'true' }]);
-              }}
-            >
-              <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="created_at:true">Newest First</SelectItem>
-                <SelectItem value="created_at:false">Oldest First</SelectItem>
-                <SelectItem value="product_name:false">Product Name (A-Z)</SelectItem>
-                <SelectItem value="product_name:true">Product Name (Z-A)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="text"
-              placeholder="Search by product, user..."
-              value={globalFilter}
-              onChange={e => setGlobalFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1 text-sm h-9 w-full md:w-auto"
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="Search by product, user..."
+            value={globalFilter}
+            onChange={e => setGlobalFilter(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          />
         </div>
-        <div className="flex flex-col md:flex-row md:gap-4 w-full md:w-auto">
+        <div className="w-full">
           <DateRangePicker
             date={dateRange}
             onDateChange={setDateRange}
-            className="w-full md:w-[300px]"
+            periodFilter={periodFilter}
+            className="w-full"
           />
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table Section */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <div className="relative overflow-auto h-[68vh]">
+        <div className="relative overflow-auto" style={{ height: 'calc(100vh - 450px)' }}>
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10 bg-gray-50">
               {table.getHeaderGroups().map(headerGroup => (
@@ -485,25 +525,10 @@ const QuotesTable = () => {
         </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between gap-4 mt-4">
-        <div className="text-sm text-gray-600">
-          {!loading && `Showing ${totalQuotes > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalQuotes)} of ${totalQuotes} entries`}
-        </div>
-        {!loading && totalPages > 1 && (
-          <Pagination className='justify-end'>
-            <PaginationContent>
-              <PaginationItem><PaginationPrevious onClick={() => handlePageChange(page - 1)} aria-disabled={page === 1} className={page === 1 ? "pointer-events-none opacity-50" : ""} /></PaginationItem>
-              {generatePagination().map((p, index) => (
-                <PaginationItem key={index}>
-                  {typeof p === 'string' ? <PaginationEllipsis /> : <PaginationLink isActive={page === p} onClick={() => handlePageChange(p)}>{p}</PaginationLink>}
-                </PaginationItem>
-              ))}
-              <PaginationItem><PaginationNext onClick={() => handlePageChange(page + 1)} aria-disabled={page === totalPages} className={page === totalPages ? "pointer-events-none opacity-50" : ""} /></PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        )}
-      </div>
+      {/* Remove the bottom info section since it's now at the top */}
+      {/* <div className="text-sm text-gray-600">
+        {!loading && `Showing ${totalQuotes > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalQuotes)} of ${totalQuotes} entries`}
+      </div> */}
     </div>
   );
 };
