@@ -366,6 +366,16 @@ const QuotesTable = () => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
+      {/* Details Sheet - Add it back */}
+      <QuoteDetailsSheet
+        quote={selectedQuote}
+        isOpen={isSheetOpen}
+        isUpdating={isUpdating}
+        onOpenChange={setIsSheetOpen}
+        onApprove={() => selectedQuote && handleApproveReject(selectedQuote.id, 'approve')}
+        onReject={() => selectedQuote && handleApproveReject(selectedQuote.id, 'reject')}
+      />
+
       {/* Header with title and export */}
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
@@ -476,7 +486,7 @@ const QuotesTable = () => {
         </div>
       </div>
 
-      {/* Table Section */}
+      {/* Table Section - Update onClick handler */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
         <div className="relative overflow-auto" style={{ height: 'calc(100vh - 450px)' }}>
           <table className="w-full text-sm">

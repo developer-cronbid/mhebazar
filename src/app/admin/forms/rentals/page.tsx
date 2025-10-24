@@ -338,6 +338,15 @@ const RentalsTable = () => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
+      {/* Details Sheet - Add it back */}
+      <RentalDetailsSheet
+        rental={selectedRental}
+        isOpen={isSheetOpen}
+        isUpdating={isUpdating}
+        onOpenChange={setIsSheetOpen}
+        onUpdateStatus={handleUpdateRentalStatus}
+      />
+
       {/* Header with title and export */}
       <div className="flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
@@ -449,7 +458,7 @@ const RentalsTable = () => {
         </div>
       </div>
 
-      {/* Table Section */}
+      {/* Table Section - Update onClick handler */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
         <div className="relative overflow-auto" style={{ height: 'calc(100vh - 450px)' }}>
           <table className="w-full text-sm">
