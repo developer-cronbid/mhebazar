@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
-import api from '@/lib/api';
+import { useEffect, useState, useRef } from "react";
+import api from "@/lib/api";
 // NEW: AnimatePresence for exit animations and new icons
-import { motion } from 'framer-motion';
-import { Calendar, Clock, Hash } from 'lucide-react';
+import { motion } from "framer-motion";
+import { Calendar, Clock, Hash, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import '@/styles/blog-styles.css'
+import "@/styles/blog-styles.css";
 
 // Interfaces remain the same
 interface Blog {
@@ -60,7 +60,6 @@ const TocContent = ({ toc, onLinkClick }: TocContentProps) => (
   </>
 );
 
-
 export default function BlogPostPage({ params }: { params: { slug: string } }) {
   // `params.slug` is automatically populated by Next.js with the value from the URL.
   // For a URL like "/blog/my-first-post", params.slug will be "my-first-post".
@@ -100,38 +99,43 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   useEffect(() => {
     if (blog) {
       const metaTitle = blog.meta_title || blog.blog_title || "MHE Bazar Blog";
-      const metaDescription = blog.description1 || blog.description || "Read the latest blog posts on material handling equipment.";
+      const metaDescription =
+        blog.description1 ||
+        blog.description ||
+        "Read the latest blog posts on material handling equipment.";
 
       // Set the document title
       document.title = metaTitle;
 
       // Update or create meta description tag
-      let metaDescriptionTag = document.querySelector('meta[name="description"]');
+      let metaDescriptionTag = document.querySelector(
+        'meta[name="description"]'
+      );
       if (!metaDescriptionTag) {
-        metaDescriptionTag = document.createElement('meta');
-        metaDescriptionTag.setAttribute('name', 'description');
+        metaDescriptionTag = document.createElement("meta");
+        metaDescriptionTag.setAttribute("name", "description");
         document.head.appendChild(metaDescriptionTag);
       }
-      metaDescriptionTag.setAttribute('content', metaDescription);
+      metaDescriptionTag.setAttribute("content", metaDescription);
 
       // Update or create meta title tag
       let metaTitleTag = document.querySelector('meta[name="title"]');
       if (!metaTitleTag) {
-        metaTitleTag = document.createElement('meta');
-        metaTitleTag.setAttribute('name', 'title');
+        metaTitleTag = document.createElement("meta");
+        metaTitleTag.setAttribute("name", "title");
         document.head.appendChild(metaTitleTag);
       }
-      metaTitleTag.setAttribute('content', metaTitle);
+      metaTitleTag.setAttribute("content", metaTitle);
 
       // Update or create canonical link tag
       const canonicalUrl = `https://www.mhebazar.in/blog/${slug}`;
       let canonicalLinkTag = document.querySelector('link[rel="canonical"]');
       if (!canonicalLinkTag) {
-        canonicalLinkTag = document.createElement('link');
-        canonicalLinkTag.setAttribute('rel', 'canonical');
+        canonicalLinkTag = document.createElement("link");
+        canonicalLinkTag.setAttribute("rel", "canonical");
         document.head.appendChild(canonicalLinkTag);
       }
-      canonicalLinkTag.setAttribute('href', canonicalUrl);
+      canonicalLinkTag.setAttribute("href", canonicalUrl);
     }
   }, [blog, slug]);
 
@@ -152,7 +156,11 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     ) as HTMLElement[];
     const newToc = headingElements.map((heading, index) => {
       const text = heading.innerText.trim();
-      const id = text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") + `-${index}`;
+      const id =
+        text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "") + `-${index}`;
       return { id, text, level: 2 };
     });
     setToc(newToc);
@@ -185,48 +193,56 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   };
 
   // Image handling logic remains the same
-// New Logic in page.tsx
-const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
-  // 1. Fallback to default image if no path
-  if (!imagePath) {
-    return "/mhe-logo.png";
-  }
+  // New Logic in page.tsx
+  const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
+    // 1. Fallback to default image if no path
+    if (!imagePath) {
+      return "/mhe-logo.png";
+    }
 
-  // 2. Fallback to existing local asset logic ONLY if an error has occurred
-  if (hasError) {
-    const filename = imagePath.split('/').pop();
-    // This is your secondary local fallback
-    return `/css/asset/blogimg/${filename}`; 
-  }
+    // 2. Fallback to existing local asset logic ONLY if an error has occurred
+    if (hasError) {
+      const filename = imagePath.split("/").pop();
+      // This is your secondary local fallback
+      return `/css/asset/blogimg/${filename}`;
+    }
 
-  // 3. Primary Logic: Use the path as is (works for full URLs like http://api.mhebazar.in/...)
-  if (imagePath.startsWith("http")) {
+    // 3. Primary Logic: Use the path as is (works for full URLs like http://api.mhebazar.in/...)
+    if (imagePath.startsWith("http")) {
+      return imagePath;
+    }
+
+    // 4. Handle relative API paths (as seen in BlogListClient.tsx logic)
+    if (imagePath.startsWith("media/")) {
+      // Construct the full API URL for relative paths
+      return `https://api.mhebazar.in/${imagePath}`;
+    }
+
+    // 5. Default: Treat it as a direct path if none of the above
     return imagePath;
-  }
-
-  // 4. Handle relative API paths (as seen in BlogListClient.tsx logic)
-  if (imagePath.startsWith("media/")) {
-    // Construct the full API URL for relative paths
-    return `https://api.mhebazar.in/${imagePath}`;
-  }
-  
-  // 5. Default: Treat it as a direct path if none of the above
-  return imagePath; 
-};
+  };
 
   const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
 
   const handleImageError = (id: number) => {
-    setImageError(prev => ({ ...prev, [id]: true }));
+    setImageError((prev) => ({ ...prev, [id]: true }));
   };
 
   // --- RENDER LOGIC ---
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   if (error || !blog) {
-    return <div className="flex items-center justify-center h-screen text-red-500">{error || "Blog not found."}</div>;
+    return (
+      <div className="flex items-center justify-center h-screen text-red-500">
+        {error || "Blog not found."}
+      </div>
+    );
   }
 
   return (
@@ -234,11 +250,10 @@ const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
       <div className="bg-background text-foreground">
         <div className="container mx-auto px-2 py-8 lg:py-16">
           <div className="grid grid-cols-12 lg:gap-12">
-
             {/* --- Desktop Sidebar: Table of Contents --- */}
             <aside className="hidden lg:block col-span-3">
               <div className="sticky top-40">
-                <Card className='border border-l-4 border-[#5ca030]'>
+                <Card className="border border-l-4 border-[#5ca030]">
                   <CardContent className="px-6">
                     {/* Use the reusable component */}
                     <TocContent toc={toc} onLinkClick={handleTocClick} />
@@ -261,16 +276,28 @@ const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
                     {blog.blog_title}
                   </h1>
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground text-sm">
+                  
                     <div className="flex items-center space-x-2">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={`https://api.dicebear.com/8.x/initials/svg?seed=${blog.author_name || 'A'}`} />
-                        <AvatarFallback>{(blog.author_name || 'A').charAt(0)}</AvatarFallback>
+                      <Avatar className="h-8 w-8 bg-green-300 dark:bg-green-700">
+                        {" "}
+                        {/* Generic background added */}
+                        {/* AvatarImage ko hata diya gaya taaki initials image load na ho */}
+                        <AvatarFallback>
+                          {/* Ab User icon dikhega initials ke bajaye */}
+                          <User className="h-5 w-5 text-green-600 dark:text-green-900" />
+                        </AvatarFallback>
                       </Avatar>
-                      <span>{blog.author_name || 'Anonymous'}</span>
+                      <span>{blog.author_name || "Anonymous"}</span>
                     </div>
                     <div className="flex items-center">
                       <Calendar className="mr-2 h-4 w-4" />
-                      <span>{new Date(blog.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      <span>
+                        {new Date(blog.created_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <Clock className="mr-2 h-4 w-4" />
@@ -284,7 +311,7 @@ const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
                   src={getImageUrl(blog.image1, imageError[blog.id] || false)}
                   alt={blog.blog_title}
                   className="w-full h-auto rounded-xl object-cover mb-8 shadow-lg"
-                  style={{ aspectRatio: '16/9' }}
+                  style={{ aspectRatio: "16/9" }}
                   onError={() => handleImageError(blog.id)}
                 />
               </motion.div>
@@ -307,16 +334,16 @@ const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
       {/* <AnimatePresence>
         {isTocOpen && (
           <> */}
-            {/* Overlay */}
-            {/* <motion.div
+      {/* Overlay */}
+      {/* <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsTocOpen(false)}
               className="fixed inset-0 bg-black/50 z-40 lg:hidden"
             /> */}
-            {/* Drawer */}
-            {/* <motion.div
+      {/* Drawer */}
+      {/* <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
