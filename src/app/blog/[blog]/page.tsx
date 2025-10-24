@@ -185,13 +185,34 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   };
 
   // Image handling logic remains the same
-  const getImageUrl = (imagePath: string | null, hasError: boolean) => {
-    if (hasError || !imagePath) {
-      return "/mhe-logo.png";
-    }
+// New Logic in page.tsx
+const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
+  // 1. Fallback to default image if no path
+  if (!imagePath) {
+    return "/mhe-logo.png";
+  }
+
+  // 2. Fallback to existing local asset logic ONLY if an error has occurred
+  if (hasError) {
     const filename = imagePath.split('/').pop();
-    return `/css/asset/blogimg/${filename}`;
-  };
+    // This is your secondary local fallback
+    return `/css/asset/blogimg/${filename}`; 
+  }
+
+  // 3. Primary Logic: Use the path as is (works for full URLs like http://api.mhebazar.in/...)
+  if (imagePath.startsWith("http")) {
+    return imagePath;
+  }
+
+  // 4. Handle relative API paths (as seen in BlogListClient.tsx logic)
+  if (imagePath.startsWith("media/")) {
+    // Construct the full API URL for relative paths
+    return `https://api.mhebazar.in/${imagePath}`;
+  }
+  
+  // 5. Default: Treat it as a direct path if none of the above
+  return imagePath; 
+};
 
   const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
 
