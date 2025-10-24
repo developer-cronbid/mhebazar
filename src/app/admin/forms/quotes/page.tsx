@@ -13,6 +13,8 @@ import { ImageIcon, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import quoteData from '@/data/quoteData.json';
 import Link from 'next/link';
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 // Interfaces for data structure
 interface Image {
@@ -69,6 +71,7 @@ const QuotesTable = () => {
   const [sortBy, setSortBy] = useState<SortingState>([
     { id: 'created_at', desc: true }
   ]);
+  const [dateRange, setDateRange] = useState<DateRange>();
   const pageSize = 20;
 
   // Debounce search input for performance
@@ -151,6 +154,17 @@ const QuotesTable = () => {
       );
     }
 
+    // Apply date range filter
+    if (dateRange?.from) {
+      filteredData = filteredData.filter(quote => {
+        const quoteDate = new Date(quote.created_at);
+        if (dateRange.to) {
+          return quoteDate >= dateRange.from && quoteDate <= dateRange.to;
+        }
+        return quoteDate >= dateRange.from;
+      });
+    }
+
     // Apply sorting
     if (sortBy.length > 0) {
       const sort = sortBy[0];
@@ -173,7 +187,7 @@ const QuotesTable = () => {
     }
 
     return filteredData;
-  }, [allQuotes, statusFilter, debouncedGlobalFilter, sortBy]);
+  }, [allQuotes, statusFilter, debouncedGlobalFilter, sortBy, dateRange]);
 
   const totalQuotes = processedData.length;
   const totalPages = Math.ceil(totalQuotes / pageSize);
@@ -412,6 +426,13 @@ const QuotesTable = () => {
               className="border border-gray-300 rounded px-3 py-1 text-sm h-9 w-full md:w-auto"
             />
           </div>
+        </div>
+        <div className="flex flex-col md:flex-row md:gap-4 w-full md:w-auto">
+          <DateRangePicker
+            date={dateRange}
+            onDateChange={setDateRange}
+            className="w-full md:w-[300px]"
+          />
         </div>
       </div>
 

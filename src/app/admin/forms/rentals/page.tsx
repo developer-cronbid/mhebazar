@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import rentData from '@/data/rentData.json';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { DateRange } from "react-day-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 // Define TypeScript interfaces based on your API response
 interface Image {
@@ -67,6 +69,7 @@ const RentalsTable = () => {
   const [sortBy, setSortBy] = useState<SortingState>([
     { id: 'created_at', desc: true }
   ]);
+  const [dateRange, setDateRange] = useState<DateRange>();
   const pageSize = 20;
 
   useEffect(() => {
@@ -135,6 +138,17 @@ const RentalsTable = () => {
   const processedData = useMemo(() => {
     let filteredData = [...allRentals];
 
+    // Apply date range filter
+    if (dateRange?.from) {
+      filteredData = filteredData.filter(rental => {
+        const rentalDate = new Date(rental.created_at);
+        if (dateRange.to) {
+          return rentalDate >= dateRange.from && rentalDate <= dateRange.to;
+        }
+        return rentalDate >= dateRange.from;
+      });
+    }
+
     if (statusFilter !== 'all') {
       filteredData = filteredData.filter(rental => rental.status === statusFilter);
     }
@@ -169,7 +183,7 @@ const RentalsTable = () => {
     }
 
     return filteredData;
-  }, [allRentals, statusFilter, debouncedGlobalFilter, sortBy]);
+  }, [allRentals, statusFilter, debouncedGlobalFilter, sortBy, dateRange]);
 
   const totalRentals = processedData.length;
   const totalPages = Math.ceil(totalRentals / pageSize);
@@ -384,6 +398,13 @@ const RentalsTable = () => {
               className="border border-gray-300 rounded px-3 py-1 text-sm h-9 w-full md:w-auto"
             />
           </div>
+        </div>
+        <div className="flex flex-col md:flex-row md:gap-4 w-full">
+          <DateRangePicker
+            date={dateRange}
+            onDateChange={setDateRange}
+            className="w-full md:w-auto"
+          />
         </div>
       </div>
 
