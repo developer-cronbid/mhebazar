@@ -14,13 +14,13 @@ import Autoplay from "embla-carousel-autoplay";
 interface BlogPost {
   id: number;
   blog_title: string;
-  image1: string;
+  image1: string | null;
   blog_url: string;
-  blog_category_name: string;
-  author_name: string;
-  created_at: string;
-  description: string;
-  description1: string;
+  blog_category_name?: string | null;
+  author_name?: string | null;
+  created_at?: string | null;
+  preview_description?: string | null;
+  description1?: string | null;
 }
 
 interface BlogCarouselClientProps {
@@ -50,7 +50,7 @@ const cardVariants = {
   },
 };
 
-export default function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientProps) {
+function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientProps) {
   const [blogs, setBlogs] = React.useState<BlogPost[]>(initialBlogs);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(initialError);
@@ -79,6 +79,7 @@ export default function _BlogCarouselClient({ initialBlogs, initialError }: Blog
       return "/mhe-logo.png";
     }
 
+    // If API already returns a full URL, use it directly
     if (imagePath.startsWith("http")) {
       return imagePath;
     }
@@ -114,6 +115,9 @@ export default function _BlogCarouselClient({ initialBlogs, initialError }: Blog
       });
     }
   };
+
+  // memoize blogs to avoid unnecessary re-renders / mapping work
+  const memoBlogs = React.useMemo(() => blogs || [], [blogs]);
 
   if (loading) {
     return (
@@ -163,7 +167,7 @@ export default function _BlogCarouselClient({ initialBlogs, initialError }: Blog
       >
         <div
           ref={scrollContainerRef}
-          className="flex overflow-x-auto snap-x snap-mandatory -ml-4"
+          className="flex overflow-x-auto snap-x snap-mandatory -ml-4 gap-4"
           style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
           onScroll={(e) => {
             const carouselContent = e.currentTarget;
@@ -172,63 +176,83 @@ export default function _BlogCarouselClient({ initialBlogs, initialError }: Blog
             setScrollIndex(newIndex);
           }}
         >
-          {blogs.map((blog) => {
+          {memoBlogs.map((blog) => {
             const imageUrl = getOptimizedImageUrl(blog.image1, imageError[blog.id] || false);
             return (
               <div
                 key={`blog-${blog.id}`}
-                className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3"
+                className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3 flex"
+                aria-roledescription="slide"
               >
                 <motion.div
                   variants={cardVariants}
                   whileHover="hover"
+                  className="w-full flex"
                 >
-                  <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg h-full transition-all duration-300 pt-0">
+                  <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg h-[460px] w-full flex flex-col transition-all duration-300">
                     <Link href={`/blog/${blog.blog_url}`} className="block h-full">
-                      <div className="relative overflow-hidden rounded-t-lg">
-                        <div className="w-full h-auto aspect-[155/96] relative">
-                          <Image
-                            src={imageUrl}
-                            alt={blog.blog_title}
-                            layout="fill"
-                            objectFit="contain"
-                            className="bg-gray-50"
-                            onError={() => handleImageError(blog.id)}
-                          />
+                      {/* image area: consistent aspect ratio so entire image is visible (clean look) */}
+                      <div className="relative overflow-hidden rounded-t-lg w-full bg-gray-50">
+                        <div className="w-full aspect-[155/96] relative">
+                          {imageUrl.startsWith('http') ? (
+                            <img
+                              src={imageUrl}
+                              alt={blog.blog_title || 'blog image'}
+                              className="w-full h-full object-contain bg-gray-50 p-4"
+                              onError={() => handleImageError(blog.id)}
+                              loading="lazy"
+                              decoding="async"
+                              style={{ display: 'block' }}
+                            />
+                          ) : (
+                            <Image
+                              src={imageUrl}
+                              alt={blog.blog_title || 'blog image'}
+                              fill
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                              style={{ objectFit: 'contain' }}
+                              className="bg-gray-50 p-4"
+                              onError={() => handleImageError(blog.id)}
+                            />
+                          )}
                         </div>
                         <div className="absolute top-3 right-3">
                           <Badge className="bg-[#5ca131] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">
-                            {blog.blog_category_name}
+                            {blog.blog_category_name || 'Blog'}
                           </Badge>
                         </div>
                       </div>
 
-                      <CardHeader className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center text-xs text-gray-500">
-                            <Calendar className="h-3 w-3 mr-1" />
-                            {formatDate(blog.created_at)}
-                          </div>
-                          {blog.author_name && (
+                      {/* content area: remaining height; neat spacing and truncation */}
+                      <div className="flex flex-col justify-between grow p-4">
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center text-xs text-gray-500">
-                              <User className="h-3 w-3 mr-1" />
-                              <span className="truncate max-w-[100px] font-medium">{blog.author_name}</span>
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {formatDate(blog.created_at || '')}
                             </div>
-                          )}
+                            {blog.author_name && (
+                              <div className="flex items-center text-xs text-gray-500">
+                                <User className="h-3 w-3 mr-1" />
+                                <span className="truncate max-w-[100px] font-medium">{blog.author_name}</span>
+                              </div>
+                            )}
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900 hover:text-[#5ca131] transition-colors line-clamp-2 leading-tight">
+                            {blog.blog_title}
+                          </h2>
+                          <p className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed mt-2">
+                            {(blog.description1 && blog.description1.trim())
+                              ? blog.description1
+                              : (stripHtml(blog.preview_description || '').substring(0, 120) + "...")}
+                          </p>
                         </div>
-                        <h2 className="text-lg font-bold text-gray-900 hover:text-[#5ca131] transition-colors line-clamp-2 leading-tight">
-                          {blog.blog_title}
-                        </h2>
-                      </CardHeader>
-                      <CardContent className="pt-0 p-4">
-                        <p className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed">
-                          {blog.description1 || stripHtml(blog.description).substring(0, 100) + "..."}
-                        </p>
+
                         <div className="flex items-center text-[#5ca131] text-sm font-semibold hover:text-[#4a8429]">
                           Read More
                           <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                         </div>
-                      </CardContent>
+                      </div>
                     </Link>
                   </Card>
                 </motion.div>
@@ -238,16 +262,17 @@ export default function _BlogCarouselClient({ initialBlogs, initialError }: Blog
         </div>
       </Carousel>
       <div className="flex justify-center space-x-2 mt-2">
-        {blogs.map((blog, index) => (
+        {memoBlogs.map((blog, index) => (
           <span
             key={`dot-${blog.id}`}
             onClick={() => handleDotClick(index)}
-            className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${
-              index === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"
-            }`}
+            className={`cursor-pointer w-3 h-3 rounded-full transition-colors duration-300 ${index === scrollIndex ? "bg-[#42a856]" : "bg-[#b5e0c0]"}`}
           />
         ))}
       </div>
     </div>
   );
 }
+
+// Export memoized component to reduce unnecessary re-renders
+export default React.memo(_BlogCarouselClient);
