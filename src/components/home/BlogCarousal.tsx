@@ -21,27 +21,31 @@ export async function BlogCarousel() {
   let error: string | null = null;
 
   try {
-    // Primary attempt: use app api client (works in dev and when baseURL is configured)
-    const response = await api.get<any>('/blogs/?limit=3');
+    // Use absolute production endpoint for reliable data during build on Vercel
+    let data: any = null;
 
-    let data = response.data;
+    // Primary: fetch production API (guaranteed to be accessible during build)
+    try {
+      const res = await fetch('https://api.mhebazar.in/api/blogs/?limit=3', { next: { revalidate: 300 } });
+      if (res.ok) {
+        data = await res.json();
+      } else {
+        throw new Error(`Production fetch failed: ${res.status}`);
+      }
+    } catch (prodErr) {
+      // Fallback: try app api client if configured (keeps local dev working)
+      try {
+        const response = await api.get<any>('/blogs/?limit=3');
+        data = response.data;
+      } catch (clientErr) {
+        console.error('Both production fetch and api client failed:', prodErr, clientErr);
+        throw prodErr;
+      }
+    }
 
     // If server sends paginated shape, extract results
     if (data && !Array.isArray(data) && Array.isArray(data.results)) {
       data = data.results;
-    }
-
-    // If still not an array, try production absolute endpoint as fallback
-    if (!Array.isArray(data)) {
-      try {
-        const fallback = await fetch('https://api.mhebazar.in/api/blogs/?limit=3');
-        if (fallback.ok) {
-          data = await fallback.json();
-        }
-      } catch (fallbackErr) {
-        // ignore, will be handled below
-        console.error('Fallback fetch failed:', fallbackErr);
-      }
     }
 
     if (Array.isArray(data)) {

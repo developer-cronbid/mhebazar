@@ -199,7 +199,7 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
                             <img
                               src={imageUrl}
                               alt={blog.blog_title || 'blog image'}
-                              className="w-full h-full object-contain bg-gray-50 p-4"
+                              className="w-full h-full object-cover bg-gray-50"
                               onError={() => handleImageError(blog.id)}
                               loading="lazy"
                               decoding="async"
@@ -211,8 +211,8 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
                               alt={blog.blog_title || 'blog image'}
                               fill
                               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                              style={{ objectFit: 'contain' }}
-                              className="bg-gray-50 p-4"
+                              style={{ objectFit: 'cover' }}
+                              className="bg-gray-50"
                               onError={() => handleImageError(blog.id)}
                             />
                           )}
