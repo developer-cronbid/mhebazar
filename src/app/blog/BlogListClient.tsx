@@ -1,7 +1,7 @@
 // src/components/BlogListClient.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Calendar, User, ArrowRight, Loader2, Filter, SortDesc, SortAsc, Grid3X3, List } from "lucide-react";
-import { motion as m } from "framer-motion";
+import { motion } from "framer-motion";
 import { AnimatePresence } from "framer-motion";
 import api from "@/lib/api";
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
@@ -17,12 +17,10 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 interface Blog {
   id: number;
   blog_title: string;
-  blog_category_id: number;
+  blog_category: number;
   blog_category_name: string;
   image1: string | null;
-  image2: string | null;
-  description: string;
-  description1: string;
+  preview_description: string;
   blog_url: string;
   tags: string | null;
   author_name: string | null;
@@ -40,7 +38,12 @@ interface BlogResponse {
 interface Category {
   id: number;
   name: string;
-  blog_count?: number;
+}
+
+interface BlogListClientProps {
+  initialSearchTerm: string;
+  initialCategoryId: string;
+  initialSortOrder: string;
 }
 
 // Animation variants
@@ -88,12 +91,6 @@ const cardVariants = {
   },
 };
 
-interface BlogListClientProps {
-  initialSearchTerm: string;
-  initialCategoryId: string;
-  initialSortOrder: string;
-}
-
 const BlogListClient: React.FC<BlogListClientProps> = ({
   initialSearchTerm,
   initialCategoryId,
@@ -112,37 +109,12 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
   const [previousPage, setPreviousPage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-
   const [availableCategories, setAvailableCategories] = useState<Category[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(initialCategoryId);
   const [sortOrder, setSortOrder] = useState<string>(initialSortOrder);
-  const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
+  const [imageError, setImageError] = useState<Record<number, boolean>>({});
 
-  // UseEffect hook to set the page's title and meta tags
-  useEffect(() => {
-    // Set the document title
-    document.title = "Empower Your Material Handling Expertise: Insights from Mhe Bazar's Blog";
-
-    // Create or update the meta title tag
-    let metaTitle = document.querySelector('meta[name="title"]');
-    if (!metaTitle) {
-      metaTitle = document.createElement('meta');
-      metaTitle.setAttribute('name', 'title');
-      document.head.appendChild(metaTitle);
-    }
-    metaTitle.setAttribute('content', "MHE Bazar Blog | Insights on Material Handling and Safety");
-
-    // Create or update the meta description tag
-    let metaDescription = document.querySelector('meta[name="description"]');
-    if (!metaDescription) {
-      metaDescription = document.createElement('meta');
-      metaDescription.setAttribute('name', 'description');
-      document.head.appendChild(metaDescription);
-    }
-    metaDescription.setAttribute('content', "Explore expert articles on material handling equipment, warehouse safety, battery solutions, and industrial trends—only on the official MHE Bazar Blog");
-  }, []);
-
-
+  // Memoized URL creation
   const createQueryString = useCallback(
     (name: string, value: string) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -152,53 +124,23 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
     [searchParams]
   );
 
+  // Memoized data fetcher
   const fetchBlogs = useCallback(async (page: number, search: string, categoryId: string, order: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      const categoriesResponse = await api.get<Category[]>("/categories/");
-      
-      const categoryMap = new Map<number, string>();
-      categoriesResponse.data.forEach((cat) => {
-        categoryMap.set(cat.id, cat.name);
-      });
+      // Fetch categories and blogs in parallel
+      const [categoriesResponse, blogsResponse] = await Promise.all([
+        api.get<Category[]>("/categories/"),
+        api.get<BlogResponse>(`/blogs/?page=${page}&search=${encodeURIComponent(search)}&blog_category=${categoryId}&ordering=${order}`)
+      ]);
 
-      const allBlogsResponse = await api.get<BlogResponse>("/blogs/");
-      const categoriesWithBlogs = new Set<number>();
-      
-      allBlogsResponse.data.results.forEach((blog: any) => {
-        categoriesWithBlogs.add(blog.blog_category);
-      });
-
-      const categoriesWithBlogsData = categoriesResponse.data.filter(cat => 
-        categoriesWithBlogs.has(cat.id)
-      );
-      setAvailableCategories(categoriesWithBlogsData);
-
-      let url = `/blogs/?page=${page}`;
-      if (search.trim()) {
-        url += `&search=${encodeURIComponent(search)}`;
-      }
-      if (categoryId) {
-        url += `&blog_category=${categoryId}`;
-      }
-      if (order) {
-        url += `&ordering=${order}`;
-      }
-
-      const response = await api.get<BlogResponse>(url);
-
-      const enrichedBlogs = response.data.results.map((blog: any) => ({
-        ...blog,
-        blog_category_id: blog.blog_category,
-        blog_category_name: categoryMap.get(blog.blog_category) || "Uncategorized",
-      }));
-
-      setBlogs(enrichedBlogs);
-      setTotalCount(response.data.count);
-      setNextPage(response.data.next);
-      setPreviousPage(response.data.previous);
+      setAvailableCategories(categoriesResponse.data);
+      setBlogs(blogsResponse.data.results);
+      setTotalCount(blogsResponse.data.count);
+      setNextPage(blogsResponse.data.next);
+      setPreviousPage(blogsResponse.data.previous);
     } catch (err) {
       console.error("Error fetching blogs:", err);
       setError("Failed to load blogs. Please try again later.");
@@ -207,100 +149,229 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
     }
   }, []);
 
+  // Debounced search effect
   useEffect(() => {
-    fetchBlogs(currentPage, searchTerm, selectedCategoryId, sortOrder);
+    const timeoutId = setTimeout(() => {
+      fetchBlogs(currentPage, searchTerm, selectedCategoryId, sortOrder);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
   }, [currentPage, searchTerm, selectedCategoryId, sortOrder, fetchBlogs]);
 
+  // SEO optimization
+  useEffect(() => {
+    document.title = "Empower Your Material Handling Expertise: Insights from Mhe Bazar's Blog";
+    
+    // Update meta tags efficiently
+    const updateMetaTag = (name: string, content: string) => {
+      let metaTag = document.querySelector(`meta[name="${name}"]`);
+      if (!metaTag) {
+        metaTag = document.createElement('meta');
+        metaTag.setAttribute('name', name);
+        document.head.appendChild(metaTag);
+      }
+      metaTag.setAttribute('content', content);
+    };
+
+    updateMetaTag('title', "MHE Bazar Blog | Insights on Material Handling and Safety");
+    updateMetaTag('description', "Explore expert articles on material handling equipment, warehouse safety, battery solutions, and industrial trends—only on the official MHE Bazar Blog");
+  }, []);
+
+  // Event handlers
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    router.push(pathname + '?' + createQueryString('search', searchTerm));
+    router.push(`${pathname}?${createQueryString('search', searchTerm)}`, { scroll: false });
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newCategoryId = e.target.value;
     setSelectedCategoryId(newCategoryId);
     setCurrentPage(1);
-    router.push(pathname + '?' + createQueryString('blog_category', newCategoryId));
+    router.push(`${pathname}?${createQueryString('blog_category', newCategoryId)}`, { scroll: false });
   };
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newSortOrder = e.target.value;
     setSortOrder(newSortOrder);
     setCurrentPage(1);
-    router.push(pathname + '?' + createQueryString('ordering', newSortOrder));
+    router.push(`${pathname}?${createQueryString('ordering', newSortOrder)}`, { scroll: false });
   };
 
   const handleNextPage = () => {
     if (nextPage) {
       setCurrentPage(prev => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePreviousPage = () => {
     if (previousPage) {
       setCurrentPage(prev => prev - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  const formatDate = (dateString: string) => {
+  // Memoized utility functions
+  const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-  };
+  }, []);
 
-  const stripHtml = (html: string) => {
-    const temp = document.createElement("div");
-    temp.innerHTML = html;
-    return temp.textContent || temp.innerText || "";
-  };
-
-  const getImageUrl = (imagePath: string | null): string => {
-    if (!imagePath) {
-      return "/mhe-logo.png";
-    }
-    // Check if the imagePath is a full URL
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
-    // If it's a relative path from the API
-    return `https://api.mhebazar.in/media/${imagePath}`;
-  };
-
-  const handleImageError = (id: number) => {
-    setImageError(prev => ({ ...prev, [id]: true }));
-  };
-  
-  const getOptimizedImageUrl = (imagePath: string | null, hasError: boolean): string => {
-    if (!imagePath) {
-      return "/mhe-logo.png";
-    }
-
+  const getOptimizedImageUrl = useCallback((imagePath: string | null, hasError: boolean): string => {
+    if (!imagePath) return "/mhe-logo.png";
     if (hasError) {
       const filename = imagePath.split('/').pop();
-      if (filename) {
-        return `/css/asset/blogimg/${filename}`;
-      }
-      return "/mhe-logo.png";
+      return filename ? `/css/asset/blogimg/${filename}` : "/mhe-logo.png";
     }
+    return imagePath.startsWith("http") ? imagePath : `https://api.mhebazar.in/media/${imagePath}`;
+  }, []);
 
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
-    
-    return `https://api.mhebazar.in/media/${imagePath}`;
-  };
+  const handleImageError = useCallback((id: number) => {
+    setImageError(prev => ({ ...prev, [id]: true }));
+  }, []);
+
+  // Memoized blog cards for better performance
+  const renderBlogCards = useMemo(() => {
+    return blogs.map((blog, index) => {
+      const imageUrl = getOptimizedImageUrl(blog.image1, imageError[blog.id] || false);
+      
+      return (
+        <motion.div
+          key={blog.id}
+          variants={cardVariants}
+          whileHover="hover"
+          custom={index}
+        >
+          <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg h-full transition-all duration-300 pt-0">
+            <Link href={`/blog/${blog.blog_url}`} className="block h-full" prefetch={false}>
+              <div className="relative overflow-hidden rounded-t-lg">
+                <div className="w-full h-auto aspect-[155/96] relative">
+                  <Image
+                    src={imageUrl}
+                    alt={blog.blog_title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    className="bg-gray-50 object-contain"
+                    onError={() => handleImageError(blog.id)}
+                    priority={index < 4} // Priority load first 4 images
+                  />
+                </div>
+                <div className="absolute top-3 right-3">
+                  <Badge className="bg-[#5ca131] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">
+                    {blog.blog_category_name}
+                  </Badge>
+                </div>
+              </div>
+
+              <CardHeader className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center text-xs text-gray-500">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {formatDate(blog.created_at)}
+                  </div>
+                  {blog.author_name && (
+                    <div className="flex items-center text-xs text-gray-500">
+                      <User className="h-3 w-3 mr-1" />
+                      <span className="truncate max-w-[100px] font-medium">{blog.author_name}</span>
+                    </div>
+                  )}
+                </div>
+                <h2 className="text-lg font-bold text-gray-900 hover:text-[#5ca131] transition-colors line-clamp-2 leading-tight">
+                  {blog.blog_title}
+                </h2>
+              </CardHeader>
+              <CardContent className="pt-0 p-4">
+                <p className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed">
+                  {blog.preview_description}
+                </p>
+                <div className="flex items-center text-[#5ca131] text-sm font-semibold hover:text-[#4a8429]">
+                  Read More
+                  <ArrowRight className="h-4 w-4 ml-2 transition-transform" />
+                </div>
+              </CardContent>
+            </Link>
+          </Card>
+        </motion.div>
+      );
+    });
+  }, [blogs, imageError, getOptimizedImageUrl, handleImageError, formatDate]);
+
+  const renderListView = useMemo(() => {
+    return blogs.map((blog, index) => {
+      const imageUrl = getOptimizedImageUrl(blog.image1, imageError[blog.id] || false);
+      
+      return (
+        <motion.div
+          key={blog.id}
+          variants={cardVariants}
+          whileHover="hover"
+          custom={index}
+        >
+          <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg transition-all duration-300">
+            <Link href={`/blog/${blog.blog_url}`} className="block" prefetch={false}>
+              <div className="flex flex-col md:flex-row">
+                <div className="relative md:w-64 lg:w-80 flex-shrink-0">
+                  <div className="w-full h-48 md:h-full relative">
+                    <Image
+                      src={imageUrl}
+                      alt={blog.blog_title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 320px"
+                      className="bg-gray-50 object-contain rounded-t-lg md:rounded-l-lg md:rounded-tr-none"
+                      onError={() => handleImageError(blog.id)}
+                      priority={index < 2}
+                    />
+                  </div>
+                  <div className="absolute top-3 right-3">
+                    <Badge className="bg-[#5ca131] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">
+                      {blog.blog_category_name}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="flex-1 p-6 md:p-8">
+                  <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      {formatDate(blog.created_at)}
+                    </div>
+                    {blog.author_name && (
+                      <div className="flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        <span className="font-medium">{blog.author_name}</span>
+                      </div>
+                    )}
+                  </div>
+                  <h2 className="text-xl md:text-2xl font-bold text-gray-900 hover:text-[#5ca131] transition-colors mb-3 line-clamp-2 leading-tight">
+                    {blog.blog_title}
+                  </h2>
+                  <p className="text-gray-600 text-sm line-clamp-3 mb-6 leading-relaxed">
+                    {blog.preview_description}
+                  </p>
+                  <div className="flex items-center text-[#5ca131] text-sm font-bold hover:text-[#4a8429]">
+                    Read Full Article
+                    <ArrowRight className="h-4 w-4 ml-2 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </Card>
+        </motion.div>
+      );
+    });
+  }, [blogs, imageError, getOptimizedImageUrl, handleImageError, formatDate]);
 
   if (error) {
     return (
-      <m.div
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="min-h-screen bg-white flex items-center justify-center p-6"
       >
-        <m.div
+        <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -314,7 +385,7 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                   width={80}
                   height={80}
                   className="mx-auto mb-4 object-contain"
-                  unoptimized // Use unoptimized for local static assets
+                  unoptimized
                 />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h3>
                 <p className="text-gray-600 leading-relaxed text-sm">{error}</p>
@@ -328,15 +399,15 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
               </Button>
             </CardContent>
           </Card>
-        </m.div>
-      </m.div>
+        </motion.div>
+      </motion.div>
     );
   }
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header Section */}
-      <m.div
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -353,7 +424,7 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
           </div>
 
           {/* Search Bar */}
-          <m.form
+          <motion.form
             onSubmit={handleSearch}
             className="max-w-xl mx-auto"
             initial={{ y: 20, opacity: 0 }}
@@ -383,18 +454,18 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                 )}
               </Button>
             </div>
-          </m.form>
+          </motion.form>
         </div>
-      </m.div>
+      </motion.div>
 
       {/* Filter and Sort Section */}
-      <m.div
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4, duration: 0.5 }}
         className="bg-gray-50 py-6 px-5"
       >
-        <div className=" mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
             <div className="flex flex-col sm:flex-row items-center gap-6 w-full lg:w-auto">
               <div className="flex items-center gap-3">
@@ -407,7 +478,7 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                 >
                   <option value="">All Categories</option>
                   {availableCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
+                    <option key={cat.id} value={cat.id.toString()}>
                       {cat.name}
                     </option>
                   ))}
@@ -458,13 +529,13 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
             </div>
           </div>
         </div>
-      </m.div>
+      </motion.div>
 
       {/* Main Content */}
-      <div className=" mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <AnimatePresence mode="wait">
           {loading ? (
-            <m.div
+            <motion.div
               key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -473,9 +544,9 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
             >
               <Loader2 className="h-16 w-16 text-[#5ca131] animate-spin mb-4" />
               <p className="mt-4 text-lg text-gray-600 font-medium">Loading...</p>
-            </m.div>
+            </motion.div>
           ) : blogs.length === 0 ? (
-            <m.div
+            <motion.div
               key="no-blogs"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -497,28 +568,28 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
               >
                 Clear All Filters
               </Button>
-            </m.div>
+            </motion.div>
           ) : (
-            <m.div
+            <motion.div
               key="blogs"
               initial="hidden"
               animate="visible"
-                  variants={containerVariants}
-                  className="px-5"
+              variants={containerVariants}
+              className="px-5"
             >
               {/* Results Info */}
-              <m.div
+              <motion.div
                 variants={itemVariants}
                 className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4"
               >
                 <div className="flex items-center gap-2">
                   <p className="text-base text-gray-700 font-medium">
                     Showing <span className="text-[#5ca131] font-bold text-lg">{blogs.length}</span> of
-                    <span className="text-[#5ca131] font-bold text-lg">{totalCount}</span> articles
+                    <span className="text-[#5ca131] font-bold text-lg"> {totalCount}</span> articles
                   </p>
                 </div>
                 {searchTerm && (
-                  <m.div
+                  <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     className="flex items-center gap-2"
@@ -527,148 +598,30 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                     <Badge className="bg-gray-100 text-gray-700 border border-gray-300 px-3 py-1 font-medium rounded-full">
                       {searchTerm}
                     </Badge>
-                  </m.div>
+                  </motion.div>
                 )}
-              </m.div>
+              </motion.div>
 
               {/* Blog Content */}
               {viewMode === 'grid' ? (
-                <m.div
+                <motion.div
                   variants={containerVariants}
                   className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8"
                 >
-                  {blogs.map((blog, index) => {
-                    const imageUrl = getOptimizedImageUrl(blog.image1, imageError[blog.id] || false);
-                    return (
-                      <m.div
-                        key={blog.id}
-                        variants={cardVariants}
-                        whileHover="hover"
-                        custom={index}
-                      >
-                        <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg h-full transition-all duration-300 pt-0">
-                          <Link href={`/blog/${blog.blog_url}`} className="block h-full">
-                            <div className="relative overflow-hidden rounded-t-lg">
-                              <div className="w-full h-auto aspect-[155/96] relative">
-                                <Image
-                                  src={imageUrl}
-                                  alt={blog.blog_title}
-                                  layout="fill"
-                                  objectFit="contain"
-                                  className="bg-gray-50"
-                                  onError={() => handleImageError(blog.id)}
-                                />
-                              </div>
-                              <div className="absolute top-3 right-3">
-                                <Badge className="bg-[#5ca131] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">
-                                  {blog.blog_category_name}
-                                </Badge>
-                              </div>
-                            </div>
-
-                            <CardHeader className="p-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center text-xs text-gray-500">
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  {formatDate(blog.created_at)}
-                                </div>
-                                {blog.author_name && (
-                                  <div className="flex items-center text-xs text-gray-500">
-                                    <User className="h-3 w-3 mr-1" />
-                                    <span className="truncate max-w-[100px] font-medium">{blog.author_name}</span>
-                                  </div>
-                                )}
-                              </div>
-                              <h2 className="text-lg font-bold text-gray-900 hover:text-[#5ca131] transition-colors line-clamp-2 leading-tight">
-                                {blog.blog_title}
-                              </h2>
-                            </CardHeader>
-                            <CardContent className="pt-0 p-4">
-                              <p className="text-gray-600 text-sm line-clamp-3 mb-4 leading-relaxed">
-                                {blog.description1 || stripHtml(blog.description).substring(0, 100) + "..."}
-                              </p>
-                              <div className="flex items-center text-[#5ca131] text-sm font-semibold hover:text-[#4a8429]">
-                                Read More
-                                <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                              </div>
-                            </CardContent>
-                          </Link>
-                        </Card>
-                      </m.div>
-                    );
-                  })}
-                </m.div>
+                  {renderBlogCards}
+                </motion.div>
               ) : (
-                /* List View */
-                <m.div
+                <motion.div
                   variants={containerVariants}
                   className="space-y-6"
                 >
-                  {blogs.map((blog, index) => {
-                    const imageUrl = getOptimizedImageUrl(blog.image1, imageError[blog.id] || false);
-                    return (
-                      <m.div
-                        key={blog.id}
-                        variants={cardVariants}
-                        whileHover="hover"
-                        custom={index}
-                      >
-                        <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg transition-all duration-300">
-                          <Link href={`/blog/${blog.blog_url}`} className="block">
-                            <div className="flex flex-col md:flex-row">
-                              <div className="relative md:w-64 lg:w-80 flex-shrink-0">
-                                <div className="w-full h-48 md:h-full relative">
-                                  <Image
-                                    src={imageUrl}
-                                    alt={blog.blog_title}
-                                    layout="fill"
-                                    objectFit="contain"
-                                    className="bg-gray-50 rounded-t-lg md:rounded-l-lg md:rounded-tr-none"
-                                    onError={() => handleImageError(blog.id)}
-                                  />
-                                </div>
-                                <div className="absolute top-3 right-3">
-                                  <Badge className="bg-[#5ca131] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">
-                                    {blog.blog_category_name}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <div className="flex-1 p-6 md:p-8">
-                                <div className="flex items-center gap-4 mb-3 text-sm text-gray-500">
-                                  <div className="flex items-center">
-                                    <Calendar className="h-4 w-4 mr-2" />
-                                    {formatDate(blog.created_at)}
-                                  </div>
-                                  {blog.author_name && (
-                                    <div className="flex items-center">
-                                      <User className="h-4 w-4 mr-2" />
-                                      <span className="font-medium">{blog.author_name}</span>
-                                    </div>
-                                  )}
-                                </div>
-                                <h2 className="text-xl md:text-2xl font-bold text-gray-900 hover:text-[#5ca131] transition-colors mb-3 line-clamp-2 leading-tight">
-                                  {blog.blog_title}
-                                </h2>
-                                <p className="text-gray-600 text-sm line-clamp-3 mb-6 leading-relaxed">
-                                  {blog.description1 || stripHtml(blog.description).substring(0, 150) + "..."}
-                                </p>
-                                <div className="flex items-center text-[#5ca131] text-sm font-bold hover:text-[#4a8429]">
-                                  Read Full Article
-                                  <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                                </div>
-                              </div>
-                            </div>
-                          </Link>
-                        </Card>
-                      </m.div>
-                    );
-                  })}
-                </m.div>
+                  {renderListView}
+                </motion.div>
               )}
 
               {/* Pagination */}
               {(nextPage || previousPage) && (
-                <m.div
+                <motion.div
                   variants={itemVariants}
                   className="flex flex-col sm:flex-row justify-center items-center space-y-4 sm:space-y-0 sm:space-x-8 mt-12"
                 >
@@ -691,9 +644,9 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                     Next
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
-                </m.div>
+                </motion.div>
               )}
-            </m.div>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
