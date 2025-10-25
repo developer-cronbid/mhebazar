@@ -99,7 +99,11 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
     });
   };
 
-  const stripHtml = (html: string) => {
+const stripHtml = (html: string) => {
+    // Adding a check for 'document' just in case
+    if (typeof document === 'undefined') {
+        return html; 
+    }
     const temp = document.createElement("div");
     temp.innerHTML = html;
     return temp.textContent || temp.innerText || "";
