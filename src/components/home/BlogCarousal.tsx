@@ -21,26 +21,41 @@ export async function BlogCarousel() {
   let error: string | null = null;
 
   try {
-    // API returns an array of blog objects
-    const response = await api.get<BlogPost[]>('/blogs/?limit=3');
+    // Primary attempt: use app api client (works in dev and when baseURL is configured)
+    const response = await api.get<any>('/blogs/?limit=3');
 
-    if (response.data) {
-      const data = response.data;
-      if (!Array.isArray(data)) {
-        throw new Error("Unexpected API response format");
+    let data = response.data;
+
+    // If server sends paginated shape, extract results
+    if (data && !Array.isArray(data) && Array.isArray(data.results)) {
+      data = data.results;
+    }
+
+    // If still not an array, try production absolute endpoint as fallback
+    if (!Array.isArray(data)) {
+      try {
+        const fallback = await fetch('https://api.mhebazar.in/api/blogs/?limit=3');
+        if (fallback.ok) {
+          data = await fallback.json();
+        }
+      } catch (fallbackErr) {
+        // ignore, will be handled below
+        console.error('Fallback fetch failed:', fallbackErr);
       }
+    }
 
+    if (Array.isArray(data)) {
       // Ensure we send the latest three blogs (sorted by created_at desc)
       blogs = data
         .slice()
-        .sort((a, b) => {
+        .sort((a: BlogPost, b: BlogPost) => {
           const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
           const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
           return tb - ta;
         })
         .slice(0, 3);
     } else {
-      throw new Error("Invalid API response");
+      throw new Error("Unexpected API response format");
     }
   } catch (err) {
     console.error('Failed to fetch blogs:', err);

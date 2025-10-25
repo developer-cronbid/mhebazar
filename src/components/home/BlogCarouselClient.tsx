@@ -181,7 +181,8 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
             return (
               <div
                 key={`blog-${blog.id}`}
-                className="pl-4 snap-start flex-shrink-0 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/3 flex"
+                // fixed width slides -> broader look (adjust sizes if you want wider/narrower)
+                className="pl-4 snap-start flex-shrink-0 w-[320px] sm:w-[360px] md:w-[420px] lg:w-[460px] flex"
                 aria-roledescription="slide"
               >
                 <motion.div
@@ -189,7 +190,7 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
                   whileHover="hover"
                   className="w-full flex"
                 >
-                  <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg h-[460px] w-full flex flex-col transition-all duration-300">
+                  <Card className="overflow-hidden border border-gray-200 bg-white rounded-lg h-[480px] w-full flex flex-col transition-all duration-300 shadow-sm">
                     <Link href={`/blog/${blog.blog_url}`} className="block h-full">
                       {/* image area: consistent aspect ratio so entire image is visible (clean look) */}
                       <div className="relative overflow-hidden rounded-t-lg w-full bg-gray-50">
