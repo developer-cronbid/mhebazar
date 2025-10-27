@@ -39,13 +39,21 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className={inter.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         <link rel="preconnect" href="https://api.mhebazar.in" />
 
         {/* ✅ Google Analytics Script */}
@@ -82,9 +90,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-                {/* Product JSON-LD Schema */}
-        <script
+        {/* Product JSON-LD Schema */}
+        {/* ✅ Product JSON-LD Schema (from SEO team) */}
+        <Script
+          id="product-schema"
           type="application/ld+json"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               {
@@ -105,13 +116,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
 
-
         <Suspense>
           <Canonical />
         </Suspense>
       </head>
       <body className="antialiased font-sans">
-
         <Toaster
           position="top-right"
           richColors
