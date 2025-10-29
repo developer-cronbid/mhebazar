@@ -69,6 +69,8 @@ const navigationLinks = [
   { name: "Services", href: "/services" },
   { name: "Training", href: "/training" },
   { name: "Blogs", href: "/blog" },
+  { name: "Events", href: "/events" },
+
 ];
 
 export interface User {
