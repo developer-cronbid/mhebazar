@@ -30,7 +30,7 @@ interface EventType {
 }
 
 // --- Event Data (No change) ---
-// Note: Keeping only one event for brevity and focus on UI, but the structure is ready for multiple events.
+
 const events: EventType[] = [
   {
     id: 1,
@@ -60,18 +60,15 @@ const events: EventType[] = [
   },
 ];
 
-// --- Utility Functions (Refactored for clarity and best practices) ---
+// --- Utility Functions ---
 
-type EventStatus = 'upcoming' | 'ongoing' | 'completed';
-
-const getEventStatus = (startDate: string, endDate: string): EventStatus => {
+const getEventStatus = (startDate: string, endDate: string): 'upcoming' | 'ongoing' | 'completed' => {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   const start = new Date(startDate);
   start.setHours(0, 0, 0, 0);
   const end = new Date(endDate);
-  // Set end date to end of the day to properly capture multi-day events
-  end.setHours(23, 59, 59, 999); 
+  end.setHours(23, 59, 59, 999);
 
   if (now < start) return 'upcoming';
   if (now >= start && now <= end) return 'ongoing';
@@ -82,10 +79,8 @@ const formatDateRange = (startDate: string, endDate: string): string => {
   const start = new Date(startDate);
   const end = new Date(endDate);
   
-  const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
-
   if (start.toDateString() === end.toDateString()) {
-    return start.toLocaleDateString('en-IN', options);
+    return start.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
   }
   
   const startDay = start.getDate();
@@ -102,38 +97,7 @@ const formatDateRange = (startDate: string, endDate: string): string => {
 };
 
 
-// --- UI Components ---
-
-// Status Badge Component - Enhanced with pulse animation
-const StatusBadge = ({ status }: { status: EventStatus }) => {
-  const styles = {
-    upcoming: 'bg-indigo-600/10 text-indigo-700 ring-1 ring-inset ring-indigo-600/20',
-    ongoing: 'bg-emerald-600/10 text-emerald-700 ring-1 ring-inset ring-emerald-600/20', // Animation moved inside
-    completed: 'bg-gray-400/10 text-gray-700 ring-1 ring-inset ring-gray-400/20'
-  };
-
-  const labels = {
-    upcoming: 'Upcoming',
-    ongoing: 'Live Now',
-    completed: 'Completed'
-  };
-
-  return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${styles[status]}`}>
-      {status === 'ongoing' && (
-        <span className="relative flex h-2 w-2 mr-1.5">
-            {/* The pulsing effect for 'Live Now' */}
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-        </span>
-      )}
-      {labels[status]}
-    </span>
-  );
-};
-
-
-// --- Event Page Component - The Extraordinary UI ---
+// --- Event Page Component ---
 
 export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
@@ -151,83 +115,110 @@ export default function EventsPage() {
     window.open(link, '_blank', 'noopener,noreferrer');
   };
 
-  const primaryColor = '#5ca131'; // A deep MHE Bazar green
+  // Status Badge Component - Professionally styled
+  const StatusBadge = ({ status }: { status: 'upcoming' | 'ongoing' | 'completed' }) => {
+    const styles = {
+      upcoming: 'bg-indigo-600/10 text-indigo-700 ring-1 ring-inset ring-indigo-600/20',
+      ongoing: 'bg-emerald-600/10 text-emerald-700 ring-1 ring-inset ring-emerald-600/20 animate-pulse',
+      completed: 'bg-gray-400/10 text-gray-700 ring-1 ring-inset ring-gray-400/20'
+    };
+
+    const labels = {
+      upcoming: 'Upcoming',
+      ongoing: 'Live Now',
+      completed: 'Completed'
+    };
+
+    return (
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${styles[status]}`}>
+        {status === 'ongoing' && <span className="relative flex h-2 w-2 mr-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span>}
+        {labels[status]}
+      </span>
+    );
+  };
+
+  const primaryColor = '#5ca131'; 
 
   return (
-    // Minimalistic background color to make the cards pop
     <div className="min-h-screen bg-gray-50 antialiased">
       {/* Schema Markup for SEO */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
-            // ... SEO markup data
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "itemListElement": events.map((event, index) => ({
+              "@type": "Event",
+              "position": index + 1,
+              "name": event.title,
+              "startDate": event.startDate,
+              "endDate": event.endDate,
+              "location": {
+                "@type": "Place",
+                "name": event.location
+              },
+              "description": event.description,
+              "organizer": {
+                "@type": "Organization",
+                "name": event.organizer
+              }
+            }))
           })
         }}
       />
 
-      {/* =========================================================
-        --- Event List View (The main list/grid) ---
-        =========================================================
-      */}
+      {/* --- Event List View --- */}
       {!selectedEvent && (
         <>
-          {/* Hero Section - Significantly Reduced Height
-            The main content (cards) is strategically pulled up into this section 
-            to solve the scroll issue, making them instantly visible.
-          */}
-          <section className="relative overflow-hidden pt-12 pb-16 sm:pt-16 sm:pb-20 bg-white shadow-lg border-b border-gray-100">
+          {/* Hero Section - Reduced height for better UX/content visibility */}
+          <section className="relative overflow-hidden pt-16 pb-20 sm:pb-24 bg-white shadow-inner-xl">
             {/* Background Pattern for design flair */}
             <div className="absolute inset-0 bg-repeat opacity-5" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.1'%3E%3Cpath d='M36 34L48 24 42 30 39 33 36 34zm9 3c-.71 0-1.38.21-1.93.57L33.72 45.42C33.2 46.84 31.69 48 30 48c-1.69 0-3.2-.84-3.72-2.58L16.93 37.57A3.99 3.99 0 0 1 15 37c-2.21 0-4 1.79-4 4s1.79 4 4 4c.21 0 .42-.02.63-.07l9.89 12.08C25.84 58.74 27.8 60 30 60c2.2 0 4.16-1.26 5.48-3.04l9.89-12.08c.21.05.42.07.63.07 2.21 0 4-1.79 4-4s-1.79-4-4-4z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}></div>
-            
             <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              {/* Category Tagline */}
-              <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 mb-4 shadow-sm">
+              <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-emerald-100 border border-emerald-300 mb-6 shadow-sm">
                 <span className="text-sm font-semibold text-gray-700">The Future of Logistics & MHE</span>
               </div>
-              
-              <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4 leading-tight">
                 Explore Industry-Leading
                 <span className="block mt-2 bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(to right, ${primaryColor}, #10B981)` }}>
-                  MHE Bazar Events 🌎
+                  MHE Bazar Events
                 </span>
               </h1>
-              <p className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
                 Network with industry leaders, explore cutting-edge innovations, and accelerate your business growth.
               </p>
             </div>
           </section>
 
-          {/* Event Cards Section - Overlaps the Hero for instant content visibility
-            This is the core fix for the "big header" scroll issue. 
-          */}
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-10 sm:-mt-12 z-10 relative">
+          {/* Event Cards Section - Pulled up to be immediately visible */}
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 -mt-12">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
               {eventsWithStatus.map((event) => (
                 <article
                   key={event.id}
-                  className={`group bg-white rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden border 
-                    ${event.status === 'completed' 
-                      ? 'opacity-70 border-gray-100 hover:shadow-xl' 
+                  className={`group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 overflow-hidden border ${
+                    event.status === 'completed' 
+                      ? 'opacity-80 border-gray-100' 
                       : event.status === 'ongoing'
-                      ? 'border-emerald-400 ring-4 ring-emerald-100' // Highlighting 'Live Now'
-                      : 'border-gray-100 hover:border-emerald-300'
-                    } transform hover:-translate-y-2`} // Stronger hover lift
+                      ? 'border-emerald-400 ring-4 ring-emerald-100' // Increased ring for emphasis
+                      : 'border-gray-100 hover:border-emerald-300' // Better hover color
+                  } transform hover:-translate-y-1`}
                 >
-                  {/* Image Div - Maintained aspect ratio (2/1) for a modern, wide card look */}
+                  {/* Image Div - Maintained aspect ratio (2/1) for perfect fit */}
                   <div className="relative aspect-[2/1] overflow-hidden bg-gray-100">
                     <img
                       src={event.image}
                       alt={event.title}
                       loading="lazy"
-                      className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700" // Stronger image zoom
+                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-700"
                     />
                     {/* Dark overlay for text readability */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"></div>
                     <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
                       <StatusBadge status={event.status} />
                       {event.category && (
-                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-white text-gray-700 shadow-md backdrop-blur-sm">
+                        <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-white text-gray-700 shadow-md">
                           {event.category}
                         </span>
                       )}
@@ -241,17 +232,14 @@ export default function EventsPage() {
 
                     {/* Key details presented clearly */}
                     <div className="space-y-3 mb-5 border-y border-gray-100 py-4">
-                      {/* Date */}
                       <div className="flex items-center text-sm text-gray-600">
                         <Calendar className="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0" />
                         <span className="font-semibold">{event.formattedDate}</span>
                       </div>
-                      {/* Time */}
                       <div className="flex items-center text-sm text-gray-600">
                         <Clock className="w-5 h-5 text-indigo-500 mr-3 flex-shrink-0" />
                         <span>{event.time}</span>
                       </div>
-                      {/* Location */}
                       <div className="flex items-center text-sm text-gray-600">
                         <MapPin className="w-5 h-5 text-red-500 mr-3 flex-shrink-0" />
                         <span className="font-medium">{event.location}</span>
@@ -263,21 +251,18 @@ export default function EventsPage() {
                     </p>
 
                     <div className="flex flex-col gap-3">
-                      {/* Primary Action Button - Register */}
                       <button
                         onClick={() => handleRegister(event.registrationLink)}
                         disabled={event.status === 'completed'}
-                        className={`w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-base transition-all shadow-lg 
-                          ${event.status === 'completed'
+                        className={`w-full inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-base transition-all shadow-lg ${
+                          event.status === 'completed'
                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none'
-                            : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:shadow-2xl hover:shadow-green-300 transform hover:scale-[1.01]'
-                          }`}
+                            : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:shadow-xl hover:shadow-green-300 transform hover:scale-[1.01]'
+                        }`}
                       >
                         {event.status === 'completed' ? 'Event Completed' : 'Register Now'}
                         {event.status !== 'completed' && <ExternalLink className="w-4 h-4 ml-2" />}
                       </button>
-                      
-                      {/* Secondary Action Button - View Details */}
                       <button
                         onClick={() => setSelectedEvent(event)}
                         className="w-full inline-flex items-center justify-center px-6 py-3 border-2 border-gray-200 rounded-xl font-semibold text-base text-gray-700 hover:border-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 transition-all group"
@@ -294,28 +279,23 @@ export default function EventsPage() {
         </>
       )}
 
-      {/* =========================================================
-        --- Event Detail View (Enhanced for maximum impact) ---
-        =========================================================
-      */}
+      {/* --- Event Detail View (Enhanced for impact) --- */}
       {selectedEvent && (() => {
         const status = getEventStatus(selectedEvent.startDate, selectedEvent.endDate);
         const formattedDate = formatDateRange(selectedEvent.startDate, selectedEvent.endDate);
         
         return (
           <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-            
-            {/* Back Button - Prominent and easy to hit */}
             <button
               onClick={() => setSelectedEvent(null)}
-              className="inline-flex items-center text-gray-600 hover:text-emerald-600 font-bold mb-8 transition-all group px-4 py-2 rounded-xl hover:bg-emerald-50 border border-transparent hover:border-emerald-200"
+              className="inline-flex items-center text-gray-600 hover:text-emerald-600 font-semibold mb-8 transition-all group px-4 py-2 rounded-lg hover:bg-emerald-50"
             >
-              <ArrowLeft className="w-5 h-5 mr-3 group-hover:-translate-x-1 transition-transform" />
+              <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
               Back to All Events
             </button>
 
-            <article className="bg-white rounded-3xl shadow-3xl overflow-hidden border border-gray-100">
-              {/* Image Header with Status */}
+            <article className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+              {/* Image Div - Perfect fit for 2:1 image */}
               <div className="relative aspect-[2/1] w-full bg-gray-100">
                 <img
                   src={selectedEvent.image}
@@ -326,7 +306,7 @@ export default function EventsPage() {
                 <div className="absolute top-6 left-6 right-6 flex justify-between items-start">
                   <StatusBadge status={status} />
                   {selectedEvent.category && (
-                    <span className="inline-flex px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-700 backdrop-blur-sm shadow-xl">
+                    <span className="inline-flex px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-700 backdrop-blur-sm shadow-md">
                       {selectedEvent.category}
                     </span>
                   )}
@@ -334,44 +314,36 @@ export default function EventsPage() {
               </div>
               
               <div className="p-6 sm:p-8 lg:p-12">
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-8 leading-tight">
-                  {selectedEvent.title} 
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 mb-8 leading-tight">
+                  {selectedEvent.title}
                 </h1>
 
-                {/* Key Info Strip - Prominent, visually engaging, and organized
-                  A colored, bordered strip to draw attention to the essential details.
-                */}
+                {/* Key Info Strip - Prominent and visually engaging */}
                 <div className="grid sm:grid-cols-3 gap-6 mb-10 p-6 sm:p-8 bg-emerald-50/70 rounded-2xl border-2 border-emerald-200 shadow-inner">
-                  
-                  {/* Date Card */}
-                  <div className="flex items-start bg-white p-4 rounded-xl shadow-md border border-gray-100">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-100 mr-4 flex-shrink-0">
-                      <Calendar className="w-5 h-5 text-emerald-600" />
+                  <div className="flex items-start">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white shadow-md mr-4 flex-shrink-0">
+                      <Calendar className="w-6 h-6 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Date</p>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Date</p>
                       <p className="text-base font-bold text-gray-900">{formattedDate}</p>
                     </div>
                   </div>
-                  
-                  {/* Time Card */}
-                  <div className="flex items-start bg-white p-4 rounded-xl shadow-md border border-gray-100">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100 mr-4 flex-shrink-0">
-                      <Clock className="w-5 h-5 text-indigo-600" />
+                  <div className="flex items-start">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white shadow-md mr-4 flex-shrink-0">
+                      <Clock className="w-6 h-6 text-indigo-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Time</p>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Time</p>
                       <p className="text-base font-bold text-gray-900">{selectedEvent.time}</p>
                     </div>
                   </div>
-                  
-                  {/* Location Card */}
-                  <div className="flex items-start bg-white p-4 rounded-xl shadow-md border border-gray-100">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-100 mr-4 flex-shrink-0">
-                      <MapPin className="w-5 h-5 text-red-600" />
+                  <div className="flex items-start">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white shadow-md mr-4 flex-shrink-0">
+                      <MapPin className="w-6 h-6 text-red-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Location</p>
+                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Location</p>
                       <p className="text-base font-bold text-gray-900">{selectedEvent.location}</p>
                     </div>
                   </div>
@@ -379,22 +351,22 @@ export default function EventsPage() {
 
                 {/* Description */}
                 <div className="mb-10">
-                  <h2 className="text-3xl font-extrabold text-gray-900 mb-4 border-b border-gray-100 pb-3">Event Overview</h2>
+                  <h2 className="text-2xl font-extrabold text-gray-900 mb-4 border-b border-gray-100 pb-2">Event Overview</h2>
                   <p className="text-lg text-gray-700 leading-relaxed">
                     {selectedEvent.description}
                   </p>
                 </div>
 
                 {/* Registration Button - Maximum prominence */}
-                <div className="flex flex-wrap gap-4 mb-12 border-t border-gray-100 pt-8">
+                <div className="flex flex-wrap gap-4 mb-12">
                   <button
                     onClick={() => handleRegister(selectedEvent.registrationLink)}
                     disabled={status === 'completed'}
-                    className={`inline-flex items-center px-12 py-4 rounded-full font-bold text-xl transition-all shadow-xl 
-                      ${status === 'completed'
+                    className={`inline-flex items-center px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-xl ${
+                      status === 'completed'
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-inner'
-                        : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:shadow-2xl hover:shadow-green-400 transform hover:scale-[1.01]'
-                      }`} // Full button effect
+                        : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:shadow-2xl hover:shadow-green-300 transform hover:scale-[1.02]'
+                    }`}
                   >
                     {status === 'completed' ? 'Event Completed' : 'Register Now for Free Entry'}
                     {status !== 'completed' && <ExternalLink className="w-5 h-5 ml-3" />}
@@ -403,28 +375,25 @@ export default function EventsPage() {
 
                 {/* Organizer Info & Related Blogs */}
                 <div className="border-t border-gray-200 pt-12">
-                  
                   {/* Organizer Section */}
-                  <div className="mb-10 p-6 bg-gray-50 rounded-2xl border border-gray-200 shadow-inner">
-                    <div className="flex items-center mb-6">
-                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 mr-4 shadow-xl flex-shrink-0">
-                        <Building2 className="w-6 h-6 text-white" />
-                      </div>
-                      <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
-                        About <span className="text-emerald-600">{selectedEvent.organizer}</span>
-                      </h2>
+                  <div className="flex items-center mb-8">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 mr-4 shadow-lg flex-shrink-0">
+                      <Building2 className="w-6 h-6 text-white" />
                     </div>
-                    <p className="text-gray-700 leading-relaxed text-base">
-                      {selectedEvent.organizerInfo}
-                    </p>
+                    <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">
+                      About <span className="text-emerald-600">{selectedEvent.organizer}</span>
+                    </h2>
                   </div>
+                  <p className="text-gray-700 leading-relaxed mb-10 text-base">
+                    {selectedEvent.organizerInfo}
+                  </p>
 
                   {/* Featured Insights/Blogs Section */}
                   {selectedEvent.blogs.length > 0 && (
-                    <div className="mt-12">
+                    <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 shadow-inner">
                       <div className="flex items-center mb-6">
                         <TrendingUp className="w-6 h-6 text-emerald-600 mr-3" />
-                        <h3 className="text-2xl font-bold text-gray-900">
+                        <h3 className="text-xl font-bold text-gray-900">
                           Featured Insights & Articles
                         </h3>
                       </div>
@@ -435,10 +404,10 @@ export default function EventsPage() {
                             href={blog.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group flex flex-col md:flex-row gap-6 p-6 bg-white rounded-2xl hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-emerald-400"
+                            className="group flex flex-col md:flex-row gap-6 p-4 bg-gray-50 rounded-xl hover:shadow-md transition-all duration-300 border border-gray-100 hover:border-emerald-300"
                           >
                             {/* Blog Image */}
-                            <div className="relative w-full md:w-56 h-36 flex-shrink-0 rounded-xl overflow-hidden shadow-lg bg-gray-200">
+                            <div className="relative w-full md:w-56 h-36 flex-shrink-0 rounded-lg overflow-hidden bg-gray-200">
                               <img
                                 src={blog.image}
                                 alt={blog.title}
@@ -449,22 +418,22 @@ export default function EventsPage() {
                             <div className="flex-1 flex flex-col justify-between">
                               <div>
                                 <div className="flex flex-wrap items-center gap-3 mb-2">
-                                  <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700">
+                                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                                     {blog.category}
                                   </span>
-                                  <span className="text-sm text-gray-500 flex items-center">
-                                    <Users className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                                  <span className="text-xs text-gray-500 flex items-center">
+                                    <Users className="w-3.5 h-3.5 mr-1" />
                                     By {blog.author}
                                   </span>
                                 </div>
-                                <h4 className="text-xl font-bold text-gray-900 group-hover:text-emerald-600 transition-colors mb-2 line-clamp-2">
+                                <h4 className="text-lg font-bold text-gray-900 group-hover:text-emerald-600 transition-colors mb-2 line-clamp-2">
                                   {blog.title}
                                 </h4>
-                                <p className="text-base text-gray-600 line-clamp-2 leading-relaxed">
+                                <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                                   {blog.description}
                                 </p>
                               </div>
-                              <div className="flex items-center text-emerald-600 font-semibold text-base mt-3 group-hover:gap-2 transition-all">
+                              <div className="flex items-center text-emerald-600 font-semibold text-sm mt-3 group-hover:gap-2 transition-all">
                                 <span>Continue Reading</span>
                                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                               </div>
