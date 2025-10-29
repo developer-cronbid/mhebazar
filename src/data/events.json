@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "slug": "india-warehousing-logistics-expo-2025-bengaluru",
+    "title": "India Warehousing & Logistics Expo 2025",
+    "startDate": "2025-11-06",
+    "endDate": "2025-11-08",
+    "time": "10:00 AM – 6:00 PM",
+    "location": "Bengaluru",
+    "venue": "KTPO, Whitefield, Bengaluru",
+    "image": "/event.jpg",
+    "description": "Be Part of India Warehousing & Logistics Expo 2025 – Bengaluru's Biggest Industry Gathering! Experience cutting-edge Material Handling and Logistics solutions, meet top manufacturers, and drive business growth with MHE Bazar at IW Expo Bengaluru 2025.",
+    "highlights": [
+      "Meet 200+ Leading Manufacturers",
+      "Explore Latest MHE Technology",
+      "Network with Industry Experts",
+      "Free Entry for All Visitors"
+    ],
+    "organizer": "MHE Bazar",
+    "organizerInfo": "MHE Bazar, India's trusted marketplace for Material Handling Equipment (MHE), actively participates in and hosts key industry events, trade fairs, and technology showcases across the country. These events highlight our innovations in forklifts, stackers, lithium-ion conversion kits, and energy-efficient warehouse solutions. Through our event presence, we connect with manufacturers, distributors, and logistics professionals to demonstrate how MHE Bazar's digital platform simplifies buying, selling, and renting new or used equipment. As part of Greentech India Material Handling LLP, we aim to drive India's transition toward sustainable and smart material handling operations, supporting the nation's vision for net-zero emissions by 2070. Join us at upcoming MHE Bazar events to explore the future of material handling technology and build valuable industry partnerships.",
+    "blogs": [
+      {
+        "title": "Why You Should Attend Intralogistics and Warehousing Expo 2025 – Bengaluru",
+        "link": "https://www.mhebazar.in/intralogistics-warehousing-expo-2025-bengaluru",
+        "image": "/event.jpg",
+        "author": "MHE Bazar Team",
+        "category": "Industry Events",
+        "description": "Discover why the Intralogistics and Warehousing Expo 2025 in Bengaluru is a must-attend event for professionals in material handling and logistics."
+      }
+    ],
+    "category": "Warehousing & Logistics",
+    "registrationLink": "https://fmeregistrations.com/iwe25/visitor-registration"
+  }
+]
