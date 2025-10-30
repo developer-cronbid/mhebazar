@@ -91,30 +91,7 @@ export default function RootLayout({
         />
 
         {/* Product JSON-LD Schema */}
-        {/* ✅ Product JSON-LD Schema (from SEO team) */}
-        <Script
-          id="product-schema"
-          type="application/ld+json"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              {
-                "@context": "https://schema.org/",
-                "@type": "Product",
-                "name": "{{instance.name}}",
-                "image": "https://{{ request.get_host }}{{instance.list_pic.url}}",
-                "description": "{{instance.About_Tour|striptags}}",
-                "mpn": "",
-                "offers": {
-                  "@type": "AggregateOffer",
-                  "url": "https://{{ request.get_host }}{{ request.path }}",
-                  "priceCurrency": "INR",
-                  "price": "{{instance.price_striked}}"
-                }
-              }
-            `,
-          }}
-        />
+       
 
         <Suspense>
           <Canonical />

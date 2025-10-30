@@ -61,10 +61,15 @@ export default async function VendorsPage({
 }) {
   const perPage = 20;
 
-  // Read URL parameters directly
-  const searchQuery = typeof searchParams.search === 'string' ? searchParams.search : "";
-  const sortOption = typeof searchParams.ordering === 'string' ? searchParams.ordering : "-user__date_joined";
-  const currentPage = typeof searchParams.page === 'string' ? parseInt(searchParams.page) : 1;
+  // FIX: Force the runtime check to pass by using await on the access logic.
+  // Although searchParams is technically an object, this satisfies the Turbopack error.
+  const { search: searchParam, ordering: orderingParam, page: pageParam } = await searchParams; 
+  
+  // Read URL parameters directly from the destructured variables
+  const searchQuery = typeof searchParam === 'string' ? searchParam : "";
+  const sortOption = typeof orderingParam === 'string' ? orderingParam : "-user__date_joined";
+  const currentPage = typeof pageParam === 'string' ? parseInt(pageParam) : 1;
+  // End of FIX
 
   const getVendors = async (page = 1, search = "", sort = "") => {
     try {
