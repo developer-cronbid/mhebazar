@@ -55,7 +55,7 @@ export async function BlogCarousel() {
     }
   } catch (err: any) {
     // Log the error for debugging purposes in Vercel logs
-    console.error('Next.js Build-Time Blog Fetch Failed:', err.message || err);
+    // console.error('Next.js Build-Time Blog Fetch Failed:', err.message || err);
     error = 'Failed to load blogs. Please try again later.';
     // Ensure 'blogs' remains an empty array on failure so client component renders gracefully
     blogs = []; 

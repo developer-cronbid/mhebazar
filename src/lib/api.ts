@@ -3,8 +3,6 @@
 import axios, { AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
-// **FIX 1: Ensure API_BASE_URL uses HTTPS in production environment if not already.**
-// We'll rely on NEXT_PUBLIC_API_BASE_URL but enforce HTTPS correction later if needed.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.mhebazar.com/api";
 
 const api: AxiosInstance = axios.create({
@@ -18,12 +16,13 @@ const api: AxiosInstance = axios.create({
 // REQUEST INTERCEPTOR
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // **FIX 2: Forcing all requests originating from this axios instance to HTTPS.**
-    // This is necessary if the baseURL sometimes defaults to HTTP in dev or through environment configuration.
-    if (process.env.NODE_ENV === "production" && config.url && config.url.startsWith('http://')) {
-        config.url = config.url.replace('http://', 'https://');
-    } else if (process.env.NODE_ENV === "production" && config.baseURL && config.baseURL.startsWith('http://')) {
-        config.baseURL = config.baseURL.replace('http://', 'https://');
+    // CWV FIX: Forcing all production requests originating from this axios instance to HTTPS.
+    if (process.env.NODE_ENV === "production") {
+        if (config.url?.startsWith('http://')) {
+            config.url = config.url.replace('http://', 'https://');
+        } else if (config.baseURL?.startsWith('http://')) {
+            config.baseURL = config.baseURL.replace('http://', 'https://');
+        }
     }
     
     const token = Cookies.get("access_token");

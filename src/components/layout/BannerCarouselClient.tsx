@@ -15,13 +15,15 @@ import { useRouter } from 'next/navigation';
 
 type BannerItem = { image?: string; alt?: string; url?: string; splitUrls?: { left: string, right: string } };
 
+// UPDATED TYPE: Accept the new priority prop
 type BannerCarouselProps = {
   className?: string;
   banners: BannerItem[];
   isDefault: boolean;
+  priority?: boolean; // NEW: Define priority prop
 };
 
-export default function BannerCarouselClient({ banners, isDefault, className }: BannerCarouselProps) {
+export default function BannerCarouselClient({ banners, isDefault, className, priority }: BannerCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
   const { selectedIndex, scrollSnaps, onDotClick } = useDotButton(api);
   const [loaded, setLoaded] = useState<boolean[]>(Array(banners.length).fill(false));
@@ -66,7 +68,8 @@ export default function BannerCarouselClient({ banners, isDefault, className }: 
                   className={`object-contain md:object-fill object-center transition-opacity duration-700 ${
                     loaded[idx] ? "opacity-100" : "opacity-0"
                   }`}
-                  priority={idx === 0}
+                  // CWV FIX: Use the passed priority prop for the first image
+                  priority={priority && idx === 0}
                   sizes="100vw"
                   onLoadingComplete={() => handleImageLoad(idx)}
                   onLoad={() => {

@@ -48,6 +48,8 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        
+        {/* CWV FIX: Add preconnect hints for faster resource loading (TTFB/LCP) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -55,8 +57,10 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link rel="preconnect" href="https://api.mhebazar.in" />
+        {/* Assuming NEXT_PUBLIC_API_BASE_URL might be different */}
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_BASE_URL} /> 
 
-        {/* ✅ Google Analytics Script */}
+        {/* Google Analytics Script - Strategy 'afterInteractive' is good */}
         <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-QV2CVBNETT"
@@ -75,7 +79,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* Microsoft Clarity */}
+        {/* Microsoft Clarity - Strategy 'afterInteractive' is good */}
         <Script
           id="clarity-script"
           strategy="afterInteractive"
@@ -90,7 +94,7 @@ export default function RootLayout({
           }}
         />
 
-        {/* Product JSON-LD Schema */}
+        {/* Product JSON-LD Schema (Ensure this is valid JSON to prevent CLS or errors) */}
        
 
         <Suspense>

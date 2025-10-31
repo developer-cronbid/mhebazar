@@ -3,19 +3,24 @@ import CategoryButtons from "@/components/home/CategoryButtons";
 import MostPopular from "@/components/home/MostPopular";
 import NewArrivalsAndTopSearches from "@/components/home/NewArrivalsAndTopSearches";
 import SpareParts from "@/components/home/SparepartsFeatured";
-import VendorProductsFeatured from "@/components/home/VendorFeatured";
-import ExportProductsFeatured from "@/components/home/ExportProdcutsFeatured";
-import TestimonialsCarousel from "@/components/elements/Testimonials";
-import { BlogCarousel } from "@/components/home/BlogCarousal";
-import Link from "next/link";
 import VendorMarquee from "@/components/home/Marquee";
-import SectionWrapper from "@/components/common/SectionWrapper"; // New component for animations
+import Link from "next/link";
+import SectionWrapper from "@/components/common/SectionWrapper";
 import ImagePopup from "@/components/common/ImagePopup";
+import dynamic from "next/dynamic"; // Import dynamic for lazy loading
+
+// CWV FIX: Dynamically import components below the fold to improve LCP/INP
+const VendorProductsFeatured = dynamic(() => import("@/components/home/VendorFeatured"));
+const ExportProductsFeatured = dynamic(() => import("@/components/home/ExportProdcutsFeatured"));
+const TestimonialsCarousel = dynamic(() => import("@/components/elements/Testimonials"));
+const BlogCarousel = dynamic(() => import("@/components/home/BlogCarousal").then(mod => mod.BlogCarousel));
+
 
 export default async function HomePage() {
   return (
     <>
-      <HomeBanner />
+      {/* CWV FIX: Ensure HomeBanner's main image uses the 'priority' prop for LCP */}
+      <HomeBanner priority /> 
 
       <SectionWrapper className="max-w-[97vw] mx-auto">
         <CategoryButtons />
@@ -24,7 +29,8 @@ export default async function HomePage() {
       <div className="w-full bg-[#F5F7F8] py-6 md:py-8">
         <div className="max-w-[93vw] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 justify-center items-start">
           <SectionWrapper>
-            <MostPopular />
+            {/* These are likely above the fold, keep static */}
+            <MostPopular /> 
           </SectionWrapper>
           <SectionWrapper>
             <NewArrivalsAndTopSearches />
@@ -84,10 +90,7 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* <ImagePopup /> */}
-
       <ImagePopup/>
     </>
   );
 }
-

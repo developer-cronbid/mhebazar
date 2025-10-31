@@ -162,7 +162,7 @@ export default function NewArrivalsAndTopSearches() {
         setNewArrivalsCount(res?.count || transformed.length);
       } catch (error) {
         // Silent error for fallback data
-        console.warn('Failed to fetch new arrivals:', error);
+        // console.warn('Failed to fetch new arrivals:', error);
       } finally {
         setIsLoadingNewArrivals(false);
       }
@@ -185,7 +185,7 @@ export default function NewArrivalsAndTopSearches() {
         setTopRated(transformed.slice(0, 10));
       } catch (error) {
         // Silent error for fallback data
-        console.warn('Failed to fetch top rated:', error);
+        // console.warn('Failed to fetch top rated:', error);
       } finally {
         setIsLoadingTopRated(false);
       }

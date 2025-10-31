@@ -1,3 +1,4 @@
+// HomeBanner.tsx
 import Image from "next/image";
 import React from "react";
 import { cn } from "@/lib/utils";
@@ -24,14 +25,20 @@ const BANNER_DATA = [
 	},
 ];
 
-export default function HomeBanner() {
+// NEW INTERFACE: Define the props HomeBanner accepts
+interface HomeBannerProps {
+    priority?: boolean;
+}
+
+export default function HomeBanner({ priority }: HomeBannerProps) {
 	// Remove async and fetch logic, just use default data
 	const banners = BANNER_DATA;
 	const isDefault = true;
 
 	return (
 		<div className={cn("w-full relative bg-white overflow-hidden flex flex-col")}>
-			<BannerCarouselClient banners={banners} isDefault={isDefault} />
+			{/* Pass the priority prop down to the client component */}
+			<BannerCarouselClient banners={banners} isDefault={isDefault} priority={priority} />
 		</div>
 	);
 }

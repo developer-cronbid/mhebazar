@@ -12,7 +12,7 @@ export default function Loading() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Forklift GIF */}
+      {/* Forklift GIF - Image tag retains size attributes to prevent CLS */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -20,11 +20,11 @@ export default function Loading() {
       >
         <Image
           src="/forklift.gif"
-          alt="Loading..."
+          alt="Loading animation showing a forklift moving" // CWV FIX: Descriptive alt text
           width={200}
           height={200}
           priority
-          unoptimized // ensures GIF animation plays correctly
+          unoptimized 
         />
       </motion.div>
 

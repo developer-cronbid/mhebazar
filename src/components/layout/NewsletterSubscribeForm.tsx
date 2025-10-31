@@ -18,11 +18,11 @@ export default function NewsletterSubscribeForm() {
       setIsSubmitting(true);
       try {
         const response = await api.post('/newsletter-subscriptions/', { email });
-        console.log('Newsletter subscription successful:', response.data);
+        // console.log('Newsletter subscription successful:', response.data);
         toast.success("Thank you for subscribing to our newsletter!");
         setEmail('');
       } catch (error: any) {
-        console.error('Error subscribing to newsletter:', error);
+        // console.error('Error subscribing to newsletter:', error);
         const errorMessage = error.response?.data?.detail || error.response?.data?.email?.[0] || "Failed to subscribe. Please try again.";
         toast.error(errorMessage);
       } finally {

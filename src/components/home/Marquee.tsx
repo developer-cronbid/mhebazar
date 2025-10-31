@@ -57,7 +57,7 @@ const VendorMarquee = () => {
             setVendors(vendorsResponse.data.results);
 
         } catch (err) {
-            console.error("Vendor Marquee Fetch Error:", err);
+            // console.error("Vendor Marquee Fetch Error:", err);
             setError('Failed to load approved vendors.');
         } finally {
             setIsLoading(false);

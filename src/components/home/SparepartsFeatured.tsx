@@ -167,8 +167,7 @@ export default function SparePartsFeatured() {
                   model={spare.model}
                   manufacturer={spare.manufacturer}
                   user_name={spare.user_name}
-                  created_at={spare.created_at}
-                />
+                  created_at={spare.created_at} pageUrlType={""}                />
               </motion.div>
             ))}
           </div>

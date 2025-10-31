@@ -16,6 +16,62 @@ const protectedPrefixes = ["/admin", "/vendor/", "/account"];
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
 
+// **********************************************
+// CWV FIX: Process Redirects ONLY ONCE at module load
+// **********************************************
+const redirectMap = redirects as Record<string, string>;
+
+// 1. Create a URL-encoded version of the redirect map keys.
+const encodedRedirectMap = Object.keys(redirectMap).reduce((acc: Record<string, string>, key: string) => {
+  if (key === "URL") { // Skip the header key
+    acc[key] = redirectMap[key];
+    return acc;
+  }
+  
+  // Clean and encode the key: replace newlines with a space, then replace spaces with %20
+  const cleanedKey = key.replace(/\n/g, ' ').replace(/\s/g, '%20');
+  acc[cleanedKey] = redirectMap[key];
+  return acc;
+}, {});
+
+
+// 2. Filter out any entries that are now covered by dynamic redirects.
+const filteredRedirects = Object.keys(encodedRedirectMap).reduce((acc: Record<string, string>, key: string) => {
+  
+  if (key === "URL") {
+    acc[key] = encodedRedirectMap[key];
+    return acc;
+  }
+  
+  let keyPathname: string;
+  try {
+    // Attempt to parse the key as a URL to get a cleaner pathname
+    keyPathname = new URL(key, API_BASE_URL).pathname; 
+  } catch (e) {
+    keyPathname = key;
+  }
+
+  // It's safer to decode for content-based matching logic (like checking for /vendors-listing)
+  const keyDecodedPathname = decodeURIComponent(keyPathname);
+  
+  // Dynamic patterns
+  const isProductUrl = keyDecodedPathname.match(/-\d+$/);
+  const isVendorsListing = keyDecodedPathname.includes('/vendors-listing');
+  const isCompare = keyDecodedPathname.includes('/compare/');
+  const isWishlist = keyDecodedPathname.includes('/wishlist/');
+  
+  // Include the redirect only if it doesn't match any of the dynamic patterns
+  if (!isProductUrl && !isVendorsListing && !isCompare && !isWishlist) {
+    acc[key] = encodedRedirectMap[key]; 
+  }
+  return acc;
+}, {});
+
+// **********************************************
+// End CWV FIX: Process Redirects ONLY ONCE
+// **********************************************
+
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const decodedPathname = decodeURIComponent(pathname);
@@ -53,86 +109,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // --- Filtered Hardcoded Redirects ---
+  // --- Filtered Hardcoded Redirects (Now fast) ---
 
-  // The redirect map from your JSON file
-  const redirectMap = redirects as Record<string, string>;
-  
-  // 1. First, create a URL-encoded version of the redirect map keys.
-  // This ensures that improperly spaced/newline URLs match the correct key.
-  const encodedRedirectMap = Object.keys(redirectMap).reduce((acc: Record<string, string>, key: string) => {
-    if (key === "URL") { // Skip the header key
-      acc[key] = redirectMap[key];
-      return acc;
-    }
-    
-    // Clean and encode the key: replace newlines with a space, then replace spaces with %20
-    const cleanedKey = key.replace(/\n/g, ' ').replace(/\s/g, '%20');
-    acc[cleanedKey] = redirectMap[key];
-    return acc;
-  }, {});
+  // We check against the current path and the full URL (normalized)
+  const redirectTarget = filteredRedirects[fullUrl] || filteredRedirects[pathname];
+  
+  if (redirectTarget) {
+      return NextResponse.redirect(new URL(redirectTarget, fullUrl));
+  }
 
-
-  // 2. Filter out any entries that are now covered by dynamic redirects.
-  // We iterate over the newly created encoded map.
-  const filteredRedirects = Object.keys(encodedRedirectMap).reduce((acc: Record<string, string>, key: string) => {
-    
-    // If the key is the header, just include it and skip checks
-    if (key === "URL") {
-      acc[key] = encodedRedirectMap[key];
-      return acc;
-    }
-    
-    // The key is already URL-encoded (with %20) here. 
-    // We must decode it for regex matching on path segments 
-    // (e.g., matching a full product name, which should be decoded).
-    
-    let keyPathname: string;
-    try {
-      keyPathname = new URL(key).pathname;
-    } catch (e) {
-      keyPathname = key;
-    }
-
-    // It's safer to decode for content-based matching logic (like checking for /vendors-listing)
-    const keyDecodedPathname = decodeURIComponent(keyPathname);
-    
-    // Dynamic Product Pattern: ends with -[number] 
-    const isProductUrl = keyDecodedPathname.match(/-\d+$/);
-    
-    // Dynamic Vendor Pattern: includes /vendors-listing
-    const isVendorsListing = keyDecodedPathname.includes('/vendors-listing');
-    
-    // Dynamic Compare Pattern: includes /compare/
-    const isCompare = keyDecodedPathname.includes('/compare/');
-    
-    // Dynamic Wishlist Pattern: includes /wishlist/
-    const isWishlist = keyDecodedPathname.includes('/wishlist/');
-    
-    // Include the redirect only if it doesn't match any of the dynamic patterns
-    // We use the already encoded key from the outer iteration
-    if (!isProductUrl && !isVendorsListing && !isCompare && !isWishlist) {
-      acc[key] = encodedRedirectMap[key]; // Use the encoded key and its corresponding value
-    }
-    return acc;
-  }, {});
-
-  // 3. Match the current request URL (which should also be normalized if necessary, 
-  // but assuming it's already a clean string or fullUrl is the target lookup).
-  // Note: For this to work correctly, the incoming 'fullUrl' string should also
-  // be normalized to use '%20' instead of spaces/newlines if it was somehow malformed 
-  // during the request handling, but for robust middleware matching, we assume 
-  // Next.js/Browser handles the initial request path, but the lookup must use the
-  // encoded format generated above.
-
-  // Process the filtered hardcoded redirects
-  // Assuming fullUrl here is the complete URL string passed to the lookup.
-  const redirectTarget = filteredRedirects[fullUrl];
-  if (redirectTarget) {
-      return NextResponse.redirect(new URL(redirectTarget, fullUrl));
-  }
-
-  // --- Authentication and Authorization Logic ---
+  // --- Authentication and Authorization Logic ---
 
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
