@@ -151,15 +151,34 @@ export default function SearchBar({
     }
   }, [listening, setSearchQuery]);
 
+  // Add the slugify function (same as in product pages)
+  const slugify = (text: string): string => {
+    let slug = (text || '')
+      .toString()
+      .toLowerCase()
+      .trim();
+
+    slug = slug.replace(/[^a-z0-9\.\s]/g, ' ');
+    slug = slug.replace(/\s+/g, '-');
+    slug = slug.replace(/^-+|-+$/g, '');
+    slug = slug.replace(/^\.+|\.+$/g, '');
+
+    return slug;
+  };
+
   // *** REDIRECTION LOGIC (UPDATED FOR ALL SIX TYPES) ***
   const handleSuggestionClick = useCallback(
     (item: SearchSuggestion) => {
       setShowSuggestions(false);
       setSearchQuery(item.name); 
 
-      // 1. Product (Specific URL provided by backend)
-      if (item.type === "product" && item.url) {
-        router.push(item.url); // e.g., /product/[slug]-[id]
+      // For products, generate the proper slug
+      if (item.type === "product" && item.product_id) {
+        // Generate slug using the same pattern as product pages
+        const titleForSlug = `${item.product_tags?.vendor || ''} ${item.name} ${item.product_tags?.model || ''}`.trim();
+        const productSlug = slugify(titleForSlug);
+        router.push(`/product/${productSlug}-${item.product_id}`);
+        return;
       } 
       // 2. Product Type (Specific URL provided by backend, or base slug)
       else if (item.type === "product_type" && item.url) {
