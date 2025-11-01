@@ -3,12 +3,51 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useEffect } from "react";
-import { Loader2, AlertCircle, Phone } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Product } from "@/types";
 import { useUser } from "@/context/UserContext";
 import countrycode from '@/data/countrycode_cleaned.json'
+
+// Utility function to generate a safe slug for the product link
+const generateProductSlug = (product: Product): string => {
+    const titleSlug = product.title?.toLowerCase().replace(/\s+/g, '-') || product.name?.toLowerCase().replace(/\s+/g, '-');
+    return `${titleSlug}-${product.id}`;
+};
+
+// Utility function to generate the WhatsApp URL
+const generateWhatsAppUrl = (
+    phone: string,
+    product: Product,
+    formData: any, // Using any for local form data
+    userAddress: string
+): string => {
+    const productLink = `https://www.mhebazar.in/product/${generateProductSlug(product)}`;
+    const productName = product.title || product.name || 'Material Handling Equipment';
+    
+    const messageTemplate = `
+Hello! 👋
+I'm contacting you through the MHE Bazar website.
+I'd like to request a quotation for the following product:
+
+Name: ${formData.fullName}
+Email: ${formData.email}
+Mobile No.: ${formData.phone}
+Company Name: ${formData.companyName}
+Product Name: ${productName}
+Product Link: ${productLink}
+Location: ${userAddress}
+Message: ${formData.message || 'No additional message provided.'}
+
+Please share the best quote and availability details.
+Thank you!
+    `.trim();
+
+    const encodedMessage = encodeURIComponent(messageTemplate);
+    return `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
+};
+
 
 const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void }) => {
   const { user } = useUser();
@@ -45,18 +84,16 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
         email: user.email || '',
         phone: user.phone || '',
         // --- ADDED: Prefill address if available ---
-        address: user.address?.address || '',
+        address: (user as any).address || '', // Assuming address is directly on user or via a nested property
         // ------------------------------------------
-        // The company name is not available in the user object, so we leave it empty.
-        // The address is also not a direct field, so we'll just log it.
       }));
     }
     // set default dial code: prefer user's country (user.country or user.country_code),
     // fall back to US if present, else first in list
     const userCca2 = (user as any)?.country || (user as any)?.country_code || '';
     const foundByUser = countrycode.find((c: any) => c.cca2 === userCca2);
-    const foundUS = countrycode.find((c: any) => c.cca2 === 'IN');
-    const defaultCountry = foundByUser || foundUS || countrycode[0];
+    const foundIN = countrycode.find((c: any) => c.cca2 === 'IN');
+    const defaultCountry = foundByUser || foundIN || countrycode[0];
     setSelectedDialCode(getDialFromCountry(defaultCountry));
   }, [user]);
 
@@ -82,8 +119,6 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
   };
 
   const handleSubmit = async () => {
-    // --- REMOVED: Login check has been removed as requested ---
-
     if (!validateForm()) {
       toast.error('Please fill in all required fields with valid information.');
       return;
@@ -94,7 +129,6 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
       setError(null);
 
       // Build full phone by concatenating selected dial code and local number.
-      // Remove leading zeros and spaces from local part to avoid double zeros.
       const localNumber = formData.phone.replace(/[\s\-()]+/g, '').replace(/^0+/, '');
       const dial = selectedDialCode || '';
       const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
@@ -117,26 +151,46 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
         product: product?.id,
       };
 
+      // 1. Submit Quote Request
       await api.post('/quotes/', quotePayload);
 
       toast.success('Quote request submitted successfully!');
 
-      // Reset form
+      // 2. Fetch Vendor Phone and Redirect (NEW FEATURE)
+      try {
+          const vendorPhoneResponse = await api.get<{ company_phone: string }>(`/product/${product.id}/vendor-phone/`);
+          const vendorPhone = vendorPhoneResponse.data?.company_phone;
+
+          if (vendorPhone) {
+              const whatsappUrl = generateWhatsAppUrl(
+                  vendorPhone,
+                  product,
+                  { ...formData, phone: fullPhone, message: formData.message },
+                  formData.address
+              );
+              // Redirect to WhatsApp
+              window.location.href = whatsappUrl;
+              return; // Stop execution here to prevent closing the modal immediately
+          }
+      } catch (err) {
+          // Soft fail: Log error but proceed to closing the modal
+          console.warn("Failed to fetch vendor phone for WhatsApp redirect:", err);
+      }
+
+      // 3. Fallback: Reset and Close Form
       setFormData({
         fullName: '',
         companyName: '',
         email: '',
         phone: '',
         message: '',
-        // --- ADDED: Reset address ---
         address: ''
-        // --------------------------
       });
 
-      // Close form after success
       if (onClose) {
         onClose();
       }
+
     } catch (err) {
       toast.error('Failed to submit quote request. Please try again.');
       console.error('Error submitting quote:', err);
@@ -144,6 +198,9 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
       setSubmitting(false);
     }
   };
+
+  // ... (rest of the component JSX remains the same)
+  // ---
 
   if (error && !product) {
     return (

@@ -12,6 +12,11 @@ import { Loader2 } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import countrycode from '@/data/countrycode_cleaned.json'
+// Assuming utility functions are defined or imported here
+// import { slugify } from '@/lib/utils'; 
+// Since we don't have slugify source, we'll implement a basic one here for safety:
+const slugify = (str: string): string =>
+  str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
 interface RentalFormProps {
   productId: number
@@ -24,6 +29,41 @@ interface RentalFormProps {
   }
   onClose?: () => void
 }
+
+// Utility function to generate the WhatsApp URL (reused logic)
+const generateWhatsAppUrl = (
+    phone: string,
+    productId: number,
+    productTitle: string,
+    formData: any, // Using any for local form data
+): string => {
+    // Generate a placeholder slug for the URL based on title and ID
+    const productSlug = `${slugify(productTitle)}-${productId}`;
+    const productLink = `https://www.mhebazar.in/product/${productSlug}`;
+    
+    const messageTemplate = `
+Hello! 👋
+I'm contacting you through the MHE Bazar website.
+I'd like to request a RENTAL for the following product:
+
+Name: ${formData.fullName}
+Email: ${formData.email}
+Mobile No.: ${formData.phone}
+Location: ${formData.address}
+Product Name: ${productTitle}
+Product Link: ${productLink}
+Rental Dates: ${formData.startDate} to ${formData.endDate}
+Notes: ${formData.notes || 'No additional notes provided.'}
+
+Please share the best rental quote and availability details.
+Thank you!
+    `.trim();
+
+    const encodedMessage = encodeURIComponent(messageTemplate);
+    // Use the vendor's phone number as the recipient
+    return `https://api.whatsapp.com/send?phone=${phone}&text=${encodedMessage}`;
+};
+
 
 export default function RentalForm({ productId, productDetails, onClose }: RentalFormProps): JSX.Element {
   const { user } = useUser()
@@ -50,17 +90,16 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
         fullName: user.full_name || '',
         email: user.email || '',
         phone: user.phone || '',
-        address: user.address?.address || '',
+        address: (user as any).address || '', // Assuming address is directly on user or via a nested property
       });
     }
 
     // set default dial code: prefer user's country (user.country or user.country_code),
-    // fall back to US if present, else first in list
+    // fall back to IN if present, else first in list
     const userCca2 = (user as any)?.country || (user as any)?.country_code || '';
     const foundByUser = countrycode.find((c: any) => c.cca2 === userCca2);
-    // ORIGINAL LOGIC: The original code was using 'IN' as a fallback, which is India. I'll keep it.
-    const foundUS = countrycode.find((c: any) => c.cca2 === 'IN');
-    const defaultCountry = foundByUser || foundUS || countrycode[0];
+    const foundIN = countrycode.find((c: any) => c.cca2 === 'IN');
+    const defaultCountry = foundByUser || foundIN || countrycode[0];
     const getDialFromCountry = (c: any) => {
       if (!c || !c.idd) return '+';
       const root = c.idd.root || '';
@@ -80,12 +119,6 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-
-    // --- REMOVED: Login check has been removed as requested ---
-    // if (!user) {
-    //   toast.error("You must be logged in to submit a rental request.")
-    //   return
-    // }
 
     if (!startDate || !endDate) {
       toast.error("Please select both start and end dates.")
@@ -125,11 +158,33 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
         address: contactInfo.address, // Address already exists and is now mandatory
       }
 
+      // 1. Submit Rental Request
       await api.post("/rentals/", rentalPayload)
 
       toast.success("Rental request submitted successfully! We’ll get back to you soon.")
 
-      // Reset form fields
+      // 2. Fetch Vendor Phone and Redirect (NEW FEATURE)
+      try {
+          const vendorPhoneResponse = await api.get<{ company_phone: string }>(`/product/${productId}/vendor-phone/`);
+          const vendorPhone = vendorPhoneResponse.data?.company_phone;
+
+          if (vendorPhone) {
+              const whatsappUrl = generateWhatsAppUrl(
+                  vendorPhone,
+                  productId,
+                  productDetails.title,
+                  { ...contactInfo, phone: fullPhone, startDate, endDate, notes }
+              );
+              // Redirect to WhatsApp
+              window.location.href = whatsappUrl;
+              return; // Stop execution here to prevent closing the modal immediately
+          }
+      } catch (err) {
+          // Soft fail: Log error but proceed to closing the modal
+          console.warn("Failed to fetch vendor phone for WhatsApp redirect:", err);
+      }
+      
+      // 3. Fallback: Reset and Close Form
       setContactInfo({
         fullName: '',
         email: '',
@@ -140,12 +195,11 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
       setEndDate("")
       setNotes("")
 
-      // Close modal
       onClose?.()
+      
     } catch (error: unknown) {
       console.error("Error submitting rental form:", error)
       if (axios.isAxiosError(error) && error.response) {
-        // --- IMPROVEMENT: Clearer error message for the user ---
         const errorData = error.response.data;
         let errorMessages = "Unknown error occurred.";
         if (typeof errorData === 'object' && errorData !== null) {
@@ -156,7 +210,6 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
             errorMessages = error.response.statusText || "Unknown error";
         }
         toast.error(`Failed to submit rental request: ${errorMessages}`);
-        // --------------------------------------------------------
       } else {
         toast.error("An unexpected error occurred. Please try again.")
       }
@@ -238,11 +291,9 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
                       type="text"
                       value={contactInfo.address}
                       onChange={handleContactChange}
-                      // --- UPDATED: Address is now required ---
                       required
                       className="h-12 text-sm"
                       placeholder="Address *"
-                      // ----------------------------------------
                     />
                   </div>
                 </div>
