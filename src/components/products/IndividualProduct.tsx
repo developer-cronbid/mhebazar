@@ -1,3 +1,4 @@
+// src/components/products/IndividualProduct.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
@@ -50,7 +51,7 @@ type ProductData = {
   model: string | null;
   product_details: Record<string, unknown> | null;
   price: string;
-  type: string;
+  type: string | string[]; // Can be string or string[] based on product type
   is_active: boolean;
   direct_sale: boolean;
   online_payment: boolean;
@@ -89,8 +90,10 @@ interface WishlistItemApi {
   product_details: ProductData;
 }
 
+// FIX 2: Add productSlug to ProductSectionProps
 interface ProductSectionProps {
   productId: number | string | null;
+  productSlug: string; 
 }
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
@@ -99,7 +102,6 @@ const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PU
 
 /**
  * Checks for API-encoded video URLs and cleans them.
- * Example: http://api.mhebazar.in/media/https%3A/youtu.be/hYPUD3YjnkY...
  */
 const cleanMediaUrl = (url: string): string => {
   if (!url) return '';
@@ -110,14 +112,12 @@ const cleanMediaUrl = (url: string): string => {
   const match = url.match(encodedProtocolRegex);
   
   if (match && match.index > 0) {
-    // If the encoded protocol is found, it's likely an external link incorrectly wrapped.
+    // If the encoded protocol is found, decode the rest of the string
     const encodedPart = url.substring(match.index);
     try {
-        // Decode the rest of the string to get the original external URL
         return decodeURIComponent(encodedPart);
     } catch (e) {
         console.error("Failed to decode external URL:", url, e);
-        // Fallback to original if decoding fails
         return url;
     }
   }
@@ -303,7 +303,7 @@ const containerVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-export default function ProductSection({ productId }: ProductSectionProps) {
+export default function ProductSection({ productId, productSlug }: ProductSectionProps) {
   const router = useRouter();
   const { user } = useUser();
 
@@ -819,7 +819,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
   });
 
   const formButtonText =
-    data.type === "rental" || data.type === "used" ? "Rent Now" : "Get a Quote";
+    data.type === "rental" || data.type === "used" || (Array.isArray(data.type) && (data.type.includes("rental") || data.type.includes("used"))) ? "Rent Now" : "Get a Quote";
   const validSpecs = getValidSpecs(data.product_details);
 
   const isRentalOrUsed =
@@ -1193,7 +1193,7 @@ export default function ProductSection({ productId }: ProductSectionProps) {
                   )
                 ) : (
                   <div className="mt-4 flex flex-col gap-2">
-                    {data.type.includes("rental") ? (
+                    {isRentalOrUsed ? (
                       <>
                         <Dialog>
                           <DialogTrigger asChild>

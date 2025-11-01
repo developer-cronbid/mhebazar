@@ -7,64 +7,149 @@ import SparePartsFeatured from '@/components/home/SparepartsFeatured';
 import VendorProducts from '@/components/elements/VendorFeaturedProducts';
 import CategoryProducts from '@/components/elements/CategoryProducts';
 import styles from './page.module.css';
+import { Metadata } from 'next';
+
+// --- START: FIXED API Type Definitions ---
+interface ProductApiResponse {
+  id: number;
+  category_name: string;
+  subcategory_name: string | null;
+  user_name: string | null;
+  images: { id: number; image: string }[];
+  average_rating: number | null;
+  name: string;
+  description: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  manufacturer: string | null;
+  model: string | null;
+  price: string;
+  type: string[] | string;
+  is_active: boolean;
+  direct_sale: boolean;
+  // FIX 3: Add missing stock_quantity property
+  stock_quantity: number; 
+}
+// --- END: FIXED API Type Definitions ---
 
 // Helper function for SEO-friendly slug generation (Canonical URL)
 const slugify = (text: string): string => {
-  // 1. Convert to lowercase, trim.
   let slug = (text || '')
     .toString()
     .toLowerCase()
     .trim();
 
-  // 2. Replace unwanted characters with a space first.
-  // CRITICAL FIX: Allowed characters for the URL slug are a-z, 0-9, and period (.).
-  // All other characters, including hyphens (-) and braces, are replaced by a space.
+  // 1. Replace unwanted characters with a space first.
   slug = slug.replace(/[^a-z0-9\.\s]/g, ' ');
 
-  // 3. FIX: Collapse multiple spaces into a single hyphen (-).
-  // This is the desired primary separator.
+  // 2. Collapse multiple spaces into a single hyphen (-).
   slug = slug.replace(/\s+/g, '-');
 
-  // 4. Remove leading/trailing hyphens or periods.
+  // 3. Remove leading/trailing hyphens or periods.
   slug = slug.replace(/^-+|-+$/g, '');
   slug = slug.replace(/^\.+|\.+$/g, '');
 
   return slug;
 };
 
-// This function now fetches real data for better SEO
+// Helper function to fetch product data (Reusable for Metadata and Page)
+async function getProductData(productId: number): Promise<ProductApiResponse> {
+  // Use .get<ProductApiResponse> to enforce type checking on the API response
+  const response = await api.get<ProductApiResponse>(`/products/${productId}`);
+  return response.data;
+}
+
+
+// --- SEO AND METADATA GENERATION (CWV FIX) ---
 export async function generateMetadata({
   params,
 }: {
   params: { product: string };
-}) {
-  // We use the hyphen (-) to reliably split the slug from the product ID.
-  const productId = parseInt(params.product.split('-').pop() || '', 10);
+}): Promise<Metadata> {
+  const separator = '-';
+  const productId = parseInt(params.product.split(separator).pop() || '', 10);
 
-  // Validate ID early
+  // Fallback metadata immediately if ID is invalid
   if (isNaN(productId)) {
-    return {
-      title: 'Invalid Product',
-      description: 'This product could not be found.',
-    };
+    return { title: 'Invalid Product' };
   }
 
   try {
-    const response = await api.get(`/products/${productId}`);
-    const productName = response.data.name;
+    // CWV FIX: Fetch data here for SEO/Social sharing, Next.js will cache this fetch result.
+    const productData = await getProductData(productId);
+    const productName = productData.name;
+    const metaTitle = productData.meta_title || `${productName} - MHE Product Details`;
+    const metaDescription = productData.meta_description || `Detailed information about ${productName} and customer reviews.`;
+    const firstImage = productData.images.length > 0 ? productData.images[0].image : '/mhe-logo.png';
+    const canonicalUrl = `https://www.mhebazar.in/product/${params.product}`; 
+    
+    const isAvailable = productData.stock_quantity > 0 && productData.is_active;
+
+    // Helper for Schema Markup (Rich Snippets)
+    const productSchema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": productName,
+      "description": metaDescription,
+      "sku": productData.model || productName.substring(0, 5).toUpperCase(),
+      "image": firstImage,
+      "brand": productData.manufacturer || productData.user_name || "MHE Bazar",
+      "offers": {
+        "@type": "Offer",
+        "url": canonicalUrl,
+        "priceCurrency": "INR",
+        "price": productData.price,
+        "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      },
+      // Schema for Rating (if available)
+      ...(productData.average_rating && {
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": productData.average_rating.toFixed(1),
+          "reviewCount": 1, // Placeholder, ideally fetched
+        }
+      })
+    };
 
     return {
-      title: `${productName} - MHE Product Details`,
-      description: `Detailed information about ${productName} and customer reviews.`,
+      title: metaTitle,
+      description: metaDescription,
+      // Canonical URL
+      alternates: {
+        canonical: canonicalUrl,
+      },
+      // Social Sharing: Open Graph (Facebook/LinkedIn)
+      openGraph: {
+        title: metaTitle,
+        description: metaDescription,
+        url: canonicalUrl,
+        // FIX 1: Change 'product' to 'website' to align with Next.js supported types and solve the error
+        type: 'website', 
+        images: [{ url: firstImage, alt: productName }],
+      },
+      // Social Sharing: Twitter Card
+      twitter: {
+        card: 'summary_large_image',
+        title: metaTitle,
+        description: metaDescription,
+        images: [firstImage],
+      },
+      // Schema Markup (Rich Snippets for Google)
+      metadataBase: new URL('https://www.mhebazar.in'),
+      other: {
+        'json-ld': JSON.stringify(productSchema),
+      },
     };
   } catch (error) {
-    // Handle cases where the product isn't found for metadata generation
+    // Soft fail for metadata if API throws
     return {
       title: 'Product Not Found',
       description: 'The product you are looking for does not exist.',
     };
   }
 }
+// --- END: METADATA GENERATION ---
+
 
 // The page component is now an async function
 export default async function IndividualProductPage({
@@ -78,60 +163,61 @@ export default async function IndividualProductPage({
   let productSlugFromUrl: string;
   let separator = '-'; // The reliable separator between the slug and the ID in the URL parameter.
 
-  // Case 1: Handle old query parameter URLs like /product?id=123
+  // 1. Determine Product ID
   if (searchParams.id) {
     productId = parseInt(searchParams.id, 10);
-    // Use a placeholder slug for now
     productSlugFromUrl = params.product || 'product';
   } else {
-    // Case 2: Handle slug-based URLs like /product/forklift-123
-    // We split on the hyphen, assuming it only separates the slug from the ID.
     const parts = params.product.split(separator);
     productId = parseInt(parts.pop() || '', 10);
-    productSlugFromUrl = parts.join(separator); // The slug part is everything before the last separator
+    productSlugFromUrl = parts.join(separator);
   }
 
-  // If the ID is not a valid number, render a 404 page
   if (isNaN(productId)) {
     notFound();
   }
 
-  let productData;
+  let productData: ProductApiResponse;
   try {
-    const response = await api.get(`/products/${productId}`);
-    productData = response.data;
+    // CWV FIX: Reuse the fetched product data (or trigger a cached fetch)
+    productData = await getProductData(productId); 
   } catch (error) {
     console.error('Failed to fetch product:', error);
     notFound();
   }
 
-  // Generate the correct, canonical slug from the product name (including manufacturer/model for accuracy)
+  // 2. Canonicalization Check and Redirects
+  
+  // Generate the correct, canonical slug from the product name 
+  // (Crucial for SEO and preventing duplicate content)
   const productTitleForSlug = `${productData.user_name || ''} ${productData.name} ${productData.model || ''}`;
   const canonicalProductSlug = slugify(productTitleForSlug);
 
-  // If the URL slug doesn't match the canonical slug, redirect to the correct URL
+  // Check 1: If the URL slug doesn't match the canonical slug, redirect.
   if (productSlugFromUrl !== canonicalProductSlug) {
-    // Redirect to the correct URL with the hyphen separator for the ID
     const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
     redirect(canonicalUrl);
   }
   
-  // If the old query param URL was used, redirect to the new format
+  // Check 2: If the old query param URL was used, redirect to the new format.
   if (searchParams.id) {
-    // Redirect to the correct URL with the hyphen separator for the ID
     const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
     redirect(canonicalUrl);
   }
 
+  // 3. Prepare Data for Rendering
   const { category_name, subcategory_name, name: productName } = productData;
-  // Clean the product name for Breadcrumb display (allowing all required punctuation)
+  
+  // Clean the product name for Breadcrumb display (allowing standard symbols)
   const product = productName
     .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") 
     .replace(/\s+/g, " ")
     .trim()
+  
   const cat_slug = category_name.toLowerCase().replace(/\s+/g, '-');
   const subcat_slug = subcategory_name?.toLowerCase().replace(/\s+/g, '-');
 
+  // 4. Render
   return (
     <>
       <Breadcrumb
@@ -139,11 +225,11 @@ export default async function IndividualProductPage({
           { label: 'Home', href: '/' },
           { label: category_name, href: `/${cat_slug}` },
           ...(subcategory_name ? [{ label: subcategory_name, href: `/${cat_slug}/${subcat_slug}` }] : []),
-          // Use the canonical slug for the product link
+          // Use the canonical slug for the product link in the breadcrumb
           { label: product, href: `/product/${canonicalProductSlug}${separator}${productId}` },
         ]}
       />
-
+      {/* FIX 2: Pass productSlug to the client component to resolve the prop error */}
       <ProductSection productSlug={params.product} productId={productId} />
 
       <div className={styles.animatedSection}>
