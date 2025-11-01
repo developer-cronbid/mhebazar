@@ -1,19 +1,20 @@
-// src/components/BlogCarousel.tsx (FIXED)
+// src/components/BlogCarousel.tsx
 import React from 'react';
 import _BlogCarouselClient from './BlogCarouselClient';
 
-// Define the structure of a blog post based on your API response
-interface BlogPost {
+// --- FIXED TYPE DEFINITION (Source of Truth) ---
+export interface BlogPost {
   id: number;
   blog_title: string;
-  image1?: string | null;
+  image1: string | null; // Must allow null from API
   blog_url: string;
-  blog_category_name?: string | null;
-  author_name?: string | null;
-  created_at?: string | null;
-  preview_description?: string | null;
-  description1?: string | null;
+  blog_category_name: string | null;
+  author_name: string | null;
+  created_at: string | null;
+  preview_description: string | null;
+  description1: string | null;
 }
+// ------------------------------------------------
 
 export async function BlogCarousel() {
   let blogs: BlogPost[] = [];
@@ -21,15 +22,14 @@ export async function BlogCarousel() {
   let data: any = null;
 
   try {
-    // 🚀 STABLE FETCH: Use standard fetch with an absolute public URL.
-    // This is the most reliable method for build-time data fetching.
-    const res = await fetch('https://api.mhebazar.in/api/blogs/?limit=3', { 
-        // Revalidate is good for performance and fresh data
+    // STABLE FETCH: Use standard fetch with an absolute public URL.
+    // Fetch top 5 blogs to ensure we have enough data to pick the top 3 after sorting.
+    const res = await fetch('https://api.mhebazar.in/api/blogs/?limit=5', { 
+        // Revalidate is crucial for fresh data and performance (fast subsequent server renders)
         next: { revalidate: 300 } 
     });
     
     if (!res.ok) {
-        // Throw a standard error if the HTTP status is not 200-299
         throw new Error(`Failed to fetch blogs: HTTP status ${res.status}`);
     }
     
@@ -54,10 +54,8 @@ export async function BlogCarousel() {
       throw new Error("Unexpected API response format (not an array)");
     }
   } catch (err: any) {
-    // Log the error for debugging purposes in Vercel logs
     // console.error('Next.js Build-Time Blog Fetch Failed:', err.message || err);
     error = 'Failed to load blogs. Please try again later.';
-    // Ensure 'blogs' remains an empty array on failure so client component renders gracefully
     blogs = []; 
   }
 
