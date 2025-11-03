@@ -70,7 +70,6 @@ export default function SearchBar({
       }
 
       try {
-        // Updated API call reflects the Universal Search endpoint
         const response = await api.get<SearchSuggestion[]>(
           `/search/universal/?search=${encodeURIComponent(query)}`
         );
@@ -78,13 +77,11 @@ export default function SearchBar({
         setSuggestions(response.data || []);
         setShowSuggestions(query.length > 0);
       } catch (error) {
-        // Assuming 'toast' is available globally
-        // toast.error("Failed to fetch search suggestions.");
         setSuggestions([]);
         setShowSuggestions(query.length > 0);
       }
     }, DEBOUNCE_TIME),
-    [] // Stable function
+    []
   );
 
   // 2. Main search effect
@@ -187,7 +184,6 @@ export default function SearchBar({
 
       // For products, generate the proper slug
       if (item.type === "product" && item.product_id) {
-        // Generate slug using the same pattern as product pages
         const titleForSlug = `${item.product_tags?.vendor || ""} ${item.name} ${
           item.product_tags?.model || ""
         }`.trim();
@@ -197,7 +193,7 @@ export default function SearchBar({
       }
       // 2. Product Type (Specific URL provided by backend, or base slug)
       else if (item.type === "product_type" && item.url) {
-        router.push(`/${item.category_slug}`); // e.g., /search?type=new
+        router.push(`/${item.category_slug}`); 
       }
       // 3. Vendor-Category (Vendor Page, filtered by Category)
       else if (
@@ -247,11 +243,15 @@ export default function SearchBar({
   }) => {
     if (!value) return null;
     return (
+      // MOBILE UX FIX: Enforcing wrapping and proper spacing for small screens
       <span
-        className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${colorClass} mr-2 mb-1`}
+        className={`flex items-center text-xs font-medium px-2 py-1 rounded-full ${colorClass} mr-2 mb-1 
+        max-w-full sm:max-w-none text-ellipsis overflow-hidden whitespace-nowrap`}
       >
-        <Icon className="w-3 h-3 mr-1 opacity-70" />
-        {label}: <span className="ml-1 font-semibold">{value}</span>
+        <Icon className="w-3 h-3 mr-1 opacity-70 flex-shrink-0" />
+        <span className="truncate">
+            {label}: <span className="ml-1 font-semibold">{value}</span>
+        </span>
       </span>
     );
   };
@@ -269,6 +269,7 @@ export default function SearchBar({
       badgeClass = "bg-orange-50 text-orange-600";
     else if (item.type === "vendor") badgeClass = "bg-green-50 text-green-600";
     else if (item.type === "category") badgeClass = "bg-blue-50 text-blue-600";
+    else if (item.type === "subcategory") badgeClass = "bg-purple-50 text-purple-600";
 
     return (
       <div
@@ -279,6 +280,9 @@ export default function SearchBar({
             : "flex-row justify-between items-start"
         }`}
         onClick={() => handleSuggestionClick(item)}
+        // ACCESSIBILITY: Added role for semantic list
+        role="option"
+        aria-selected={false}
       >
         <div
           className={`flex ${
@@ -300,7 +304,8 @@ export default function SearchBar({
 
         {/* DETAILS SECTION: Model, Vendor, Category for Product suggestions */}
         {isProduct && item.product_tags && (
-          <div className="flex flex-wrap mt-1">
+          // MOBILE UX FIX: Enforce flex-wrap here to ensure tags go to new lines
+          <div className="flex flex-wrap mt-1 w-full"> 
             <TagBadge
               label="Model"
               value={item.product_tags.model}
@@ -350,23 +355,21 @@ export default function SearchBar({
         }
         onKeyDown={(e) => {
           if (e.key === "Enter" && searchQuery.trim()) {
-            // 1. Prevent default browser action (e.g., submitting a form)
             e.preventDefault();
 
             setShowSuggestions(false);
 
-            // 2. ONLY act if there are suggestions.
-            // If visibleSuggestions.length is 0, the function exits here, doing nothing.
             if (visibleSuggestions.length > 0) {
-              // Select the first item if it exists
               handleSuggestionClick(visibleSuggestions[0]);
             }
           }
         }}
+        aria-label="Search products, vendors, and categories"
+        aria-expanded={showSuggestions}
         className="w-full px-4 py-2 pl-12 pr-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base transition-shadow h-10"
         autoComplete="off"
       />
-      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" aria-hidden="true" />
       <button
         type="button"
         className={`absolute right-4 top-1/2 transform -translate-y-1/2 rounded-full p-1 transition
@@ -383,13 +386,14 @@ export default function SearchBar({
           className={`w-5 h-5 ${
             listening ? "text-green-600" : "text-gray-400"
           }`}
+          aria-hidden="true"
         />
         {listening && (
-          <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping" role="status" aria-label="Microphone active"></span>
         )}
       </button>
       {listening && (
-        <div className="absolute right-12 top-1/2 -translate-y-1/2 bg-white border border-green-200 rounded px-2 py-1 text-xs text-green-700 shadow animate-fade-in">
+        <div className="absolute right-12 top-1/2 -translate-y-1/2 bg-white border border-green-200 rounded px-2 py-1 text-xs text-green-700 shadow animate-fade-in" role="status" aria-live="polite">
           Listening...
         </div>
       )}
@@ -402,6 +406,7 @@ export default function SearchBar({
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.15 }}
             className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-96 overflow-y-auto no-scrollbar"
+            role="listbox" 
           >
             {suggestions.length > 0 ? (
               <>
@@ -415,6 +420,8 @@ export default function SearchBar({
                     router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
                     setShowSuggestions(false);
                   }}
+                  role="option" 
+                  aria-label={`Search all results for ${searchQuery}`}
                 >
                   Search all results for **"{searchQuery}"**
                 </div>

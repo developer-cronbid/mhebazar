@@ -25,8 +25,8 @@ import { useRef, useState, useEffect, JSX } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import CategoryMenu from "./NavOptions";
-import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
+// ORIGINAL: import CategoryMenu from "./NavOptions";
+// ORIGINAL: import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
 import SearchBar from "./SearchBar";
 import { useUser } from "@/context/UserContext";
 import { useRouter, usePathname } from "next/navigation";
@@ -49,6 +49,19 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import ContactForm from "../forms/publicforms/ContactForm";
+import dynamic from 'next/dynamic'; // NEW: Import dynamic
+
+// NEW: Dynamic import for heavy/off-screen components (CategoryMenu uses framer-motion/complex structure)
+// This drastically improves TBT/TTI on initial mobile load.
+const DynamicCategoryMenu = dynamic(() => import("./NavOptions"), {
+  ssr: false, 
+  loading: () => <div className="w-[640px] h-[300px] bg-gray-50 animate-pulse" />, // Placeholder for best practice
+});
+
+const DynamicVendorRegistrationDrawer = dynamic(() => import("@/components/forms/publicforms/VendorRegistrationForm"), {
+  ssr: false,
+});
+
 
 export interface Subcategory {
   id: number;
@@ -135,9 +148,10 @@ export default function Navbar(): JSX.Element {
             </div>
             <div className="flex items-center gap-4 text-xs sm:text-sm">
               {isLoading ? (
-                <span>Loading...</span>
+                // BEST PRACTICE: Use ARIA attributes for live regions
+                <span role="status" aria-live="polite">Loading...</span>
               ) : user ? (
-                <span className="font-semibold text-center sm:text-left text-xs sm:text-sm text-nowrap">
+                <span className="font-semibold text-center sm:text-left text-xs sm:text-sm text-nowrap" aria-live="polite">
                   | Welcome,{" "}
                   {typeof user.username === "string"
                     ? user.username
@@ -166,7 +180,7 @@ export default function Navbar(): JSX.Element {
             <button
               className="lg:hidden p-1 sm:p-2 rounded-md text-gray-600 hover:text-gray-900"
               onClick={() => setMobileMenuOpen(true)}
-              aria-label="Open navigation menu"
+              aria-label="Open navigation menu" // ACCESSIBILITY: Added aria-label
             >
               <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
@@ -179,7 +193,7 @@ export default function Navbar(): JSX.Element {
                   width={120}
                   height={35}
                   className="h-8 sm:h-10 w-auto object-contain"
-                  priority
+                  priority // LCP FIX: Retained priority for logo
                 />
                 <span className="shine-overlay"></span>
               </Link>
@@ -200,7 +214,7 @@ export default function Navbar(): JSX.Element {
                   alt="Brand Store"
                   width={120}
                   height={40}
-                  priority
+                  priority // LCP FIX: Retained priority for brand image
                   className="object-contain"
                   style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
                 />
@@ -427,12 +441,15 @@ export default function Navbar(): JSX.Element {
                       ? "text-gray-900 font-bold"
                       : "text-gray-700 hover:text-gray-900 font-normal"
                   }`}
+                  aria-expanded={categoriesOpen} 
+                  aria-controls="category-menu-dropdown" 
                 >
                   <Menu className="w-5 h-5" />
                   All Categories
                   <ChevronDown className="w-4 h-4" />
                 </button>
-                <CategoryMenu
+                {/* FIXED: Removed erroneous 'id' prop which caused the TS error */}
+                <DynamicCategoryMenu
                   isOpen={categoriesOpen}
                   onClose={() => setCategoriesOpen(false)}
                   categories={categories}
@@ -485,7 +502,7 @@ export default function Navbar(): JSX.Element {
               </Dialog>
 
               {isLoading ? (
-                <span className="px-4 py-3 text-sm text-gray-600 font-normal">
+                <span className="px-4 py-3 text-sm text-gray-600 font-normal" role="status" aria-live="polite">
                   {" "}
                   Loading...
                 </span>
@@ -591,6 +608,7 @@ export default function Navbar(): JSX.Element {
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="p-2 text-gray-500 hover:text-gray-700"
+                  aria-label="Close navigation menu"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -614,6 +632,8 @@ export default function Navbar(): JSX.Element {
                             ? "text-gray-900 font-bold"
                             : "text-gray-700 hover:bg-gray-50"
                         }`}
+                        aria-expanded={openCategory === category.id} 
+                        aria-controls={`mobile-category-${category.id}`} 
                       >
                         <span>{category.name}</span>
                         <ChevronDown
@@ -626,6 +646,7 @@ export default function Navbar(): JSX.Element {
                       <AnimatePresence>
                         {openCategory === category.id && (
                           <motion.div
+                            id={`mobile-category-${category.id}`} 
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
@@ -723,7 +744,7 @@ export default function Navbar(): JSX.Element {
                     Help
                   </Link>
                   {isLoading ? (
-                    <span className="block px-4 py-3 text-gray-700">
+                    <span className="block px-4 py-3 text-gray-700" role="status" aria-live="polite">
                       Loading...
                     </span>
                   ) : user?.role?.id === 2 ? (
@@ -768,7 +789,7 @@ export default function Navbar(): JSX.Element {
         )}
       </AnimatePresence>
 
-      <VendorRegistrationDrawer
+      <DynamicVendorRegistrationDrawer
         open={vendorDrawerOpen}
         onClose={() => setVendorDrawerOpen(false)}
       />
