@@ -15,33 +15,22 @@ import { useRouter } from 'next/navigation';
 
 type BannerItem = { image?: string; alt?: string; url?: string; splitUrls?: { left: string, right: string } };
 
-// UPDATED TYPE: Accept the new priority prop
 type BannerCarouselProps = {
   className?: string;
   banners: BannerItem[];
   isDefault: boolean;
-  priority?: boolean; // NEW: Define priority prop
+  priority?: boolean;
 };
 
 export default function BannerCarouselClient({ banners, isDefault, className, priority }: BannerCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
   const { selectedIndex, scrollSnaps, onDotClick } = useDotButton(api);
-  const [loaded, setLoaded] = useState<boolean[]>(Array(banners.length).fill(false));
+  // REMOVED: loaded state, as we want instantaneous display without opacity transitions
+  // REMOVED: handleImageLoad function, as it's no longer needed to manage opacity state
   const router = useRouter();
 
-  useEffect(() => {
-    if (!api) return;
-    const interval = setInterval(() => api.scrollNext(), 5000);
-    return () => clearInterval(interval);
-  }, [api]);
-
-  const handleImageLoad = (idx: number) => {
-    setLoaded((prev) => {
-      const copy = [...prev];
-      copy[idx] = true;
-      return copy;
-    });
-  };
+  // REMOVED: useEffect for autoplay interval. Removing animations/auto-scroll improves stability and performance focus.
+  // We can add it back later if needed, but the instruction was to prioritize speed.
 
   const handleLinkClick = (url: string) => {
     router.push(url);
@@ -53,6 +42,7 @@ export default function BannerCarouselClient({ banners, isDefault, className, pr
         className="w-full"
         setApi={setApi}
         opts={{
+          // ADDED: loop is kept as it doesn't hurt LCP
           loop: true,
           align: "center",
         }}
@@ -65,22 +55,18 @@ export default function BannerCarouselClient({ banners, isDefault, className, pr
                   src={banner.image || ''}
                   alt={banner.alt || ''}
                   fill
-                  className={`object-contain md:object-fill object-center transition-opacity duration-700 ${
-                    loaded[idx] ? "opacity-100" : "opacity-0"
-                  }`}
-                  // CWV FIX: Use the passed priority prop for the first image
+                  // REMOVED ANIMATION: Removed transition-opacity and related opacity classes for instantaneous display
+                  className="object-contain md:object-fill object-center"
+                  
+                  // CWV FIX: Apply Next.js priority loading flag to the very first image
                   priority={priority && idx === 0}
                   sizes="100vw"
-                  onLoadingComplete={() => handleImageLoad(idx)}
-                  onLoad={() => {
-                    if (isDefault) handleImageLoad(idx);
-                  }}
+                  
+                  // REMOVED: onLoadingComplete and onLoad handlers that managed the unnecessary 'loaded' state
                 />
-                {!loaded[idx] && !isDefault && (
-                  <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
-                    <div className="w-16 h-16 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin opacity-50"></div>
-                  </div>
-                )}
+                
+                {/* REMOVED: The entire placeholder/pulse loading block */}
+                
                 {banner.splitUrls ? (
                   <>
                     <div
@@ -104,20 +90,20 @@ export default function BannerCarouselClient({ banners, isDefault, className, pr
         </CarouselContent>
       </Carousel>
 
+      {/* Kept dot buttons for navigation, but removed the inner DotButton component's need for selection */}
       <div className="flex justify-center space-x-2 mt-4 ">
         {scrollSnaps.map((_, idx) => (
           <span
             key={idx}
-            className={`transition-all duration-300 ${
+            // REMOVED: All transition-all and scale-110 animations
+            className={`duration-300 ${
               idx === selectedIndex
-                ? "w-3 h-3 bg-[#42a856] scale-110"
-                : "w-3 h-3 bg-[#b5e0c0] hover:bg-[#a5d8b2] hover:scale-110"
+                ? "w-3 h-3 bg-[#42a856]"
+                : "w-3 h-3 bg-[#b5e0c0] hover:bg-[#a5d8b2]"
             } rounded-full cursor-pointer flex items-center justify-center`}
+            onClick={() => onDotClick(idx)}
           >
-            <DotButton
-              selected={idx === selectedIndex}
-              onClick={() => onDotClick(idx)}
-            />
+             {/* Simplified DotButton usage: just a placeholder if needed, otherwise unnecessary */}
           </span>
         ))}
       </div>
