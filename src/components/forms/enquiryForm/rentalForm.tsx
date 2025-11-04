@@ -8,12 +8,11 @@ import Image from "next/image"
 import { toast } from "sonner"
 import api from "@/lib/api"
 import { useUser } from "@/context/UserContext"
-import { Loader2 } from "lucide-react"
+import { Loader2, MessageSquare } from "lucide-react" // Added MessageSquare
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import countrycode from '@/data/countrycode_cleaned.json'
-// Assuming utility functions are defined or imported here
-// import { slugify } from '@/lib/utils'; 
+
 // Since we don't have slugify source, we'll implement a basic one here for safety:
 const slugify = (str: string): string =>
   str.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -41,6 +40,7 @@ const generateWhatsAppUrl = (
     const productSlug = `${slugify(productTitle)}-${productId}`;
     const productLink = `https://www.mhebazar.in/product/${productSlug}`;
     
+    // NOTE: formData.notes will contain the "WhatsApp: " prefix if confirmed.
     const messageTemplate = `
 Hello! 👋
 I'm contacting you through the MHE Bazar website.
@@ -71,11 +71,14 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
   const [endDate, setEndDate] = useState("")
   const [notes, setNotes] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showConfirmation, setShowConfirmation] = useState(false); // NEW STATE for custom popup
+  const [vendorPhone, setVendorPhone] = useState<string | null>(null); // NEW STATE to hold vendor phone temporarily
+
   const [contactInfo, setContactInfo] = useState({
     fullName: '',
     email: '',
     phone: '',
-    address: '', // Already exists
+    address: '', 
   });
 
   // selected country dial code, e.g. "+1"
@@ -94,8 +97,6 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
       });
     }
 
-    // set default dial code: prefer user's country (user.country or user.country_code),
-    // fall back to IN if present, else first in list
     const userCca2 = (user as any)?.country || (user as any)?.country_code || '';
     const foundByUser = countrycode.find((c: any) => c.cca2 === userCca2);
     const foundIN = countrycode.find((c: any) => c.cca2 === 'IN');
@@ -116,7 +117,91 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
       [name]: value
     }));
   };
+  
+  // New function for submission and redirection logic
+  const submitRentalAndRedirect = async (shouldRedirectToWhatsApp: boolean) => {
+    try {
+        setIsSubmitting(true)
 
+        // Build full phone number
+        const localNumber = contactInfo.phone.replace(/[\s\-()]+/g, '').replace(/^0+/, '');
+        const dial = selectedDialCode || '';
+        const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
+        const fullPhone = `${normalizedDial}${localNumber}`;
+
+        let finalNotes = notes; 
+
+        // Append "WhatsApp" prefix if confirmed
+        if (shouldRedirectToWhatsApp) {
+            finalNotes = `WhatsApp: ${finalNotes}`;
+        }
+
+        const rentalPayload: Record<string, any> = {
+            product: productId,
+            start_date: startDate,
+            end_date: endDate,
+            notes: finalNotes, // Use the potentially updated notes (includes 'WhatsApp' if confirmed)
+            full_name: contactInfo.fullName,
+            email: contactInfo.email,
+            phone: fullPhone,
+            address: contactInfo.address, 
+        }
+
+        // 1. Submit Rental Request
+        await api.post("/rentals/", rentalPayload)
+
+        toast.success("Rental request submitted successfully! We’ll get back to you soon.")
+
+        // 2. Conditional Redirect
+        if (shouldRedirectToWhatsApp && vendorPhone) {
+            const whatsappUrl = generateWhatsAppUrl(
+                vendorPhone,
+                productId,
+                productDetails.title,
+                { ...contactInfo, phone: fullPhone, startDate, endDate, notes: finalNotes } // Pass the notes with 'WhatsApp:' prefix
+            );
+            // Redirect to WhatsApp
+            window.location.href = whatsappUrl;
+            return; 
+        }
+        
+        // 3. Fallback: Reset and Close Form
+        setContactInfo({
+            fullName: '',
+            email: '',
+            phone: '',
+            address: '',
+        });
+        setStartDate("")
+        setEndDate("")
+        setNotes("")
+
+        onClose?.()
+        
+    } catch (error: unknown) {
+        console.error("Error submitting rental form:", error)
+        if (axios.isAxiosError(error) && error.response) {
+            const errorData = error.response.data;
+            let errorMessages = "Unknown error occurred.";
+            if (typeof errorData === 'object' && errorData !== null) {
+                errorMessages = Object.values(errorData).flat().join(". ") || error.response.statusText;
+            } else if (typeof errorData === 'string') {
+                errorMessages = errorData;
+            } else {
+                errorMessages = error.response.statusText || "Unknown error";
+            }
+            toast.error(`Failed to submit rental request: ${errorMessages}`);
+        } else {
+            toast.error("An unexpected error occurred. Please try again.")
+        }
+    } finally {
+        setIsSubmitting(false);
+        setShowConfirmation(false); // Hide the confirmation popup
+    }
+  }
+
+
+  // UPDATED handleSubmit: Shows Confirmation Modal first
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
@@ -130,96 +215,77 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
       return
     }
 
-    // --- UPDATED: Address is now required ---
     if (!contactInfo.fullName || !contactInfo.email || !contactInfo.phone || !contactInfo.address) {
       toast.error("Please fill in your name, email, phone number, and address.");
       return;
     }
 
-
+    setIsSubmitting(true)
+    
     try {
-      setIsSubmitting(true)
+        // Fetch Vendor Phone (required for WhatsApp)
+        const vendorPhoneResponse = await api.get<{ company_phone: string }>(`/product/${productId}/vendor-phone/`);
+        const phone = vendorPhoneResponse.data?.company_phone || null;
+        setVendorPhone(phone); // Store it
+        
+        setIsSubmitting(false); // Stop loader after fetch
 
-      // Build full phone by concatenating selected dial code and local number.
-      // Remove spaces, dashes, parentheses and leading zeros from the local part
-      const localNumber = contactInfo.phone.replace(/[\s\-()]+/g, '').replace(/^0+/, '');
-      const dial = selectedDialCode || '';
-      const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
-      const fullPhone = `${normalizedDial}${localNumber}`;
-
-      const rentalPayload: Record<string, any> = {
-        product: productId,
-        start_date: startDate,
-        end_date: endDate,
-        notes: notes,
-        full_name: contactInfo.fullName,
-        email: contactInfo.email,
-        phone: fullPhone,
-        address: contactInfo.address, // Address already exists and is now mandatory
-      }
-
-      // 1. Submit Rental Request
-      await api.post("/rentals/", rentalPayload)
-
-      toast.success("Rental request submitted successfully! We’ll get back to you soon.")
-
-      // 2. Fetch Vendor Phone and Redirect (NEW FEATURE)
-      try {
-          const vendorPhoneResponse = await api.get<{ company_phone: string }>(`/product/${productId}/vendor-phone/`);
-          const vendorPhone = vendorPhoneResponse.data?.company_phone;
-
-          if (vendorPhone) {
-              const whatsappUrl = generateWhatsAppUrl(
-                  vendorPhone,
-                  productId,
-                  productDetails.title,
-                  { ...contactInfo, phone: fullPhone, startDate, endDate, notes }
-              );
-              // Redirect to WhatsApp
-              window.location.href = whatsappUrl;
-              return; // Stop execution here to prevent closing the modal immediately
-          }
-      } catch (err) {
-          // Soft fail: Log error but proceed to closing the modal
-          console.warn("Failed to fetch vendor phone for WhatsApp redirect:", err);
-      }
-      
-      // 3. Fallback: Reset and Close Form
-      setContactInfo({
-        fullName: '',
-        email: '',
-        phone: '',
-        address: '',
-      });
-      setStartDate("")
-      setEndDate("")
-      setNotes("")
-
-      onClose?.()
-      
-    } catch (error: unknown) {
-      console.error("Error submitting rental form:", error)
-      if (axios.isAxiosError(error) && error.response) {
-        const errorData = error.response.data;
-        let errorMessages = "Unknown error occurred.";
-        if (typeof errorData === 'object' && errorData !== null) {
-            errorMessages = Object.values(errorData).flat().join(". ") || error.response.statusText;
-        } else if (typeof errorData === 'string') {
-            errorMessages = errorData;
+        if (phone) {
+            // Show custom confirmation UI if vendor phone is available
+            setShowConfirmation(true);
         } else {
-            errorMessages = error.response.statusText || "Unknown error";
+            // If vendor phone is NOT available, submit directly without asking
+            await submitRentalAndRedirect(false);
         }
-        toast.error(`Failed to submit rental request: ${errorMessages}`);
-      } else {
-        toast.error("An unexpected error occurred. Please try again.")
-      }
-    } finally {
-      setIsSubmitting(false)
+
+    } catch (err) {
+        // If fetching phone fails, submit the form directly and warn/log
+        console.warn("Failed to fetch vendor phone, submitting without WhatsApp prompt:", err);
+        setIsSubmitting(false);
+        await submitRentalAndRedirect(false);
     }
   }
+  
+  // Custom Confirmation Dialog Component
+  const ConfirmationDialog = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <Card className="w-full max-w-md p-6 bg-white shadow-2xl rounded-lg">
+        <div className="flex flex-col items-center text-center space-y-4">
+          <MessageSquare className="h-10 w-10 text-[#5ca131]" />
+          <h4 className="text-xl font-bold text-gray-900">
+            Contact Vendor Directly?
+          </h4>
+          <p className="text-sm text-gray-700">
+            Your request has been saved. For an **immediate response** and faster discussion, would you like to **message the vendor directly on WhatsApp**?
+          </p>
+        </div>
+        <div className="mt-6 flex gap-3 justify-end">
+          <Button 
+            variant="outline"
+            onClick={() => submitRentalAndRedirect(false)}
+            disabled={isSubmitting}
+            className="h-10 border-gray-300 text-gray-700 hover:bg-gray-100"
+          >
+            Just Submit Form
+          </Button>
+          <Button 
+            onClick={() => submitRentalAndRedirect(true)}
+            disabled={isSubmitting}
+            className="h-10 bg-[#5ca131] hover:bg-[#459426] text-white"
+          >
+            Yes, WhatsApp Now
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+
 
   return (
     <div className="max-h-[90vh] overflow-auto custom-scrollbar">
+      {/* Conditionally render the custom confirmation dialog */}
+      {showConfirmation && <ConfirmationDialog />}
+      
       <div className="w-full mx-auto">
         <Card className="border-none shadow-none">
           <CardContent className=" bg-white">
@@ -345,13 +411,13 @@ export default function RentalForm({ productId, productDetails, onClose }: Renta
 
                 <Button
                   type="submit"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || showConfirmation}
                   className="w-full h-12 bg-[#5ca131] hover:bg-[#459426] disabled:bg-gray-400 text-white font-bold text-sm transition-colors duration-200"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Submitting...
+                      Loading Contact...
                     </div>
                   ) : (
                     "Submit Rental Request"

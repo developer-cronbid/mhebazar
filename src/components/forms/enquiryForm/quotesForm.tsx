@@ -1,14 +1,17 @@
+"use client"
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import React, { useState, useEffect } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, MessageSquare } from "lucide-react"; // Added MessageSquare
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { Product } from "@/types";
 import { useUser } from "@/context/UserContext";
 import countrycode from '@/data/countrycode_cleaned.json'
+import Image from "next/image"; // Added Image import
 
 // Utility function to generate a safe slug for the product link
 const generateProductSlug = (product: Product): string => {
@@ -20,12 +23,13 @@ const generateProductSlug = (product: Product): string => {
 const generateWhatsAppUrl = (
     phone: string,
     product: Product,
-    formData: any, // Using any for local form data
+    formData: any, 
     userAddress: string
 ): string => {
     const productLink = `https://www.mhebazar.in/product/${generateProductSlug(product)}`;
     const productName = product.title || product.name || 'Material Handling Equipment';
     
+    // NOTE: formData.message will contain the "WhatsApp: " prefix if confirmed.
     const messageTemplate = `
 Hello! 👋
 I'm contacting you through the MHE Bazar website.
@@ -53,21 +57,20 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
   const { user } = useUser();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [showConfirmation, setShowConfirmation] = useState(false); 
+  const [vendorPhone, setVendorPhone] = useState<string | null>(null); 
+  
   const [formData, setFormData] = useState({
     fullName: '',
     companyName: '',
     email: '',
     phone: '',
     message: '',
-    // --- ADDED: Address field for Quote ---
     address: ''
-    // -------------------------------------
   });
 
-  // store selected country dial code (e.g. "+1")
   const [selectedDialCode, setSelectedDialCode] = useState<string>('');
 
-  // helper to get a displayable dial for a country entry
   const getDialFromCountry = (c: any) => {
     if (!c || !c.idd) return '+';
     const root = c.idd.root || '';
@@ -75,7 +78,6 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
     return `${root}${suffix}`.replace(/\s+/g, '');
   };
 
-  // Prefill form fields with user data if available
   useEffect(() => {
     if (user) {
       setFormData(prev => ({
@@ -83,13 +85,9 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
         fullName: user.full_name || '',
         email: user.email || '',
         phone: user.phone || '',
-        // --- ADDED: Prefill address if available ---
-        address: (user as any).address || '', // Assuming address is directly on user or via a nested property
-        // ------------------------------------------
+        address: (user as any).address || '', 
       }));
     }
-    // set default dial code: prefer user's country (user.country or user.country_code),
-    // fall back to US if present, else first in list
     const userCca2 = (user as any)?.country || (user as any)?.country_code || '';
     const foundByUser = countrycode.find((c: any) => c.cca2 === userCca2);
     const foundIN = countrycode.find((c: any) => c.cca2 === 'IN');
@@ -106,9 +104,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
   };
 
   const validateForm = () => {
-    // --- UPDATED: 'address' is now a required field ---
     const requiredFields = ['fullName', 'companyName', 'email', 'phone', 'address'];
-    // --------------------------------------------------
     for (const field of requiredFields) {
       if (!formData[field].trim()) {
         return false;
@@ -117,90 +113,146 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(formData.email);
   };
+  
+  // Function to handle the actual API submission and redirection
+  const submitQuoteAndRedirect = async (shouldRedirectToWhatsApp: boolean) => {
+    try {
+        setSubmitting(true);
+        
+        // Build full phone number
+        const localNumber = formData.phone.replace(/[\s\-()]+/g, '').replace(/^0+/, '');
+        const dial = selectedDialCode || '';
+        const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
+        const fullPhone = `${normalizedDial}${localNumber}`;
 
-  const handleSubmit = async () => {
+        let finalQuoteMessage = formData.message.trim();
+        
+        // Append "WhatsApp" prefix if confirmed
+        if (shouldRedirectToWhatsApp) {
+            finalQuoteMessage = `WhatsApp: ${finalQuoteMessage}`;
+        }
+
+        const addressString = `Company Address: ${formData.address.trim()}`;
+        const apiMessage = finalQuoteMessage.trim() ? `${finalQuoteMessage.trim()}\n\n---\n${addressString}` : addressString;
+
+        const quotePayload: Record<string, any> = {
+            message: apiMessage,
+            full_name: formData.fullName,
+            email: formData.email,
+            phone: fullPhone,
+            company_name: formData.companyName,
+            product: product?.id,
+        };
+
+        // 1. Submit Quote Request
+        await api.post('/quotes/', quotePayload);
+
+        toast.success('Quote request submitted successfully!');
+
+        // 2. Conditional Redirect
+        if (shouldRedirectToWhatsApp && vendorPhone) {
+            const whatsappUrl = generateWhatsAppUrl(
+                vendorPhone,
+                product,
+                { ...formData, phone: fullPhone, message: finalQuoteMessage },
+                formData.address
+            );
+            window.location.href = whatsappUrl;
+            return; 
+        }
+
+        // 3. Fallback: Reset and Close Form
+        setFormData({
+            fullName: '',
+            companyName: '',
+            email: '',
+            phone: '',
+            message: '',
+            address: ''
+        });
+
+        if (onClose) {
+            onClose();
+        }
+
+    } catch (err) {
+        toast.error('Failed to submit quote request. Please try again.');
+        console.error('Error submitting quote:', err);
+    } finally {
+        setSubmitting(false);
+        setShowConfirmation(false); // Hide the confirmation popup
+    }
+  }
+
+  // UPDATED handleSubmit: Shows Confirmation Modal first
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    e.preventDefault();
     if (!validateForm()) {
       toast.error('Please fill in all required fields with valid information.');
       return;
     }
-
+    
+    // Set submitting state while fetching the vendor phone
+    setSubmitting(true);
+    
     try {
-      setSubmitting(true);
-      setError(null);
+        // Fetch Vendor Phone (required for WhatsApp)
+        const vendorPhoneResponse = await api.get<{ company_phone: string }>(`/product/${product.id}/vendor-phone/`);
+        const phone = vendorPhoneResponse.data?.company_phone || null;
+        setVendorPhone(phone); 
+        
+        setSubmitting(false); // Stop loader after fetch
 
-      // Build full phone by concatenating selected dial code and local number.
-      const localNumber = formData.phone.replace(/[\s\-()]+/g, '').replace(/^0+/, '');
-      const dial = selectedDialCode || '';
-      const normalizedDial = dial.startsWith('+') ? dial : `+${dial}`;
-      const fullPhone = `${normalizedDial}${localNumber}`;
-      
-      // --- ADDED: Append Address to Message ---
-      const addressString = `Company Address: ${formData.address.trim()}`;
-      const finalMessage = formData.message.trim() ? `${formData.message.trim()}\n\n---\n${addressString}` : addressString;
-      // ---------------------------------------
-
-      const quotePayload: Record<string, any> = {
-        // --- UPDATED: Use finalMessage which includes the address ---
-        message: finalMessage,
-        // -----------------------------------------------------------
-        full_name: formData.fullName,
-        email: formData.email,
-        // send concatenated international number
-        phone: fullPhone,
-        company_name: formData.companyName,
-        product: product?.id,
-      };
-
-      // 1. Submit Quote Request
-      await api.post('/quotes/', quotePayload);
-
-      toast.success('Quote request submitted successfully!');
-
-      // 2. Fetch Vendor Phone and Redirect (NEW FEATURE)
-      try {
-          const vendorPhoneResponse = await api.get<{ company_phone: string }>(`/product/${product.id}/vendor-phone/`);
-          const vendorPhone = vendorPhoneResponse.data?.company_phone;
-
-          if (vendorPhone) {
-              const whatsappUrl = generateWhatsAppUrl(
-                  vendorPhone,
-                  product,
-                  { ...formData, phone: fullPhone, message: formData.message },
-                  formData.address
-              );
-              // Redirect to WhatsApp
-              window.location.href = whatsappUrl;
-              return; // Stop execution here to prevent closing the modal immediately
-          }
-      } catch (err) {
-          // Soft fail: Log error but proceed to closing the modal
-          console.warn("Failed to fetch vendor phone for WhatsApp redirect:", err);
-      }
-
-      // 3. Fallback: Reset and Close Form
-      setFormData({
-        fullName: '',
-        companyName: '',
-        email: '',
-        phone: '',
-        message: '',
-        address: ''
-      });
-
-      if (onClose) {
-        onClose();
-      }
+        if (phone) {
+            // Show custom confirmation UI if vendor phone is available
+            setShowConfirmation(true);
+        } else {
+            // If vendor phone is NOT available, submit directly without asking
+            await submitQuoteAndRedirect(false);
+        }
 
     } catch (err) {
-      toast.error('Failed to submit quote request. Please try again.');
-      console.error('Error submitting quote:', err);
-    } finally {
-      setSubmitting(false);
+        // If fetching phone fails, submit the form directly and warn/log
+        console.warn("Failed to fetch vendor phone, submitting without WhatsApp prompt:", err);
+        setSubmitting(false);
+        await submitQuoteAndRedirect(false);
     }
   };
+  
+  // Custom Confirmation Dialog Component
+  const ConfirmationDialog = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <Card className="w-full max-w-md p-6 bg-white shadow-2xl rounded-lg">
+        <div className="flex flex-col items-center text-center space-y-4">
+          <MessageSquare className="h-10 w-10 text-[#5ca131]" />
+          <h4 className="text-xl font-bold text-gray-900">
+            Contact Vendor Directly?
+          </h4>
+          <p className="text-sm text-gray-700">
+            Your request has been saved. For an **immediate quote** and faster discussion, would you like to **message the vendor directly on WhatsApp**?
+          </p>
+        </div>
+        <div className="mt-6 flex gap-3 justify-end">
+          <Button 
+            variant="outline"
+            onClick={() => submitQuoteAndRedirect(false)}
+            disabled={submitting}
+            className="h-10 border-gray-300 text-gray-700 hover:bg-gray-100"
+          >
+            Just Submit Form
+          </Button>
+          <Button 
+            onClick={() => submitQuoteAndRedirect(true)}
+            disabled={submitting}
+            className="h-10 bg-[#5ca131] hover:bg-[#459426] text-white"
+          >
+            Yes, WhatsApp Now
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
 
-  // ... (rest of the component JSX remains the same)
-  // ---
 
   if (error && !product) {
     return (
@@ -221,24 +273,30 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
 
   return (
     <div className="max-h-[90vh] overflow-auto">
+      {/* Conditionally render the custom confirmation dialog */}
+      {showConfirmation && <ConfirmationDialog />}
+      
       <div className="w-full mx-auto">
         <Card className="border-none">
           <CardContent className=" bg-white">
             {/* Product Information - kept for context */}
             <div className="flex flex-col-reverse justify-center items-center gap-6 lg:gap-8 mb-8">
               <div className="w-full lg:w-1/2 xl:w-2/5">
-                <img
-                  src={product?.image || product?.images[0].image || "/no-product.jpg"}
-                  alt={product?.title || product?.name || "Product"}
-                  className="w-full h-48 sm:h-64 lg:h-72 object-contain rounded-lg shadow-sm"
-                />
+                <div className="relative w-full h-48 sm:h-64 lg:h-72 rounded-lg shadow-sm overflow-hidden">
+                    <Image
+                        src={product?.image || product?.images?.[0]?.image || "/no-product.jpg"}
+                        alt={product?.title || product?.name || "Product"}
+                        fill
+                        className="object-contain"
+                    />
+                </div>
               </div>
               <div className="flex-1 space-y-3">
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
                   {product?.title || product?.name || "Product"}
                 </h2>
                 <div className="space-y-2 text-sm sm:text-base text-gray-600">
-                  {/* ... */}
+                  {/* Additional product details here if needed */}
                 </div>
               </div>
             </div>
@@ -249,6 +307,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                 Get a Quote
               </h3>
               <div className="space-y-4">
+                
                 {/* Name and Company Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -273,7 +332,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                   </div>
                 </div>
 
-                {/* Email and Phone Row */}
+                {/* Email and Phone Row (Country code select) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Input
@@ -316,7 +375,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                   </div>
                 </div>
 
-                {/* --- ADDED: Address Field --- */}
+                {/* Address Field */}
                 <div>
                   <Input
                     name="address"
@@ -328,8 +387,7 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                     placeholder="Company Address *"
                   />
                 </div>
-                {/* ---------------------------- */}
-
+                
                 {/* Message */}
                 <div>
                   <Textarea
@@ -341,16 +399,16 @@ const QuoteForm = ({ product, onClose }: { product: Product, onClose: () => void
                   />
                 </div>
 
-                {/* Submit Button */}
+                {/* Submit Button - Now triggers confirmation or direct submission */}
                 <Button
-                  onClick={handleSubmit}
-                  disabled={submitting}
+                  onClick={handleSubmit} 
+                  disabled={submitting || showConfirmation} 
                   className="w-full h-12 bg-[#5ca131] hover:bg-[#459426] disabled:bg-gray-400 text-white font-bold text-sm transition-colors duration-200"
                 >
                   {submitting ? (
                     <div className="flex items-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Submitting...
+                      Loading Contact...
                     </div>
                   ) : (
                     'Submit Quote Request'
