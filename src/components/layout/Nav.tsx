@@ -25,8 +25,6 @@ import { useRef, useState, useEffect, JSX } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-// ORIGINAL: import CategoryMenu from "./NavOptions";
-// ORIGINAL: import VendorRegistrationDrawer from "@/components/forms/publicforms/VendorRegistrationForm";
 import SearchBar from "./SearchBar";
 import { useUser } from "@/context/UserContext";
 import { useRouter, usePathname } from "next/navigation";
@@ -49,13 +47,12 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import ContactForm from "../forms/publicforms/ContactForm";
-import dynamic from 'next/dynamic'; // NEW: Import dynamic
+import dynamic from 'next/dynamic';
 
-// NEW: Dynamic import for heavy/off-screen components (CategoryMenu uses framer-motion/complex structure)
-// This drastically improves TBT/TTI on initial mobile load.
+// Dynamic imports (Kept for performance)
 const DynamicCategoryMenu = dynamic(() => import("./NavOptions"), {
   ssr: false, 
-  loading: () => <div className="w-[640px] h-[300px] bg-gray-50 animate-pulse" />, // Placeholder for best practice
+  loading: () => <div className="w-[640px] h-[300px] bg-gray-50 animate-pulse" />,
 });
 
 const DynamicVendorRegistrationDrawer = dynamic(() => import("@/components/forms/publicforms/VendorRegistrationForm"), {
@@ -83,7 +80,6 @@ const navigationLinks = [
   { name: "Training", href: "/training" },
   { name: "Blogs", href: "/blog" },
   { name: "Events", href: "/events" },
-
 ];
 
 export interface User {
@@ -98,7 +94,6 @@ export interface User {
 }
 
 export default function Navbar(): JSX.Element {
-  // Move categories definition to the top with other state declarations
   const categories: Category[] = categoriesData;
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
@@ -106,6 +101,9 @@ export default function Navbar(): JSX.Element {
   const [vendorDrawerOpen, setVendorDrawerOpen] = useState<boolean>(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const categoryMenuRef = useRef<HTMLDivElement>(null);
+
+  // FIX 1: State to track if the component has mounted on the client side
+  const [isMounted, setIsMounted] = useState(false);
 
   const createSlug = (name: string): string =>
     name.toLowerCase().replace(/\s+/g, "-");
@@ -117,6 +115,9 @@ export default function Navbar(): JSX.Element {
   const pathname = usePathname();
 
   useEffect(() => {
+    // FIX 1: Set mounted true on client-side to prevent initial render issues
+    setIsMounted(true);
+
     const handleClickOutside = (event: MouseEvent): void => {
       if (
         categoryMenuRef.current &&
@@ -138,439 +139,451 @@ export default function Navbar(): JSX.Element {
   };
 
   return (
-    <header className="bg-white shadow-sm z-50 sticky top-0">
-      <div className="bg-[#5CA131] text-white">
-        <div className="max-w-full mx-auto px-2 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-1 sm:gap-2 py-2">
-            <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-              <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="">+91 73059 50939</span>
-            </div>
-            <div className="flex items-center gap-4 text-xs sm:text-sm">
-              {isLoading ? (
-                // BEST PRACTICE: Use ARIA attributes for live regions
-                <span role="status" aria-live="polite">Loading...</span>
-              ) : user ? (
-                <span className="font-semibold text-center sm:text-left text-xs sm:text-sm text-nowrap" aria-live="polite">
-                  | Welcome,{" "}
-                  {typeof user.username === "string"
-                    ? user.username
-                    : user.email}
-                  !
-                </span>
-              ) : (
-                <>
-                  <Link href="/login" className="hover:underline">
-                    Sign In
-                  </Link>
-                  <span className="opacity-50">|</span>
-                  <Link href="/register" className="hover:underline">
-                    Sign Up
-                  </Link>
-                </>
-              )}
+    // FIX 3: Removed 'sticky top-0' from <header> and gave it the shadow
+    <header className="bg-white shadow-sm z-50"> 
+      {/* FIX 3: Applied sticky/fixed positioning to this inner container for better control */}
+      <div className="sticky top-0 z-[50] bg-white shadow-sm">
+        {/* -------------------- Top Bar (Green) -------------------- */}
+        <div className="bg-[#5CA131] text-white">
+          <div className="max-w-full mx-auto px-2 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between gap-1 sm:gap-2 py-2">
+              <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="">+91 73059 50939</span>
+              </div>
+              <div className="flex items-center gap-4 text-xs sm:text-sm">
+                {isLoading ? (
+                  // FIX 2: Added min-w-[120px] to reserve horizontal space, preventing layout shift
+                  <span role="status" aria-live="polite" className="min-w-[120px] text-center">Loading...</span>
+                ) : user ? (
+                  <span className="font-semibold text-center sm:text-left text-xs sm:text-sm text-nowrap" aria-live="polite">
+                    | Welcome,{" "}
+                    {typeof user.username === "string"
+                      ? user.username
+                      : user.email}
+                    !
+                  </span>
+                ) : (
+                  // Wrapped links in a div to maintain consistent structure
+                  <div className="flex items-center gap-4 text-xs sm:text-sm">
+                    <Link href="/login" className="hover:underline">
+                      Sign In
+                    </Link>
+                    <span className="opacity-50">|</span>
+                    <Link href="/register" className="hover:underline">
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="bg-white">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-2 sm:py-3">
-            <button
-              className="lg:hidden p-1 sm:p-2 rounded-md text-gray-600 hover:text-gray-900"
-              onClick={() => setMobileMenuOpen(true)}
-              aria-label="Open navigation menu" // ACCESSIBILITY: Added aria-label
-            >
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-
-            <div className="flex items-center ml-2 sm:ml-5">
-              <Link href="/" className="flex items-center relative shine-effect">
-                <Image
-                  src="/mhe-logo.png"
-                  alt="MHE BAZAR Logo"
-                  width={120}
-                  height={35}
-                  className="h-8 sm:h-10 w-auto object-contain"
-                  priority // LCP FIX: Retained priority for logo
-                />
-                <span className="shine-overlay"></span>
-              </Link>
-            </div>
-
-            <div className="hidden md:flex flex-1 max-w-5xl mx-2 sm:mx-8 items-center gap-2 sm:gap-4">
-              <SearchBar
-                categories={categories}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-              />
-              <Link
-                href="/vendor-listing"
-                className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect hidden sm:block"
+        {/* -------------------- Main Bar (Logo, Search, Icons) -------------------- */}
+        <div className="bg-white">
+          <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between py-2 sm:py-3">
+              <button
+                className="lg:hidden p-1 sm:p-2 rounded-md text-gray-600 hover:text-gray-900"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open navigation menu"
               >
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+
+              <div className="flex items-center ml-2 sm:ml-5">
+                <Link href="/" className="flex items-center relative shine-effect">
                   <Image
-                  src="/brand-image.png"
-                  alt="Brand Store"
-                  width={120}
-                  height={40}
-                  priority // LCP FIX: Retained priority for brand image
-                  className="object-contain"
-                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
-                />
-                <span className="shine-overlay"></span>
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-2 sm:gap-4">
-              <Link
-                href="/compare"
-                className="hidden sm:flex items-center text-gray-600 hover:text-gray-900 transition"
-                aria-label="Compare Products"
-              >
-                <Repeat className="w-5 h-5 sm:w-6 sm:h-6" />
-              </Link>
-
-              {!isLoading && user && (
-                <Link
-                  href="/cart"
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition"
-                  aria-label="Cart"
-                >
-                  <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+                    src="/mhe-logo.png"
+                    alt="MHE BAZAR Logo"
+                    width={120}
+                    height={35}
+                    className="h-8 sm:h-10 w-auto object-contain"
+                    priority
+                  />
+                  <span className="shine-overlay"></span>
                 </Link>
-              )}
+              </div>
 
-              <div className="relative" ref={profileMenuRef}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                      {isLoading ? (
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
-                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
-                        </div>
-                      ) : user ? (
+              <div className="hidden md:flex flex-1 max-w-5xl mx-2 sm:mx-8 items-center gap-2 sm:gap-4">
+                <SearchBar
+                  categories={categories}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                />
+                <Link
+                  href="/vendor-listing"
+                  className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect hidden sm:block"
+                >
+                    <Image
+                    src="/brand-image.png"
+                    alt="Brand Store"
+                    width={120}
+                    height={40}
+                    priority
+                    className="object-contain"
+                    style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
+                  />
+                  <span className="shine-overlay"></span>
+                </Link>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-4">
+                <Link
+                  href="/compare"
+                  className="hidden sm:flex items-center text-gray-600 hover:text-gray-900 transition"
+                  aria-label="Compare Products"
+                >
+                  <Repeat className="w-5 h-5 sm:w-6 sm:h-6" />
+                </Link>
+
+                {!isLoading && user && (
+                  <Link
+                    href="/cart"
+                    className="flex items-center text-gray-600 hover:text-gray-900 transition"
+                    aria-label="Cart"
+                  >
+                    <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </Link>
+                )}
+
+                <div className="relative" ref={profileMenuRef}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      {/* FIX 3: Made the trigger button the same size across states to prevent layout shift */}
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer">
+                        {isLoading ? (
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 animate-pulse flex items-center justify-center">
+                            <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+                          </div>
+                        ) : user ? (
+                          <>
+                            {Array.isArray(user.username) && user.username[0]?.image ? (
+                              <Image
+                                src={user.username[0].image}
+                                alt="Profile"
+                                width={40}
+                                height={40}
+                                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-600 shadow-sm object-cover"
+                              />
+                            ) : (
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+                          </div>
+                        )}
+                      </div>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent className="w-64" align="end">
+                      {user ? (
                         <>
-                          {Array.isArray(user.username) &&
-                          user.username[0]?.image ? (
-                            <Image
-                              src={user.username[0].image}
-                              alt="Profile"
-                              width={40}
-                              height={40}
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-green-600 shadow-sm object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-green-100 flex items-center justify-center">
-                              <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-                            </div>
+                          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                          <DropdownMenuItem asChild>
+                            <Link href="/account" className="cursor-pointer">
+                              <User className="mr-2 h-4 w-4 text-green-600" />
+                              <span>My Account</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href="/account/orders"
+                              className="cursor-pointer"
+                            >
+                              <Package className="mr-2 h-4 w-4 text-green-600" />
+                              <span>My Orders</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href="/account/wishlist"
+                              className="cursor-pointer"
+                            >
+                              <Heart className="mr-2 h-4 w-4 text-green-600" />
+                              <span>Wishlist</span>
+                            </Link>
+                          </DropdownMenuItem>
+
+                          {user.role?.id === 2 && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel>Vendor Panel</DropdownMenuLabel>
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href="/vendor/dashboard"
+                                  className="cursor-pointer"
+                                >
+                                  <LayoutDashboard className="mr-2 h-4 w-4 text-blue-600" />
+                                  <span>Dashboard</span>
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href="/vendor/product-list"
+                                  className="cursor-pointer"
+                                >
+                                  <Tag className="mr-2 h-4 w-4 text-blue-600" />
+                                  <span>My Products</span>
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href="/vendor/profile"
+                                  className="cursor-pointer"
+                                >
+                                  <User className="mr-2 h-4 w-4 text-blue-600" />
+                                  <span>Vendor Profile</span>
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href="/vendor/notifications"
+                                  className="cursor-pointer"
+                                >
+                                  <Bell className="mr-2 h-4 w-4 text-blue-600" />
+                                  <span>Notifications</span>
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link
+                                  href="/vendor/enquiry"
+                                  className="cursor-pointer"
+                                >
+                                  <ClipboardList className="mr-2 h-4 w-4 text-blue-600" />
+                                  <span>Enquiries</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
                           )}
+
+                          {user.role?.id === 1 && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel>Admin Panel</DropdownMenuLabel>
+                              <DropdownMenuItem asChild>
+                                <Link href="/admin" className="cursor-pointer">
+                                  <ShieldCheck className="mr-2 h-4 w-4 text-red-600" />
+                                  <span>Admin Dashboard</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            </>
+                          )}
+
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={onLogoutClick}
+                            className="cursor-pointer text-red-500 focus:text-red-700"
+                          >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            <span>Logout</span>
+                          </DropdownMenuItem>
                         </>
                       ) : (
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                          <UserIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
-                        </div>
+                        <>
+                          <DropdownMenuItem asChild>
+                            <Link href="/login" className="cursor-pointer">
+                              <LogOut className="mr-2 h-4 w-4" />
+                              <span>Sign In</span>
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href="/register" className="cursor-pointer">
+                              <UserPlus className="mr-2 h-4 w-4" />
+                              <span>Sign Up</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        </>
                       )}
-                    </div>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent className="w-64" align="end">
-                    {user ? (
-                      <>
-                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                        <DropdownMenuItem asChild>
-                          <Link href="/account" className="cursor-pointer">
-                            <User className="mr-2 h-4 w-4 text-green-600" />
-                            <span>My Account</span>
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link
-                            href="/account/orders"
-                            className="cursor-pointer"
-                          >
-                            <Package className="mr-2 h-4 w-4 text-green-600" />
-                            <span>My Orders</span>
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link
-                            href="/account/wishlist"
-                            className="cursor-pointer"
-                          >
-                            <Heart className="mr-2 h-4 w-4 text-green-600" />
-                            <span>Wishlist</span>
-                          </Link>
-                        </DropdownMenuItem>
-
-                        {user.role?.id === 2 && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Vendor Panel</DropdownMenuLabel>
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href="/vendor/dashboard"
-                                className="cursor-pointer"
-                              >
-                                <LayoutDashboard className="mr-2 h-4 w-4 text-blue-600" />
-                                <span>Dashboard</span>
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href="/vendor/product-list"
-                                className="cursor-pointer"
-                              >
-                                <Tag className="mr-2 h-4 w-4 text-blue-600" />
-                                <span>My Products</span>
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href="/vendor/profile"
-                                className="cursor-pointer"
-                              >
-                                <User className="mr-2 h-4 w-4 text-blue-600" />
-                                <span>Vendor Profile</span>
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href="/vendor/notifications"
-                                className="cursor-pointer"
-                              >
-                                <Bell className="mr-2 h-4 w-4 text-blue-600" />
-                                <span>Notifications</span>
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href="/vendor/enquiry"
-                                className="cursor-pointer"
-                              >
-                                <ClipboardList className="mr-2 h-4 w-4 text-blue-600" />
-                                <span>Enquiries</span>
-                              </Link>
-                            </DropdownMenuItem>
-                          </>
-                        )}
-
-                        {user.role?.id === 1 && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Admin Panel</DropdownMenuLabel>
-                            <DropdownMenuItem asChild>
-                              <Link href="/admin" className="cursor-pointer">
-                                <ShieldCheck className="mr-2 h-4 w-4 text-red-600" />
-                                <span>Admin Dashboard</span>
-                              </Link>
-                            </DropdownMenuItem>
-                          </>
-                        )}
-
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={onLogoutClick}
-                          className="cursor-pointer text-red-500 focus:text-red-700"
-                        >
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>Logout</span>
-                        </DropdownMenuItem>
-                      </>
-                    ) : (
-                      <>
-                        <DropdownMenuItem asChild>
-                          <Link href="/login" className="cursor-pointer">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            <span>Sign In</span>
-                          </Link>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                          <Link href="/register" className="cursor-pointer">
-                            <UserPlus className="mr-2 h-4 w-4" />
-                            <span>Sign Up</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="md:hidden pb-2 sm:pb-3">
-            <div className="flex items-center gap-2">
-              <SearchBar
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-              />
-              <Link
-                href="/vendor-listing"
-                className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect"
-              >
-                <Image
-                  src="/brand-image.png"
-                  alt="Brand Store"
-                  width={120}
-                  height={40}
-                  priority
-                  className="object-contain"
-                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
+            <div className="md:hidden pb-2 sm:pb-3">
+              <div className="flex items-center gap-2">
+                <SearchBar
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
                 />
-                <span className="shine-overlay"></span>
-              </Link>
+                <Link
+                  href="/vendor-listing"
+                  className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect"
+                >
+                  <Image
+                    src="/brand-image.png"
+                    alt="Brand Store"
+                    width={120}
+                    height={40}
+                    priority
+                    className="object-contain"
+                    style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
+                  />
+                  <span className="shine-overlay"></span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <nav className="hidden lg:block bg-white border-t border-gray-200">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div
-                className="relative"
-                ref={categoryMenuRef}
-                onMouseEnter={() => setCategoriesOpen(true)}
-                onMouseLeave={() => setCategoriesOpen(false)}
-              >
-                <button
-                  className={`flex items-center gap-2 px-4 py-3 text-sm transition ${
-                    pathname.includes("categories") || categoriesOpen
-                      ? "text-gray-900 font-bold"
-                      : "text-gray-700 hover:text-gray-900 font-normal"
-                  }`}
-                  aria-expanded={categoriesOpen} 
-                  aria-controls="category-menu-dropdown" 
-                >
-                  <Menu className="w-5 h-5" />
-                  All Categories
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                {/* FIXED: Removed erroneous 'id' prop which caused the TS error */}
-                <DynamicCategoryMenu
-                  isOpen={categoriesOpen}
-                  onClose={() => setCategoriesOpen(false)}
-                  categories={categories}
-                />
-              </div>
-
-              <div className="flex items-center">
-                {navigationLinks.map((link, index) => (
-                  <Link
-                    key={index}
-                    href={link.href}
-                    className={`px-4 py-3 text-sm transition ${
-                      pathname === link.href
-                        ? "text-gray-900 font-bold"
-                        : "text-gray-700 hover:text-gray-900 font-normal"
-                    }`}
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <Dialog>
-                <DialogTrigger asChild>
+        {/* -------------------- Navigation Bar (Bottom Nav) -------------------- */}
+        {/* FIX 1: Only render the complex Nav bar if mounted */}
+        {isMounted && (
+          <nav className="hidden lg:block bg-white border-t border-gray-200">
+            <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
                   <div
-                    role="button"
-                    tabIndex={0}
-                    className={`flex items-center gap-2 px-4 py-3 transition cursor-pointer ${
-                      pathname === "/contact"
-                        ? "text-gray-900 font-bold"
-                        : "text-gray-600 hover:text-gray-900 font-normal"
-                    }`}
+                    className="relative"
+                    ref={categoryMenuRef}
+                    onMouseEnter={() => setCategoriesOpen(true)}
+                    onMouseLeave={() => setCategoriesOpen(false)}
                   >
-                    <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
-                      ?
-                    </div>
-                    <span className="text-sm font-normal">Help</span>
+                    <button
+                      className={`flex items-center gap-2 px-4 py-3 text-sm transition ${
+                        pathname.includes("categories") || categoriesOpen
+                          ? "text-gray-900 font-bold"
+                          : "text-gray-700 hover:text-gray-900 font-normal"
+                      }`}
+                      aria-expanded={categoriesOpen} 
+                      aria-controls="category-menu-dropdown" 
+                    >
+                      <Menu className="w-5 h-5" />
+                      All Categories
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    <DynamicCategoryMenu
+                      isOpen={categoriesOpen}
+                      onClose={() => setCategoriesOpen(false)}
+                      categories={categories}
+                    />
                   </div>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Help</DialogTitle>
-                    <DialogDescription>
-                      <ContactForm />
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
 
-              {isLoading ? (
-                <span className="px-4 py-3 text-sm text-gray-600 font-normal" role="status" aria-live="polite">
-                  {" "}
-                  Loading...
-                </span>
-              ) : user ? (
-                user.role?.id === 2 ? (
-                  <Link
-                    href="/vendor/dashboard"
-                    className={`flex items-center gap-2 px-4 py-3 transition ${
-                      pathname.includes("/vendor/dashboard")
-                        ? "text-gray-900 font-bold"
-                        : "text-gray-600 hover:text-gray-900 font-normal"
-                    }`}
-                  >
-                    <User className="w-5 h-5" />
-                    <span className="text-sm font-normal">
+                  <div className="flex items-center">
+                    {navigationLinks.map((link, index) => (
+                      <Link
+                        key={index}
+                        href={link.href}
+                        className={`px-4 py-3 text-sm transition ${
+                          pathname === link.href
+                            ? "text-gray-900 font-bold"
+                            : "text-gray-700 hover:text-gray-900 font-normal"
+                        }`}
+                      >
+                        {link.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        className={`flex items-center gap-2 px-4 py-3 transition cursor-pointer ${
+                          pathname === "/contact"
+                            ? "text-gray-900 font-bold"
+                            : "text-gray-600 hover:text-gray-900 font-normal"
+                        }`}
+                      >
+                        <div className="w-5 h-5 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 font-normal text-sm">
+                          ?
+                        </div>
+                        <span className="text-sm font-normal">Help</span>
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Help</DialogTitle>
+                        <DialogDescription>
+                          <ContactForm />
+                        </DialogDescription>
+                      </DialogHeader>
+                    </DialogContent>
+                  </Dialog>
+
+                  {isLoading ? (
+                    <span className="px-4 py-3 text-sm text-gray-600 font-normal" role="status" aria-live="polite">
                       {" "}
-                      My Vendor Dashboard
+                      Loading...
                     </span>
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setVendorDrawerOpen(true)}
-                    className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
-                      pathname === "/become-a-vendor"
+                  ) : user ? (
+                    user.role?.id === 2 ? (
+                      <Link
+                        href="/vendor/dashboard"
+                        className={`flex items-center gap-2 px-4 py-3 transition ${
+                          pathname.includes("/vendor/dashboard")
+                            ? "text-gray-900 font-bold"
+                            : "text-gray-600 hover:text-gray-900 font-normal"
+                        }`}
+                      >
+                        <User className="w-5 h-5" />
+                        <span className="text-sm font-normal">
+                          {" "}
+                          My Vendor Dashboard
+                        </span>
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setVendorDrawerOpen(true)}
+                        className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
+                          pathname === "/become-a-vendor"
+                            ? "text-gray-900 font-bold"
+                            : "text-gray-600 hover:text-gray-900 font-normal"
+                        }`}
+                      >
+                        <User className="w-5 h-5" />
+                        <span className="text-sm font-normal">
+                          Become a Vendor
+                        </span>{" "}
+                      </button>
+                    )
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setVendorDrawerOpen(true)}
+                      className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
+                        pathname === "/become-a-vendor"
+                          ? "text-gray-900 font-bold"
+                          : "text-gray-600 hover:text-gray-900 font-normal"
+                      }`}
+                    >
+                      <User className="w-5 h-5" />
+                      <span className="text-sm font-normal">Become a Vendor</span>
+                    </button>
+                  )}
+
+                  <Link
+                    href="/services/subscription-plan"
+                    className={`flex items-center gap-2 px-4 py-3 transition ${
+                      pathname === "/services/subscription-plan"
                         ? "text-gray-900 font-bold"
                         : "text-gray-600 hover:text-gray-900 font-normal"
                     }`}
                   >
-                    <User className="w-5 h-5" />
-                    <span className="text-sm font-normal">
-                      Become a Vendor
-                    </span>{" "}
-                  </button>
-                )
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setVendorDrawerOpen(true)}
-                  className={`flex items-center gap-2 px-4 py-3 transition bg-transparent border-0 cursor-pointer ${
-                    pathname === "/become-a-vendor"
-                      ? "text-gray-900 font-bold"
-                      : "text-gray-600 hover:text-gray-900 font-normal"
-                  }`}
-                >
-                  <User className="w-5 h-5" />
-                  <span className="text-sm font-normal">Become a Vendor</span>
-                </button>
-              )}
-
-              <Link
-                href="/services/subscription-plan"
-                className={`flex items-center gap-2 px-4 py-3 transition ${
-                  pathname === "/services/subscription-plan"
-                    ? "text-gray-900 font-bold"
-                    : "text-gray-600 hover:text-gray-900 font-normal"
-                }`}
-              >
-                <Tag className="w-5 h-5" />
-                <span className="text-sm font-normal">Price Plan</span>{" "}
-              </Link>
+                    <Tag className="w-5 h-5" />
+                    <span className="text-sm font-normal">Price Plan</span>{" "}
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </nav>
+          </nav>
+        )}
+      </div> {/* End of sticky/fixed container */}
 
+      {/* -------------------- Mobile Menu Drawer -------------------- */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {/* FIX 1: Only show the mobile menu if the component is mounted */}
+        {isMounted && mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -721,15 +734,15 @@ export default function Navbar(): JSX.Element {
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                     <Image
-                  src="/brand-image.png"
-                  alt="Brand Store"
-                  width={120}
-                  height={40}
-                  priority
-                  className="object-contain"
-                  style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
-                />
+                      <Image
+                    src="/brand-image.png"
+                    alt="Brand Store"
+                    width={120}
+                    height={40}
+                    priority
+                    className="object-contain"
+                    style={{ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)" }}
+                  />
                     <span className="shine-overlay"></span>
                   </Link>
                   <Link
