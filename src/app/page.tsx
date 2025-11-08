@@ -6,7 +6,7 @@ import SpareParts from "@/components/home/SparepartsFeatured";
 import VendorMarquee from "@/components/home/Marquee";
 import Link from "next/link";
 import SectionWrapper from "@/components/common/SectionWrapper";
-import ImagePopup from "@/components/common/ImagePopup";
+// import ImagePopup from "@/components/common/ImagePopup";
 import dynamic from "next/dynamic"; // Import dynamic for lazy loading
 
 // CWV FIX: Dynamically import components below the fold to improve LCP/INP
@@ -90,7 +90,7 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <ImagePopup/>
+      {/* <ImagePopup/> */}
     </>
   );
 }
