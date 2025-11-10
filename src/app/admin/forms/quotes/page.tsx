@@ -488,7 +488,7 @@ const QuotesTable = () => {
 
       {/* Table Section - Update onClick handler */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <div className="relative overflow-auto" style={{ height: 'calc(100vh - 450px)' }}>
+        <div className="relative overflow-auto" style={{ height: 'calc(100vh - 50px)' }}>
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10 bg-gray-50">
               {table.getHeaderGroups().map(headerGroup => (
