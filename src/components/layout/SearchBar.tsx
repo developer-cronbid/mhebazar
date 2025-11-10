@@ -127,14 +127,63 @@ export default function SearchBar({
     return slug;
   };
 
-  const handleSuggestionClick = useCallback(
-    (item: SearchSuggestion) => {
-      setShowSuggestions(false);
-      setSearchQuery(item.name);
-      // ... (redirection logic)
-    },
-    [router, setSearchQuery]
-  );
+const handleSuggestionClick = useCallback(
+    (item: SearchSuggestion) => {
+      setShowSuggestions(false);
+      setSearchQuery(item.name);
+      
+      // *** START: REDIRECTION LOGIC IMPLEMENTED ***
+      let path = '';
+      
+      switch (item.type) {
+        case 'product':
+          if (item.product_id) {
+            // Logic: /product/{vendor-name-model-slug}-{id}
+            const titleForSlug = `${item.product_tags?.vendor || ''} ${item.name} ${item.product_tags?.model || ''}`.trim();
+            const productSlug = slugify(titleForSlug);
+            path = `/product/${productSlug}-${item.product_id}`;
+          }
+          break;
+        case 'vendor':
+          // Logic: /vendor-listing/{vendor_slug}
+          path = `/vendor-listing/${item.vendor_slug || item.id}`;
+          break;
+        case 'category':
+          // Logic: /{category_slug} (Top-level category page)
+          path = `/${item.category_slug || slugify(item.name)}`;
+          break;
+        case 'subcategory':
+          // Logic: /{category_slug}/{subcategory_slug}
+          if (item.category_slug && item.subcategory_slug) {
+            path = `/${item.category_slug}/${item.subcategory_slug}`;
+          }
+          break;
+        case 'product_type':
+          // Logic: /{category_slug} (Using category_slug for the specific product type listing page)
+          path = `/${item.category_slug || slugify(item.name)}`;
+          break;
+        case 'vendor_category':
+          // Logic: /vendor-listing/{vendor_slug}?category={category_slug}
+          if (item.vendor_slug) {
+            path = `/vendor-listing/${item.vendor_slug}?category=${item.category_slug || ''}`;
+          }
+          break;
+        default:
+          // Fallback to general search
+          path = `/search?q=${encodeURIComponent(item.name)}`;
+          break;
+      }
+
+      if (path) {
+        router.push(path);
+      } else {
+        // Final safety net if ID/slug was missing
+        router.push(`/search?q=${encodeURIComponent(item.name)}`);
+      }
+      // *** END: REDIRECTION LOGIC IMPLEMENTED ***
+    },
+    [router, setSearchQuery]
+  );
 
   // Helper component to render badge
   const TagBadge = ({
