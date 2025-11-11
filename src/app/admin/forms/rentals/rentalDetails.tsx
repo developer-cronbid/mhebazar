@@ -3,7 +3,7 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Package, User, ClipboardList, Undo2, Mail, Phone } from "lucide-react";
+import { Loader2, Package, User, ClipboardList, Undo2, Mail, Phone, MessageSquare } from "lucide-react"; // Added MessageSquare
 
 // --- Types (Updated) ---
 interface Image {
@@ -69,9 +69,51 @@ const DetailRow = ({ label, value }: { label: string; value: React.ReactNode; })
   </div>
 );
 
+// --- Utility Functions for Extraction (MODIFIED/NEW) ---
+
+/**
+ * Extracts the Company Name from the notes field using regex.
+ * Assumes format: (WhatsApp: )?Company Name: [VALUE]...
+ */
+const extractCompanyName = (notes: string): string | null => {
+  const match = notes.match(/Company Name:\s*(.+?)(?:\n|$)/i); // Added \s* and removed $ from regex end
+  return match ? match[1].trim() : null;
+};
+
+/**
+ * Checks if the rental notes indicate contact via WhatsApp. (NEW)
+ */
+const checkWhatsAppStatus = (notes: string): boolean => {
+  return notes.toLowerCase().includes('whatsapp:');
+};
+
+
+/**
+ * Removes the Company Name and WhatsApp prefixes from the notes field. (MODIFIED)
+ */
+const cleanNotes = (notes: string): string => {
+  let cleaned = notes;
+
+  // 1. Remove optional 'WhatsApp: ' prefix
+  cleaned = cleaned.replace(/^WhatsApp:\s*/i, "");
+
+  // 2. Remove 'Company Name: [VALUE]' line
+  // We use a non-greedy match (.*?) followed by an optional newline or end of string
+  cleaned = cleaned.replace(/Company Name:\s*.+?(?:\n|$)/i, "");
+
+  // 3. Trim remaining whitespace/newlines
+  return cleaned.trim();
+};
+
+
 // --- Main Component (Updated) ---
 export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, onUpdateStatus }: RentalDetailsSheetProps) => {
   if (!rental) return null;
+
+  // Extract and clean data
+  const companyName = extractCompanyName(rental.notes);
+  const isWhatsAppContact = checkWhatsAppStatus(rental.notes); // NEW
+  const cleanedNotes = cleanNotes(rental.notes);
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -131,19 +173,28 @@ export const RentalDetailsSheet = ({ rental, isOpen, isUpdating, onOpenChange, o
             <DetailRow label="Requested At" value={new Date(rental.created_at).toLocaleString()} />
             <DetailRow label="Start Date" value={new Date(rental.start_date).toLocaleDateString()} />
             <DetailRow label="End Date" value={new Date(rental.end_date).toLocaleDateString()} />
-            <DetailRow
-              label="Notes"
-              value={
+            
+            {/* Notes & WhatsApp Badge (MODIFIED) */}
+            <div className="flex items-center justify-between">
+                <dt className="text-sm font-medium text-gray-500">Notes</dt>
+                {isWhatsAppContact && (
+                    <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50">
+                        <MessageSquare className="mr-1 h-3 w-3" /> WhatsApp
+                    </Badge>
+                )}
+            </div>
+            <dd className="col-span-3 text-sm text-gray-900 break-words -mt-2">
                 <p className="whitespace-pre-wrap bg-gray-50 p-3 rounded-lg border text-sm text-gray-700">
-                  {rental.notes || "No notes provided."}
+                    {cleanedNotes || "No notes provided."}
                 </p>
-              }
-            />
+            </dd>
           </Section>
 
           {/* Requester Section */}
           <Section title="Requester Information" icon={<User className="h-5 w-5 text-gray-600" />}>
             <DetailRow label="Full Name" value={rental.full_name || rental.user_name} />
+            {/* NEW: Display Company Name separately */}
+            {companyName && <DetailRow label="Company Name" value={companyName} />} 
             {rental.email && <DetailRow label="Email" value={
               <a href={`mailto:${rental.email}`} className="text-blue-600 hover:underline">{rental.email}</a>
             } />}

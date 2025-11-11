@@ -43,7 +43,7 @@ const generateWhatsAppUrl = (
   const productSlug = `${slugify(productTitle)}-${productId}`;
   const productLink = `https://www.mhebazar.in/product/${productSlug}`;
 
-  // NOTE: formData.notes will contain the "WhatsApp: " prefix if confirmed.
+  // NOTE: formData.notes will contain the "WhatsApp: " prefix and the "Company Name: " prefix if confirmed.
   const messageTemplate = `
 Hello! 👋
 I'm contacting you through the MHE Bazar website.
@@ -52,11 +52,15 @@ I'd like to request a RENTAL for the following product:
 Name: ${formData.fullName}
 Email: ${formData.email}
 Mobile No.: ${formData.phone}
+Company Name: ${formData.companyName}
 Location: ${formData.address}
 Product Name: ${productTitle}
 Product Link: ${productLink}
 Rental Dates: ${formData.startDate} to ${formData.endDate}
-Notes: ${formData.notes || "No additional notes provided."}
+Notes: ${
+    formData.notes.replace(/^(?:WhatsApp: ?)?(?:Company Name:.*?)?[\s\n]*/, "") ||
+    "No additional notes provided."
+}
 
 Please share the best rental quote and availability details.
 Thank you!
@@ -76,6 +80,7 @@ export default function RentalForm({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [notes, setNotes] = useState("");
+  const [companyName, setCompanyName] = useState(""); // NEW STATE for Company Name
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false); // NEW STATE for custom popup
   const [vendorPhone, setVendorPhone] = useState<string | null>(null); // NEW STATE to hold vendor phone temporarily
@@ -101,6 +106,8 @@ export default function RentalForm({
         phone: user.phone || "",
         address: (user as any).address || "", // Assuming address is directly on user or via a nested property
       });
+      // Try to prefill Company Name if available
+      setCompanyName((user as any)?.company_name || "");
     }
 
     const userCca2 =
@@ -144,8 +151,13 @@ export default function RentalForm({
 
       let finalNotes = notes;
 
-      // Append "WhatsApp" prefix if confirmed
+      // 1. Prepend Company Name to notes for API submission
+      const companyPrefix = `Company Name: ${companyName}`;
+      finalNotes = `${companyPrefix}${finalNotes ? `\n\n${finalNotes}` : ""}`;
+
+      // 2. Append "WhatsApp" prefix if confirmed (THIS SHOULD BE LAST)
       if (shouldRedirectToWhatsApp) {
+        // Prepending 'WhatsApp: ' to the existing finalNotes.
         finalNotes = `WhatsApp: ${finalNotes}`;
       }
 
@@ -153,21 +165,21 @@ export default function RentalForm({
         product: productId,
         start_date: startDate,
         end_date: endDate,
-        notes: finalNotes, // Use the potentially updated notes (includes 'WhatsApp' if confirmed)
+        notes: finalNotes, // Use the updated notes (includes Company Name and potentially 'WhatsApp')
         full_name: contactInfo.fullName,
         email: contactInfo.email,
         phone: fullPhone,
         address: contactInfo.address,
       };
 
-      // 1. Submit Rental Request
+      // 3. Submit Rental Request
       await api.post("/rentals/", rentalPayload);
 
       toast.success(
         "Rental request submitted successfully! We’ll get back to you soon."
       );
 
-      // 2. Conditional Redirect
+      // 4. Conditional Redirect
       if (shouldRedirectToWhatsApp && vendorPhone) {
         const whatsappUrl = generateWhatsAppUrl(
           vendorPhone,
@@ -178,21 +190,23 @@ export default function RentalForm({
             phone: fullPhone,
             startDate,
             endDate,
-            notes: finalNotes,
-          } // Pass the notes with 'WhatsApp:' prefix
+            notes: finalNotes, // Pass the notes with prefixes for internal use
+            companyName: companyName, // Pass company name separately for clear WhatsApp formatting
+          }
         );
         // Redirect to WhatsApp
         window.location.href = whatsappUrl;
         return;
       }
 
-      // 3. Fallback: Reset and Close Form
+      // 5. Fallback: Reset and Close Form
       setContactInfo({
         fullName: "",
         email: "",
         phone: "",
         address: "",
       });
+      setCompanyName("");
       setStartDate("");
       setEndDate("");
       setNotes("");
@@ -240,10 +254,11 @@ export default function RentalForm({
       !contactInfo.fullName ||
       !contactInfo.email ||
       !contactInfo.phone ||
-      !contactInfo.address
+      !contactInfo.address ||
+      !companyName // NEW VALIDATION
     ) {
       toast.error(
-        "Please fill in your name, email, phone number, and address."
+        "Please fill in your name, company name, email, phone number, and address."
       );
       return;
     }
@@ -408,6 +423,22 @@ export default function RentalForm({
                     />
                   </div>
                 </div>
+
+                {/* NEW: Company Name Input */}
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Input
+                      name="companyName"
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      required // Made required as per request
+                      className="h-12 text-sm"
+                      placeholder="Company Name *"
+                    />
+                  </div>
+                </div>
+                {/* END NEW: Company Name Input */}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

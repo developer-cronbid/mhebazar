@@ -23,6 +23,7 @@ import {
   LogIn,
   ChevronDown,
   Home,
+  MessageSquare, // Added for WhatsApp badge
 } from 'lucide-react';
 
 // Shadcn UI Components
@@ -132,6 +133,41 @@ interface ArchivedQuote {
 }
 
 type FilterStatus = 'all' | 'pending' | 'approved' | 'rejected';
+
+// --- UTILITY FUNCTIONS FOR RENTAL NOTES PARSING (NEW/MODIFIED) ---
+
+/**
+ * Extracts the Company Name from the rental notes field using regex.
+ * Assumes format: (WhatsApp: )?(Company Name: [VALUE])...
+ */
+const extractRentalCompanyName = (notes: string): string | null => {
+  // Matches "Company Name: " followed by any characters until a newline or the end of string
+  const match = notes.match(/Company Name:\s*(.+?)(?:\n|$)/i);
+  return match ? match[1].trim() : null;
+};
+
+/**
+ * Checks if the rental notes indicate contact via WhatsApp.
+ */
+const checkWhatsAppStatus = (notes: string): boolean => {
+  return notes.toLowerCase().includes('whatsapp:');
+};
+
+/**
+ * Removes the Company Name and WhatsApp prefixes/values from the notes field.
+ */
+const cleanRentalNotes = (notes: string): string => {
+  // 1. Remove optional 'WhatsApp: ' prefix
+  let cleaned = notes.replace(/^WhatsApp:\s*/i, "");
+
+  // 2. Remove 'Company Name: [VALUE]' line
+  // We use a non-greedy match (.*?) followed by an optional newline or end of string
+  cleaned = cleaned.replace(/Company Name:\s*.+?(?:\n|$)/i, "");
+
+  // 3. Clean up any resulting empty lines or extra spaces at the start/end
+  return cleaned.trim();
+};
+
 
 // --- REUSABLE HELPER COMPONENTS ---
 const InfoLine = ({
@@ -365,6 +401,7 @@ const QuoteCard = ({ quote, onCustomerClick }: { quote: Quote, onCustomerClick: 
   );
 };
 
+// MODIFIED RentalCard
 const RentalCard = ({ rental, onCustomerClick }: { rental: Rental, onCustomerClick: (userId: number) => void }) => {
   const router = useRouter();
   const handleViewProduct = () => {
@@ -372,6 +409,12 @@ const RentalCard = ({ rental, onCustomerClick }: { rental: Rental, onCustomerCli
   };
 
   const customerName = rental.full_name || rental.user_name;
+
+  // --- NEW RENTAL LOGIC ---
+  const companyName = extractRentalCompanyName(rental.notes);
+  const isWhatsappContact = checkWhatsAppStatus(rental.notes);
+  const cleanedNotes = cleanRentalNotes(rental.notes);
+  // --- END NEW RENTAL LOGIC ---
 
   return (
     <motion.div
@@ -419,6 +462,8 @@ const RentalCard = ({ rental, onCustomerClick }: { rental: Rental, onCustomerCli
             )}
             {rental.email && <InfoLine icon={<Mail size={14} />} text={rental.email} />}
             {rental.phone && <InfoLine icon={<Phone size={14} />} text={rental.phone} />}
+            {/* NEW: Company Name extracted from notes */}
+            {companyName && <InfoLine icon={<BriefcaseBusiness size={14} />} text={companyName} />}
             {rental.address && <InfoLine icon={<Home size={14} />} text={rental.address} />}
           </div>
           
@@ -434,10 +479,20 @@ const RentalCard = ({ rental, onCustomerClick }: { rental: Rental, onCustomerCli
             />
           </div>
           
-          <div className="mb-2 mt-4 font-semibold text-primary">Notes:</div>
+          {/* NEW: WhatsApp Badge and Cleaned Notes */}
+          <div className="flex items-center justify-between mb-2 mt-4">
+            <div className="font-semibold text-primary">Notes:</div>
+            {isWhatsappContact && (
+              <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50">
+                <MessageSquare className="mr-1 h-3 w-3" /> WhatsApp Contact
+              </Badge>
+            )}
+          </div>
           <p className="text-sm italic text-muted-foreground">
-            &quot;{rental.notes}&quot;
+            &quot;{cleanedNotes || "No additional notes provided."}&quot;
           </p>
+          {/* END NEW */}
+
         </CardContent>
         <CardFooter className="flex justify-between bg-muted/40 p-4">
           <InfoLine icon={<Hash size={14} />} text={`Rental ID: R-${rental.id}`} />
