@@ -573,7 +573,7 @@ export default function VendorQuotesPage() {
         const response = await api.get(`/users/${userId}/`);
         setSelectedUser(response.data as DetailedUser);
     } catch (err) {
-        toast.error("Failed to fetch customer details.");
+        toast.error("Non Registered customer.");
         console.error("Error fetching user details:", err);
         setSelectedUser(null);
     } finally {
