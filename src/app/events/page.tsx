@@ -32,6 +32,31 @@ interface EventType {
 // --- Event Data ---
 
 const events: EventType[] = [
+
+  {
+  "id": 2,
+  "title": "India Warehousing & Logistics Show 2025 (IWLS)",
+  "startDate": "2025-11-20",
+  "endDate": "2025-11-22",
+  "time": "10:00 AM – 6:00 PM",
+  "location": "Bombay Exhibition Centre, Goregaon (E), Mumbai",
+  "image": "/event.webp",
+  "description": "Attend the India Warehousing & Logistics Show 2025 (IWLS), Western & Southern India's only platform to display complete warehousing and logistics solutions. The event is co-located with the India Cold Chain Show and features the Cold Chain Conclave on November 20, 2025. This premier industry gathering is built by RX and is the ideal place to explore cutting-edge material handling, automation, and supply chain technology.",
+  "organizer": "RX India (Built by RX)",
+  "organizerInfo": "The India Warehousing & Logistics Show (IWLS) is built by RX (Reed Exhibitions), a leading global events organizer. IWLS is recognized as Western & Southern India's only dedicated platform for warehousing and logistics solutions. The show is co-located with the India Cold Chain Show, featuring the Cold Chain Conclave. SOTI is the Title Partner for the India Warehousing & Logistics Show.",
+  "blogs": [
+    {
+      "title": "Why You Should Attend India Warehousing & Logistics Show 2025 – Mumbai",
+      "link": "https://www.mhebazar.in/blog/india-warehousing-logistics-show-2025-mumbai",
+      "image": "/event.webp",
+      "author": "MHE Bazar Team",
+      "category": "Industry Events",
+      "description": "Discover why the India Warehousing & Logistics Show 2025 in Mumbai is a must-attend event for professionals in material handling, logistics, and cold chain technology."
+    }
+  ],
+  "category": "Warehousing, Logistics & Cold Chain",
+  "registrationLink": "https://www.indiawlshow.com/en-gb/register.html?cat=vip&ct=U2FsdGVkX185WyZXodR/saiGpOstsnn29HsMryvc7yk=&T=M&utm_source=VIP_invite&utm_medium=Invite&utm_campaign=IWLS"
+},
   {
     id: 1,
     title: "Intralogistics & Warehousing Expo 2025",
@@ -58,30 +83,7 @@ const events: EventType[] = [
     category: "Warehousing & Logistics",
     registrationLink: "https://fmeregistrations.com/iwe25/visitor-registration"
   },
-{
-  "id": 2,
-  "title": "India Warehousing & Logistics Show 2025 (IWLS)",
-  "startDate": "2025-11-20",
-  "endDate": "2025-11-22",
-  "time": "10:00 AM – 6:00 PM",
-  "location": "Bombay Exhibition Centre, Goregaon (E), Mumbai",
-  "image": "/event.webp",
-  "description": "Attend the India Warehousing & Logistics Show 2025 (IWLS), Western & Southern India's only platform to display complete warehousing and logistics solutions. The event is co-located with the India Cold Chain Show and features the Cold Chain Conclave on November 20, 2025. This premier industry gathering is built by RX and is the ideal place to explore cutting-edge material handling, automation, and supply chain technology.",
-  "organizer": "RX India (Built by RX)",
-  "organizerInfo": "The India Warehousing & Logistics Show (IWLS) is built by RX (Reed Exhibitions), a leading global events organizer. IWLS is recognized as Western & Southern India's only dedicated platform for warehousing and logistics solutions. The show is co-located with the India Cold Chain Show, featuring the Cold Chain Conclave. SOTI is the Title Partner for the India Warehousing & Logistics Show.",
-  "blogs": [
-    {
-      "title": "Why You Should Attend India Warehousing & Logistics Show 2025 – Mumbai",
-      "link": "https://www.mhebazar.in/blog/india-warehousing-logistics-show-2025-mumbai",
-      "image": "/event.webp",
-      "author": "MHE Bazar Team",
-      "category": "Industry Events",
-      "description": "Discover why the India Warehousing & Logistics Show 2025 in Mumbai is a must-attend event for professionals in material handling, logistics, and cold chain technology."
-    }
-  ],
-  "category": "Warehousing, Logistics & Cold Chain",
-  "registrationLink": "https://www.indiawlshow.com/en-gb/register.html?cat=vip&ct=U2FsdGVkX185WyZXodR/saiGpOstsnn29HsMryvc7yk=&T=M&utm_source=VIP_invite&utm_medium=Invite&utm_campaign=IWLS"
-},
+
 ];
 
 // --- Utility Functions ---
