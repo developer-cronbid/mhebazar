@@ -45,14 +45,14 @@ const events: EventType[] = [
   "organizer": "RX India (Built by RX)",
   "organizerInfo": "The India Warehousing & Logistics Show (IWLS) is built by RX (Reed Exhibitions), a leading global events organizer. IWLS is recognized as Western & Southern India's only dedicated platform for warehousing and logistics solutions. The show is co-located with the India Cold Chain Show, featuring the Cold Chain Conclave. SOTI is the Title Partner for the India Warehousing & Logistics Show.",
   "blogs": [
-    {
-      "title": "Why You Should Attend India Warehousing & Logistics Show 2025 – Mumbai",
-      "link": "https://www.mhebazar.in/blog/india-warehousing-logistics-show-2025-mumbai",
-      "image": "/event.webp",
-      "author": "MHE Bazar Team",
-      "category": "Industry Events",
-      "description": "Discover why the India Warehousing & Logistics Show 2025 in Mumbai is a must-attend event for professionals in material handling, logistics, and cold chain technology."
-    }
+    // {
+    //   "title": "Why You Should Attend India Warehousing & Logistics Show 2025 – Mumbai",
+    //   "link": "https://www.mhebazar.in/blog/india-warehousing-logistics-show-2025-mumbai",
+    //   "image": "/event.webp",
+    //   "author": "MHE Bazar Team",
+    //   "category": "Industry Events",
+    //   "description": "Discover why the India Warehousing & Logistics Show 2025 in Mumbai is a must-attend event for professionals in material handling, logistics, and cold chain technology."
+    // }
   ],
   "category": "Warehousing, Logistics & Cold Chain",
   "registrationLink": "https://www.indiawlshow.com/en-gb/register.html?cat=vip&ct=U2FsdGVkX185WyZXodR/saiGpOstsnn29HsMryvc7yk=&T=M&utm_source=VIP_invite&utm_medium=Invite&utm_campaign=IWLS"
