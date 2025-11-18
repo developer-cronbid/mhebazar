@@ -55,7 +55,7 @@ const events: EventType[] = [
     // }
   ],
   "category": "Warehousing, Logistics & Cold Chain",
-  "registrationLink": "https://www.indiawlshow.com/en-gb/register.html?cat=vip&ct=U2FsdGVkX185WyZXodR/saiGpOstsnn29HsMryvc7yk=&T=M&utm_source=VIP_invite&utm_medium=Invite&utm_campaign=IWLS"
+  "registrationLink": "https://www.indiawlshow.com/en-gb.html"
 },
   {
     id: 1,
