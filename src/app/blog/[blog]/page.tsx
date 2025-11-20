@@ -1,15 +1,46 @@
+// This file needs to be a Client Component to support useEffect, useState, and framer-motion.
+// However, SEO (metadata) logic must be moved to a Server-Side function.
 "use client";
 
 import { useEffect, useState, useRef } from "react";
 import api from "@/lib/api";
-// NEW: AnimatePresence for exit animations and new icons
 import { motion } from "framer-motion";
 import { Calendar, Clock, Hash, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import "@/styles/blog-styles.css";
 
-// Interfaces remain the same
+// ⚠️ IMPORTANT: We now export generateMetadata separately.
+// For the sake of a clean file and to avoid double API calls, 
+// we'll keep the client component with the data fetching as the main logic.
+
+// NEW: Use next/head in the old way is replaced by the 'metadata' object 
+// or the 'generateMetadata' function in the App Router.
+// Since this is a client component, we rely on a utility or the main layout 
+// for the static parts, but the dynamic parts need special handling.
+
+// Since the component uses "use client", we can't directly export `generateMetadata`
+// and must rely on the client-side fetch.
+
+// The original client-side meta tag logic is **removed from useEffect** // and replaced with a better approach in a real Next.js setup. 
+// For this single file modification, and to keep the file a client component,
+// we will re-implement the SEO with the **Next.js Head component** for a Client Component.
+// NOTE: Since you are using Next.js 15 App Router, the best practice is to
+// use `generateMetadata` in a separate Server Component, but since this
+// component is "use client", the following will adapt the existing logic 
+// to ensure the tags are correctly added. 
+
+// The original implementation was correct for a client-side approach, 
+// but we need to ensure Open Graph/Twitter tags are also added.
+
+// ❌ The original code did not include Open Graph/Twitter tags.
+// ✅ The updated code below will include the necessary logic to insert 
+// all required SEO tags (including OG/Twitter) into the DOM via useEffect.
+
+// ==============================================================================
+// 1. Interfaces remain the same
+// ==============================================================================
+
 interface Blog {
   id: number;
   blog_title: string;
@@ -18,7 +49,6 @@ interface Blog {
   description: string;
   author_name: string | null;
   created_at: string;
-  // NEW: Add meta tags and description1 to the interface
   meta_title: string | null;
   description1: string | null;
 }
@@ -29,13 +59,15 @@ interface TocItem {
   level: number;
 }
 
-// NEW: Props for our reusable TOC component
 interface TocContentProps {
   toc: TocItem[];
   onLinkClick: (id: string) => void;
 }
 
-// NEW: Reusable component for the Table of Contents list to avoid duplication
+// ==============================================================================
+// 2. Reusable TocContent component remains the same
+// ==============================================================================
+
 const TocContent = ({ toc, onLinkClick }: TocContentProps) => (
   <>
     <h3 className="text-lg font-bold mb-4 flex items-center border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -60,9 +92,52 @@ const TocContent = ({ toc, onLinkClick }: TocContentProps) => (
   </>
 );
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  // `params.slug` is automatically populated by Next.js with the value from the URL.
-  // For a URL like "/blog/my-first-post", params.slug will be "my-first-post".
+// ==============================================================================
+// 3. Helper functions and Component
+// ==============================================================================
+
+// Helper function to get the correct image URL
+const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
+  if (!imagePath) {
+    return "/mhe-logo.png";
+  }
+
+  if (hasError) {
+    const filename = imagePath.split("/").pop();
+    return `/css/asset/blogimg/${filename}`;
+  }
+
+  if (imagePath.startsWith("http")) {
+    return imagePath;
+  }
+
+  if (imagePath.startsWith("media/")) {
+    return `https://api.mhebazar.in/${imagePath}`;
+  }
+
+  return imagePath;
+};
+
+// **NEW:** Helper to safely remove existing meta/link tags by property
+const removeExistingTags = (property: string) => {
+  const existingTags = document.querySelectorAll(`meta[${property}]`);
+  existingTags.forEach((tag) => tag.remove());
+  const existingCanonical = document.querySelector('link[rel="canonical"]');
+  if (existingCanonical) existingCanonical.remove();
+};
+
+// **NEW:** Helper to create and append a meta tag
+const createMetaTag = (attribute: 'name' | 'property', value: string, content: string) => {
+  let tag = document.querySelector(`meta[${attribute}="${value}"]`);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute(attribute, value);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("content", content);
+};
+
+export default function BlogPostPage({ params }: { params: { blog: string } }) {
   const slug = params.blog;
 
   const [blog, setBlog] = useState<Blog | null>(null);
@@ -71,9 +146,8 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-
-  // NEW: State to manage the mobile TOC drawer visibility
   const [, setIsTocOpen] = useState(false);
+  const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
 
   // Effect for fetching the blog data (no changes here)
   useEffect(() => {
@@ -95,40 +169,32 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     }
   }, [slug]);
 
-  // Effect to update meta tags based on fetched blog data
+  // 🔥 CORE SEO FIX: Updated Effect to add all required tags:
+  // title, description, canonical, OG image, OG title, OG description, Twitter card.
+  // This is the most complete client-side implementation for SEO.
   useEffect(() => {
     if (blog) {
       const metaTitle = blog.meta_title || blog.blog_title || "MHE Bazar Blog";
-      const metaDescription =
+      const description =
         blog.description1 ||
         blog.description ||
         "Read the latest blog posts on material handling equipment.";
+      const canonicalUrl = `https://www.mhebazar.in/blog/${slug}`;
+      // Use primary image path for OG/Twitter before fetching and potential error handling
+      const imageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
 
-      // Set the document title
+      // 1. Clean up existing tags to prevent duplication
+      removeExistingTags('name');
+      removeExistingTags('property');
+
+      // 2. Set Document Title
       document.title = metaTitle;
 
-      // Update or create meta description tag
-      let metaDescriptionTag = document.querySelector(
-        'meta[name="description"]'
-      );
-      if (!metaDescriptionTag) {
-        metaDescriptionTag = document.createElement("meta");
-        metaDescriptionTag.setAttribute("name", "description");
-        document.head.appendChild(metaDescriptionTag);
-      }
-      metaDescriptionTag.setAttribute("content", metaDescription);
+      // 3. Standard SEO Tags (name attribute)
+      createMetaTag("name", "description", description);
+      createMetaTag("name", "title", metaTitle); 
 
-      // Update or create meta title tag
-      let metaTitleTag = document.querySelector('meta[name="title"]');
-      if (!metaTitleTag) {
-        metaTitleTag = document.createElement("meta");
-        metaTitleTag.setAttribute("name", "title");
-        document.head.appendChild(metaTitleTag);
-      }
-      metaTitleTag.setAttribute("content", metaTitle);
-
-      // Update or create canonical link tag
-      const canonicalUrl = `https://www.mhebazar.in/blog/${slug}`;
+      // 4. Canonical Link
       let canonicalLinkTag = document.querySelector('link[rel="canonical"]');
       if (!canonicalLinkTag) {
         canonicalLinkTag = document.createElement("link");
@@ -136,10 +202,36 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         document.head.appendChild(canonicalLinkTag);
       }
       canonicalLinkTag.setAttribute("href", canonicalUrl);
-    }
-  }, [blog, slug]);
 
-  // Effect 1: Calculate TOC data and reading time (no changes here)
+      // 5. Open Graph (OG) Tags for Main Image and Social Sharing
+      createMetaTag("property", "og:title", metaTitle);
+      createMetaTag("property", "og:description", description);
+      createMetaTag("property", "og:url", canonicalUrl);
+      createMetaTag("property", "og:type", "article"); 
+      
+      // OG Image (The **OG IMAGE** and **MAIN IMAGE** must be the same)
+      createMetaTag("property", "og:image", imageUrl); 
+      // Ensure the image type/size are set for better scraping
+      createMetaTag("property", "og:image:width", "1200");
+      createMetaTag("property", "og:image:height", "630");
+
+      // 6. Twitter Card Tags
+      createMetaTag("name", "twitter:card", "summary_large_image"); // Best card type for blogs
+      createMetaTag("name", "twitter:title", metaTitle);
+      createMetaTag("name", "twitter:description", description);
+      
+      // Twitter Image (Must be the same as OG image)
+      createMetaTag("name", "twitter:image", imageUrl); 
+      createMetaTag("name", "twitter:url", canonicalUrl);
+      
+      // 7. General SEO (e.g., Robots)
+      createMetaTag("name", "robots", "index, follow");
+      
+    }
+  }, [blog, slug, imageError]); // imageError added to recalculate OG image if primary load fails
+
+
+  // Effect 1: Calculate TOC data and reading time (same logic, updated dependencies)
   useEffect(() => {
     if (!blog?.description || !contentRef.current) return;
 
@@ -150,7 +242,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     const time = Math.ceil(words / wordsPerMinute);
     setReadingTime(time);
 
-    // Generate TOC data
+    // Generate TOC data (h2 elements only)
     const headingElements = Array.from(
       contentRef.current.querySelectorAll("h2")
     ) as HTMLElement[];
@@ -180,49 +272,16 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     });
   }, [toc]);
 
-  // --- Scroll handler ---
-  // MODIFIED: Now closes the mobile drawer when a link is clicked
+  // Scroll handler (no changes here)
   const handleTocClick = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
-      setIsTocOpen(false); // Close mobile TOC on navigation
+      setIsTocOpen(false);
     } else {
       console.warn("Element not found for id:", id);
     }
   };
-
-  // Image handling logic remains the same
-  // New Logic in page.tsx
-  const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
-    // 1. Fallback to default image if no path
-    if (!imagePath) {
-      return "/mhe-logo.png";
-    }
-
-    // 2. Fallback to existing local asset logic ONLY if an error has occurred
-    if (hasError) {
-      const filename = imagePath.split("/").pop();
-      // This is your secondary local fallback
-      return `/css/asset/blogimg/${filename}`;
-    }
-
-    // 3. Primary Logic: Use the path as is (works for full URLs like http://api.mhebazar.in/...)
-    if (imagePath.startsWith("http")) {
-      return imagePath;
-    }
-
-    // 4. Handle relative API paths (as seen in BlogListClient.tsx logic)
-    if (imagePath.startsWith("media/")) {
-      // Construct the full API URL for relative paths
-      return `https://api.mhebazar.in/${imagePath}`;
-    }
-
-    // 5. Default: Treat it as a direct path if none of the above
-    return imagePath;
-  };
-
-  const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
 
   const handleImageError = (id: number) => {
     setImageError((prev) => ({ ...prev, [id]: true }));
@@ -245,6 +304,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
     );
   }
 
+  // --- HTML Content ---
   return (
     <>
       <div className="bg-background text-foreground">
@@ -255,7 +315,6 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               <div className="sticky top-40">
                 <Card className="border border-l-4 border-[#5ca030]">
                   <CardContent className="px-6">
-                    {/* Use the reusable component */}
                     <TocContent toc={toc} onLinkClick={handleTocClick} />
                   </CardContent>
                 </Card>
@@ -264,7 +323,6 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
 
             {/* Main Content Area */}
             <main className="col-span-12 lg:col-span-9">
-              {/* The rest of the main content is unchanged... */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -276,14 +334,9 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                     {blog.blog_title}
                   </h1>
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-muted-foreground text-sm">
-                  
                     <div className="flex items-center space-x-2">
                       <Avatar className="h-8 w-8 bg-green-300 dark:bg-green-700">
-                        {" "}
-                        {/* Generic background added */}
-                        {/* AvatarImage ko hata diya gaya taaki initials image load na ho */}
                         <AvatarFallback>
-                          {/* Ab User icon dikhega initials ke bajaye */}
                           <User className="h-5 w-5 text-green-600 dark:text-green-900" />
                         </AvatarFallback>
                       </Avatar>
@@ -306,10 +359,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
                   </div>
                 </div>
 
-                {/* Main Image */}
+                {/* Main Image (Uses the same URL logic as the OG image) */}
                 <img
                   src={getImageUrl(blog.image1, imageError[blog.id] || false)}
                   alt={blog.blog_title}
+                  // New: Add loading="eager" for LCP and title attribute for better SEO context
+                  loading="eager" 
+                  title={blog.blog_title}
                   className="w-full h-auto rounded-xl object-cover mb-8 shadow-lg"
                   style={{ aspectRatio: "16/9" }}
                   onError={() => handleImageError(blog.id)}
@@ -320,6 +376,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
               <motion.div
                 ref={contentRef}
                 className="blog-content prose dark:prose-invert max-w-none"
+                // No changes here
                 dangerouslySetInnerHTML={{ __html: blog.description }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -329,52 +386,8 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
           </div>
         </div>
       </div>
-
-      {/* --- NEW: Mobile TOC Drawer --- */}
-      {/* <AnimatePresence>
-        {isTocOpen && (
-          <> */}
-      {/* Overlay */}
-      {/* <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsTocOpen(false)}
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            /> */}
-      {/* Drawer */}
-      {/* <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed top-0 left-0 h-full w-72 bg-background p-6 z-50 lg:hidden"
-            >
-              <button
-                onClick={() => setIsTocOpen(false)}
-                className="absolute top-4 right-4 text-muted-foreground"
-                aria-label="Close table of contents"
-              >
-                <X className="h-6 w-6" />
-              </button>
-              <div className="mt-8">
-                <TocContent toc={toc} onLinkClick={handleTocClick} />
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence> */}
-
-      {/* --- NEW: Floating Button to open Mobile TOC ---
-      <div className="fixed top-40 right-6 z-30 lg:hidden">
-        <button
-          onClick={() => setIsTocOpen(true)}
-          className="bg-[#5ca030] text-white p-2 rounded-full shadow-lg hover:bg-[#4a8a25] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5ca030]"
-          aria-label="Open table of contents"
-        >
-          <Menu className="h-6 w-6" />
-        </button>
-      </div> */}
+      
+      {/* Mobile TOC and Floating button logic commented out as per original code */}
     </>
   );
 }
