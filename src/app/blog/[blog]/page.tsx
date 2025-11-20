@@ -1,10 +1,6 @@
-// IMPORTANT: We must still use "use client" for the main component 
-// to allow state, effects, and Framer Motion to work.
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-// We must import the Next.js Metadata type for the Server function
-import type { Metadata } from 'next'; 
 import api from "@/lib/api";
 import { motion } from "framer-motion";
 import { Calendar, Clock, Hash, User } from "lucide-react";
@@ -20,7 +16,7 @@ interface Blog {
   id: number;
   blog_title: string;
   blog_url: string;
-  image1: string;
+  image1: string; // <-- The OG/Twitter image source
   description: string;
   author_name: string | null;
   created_at: string;
@@ -40,22 +36,48 @@ interface TocContentProps {
 }
 
 // ==============================================================================
-// 2. Helper Functions (Image URL - NOW WITH HTTPS ENFORCED)
+// 2. Helper Functions (Image URL and DOM Manipulation)
 // ==============================================================================
 
-// Helper function to get the correct image URL (Your existing logic)
+// Helper to safely remove existing tags based on name/property attribute
+const removeExistingTags = () => {
+  // Remove canonical link
+  document.querySelector('link[rel="canonical"]')?.remove();
+  
+  // Remove existing name tags (description, title, twitter, robots)
+  const nameTags = document.querySelectorAll(`meta[name]`);
+  nameTags.forEach(tag => tag.remove());
+  
+  // Remove existing property tags (og:)
+  const propertyTags = document.querySelectorAll(`meta[property]`);
+  propertyTags.forEach(tag => tag.remove());
+};
+
+// Helper to create or update a meta tag
+const createOrUpdateMetaTag = (attribute: 'name' | 'property', selectorValue: string, content: string) => {
+  let tag = document.querySelector(`meta[${attribute}="${selectorValue}"]`);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute(attribute, selectorValue);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("content", content);
+};
+
+
+// 🔥 CORE FIX: getImageUrl updated to enforce HTTPS and handle fallbacks
 const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
   if (!imagePath) {
     return "/mhe-logo.png";
   }
 
-  // Fallback to local asset if rendering error occurred (client-side only)
+  // 1. Fallback if rendering error occurred
   if (hasError) {
     const filename = imagePath.split("/").pop();
     return `/css/asset/blogimg/${filename}`; 
   }
 
-  // Core Fix: Ensure URL is complete and secure (HTTPS)
+  // 2. Ensure URL is secure (HTTPS)
   if (imagePath.startsWith("http://")) {
     return imagePath.replace("http://", "https://");
   }
@@ -64,7 +86,7 @@ const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
     return imagePath;
   }
 
-  // Handle relative API paths (e.g., "media/...")
+  // 3. Handle relative API paths (e.g., "media/...")
   if (imagePath.startsWith("media/")) {
     return `https://api.mhebazar.in/${imagePath}`;
   }
@@ -72,83 +94,11 @@ const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
   return imagePath;
 };
 
-// ==============================================================================
-// 3. SERVER-SIDE SEO: generateMetadata function
-// This function runs on the server and ensures tags are in the initial HTML.
-// ==============================================================================
-
-export async function generateMetadata({ 
-  params,
-}: {
-  params: { blog: string };
-}): Promise<Metadata> {
-  const slug = params.blog;
-  let blog: Blog | null = null;
-
-  try {
-    // ⚠️ IMPORTANT: Using the same API call structure to fetch data server-side
-    const response = await api.get(`/blogs/${slug}`);
-    blog = response.data;
-  } catch (error) {
-    console.error("Failed to fetch blog post for metadata:", error);
-    // Return default metadata if the fetch fails
-    return { title: 'Blog Post Not Found | MHE Bazar' };
-  }
-
-  if (!blog) {
-    return { title: 'Blog Post Not Found | MHE Bazar' };
-  }
-
-  const metaTitle = blog.meta_title || blog.blog_title || "MHE Bazar Blog";
-  const description =
-    blog.description1 ||
-    blog.description ||
-    "Read the latest blog posts on material handling equipment.";
-  const canonicalUrl = `https://www.mhebazar.in/blog/${slug}`;
-  
-  // Use the helper to get the image path (no imageError in Server Component)
-  const imageUrl = getImageUrl(blog.image1, false); 
-  
-  return {
-    title: metaTitle,
-    description: description,
-    alternates: {
-      canonical: canonicalUrl,
-    },
-    // 🔥 OG Tags (for Facebook, LinkedIn, etc.)
-    openGraph: {
-      title: metaTitle,
-      description: description,
-      url: canonicalUrl,
-      type: 'article',
-      images: [
-        {
-          url: imageUrl, // Uses HTTPS enforced image URL
-          width: 1200,
-          height: 630,
-          alt: metaTitle,
-        },
-      ],
-    },
-    // 🔥 Twitter Card Tags
-    twitter: {
-      card: 'summary_large_image',
-      title: metaTitle,
-      description: description,
-      images: [imageUrl], // Uses HTTPS enforced image URL
-    },
-    robots: {
-        index: true,
-        follow: true,
-    }
-  };
-}
 
 // ==============================================================================
-// 4. Client Component (Client-side logic only)
+// 3. Reusable TocContent component remains the same
 // ==============================================================================
 
-// Reusable component for the Table of Contents list (no change)
 const TocContent = ({ toc, onLinkClick }: TocContentProps) => (
   <>
     <h3 className="text-lg font-bold mb-4 flex items-center border-b border-gray-200 dark:border-gray-700 pb-2">
@@ -174,6 +124,10 @@ const TocContent = ({ toc, onLinkClick }: TocContentProps) => (
 );
 
 
+// ==============================================================================
+// 4. Component (Main logic)
+// ==============================================================================
+
 export default function BlogPostPage({ params }: { params: { blog: string } }) {
   const slug = params.blog;
 
@@ -186,7 +140,7 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
   const [, setIsTocOpen] = useState(false);
   const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
 
-  // Effect for fetching the blog data (No change, this populates the UI)
+  // Effect for fetching the blog data
   useEffect(() => {
     const fetchBlogData = async () => {
       setIsLoading(true);
@@ -206,22 +160,70 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
     }
   }, [slug]);
 
-  // ⚠️ Client-side meta tag manipulation (the previous problematic useEffect) is REMOVED.
-  // The SEO is now handled by generateMetadata.
+  // 🔥 CORE SEO IMPLEMENTATION (Client-side, guarantees OG/Twitter tags are set)
+  useEffect(() => {
+    if (blog) {
+      const metaTitle = blog.meta_title || blog.blog_title || "MHE Bazar Blog";
+      const description =
+        blog.description1 ||
+        blog.description ||
+        "Read the latest blog posts on material handling equipment.";
+      const canonicalUrl = `https://www.mhebazar.in/blog/${slug}`;
+      
+      // Get the correct, HTTPS-enforced image URL
+      const imageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
 
+      // --- 1. Cleanup before setting new tags ---
+      removeExistingTags();
+      
+      // --- 2. Standard SEO Tags ---
+      document.title = metaTitle;
+      createOrUpdateMetaTag("name", "title", metaTitle);
+      createOrUpdateMetaTag("name", "description", description);
+      createOrUpdateMetaTag("name", "robots", "index, follow");
+
+      // --- 3. Canonical Link ---
+      let canonicalLinkTag = document.querySelector('link[rel="canonical"]');
+      if (!canonicalLinkTag) {
+        canonicalLinkTag = document.createElement("link");
+        canonicalLinkTag.setAttribute("rel", "canonical");
+        document.head.appendChild(canonicalLinkTag);
+      }
+      canonicalLinkTag.setAttribute("href", canonicalUrl);
+      
+      // --- 4. Open Graph (OG) Tags ---
+      createOrUpdateMetaTag("property", "og:title", metaTitle);
+      createOrUpdateMetaTag("property", "og:description", description);
+      createOrUpdateMetaTag("property", "og:url", canonicalUrl);
+      createOrUpdateMetaTag("property", "og:type", "article"); 
+      
+      // ✅ OG IMAGE TAG (The most important part that was missing/not being set correctly)
+      createOrUpdateMetaTag("property", "og:image", imageUrl); 
+      createOrUpdateMetaTag("property", "og:image:width", "1200");
+      createOrUpdateMetaTag("property", "og:image:height", "630");
+
+      // --- 5. Twitter Card Tags ---
+      createOrUpdateMetaTag("name", "twitter:card", "summary_large_image");
+      createOrUpdateMetaTag("name", "twitter:title", metaTitle);
+      createOrUpdateMetaTag("name", "twitter:description", description);
+      
+      // ✅ TWITTER IMAGE TAG
+      createOrUpdateMetaTag("name", "twitter:image", imageUrl); 
+      createOrUpdateMetaTag("name", "twitter:url", canonicalUrl);
+      
+    }
+  }, [blog, slug, imageError]); 
 
   // Effect 1: Calculate TOC data and reading time (no change)
   useEffect(() => {
     if (!blog?.description || !contentRef.current) return;
 
-    // Calculate reading time
     const textContent = contentRef.current.innerText || "";
     const wordsPerMinute = 225;
     const words = textContent.trim().split(/\s+/).length;
     const time = Math.ceil(words / wordsPerMinute);
     setReadingTime(time);
 
-    // Generate TOC data
     const headingElements = Array.from(
       contentRef.current.querySelectorAll("h2")
     ) as HTMLElement[];
@@ -256,7 +258,7 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
-      setIsTocOpen(false); // Close mobile TOC on navigation
+      setIsTocOpen(false);
     } else {
       console.warn("Element not found for id:", id);
     }
@@ -282,13 +284,11 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
       </div>
     );
   }
-
-  // Image URL for client-side rendering (uses the imageError state)
+  
   const renderImageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
 
   return (
     <>
-      {/* The UI is perfect, just the render logic for blog content and sidebar */}
       <div className="bg-background text-foreground">
         <div className="container mx-auto px-2 py-8 lg:py-16">
           <div className="grid grid-cols-12 lg:gap-12">
@@ -365,8 +365,6 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
           </div>
         </div>
       </div>
-      
-      {/* Mobile TOC and Floating button logic commented out as per original code */}
     </>
   );
 }
