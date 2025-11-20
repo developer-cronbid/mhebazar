@@ -1,5 +1,4 @@
 // This file needs to be a Client Component to support useEffect, useState, and framer-motion.
-// However, SEO (metadata) logic must be moved to a Server-Side function.
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -10,33 +9,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import "@/styles/blog-styles.css";
 
-// ⚠️ IMPORTANT: We now export generateMetadata separately.
-// For the sake of a clean file and to avoid double API calls, 
-// we'll keep the client component with the data fetching as the main logic.
-
-// NEW: Use next/head in the old way is replaced by the 'metadata' object 
-// or the 'generateMetadata' function in the App Router.
-// Since this is a client component, we rely on a utility or the main layout 
-// for the static parts, but the dynamic parts need special handling.
-
-// Since the component uses "use client", we can't directly export `generateMetadata`
-// and must rely on the client-side fetch.
-
-// The original client-side meta tag logic is **removed from useEffect** // and replaced with a better approach in a real Next.js setup. 
-// For this single file modification, and to keep the file a client component,
-// we will re-implement the SEO with the **Next.js Head component** for a Client Component.
-// NOTE: Since you are using Next.js 15 App Router, the best practice is to
-// use `generateMetadata` in a separate Server Component, but since this
-// component is "use client", the following will adapt the existing logic 
-// to ensure the tags are correctly added. 
-
-// The original implementation was correct for a client-side approach, 
-// but we need to ensure Open Graph/Twitter tags are also added.
-
-// ❌ The original code did not include Open Graph/Twitter tags.
-// ✅ The updated code below will include the necessary logic to insert 
-// all required SEO tags (including OG/Twitter) into the DOM via useEffect.
-
 // ==============================================================================
 // 1. Interfaces remain the same
 // ==============================================================================
@@ -45,7 +17,7 @@ interface Blog {
   id: number;
   blog_title: string;
   blog_url: string;
-  image1: string;
+  image1: string; // <-- This is the desired OG/Twitter image
   description: string;
   author_name: string | null;
   created_at: string;
@@ -93,32 +65,47 @@ const TocContent = ({ toc, onLinkClick }: TocContentProps) => (
 );
 
 // ==============================================================================
-// 3. Helper functions and Component
+// 3. Helper functions
 // ==============================================================================
 
-// Helper function to get the correct image URL
+// 🔥 CORE FIX: Updated getImageUrl to enforce HTTPS and handle relative path correctly
 const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
+  // 1. Fallback to default image if no path
   if (!imagePath) {
     return "/mhe-logo.png";
   }
 
+  // 2. Fallback to existing local asset logic ONLY if an error has occurred
   if (hasError) {
+    // This part handles the secondary local fallback logic
     const filename = imagePath.split("/").pop();
-    return `/css/asset/blogimg/${filename}`;
+    // This is where you got the /css/... path when an error occurred
+    return `/css/asset/blogimg/${filename}`; 
   }
 
-  if (imagePath.startsWith("http")) {
+  // 3. Primary Logic: Use the API-provided path, enforcing HTTPS
+
+  // ✅ FIX 1: If it starts with an insecure HTTP link, change it to HTTPS
+  if (imagePath.startsWith("http://")) {
+    return imagePath.replace("http://", "https://");
+  }
+  
+  // ✅ FIX 2: If it starts with a secure HTTPS link, use it as is
+  if (imagePath.startsWith("https://")) {
     return imagePath;
   }
 
+  // 4. Handle relative API paths (e.g., "media/...")
   if (imagePath.startsWith("media/")) {
+    // Construct the full API URL securely
     return `https://api.mhebazar.in/${imagePath}`;
   }
 
+  // 5. Default: Treat it as a direct relative path if none of the above
   return imagePath;
 };
 
-// **NEW:** Helper to safely remove existing meta/link tags by property
+// **Helper to safely remove existing meta/link tags by property (No change)
 const removeExistingTags = (property: string) => {
   const existingTags = document.querySelectorAll(`meta[${property}]`);
   existingTags.forEach((tag) => tag.remove());
@@ -126,7 +113,7 @@ const removeExistingTags = (property: string) => {
   if (existingCanonical) existingCanonical.remove();
 };
 
-// **NEW:** Helper to create and append a meta tag
+// **Helper to create and append a meta tag (No change)
 const createMetaTag = (attribute: 'name' | 'property', value: string, content: string) => {
   let tag = document.querySelector(`meta[${attribute}="${value}"]`);
   if (!tag) {
@@ -136,6 +123,10 @@ const createMetaTag = (attribute: 'name' | 'property', value: string, content: s
   }
   tag.setAttribute("content", content);
 };
+
+// ==============================================================================
+// 4. Component
+// ==============================================================================
 
 export default function BlogPostPage({ params }: { params: { blog: string } }) {
   const slug = params.blog;
@@ -149,7 +140,7 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
   const [, setIsTocOpen] = useState(false);
   const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
 
-  // Effect for fetching the blog data (no changes here)
+  // Effect for fetching the blog data (no change)
   useEffect(() => {
     const fetchBlogData = async () => {
       setIsLoading(true);
@@ -169,9 +160,7 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
     }
   }, [slug]);
 
-  // 🔥 CORE SEO FIX: Updated Effect to add all required tags:
-  // title, description, canonical, OG image, OG title, OG description, Twitter card.
-  // This is the most complete client-side implementation for SEO.
+  // SEO Effect: Uses the corrected getImageUrl to set HTTPS for all social images
   useEffect(() => {
     if (blog) {
       const metaTitle = blog.meta_title || blog.blog_title || "MHE Bazar Blog";
@@ -180,7 +169,9 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
         blog.description ||
         "Read the latest blog posts on material handling equipment.";
       const canonicalUrl = `https://www.mhebazar.in/blog/${slug}`;
-      // Use primary image path for OG/Twitter before fetching and potential error handling
+      
+      // The imageUrl now uses the corrected helper function, ensuring HTTPS is used 
+      // for the primary image and the correct fallback is used on error.
       const imageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
 
       // 1. Clean up existing tags to prevent duplication
@@ -203,35 +194,34 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
       }
       canonicalLinkTag.setAttribute("href", canonicalUrl);
 
-      // 5. Open Graph (OG) Tags for Main Image and Social Sharing
+      // 5. Open Graph (OG) Tags
       createMetaTag("property", "og:title", metaTitle);
       createMetaTag("property", "og:description", description);
       createMetaTag("property", "og:url", canonicalUrl);
       createMetaTag("property", "og:type", "article"); 
       
-      // OG Image (The **OG IMAGE** and **MAIN IMAGE** must be the same)
+      // OG Image (Now guaranteed to be HTTPS if it's a full API path)
       createMetaTag("property", "og:image", imageUrl); 
-      // Ensure the image type/size are set for better scraping
       createMetaTag("property", "og:image:width", "1200");
       createMetaTag("property", "og:image:height", "630");
-
+      
       // 6. Twitter Card Tags
-      createMetaTag("name", "twitter:card", "summary_large_image"); // Best card type for blogs
+      createMetaTag("name", "twitter:card", "summary_large_image");
       createMetaTag("name", "twitter:title", metaTitle);
       createMetaTag("name", "twitter:description", description);
       
-      // Twitter Image (Must be the same as OG image)
+      // Twitter Image (Now guaranteed to be HTTPS if it's a full API path)
       createMetaTag("name", "twitter:image", imageUrl); 
       createMetaTag("name", "twitter:url", canonicalUrl);
       
-      // 7. General SEO (e.g., Robots)
+      // 7. General SEO
       createMetaTag("name", "robots", "index, follow");
       
     }
-  }, [blog, slug, imageError]); // imageError added to recalculate OG image if primary load fails
+  }, [blog, slug, imageError]); 
 
 
-  // Effect 1: Calculate TOC data and reading time (same logic, updated dependencies)
+  // Effect 1: Calculate TOC data and reading time (no change)
   useEffect(() => {
     if (!blog?.description || !contentRef.current) return;
 
@@ -258,7 +248,7 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
     setToc(newToc);
   }, [blog]);
 
-  // Effect 2: Sync IDs to the DOM (no changes here)
+  // Effect 2: Sync IDs to the DOM (no change)
   useEffect(() => {
     if (!contentRef.current || toc.length === 0) return;
     const headingElements = Array.from(
@@ -272,7 +262,7 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
     });
   }, [toc]);
 
-  // Scroll handler (no changes here)
+  // Scroll handler (no change)
   const handleTocClick = (id: string) => {
     const el = document.getElementById(id);
     if (el) {
@@ -303,6 +293,9 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
       </div>
     );
   }
+
+  // Determine the image URL for rendering
+  const renderImageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
 
   // --- HTML Content ---
   return (
@@ -359,11 +352,10 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
                   </div>
                 </div>
 
-                {/* Main Image (Uses the same URL logic as the OG image) */}
+                {/* Main Image (Uses the correct, HTTPS-enforced URL) */}
                 <img
-                  src={getImageUrl(blog.image1, imageError[blog.id] || false)}
+                  src={renderImageUrl}
                   alt={blog.blog_title}
-                  // New: Add loading="eager" for LCP and title attribute for better SEO context
                   loading="eager" 
                   title={blog.blog_title}
                   className="w-full h-auto rounded-xl object-cover mb-8 shadow-lg"
@@ -376,7 +368,6 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
               <motion.div
                 ref={contentRef}
                 className="blog-content prose dark:prose-invert max-w-none"
-                // No changes here
                 dangerouslySetInnerHTML={{ __html: blog.description }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -386,8 +377,6 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
           </div>
         </div>
       </div>
-      
-      {/* Mobile TOC and Floating button logic commented out as per original code */}
     </>
   );
 }
