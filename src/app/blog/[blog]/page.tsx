@@ -1,4 +1,3 @@
-// This file needs to be a Client Component to support useEffect, useState, and framer-motion.
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -17,7 +16,7 @@ interface Blog {
   id: number;
   blog_title: string;
   blog_url: string;
-  image1: string; // <-- This is the desired OG/Twitter image
+  image1: string; // <-- The OG/Twitter image source
   description: string;
   author_name: string | null;
   created_at: string;
@@ -65,70 +64,77 @@ const TocContent = ({ toc, onLinkClick }: TocContentProps) => (
 );
 
 // ==============================================================================
-// 3. Helper functions
+// 3. Helper Functions (For Image URL and DOM Manipulation)
 // ==============================================================================
 
-// 🔥 CORE FIX: Updated getImageUrl to enforce HTTPS and handle relative path correctly
+// Helper to safely remove existing tags based on name/property attribute
+const removeExistingTags = () => {
+  // Remove canonical link
+  document.querySelector('link[rel="canonical"]')?.remove();
+  
+  // Remove existing name tags (description, title, twitter, robots)
+  const nameTags = document.querySelectorAll(`meta[name]`);
+  nameTags.forEach(tag => tag.remove());
+  
+  // Remove existing property tags (og:)
+  const propertyTags = document.querySelectorAll(`meta[property]`);
+  propertyTags.forEach(tag => tag.remove());
+};
+
+// Helper to create or update a meta tag
+const createOrUpdateMetaTag = (attribute: 'name' | 'property', selectorValue: string, content: string) => {
+  let tag = document.querySelector(`meta[${attribute}="${selectorValue}"]`);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute(attribute, selectorValue);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("content", content);
+};
+
+
+// 🔥 CORE FIX 1: getImageUrl updated to enforce HTTPS and prevent /css/ fallback unless error occurs.
 const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
-  // 1. Fallback to default image if no path
+  // 1. Fallback if no path
   if (!imagePath) {
     return "/mhe-logo.png";
   }
 
   // 2. Fallback to existing local asset logic ONLY if an error has occurred
   if (hasError) {
-    // This part handles the secondary local fallback logic
     const filename = imagePath.split("/").pop();
-    // This is where you got the /css/... path when an error occurred
+    // This is your secondary local fallback
     return `/css/asset/blogimg/${filename}`; 
   }
 
-  // 3. Primary Logic: Use the API-provided path, enforcing HTTPS
-
-  // ✅ FIX 1: If it starts with an insecure HTTP link, change it to HTTPS
+  // 3. Primary Logic: Ensure URL is complete and secure (HTTPS)
+  
+  // If it starts with an insecure HTTP link, change it to HTTPS
   if (imagePath.startsWith("http://")) {
     return imagePath.replace("http://", "https://");
   }
   
-  // ✅ FIX 2: If it starts with a secure HTTPS link, use it as is
+  // If it starts with a secure HTTPS link, use it as is
   if (imagePath.startsWith("https://")) {
     return imagePath;
   }
 
-  // 4. Handle relative API paths (e.g., "media/...")
+  // Handle relative API paths (e.g., "media/...")
   if (imagePath.startsWith("media/")) {
     // Construct the full API URL securely
     return `https://api.mhebazar.in/${imagePath}`;
   }
 
-  // 5. Default: Treat it as a direct relative path if none of the above
+  // Default: Treat it as a direct path (should be rare)
   return imagePath;
 };
 
-// **Helper to safely remove existing meta/link tags by property (No change)
-const removeExistingTags = (property: string) => {
-  const existingTags = document.querySelectorAll(`meta[${property}]`);
-  existingTags.forEach((tag) => tag.remove());
-  const existingCanonical = document.querySelector('link[rel="canonical"]');
-  if (existingCanonical) existingCanonical.remove();
-};
-
-// **Helper to create and append a meta tag (No change)
-const createMetaTag = (attribute: 'name' | 'property', value: string, content: string) => {
-  let tag = document.querySelector(`meta[${attribute}="${value}"]`);
-  if (!tag) {
-    tag = document.createElement("meta");
-    tag.setAttribute(attribute, value);
-    document.head.appendChild(tag);
-  }
-  tag.setAttribute("content", content);
-};
 
 // ==============================================================================
 // 4. Component
 // ==============================================================================
 
-export default function BlogPostPage({ params }: { params: { blog: string } }) {
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const slug = params.blog;
 
   const [blog, setBlog] = useState<Blog | null>(null);
@@ -160,7 +166,7 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
     }
   }, [slug]);
 
-  // SEO Effect: Uses the corrected getImageUrl to set HTTPS for all social images
+  // 🔥 CORE SEO IMPLEMENTATION (Client-side, using DOM manipulation)
   useEffect(() => {
     if (blog) {
       const metaTitle = blog.meta_title || blog.blog_title || "MHE Bazar Blog";
@@ -170,22 +176,19 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
         "Read the latest blog posts on material handling equipment.";
       const canonicalUrl = `https://www.mhebazar.in/blog/${slug}`;
       
-      // The imageUrl now uses the corrected helper function, ensuring HTTPS is used 
-      // for the primary image and the correct fallback is used on error.
+      // Get the correct, HTTPS-enforced image URL
       const imageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
 
-      // 1. Clean up existing tags to prevent duplication
-      removeExistingTags('name');
-      removeExistingTags('property');
-
-      // 2. Set Document Title
+      // --- 1. Cleanup before setting new tags ---
+      removeExistingTags();
+      
+      // --- 2. Standard SEO Tags ---
       document.title = metaTitle;
+      createOrUpdateMetaTag("name", "title", metaTitle);
+      createOrUpdateMetaTag("name", "description", description);
+      createOrUpdateMetaTag("name", "robots", "index, follow");
 
-      // 3. Standard SEO Tags (name attribute)
-      createMetaTag("name", "description", description);
-      createMetaTag("name", "title", metaTitle); 
-
-      // 4. Canonical Link
+      // --- 3. Canonical Link ---
       let canonicalLinkTag = document.querySelector('link[rel="canonical"]');
       if (!canonicalLinkTag) {
         canonicalLinkTag = document.createElement("link");
@@ -193,33 +196,29 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
         document.head.appendChild(canonicalLinkTag);
       }
       canonicalLinkTag.setAttribute("href", canonicalUrl);
+      
+      // --- 4. Open Graph (OG) Tags (REQUIRED) ---
+      createOrUpdateMetaTag("property", "og:title", metaTitle);
+      createOrUpdateMetaTag("property", "og:description", description);
+      createOrUpdateMetaTag("property", "og:url", canonicalUrl);
+      createOrUpdateMetaTag("property", "og:type", "article"); 
+      
+      // ✅ OG IMAGE TAG (Using the correct HTTPS URL)
+      createOrUpdateMetaTag("property", "og:image", imageUrl); 
+      createOrUpdateMetaTag("property", "og:image:width", "1200");
+      createOrUpdateMetaTag("property", "og:image:height", "630");
 
-      // 5. Open Graph (OG) Tags
-      createMetaTag("property", "og:title", metaTitle);
-      createMetaTag("property", "og:description", description);
-      createMetaTag("property", "og:url", canonicalUrl);
-      createMetaTag("property", "og:type", "article"); 
+      // --- 5. Twitter Card Tags (REQUIRED) ---
+      createOrUpdateMetaTag("name", "twitter:card", "summary_large_image");
+      createOrUpdateMetaTag("name", "twitter:title", metaTitle);
+      createOrUpdateMetaTag("name", "twitter:description", description);
       
-      // OG Image (Now guaranteed to be HTTPS if it's a full API path)
-      createMetaTag("property", "og:image", imageUrl); 
-      createMetaTag("property", "og:image:width", "1200");
-      createMetaTag("property", "og:image:height", "630");
-      
-      // 6. Twitter Card Tags
-      createMetaTag("name", "twitter:card", "summary_large_image");
-      createMetaTag("name", "twitter:title", metaTitle);
-      createMetaTag("name", "twitter:description", description);
-      
-      // Twitter Image (Now guaranteed to be HTTPS if it's a full API path)
-      createMetaTag("name", "twitter:image", imageUrl); 
-      createMetaTag("name", "twitter:url", canonicalUrl);
-      
-      // 7. General SEO
-      createMetaTag("name", "robots", "index, follow");
+      // ✅ TWITTER IMAGE TAG (Using the correct HTTPS URL)
+      createOrUpdateMetaTag("name", "twitter:image", imageUrl); 
+      createOrUpdateMetaTag("name", "twitter:url", canonicalUrl);
       
     }
-  }, [blog, slug, imageError]); 
-
+  }, [blog, slug, imageError]); // imageError included to update meta tags on image loading failure
 
   // Effect 1: Calculate TOC data and reading time (no change)
   useEffect(() => {
@@ -293,8 +292,8 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
       </div>
     );
   }
-
-  // Determine the image URL for rendering
+  
+  // Determine the image URL for rendering (Uses the same logic as the SEO tags)
   const renderImageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
 
   // --- HTML Content ---
@@ -352,12 +351,10 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
                   </div>
                 </div>
 
-                {/* Main Image (Uses the correct, HTTPS-enforced URL) */}
+                {/* Main Image */}
                 <img
                   src={renderImageUrl}
                   alt={blog.blog_title}
-                  loading="eager" 
-                  title={blog.blog_title}
                   className="w-full h-auto rounded-xl object-cover mb-8 shadow-lg"
                   style={{ aspectRatio: "16/9" }}
                   onError={() => handleImageError(blog.id)}
