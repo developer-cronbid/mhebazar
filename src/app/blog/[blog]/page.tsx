@@ -36,7 +36,7 @@ interface TocContentProps {
 }
 
 // ==============================================================================
-// 2. Helper Functions (Image URL and DOM Manipulation)
+// 2. SEO Helper Functions (For DOM Manipulation)
 // ==============================================================================
 
 // Helper to safely remove existing tags based on name/property attribute
@@ -45,12 +45,10 @@ const removeExistingTags = () => {
   document.querySelector('link[rel="canonical"]')?.remove();
   
   // Remove existing name tags (description, title, twitter, robots)
-  const nameTags = document.querySelectorAll(`meta[name]`);
-  nameTags.forEach(tag => tag.remove());
+  document.querySelectorAll(`meta[name]`).forEach(tag => tag.remove());
   
   // Remove existing property tags (og:)
-  const propertyTags = document.querySelectorAll(`meta[property]`);
-  propertyTags.forEach(tag => tag.remove());
+  document.querySelectorAll(`meta[property]`).forEach(tag => tag.remove());
 };
 
 // Helper to create or update a meta tag
@@ -128,7 +126,7 @@ const TocContent = ({ toc, onLinkClick }: TocContentProps) => (
 // 4. Component (Main logic)
 // ==============================================================================
 
-export default function BlogPostPage({ params }: { params: { blog: string } }) {
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
   const slug = params.blog;
 
   const [blog, setBlog] = useState<Blog | null>(null);
@@ -160,7 +158,7 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
     }
   }, [slug]);
 
-  // 🔥 CORE SEO IMPLEMENTATION (Client-side, guarantees OG/Twitter tags are set)
+  // 🔥 CORE SEO IMPLEMENTATION (Using DOM manipulation to set all tags)
   useEffect(() => {
     if (blog) {
       const metaTitle = blog.meta_title || blog.blog_title || "MHE Bazar Blog";
@@ -197,7 +195,7 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
       createOrUpdateMetaTag("property", "og:url", canonicalUrl);
       createOrUpdateMetaTag("property", "og:type", "article"); 
       
-      // ✅ OG IMAGE TAG (The most important part that was missing/not being set correctly)
+      // ✅ OG IMAGE TAG: Should now use the HTTPS-enforced image URL
       createOrUpdateMetaTag("property", "og:image", imageUrl); 
       createOrUpdateMetaTag("property", "og:image:width", "1200");
       createOrUpdateMetaTag("property", "og:image:height", "630");
@@ -207,12 +205,12 @@ export default function BlogPostPage({ params }: { params: { blog: string } }) {
       createOrUpdateMetaTag("name", "twitter:title", metaTitle);
       createOrUpdateMetaTag("name", "twitter:description", description);
       
-      // ✅ TWITTER IMAGE TAG
+      // ✅ TWITTER IMAGE TAG: Should now use the HTTPS-enforced image URL
       createOrUpdateMetaTag("name", "twitter:image", imageUrl); 
       createOrUpdateMetaTag("name", "twitter:url", canonicalUrl);
       
     }
-  }, [blog, slug, imageError]); 
+  }, [blog, slug, imageError]); // imageError is a dependency to update tags if the image fails
 
   // Effect 1: Calculate TOC data and reading time (no change)
   useEffect(() => {
