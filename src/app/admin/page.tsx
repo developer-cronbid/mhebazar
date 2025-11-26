@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 // IMPORT THE LOADER ICON
-import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info, Loader2 } from 'lucide-react';
+import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info, Loader2, Users } from 'lucide-react';
 import AnalyticsDashboard from '@/components/admin/Graph';
 import api from '@/lib/api';
 import Cookies from 'js-cookie';
@@ -26,11 +26,22 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 // --- Type Definitions ---
+
+// NEW: Type for the vendor stats API response
+export interface VendorStats {
+  total_applications: number;
+  approved_vendors: number;
+  pending_applications: number;
+  recent_applications: number;
+}
+
 export interface StatsCardProps {
   icon: string;
   number: string;
   label: string;
   link: string;
+  // Optional: Highlight color for important cards (like pending actions)
+  highlight?: boolean; 
 }
 
 export interface VendorApplication {
@@ -85,40 +96,45 @@ interface DashboardStats {
   rentals: number;
   trainingRequests: number;
   contactRequests: number;
-  totalVendors: number;
-  pendingVendors: number;
 }
 
 
 // --- Helper Components ---
-const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link }) => {
+const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link, highlight }) => {
   const router = useRouter();
   const handleCardClick = () => router.push(link);
 
+  const cardClasses = highlight
+    ? "group relative p-4 md:p-6 rounded-xl shadow-lg border-2 border-red-400 bg-red-50 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-red-500 w-full min-h-[160px]"
+    : "group relative bg-white p-4 md:p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 w-full min-h-[160px]";
+
+  const numberClasses = highlight ? "text-3xl sm:text-4xl font-bold text-red-600 pr-10" : "text-3xl sm:text-4xl font-bold text-green-600 pr-10";
+  const arrowClasses = highlight ? "h-6 w-6 md:h-7 md:w-7 text-red-600 transition-transform duration-300 group-hover:translate-x-1" : "h-6 w-6 md:h-7 md:w-7 text-green-600 transition-transform duration-300 group-hover:translate-x-1";
+
   return (
-    // ✅ FIX: Removed aspect-square and set a min-height for better responsiveness.
-    // ✅ FIX: Added relative positioning to contain the absolutely positioned arrow.
     <div
-      className="group relative bg-white p-4 md:p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 w-full min-h-[160px]"
+      className={cardClasses}
       onClick={handleCardClick}
     >
       {/* Icon Container - Placed at the top */}
       <div className="mb-4">
-        <Image src={icon} alt={label} width={64} height={64} className="w-12 h-12 md:w-16 md:h-16" />
+        {/* Using a Lucide icon for the Pending Vendors card, otherwise use Image */}
+        {highlight && label === "Pending Vendors" ? (
+          <Users className="w-12 h-12 md:w-16 md:h-16 text-red-600" />
+        ) : (
+          <Image src={icon} alt={label} width={64} height={64} className="w-12 h-12 md:w-16 md:h-16" />
+        )}
       </div>
 
-      {/* Text content - `mt-auto` removed as we use `justify-between` and explicit positioning */}
+      {/* Text content */}
       <div>
-        <h2 className="text-3xl sm:text-4xl font-bold text-green-600 pr-10">{number}</h2>
+        <h2 className={numberClasses}>{number}</h2>
         <p className="text-base md:text-lg text-gray-500">{label}</p>
       </div>
 
-      {/* ✅ FIX: Chevron icon is now absolutely positioned for perfect vertical centering.
-        top-1/2, -translate-y-1/2 centers it vertically.
-        right-3 ensures it stays inside the card padding even on small screens.
-      */}
+      {/* Chevron icon is now absolutely positioned for perfect vertical centering. */}
       <div className="absolute top-1/2 right-3 transform -translate-y-1/2">
-        <ChevronRightIcon className="h-6 w-6 md:h-7 md:w-7 text-green-600 transition-transform duration-300 group-hover:translate-x-1" />
+        <ChevronRightIcon className={arrowClasses} />
       </div>
     </div>
   );
@@ -136,14 +152,21 @@ const DetailRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label,
 const CompleteDashboard = () => {
   const [vendorApps, setVendorApps] = useState<VendorApplication[]>([]);
   const [pendingProducts, setPendingProducts] = useState<GroupedProducts>({});
+  
+  // NEW: State to hold general statistics
   const [stats, setStats] = useState<DashboardStats>({
     productQuotes: 0, directBuys: 0, rentals: 0, trainingRequests: 0,
-    contactRequests: 0, totalVendors: 0, pendingVendors: 0,
+    contactRequests: 0,
+  });
+
+  // NEW: State to hold Vendor specific statistics
+  const [vendorStats, setVendorStats] = useState<VendorStats>({
+    total_applications: 0, approved_vendors: 0, pending_applications: 0, recent_applications: 0
   });
 
   const [isLoading, setIsLoading] = useState(true);
 
-  // MODAL STATES
+  // MODAL STATES (kept the same)
   const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
   const [isVendorRejectModalOpen, setIsVendorRejectModalOpen] = useState(false);
   const [vendorRejectionReason, setVendorRejectionReason] = useState("");
@@ -152,14 +175,13 @@ const CompleteDashboard = () => {
   const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
   const [productRejectionReason, setProductRejectionReason] = useState("");
 
-  // NEW LOADING STATES
+  // NEW LOADING STATES (kept the same)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingVendorId, setLoadingVendorId] = useState<number | null>(null);
 
 
   // --- Data Fetching ---
   const fetchData = useCallback(async () => {
-    // fetchData function remains the same, using the corrected client-side filtering
     setIsLoading(true);
     try {
       const [
@@ -168,7 +190,7 @@ const CompleteDashboard = () => {
       ] = await Promise.all([
         api.get('/vendor/'),
         api.get('/products/'),
-        api.get('/vendor/stats/'),
+        api.get('/vendor/stats/'), // Fetch vendor stats
         api.get('/quotes/?page_size=1'),
         api.get('/rentals/?page_size=1'),
         api.get('/orders/?page_size=1'),
@@ -189,12 +211,16 @@ const CompleteDashboard = () => {
       }, {});
       setPendingProducts(grouped);
 
+      // Set general counts
       setStats({
         productQuotes: quoteResponse.data.count, directBuys: orderResponse.data.count,
         rentals: rentalResponse.data.count, trainingRequests: trainingResponse.data.count,
-        contactRequests: contactResponse.data.count, totalVendors: vendorStatsResponse.data.total_applications,
-        pendingVendors: vendorStatsResponse.data.pending_applications,
+        contactRequests: contactResponse.data.count,
       });
+
+      // Set vendor stats separately
+      setVendorStats(vendorStatsResponse.data);
+
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
       toast.error("Error", { description: "Could not fetch dashboard data." });
@@ -204,7 +230,6 @@ const CompleteDashboard = () => {
   }, []);
 
   useEffect(() => {
-    // useEffect for auth check remains the same
     const checkUserAndFetch = async () => {
       try {
         const userResponse = await api.get('/users/me/');
@@ -223,7 +248,7 @@ const CompleteDashboard = () => {
     checkUserAndFetch();
   }, [fetchData]);
 
-  // --- Handler Functions ---
+  // --- Handler Functions (Unchanged) ---
 
   // Vendor Handlers
   const handleVendorApprove = async (vendorId: number) => {
@@ -312,28 +337,48 @@ const CompleteDashboard = () => {
   };
 
   const totalPendingProducts = Object.values(pendingProducts).reduce((sum, prods) => sum + prods.length, 0);
+  
+  // Data for the AnalyticsDashboard (Graph)
+  const graphData = {
+      totalApplications: vendorStats.total_applications,
+      approvedVendors: vendorStats.approved_vendors,
+      pendingApplications: vendorStats.pending_applications,
+  };
+
 
   return (
     <>
       {/* Main layout and stats cards remain the same */}
       <div className="overflow-auto bg-gray-50 p-6 sm:p-8 lg:p-10 min-h-screen">
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h2>
-        {/* ✅ Flex layout adjusted for better spacing on large screens */}
+        
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Main content area */}
           <div className="flex-1 space-y-8">
             {/* Stats Cards - Adjusted grid for better flow on all screens */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
+             
               <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://mhebazar.in/admin/forms/quotes" />
               <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://mhebazar.in/admin/forms/direct-buy" />
               <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://mhebazar.in/admin/forms/rentals" />
               <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://mhebazar.in/admin/forms/training-registrations" />
               <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://mhebazar.in/admin/contact/contact-form" />
+               {/* NEW: Pending Vendors Card with Redirection */}
+              <StatsCard
+                icon='' // Using Lucide icon inside the component based on highlight prop
+                number={String(vendorStats.pending_applications)}
+                label="Pending Vendors"
+                link="https://www.mhebazar.in/admin/accounts/registered-vendors"
+                highlight={vendorStats.pending_applications > 0} // Highlight if there are pending apps
+              />
             </div>
-            <AnalyticsDashboard />
+            
+            {/* Analytics Dashboard (Graph) - Pass the fetched vendorStats data */}
+            <AnalyticsDashboard  />
+            
           </div>
 
-          {/* Pending Actions Sidebar */}
+          {/* Pending Actions Sidebar (Unchanged) */}
           <div className="w-full lg:w-1/3 space-y-8">
             <div>
               <h3 className="text-2xl font-semibold text-gray-800 mb-4">Pending Actions</h3>
@@ -350,7 +395,7 @@ const CompleteDashboard = () => {
             {vendorApps.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg text-blue-700"><Building className='w-5 h-5' /> Vendor Applications</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-blue-700"><Building className='w-5 h-5' /> Vendor Applications</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {vendorApps.map((app) => (
@@ -412,7 +457,7 @@ const CompleteDashboard = () => {
         </div>
       </div>
 
-      {/* --- MODALS --- */}
+      {/* --- MODALS (Unchanged) --- */}
 
       {/* Vendor Rejection Modal */}
       <Dialog open={isVendorRejectModalOpen} onOpenChange={setIsVendorRejectModalOpen}>
