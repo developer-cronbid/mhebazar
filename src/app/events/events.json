@@ -1,0 +1,62 @@
+[
+  {
+    "id": 3,
+    "title": "LogiMAT India 2026",
+    "slug": "logimat-india-2026-mumbai",
+    "startDate": "2026-02-05",
+    "endDate": "2026-02-07",
+    "time": "10:00 AM – 6:00 PM",
+    "location": "Bombay Exhibition Center, Mumbai, India",
+    "image": "/logimatevent.jpg",
+    "ogImage": "/logimatevent.jpg",
+    "description": "Visit India's biggest platform for Warehouse Infrastructure, Logistics Automation, Material Handling Equipment (MHE), AIDC & Supply Chain Solutions. LogiMAT India is the International Trade Fair for Intralogistics Solutions, Transportation & Process Management, built by Messe Stuttgart India. MHE Bazar is the Strategic Digital Partner for this premier industry event.",
+    "organizer": "Messe Stuttgart India",
+    "organizerInfo": "LogiMAT India is the leading International Trade Fair focusing on Intralogistics Solutions, Transportation, and Process Management in India. It is organised by Messe Stuttgart India and serves as the biggest platform for warehouse infrastructure and logistics automation. MHE Bazar is the Strategic Digital Partner for LogiMAT India 2026.",
+    "blogs": [],
+    "category": "Intralogistics & Supply Chain",
+    "registrationLink": "https://www.logimat.in/logimat-india-2026?utm_source=ExhibitorMHEB&utm_medium=WebPromotion&utm_campaign=EWP"
+  },
+  {
+    "id": 2,
+    "title": "India Warehousing & Logistics Show 2025 (IWLS)",
+    "slug": "india-warehousing-logistics-show-2025-mumbai",
+    "startDate": "2025-11-20",
+    "endDate": "2025-11-22",
+    "time": "10:00 AM – 6:00 PM",
+    "location": "Bombay Exhibition Centre, Goregaon (E), Mumbai",
+    "image": "/event.webp",
+    "ogImage": "/event.webp",
+    "description": "Attend the India Warehousing & Logistics Show 2025 (IWLS), Western & Southern India's only platform to display complete warehousing and logistics solutions. The event is co-located with the India Cold Chain Show and features the Cold Chain Conclave on November 20, 2025. This premier industry gathering is built by RX and is the ideal place to explore cutting-edge material handling, automation, and supply chain technology.",
+    "organizer": "RX India (Built by RX)",
+    "organizerInfo": "The India Warehousing & Logistics Show (IWLS) is built by RX (Reed Exhibitions), a leading global events organizer. IWLS is recognized as Western & Southern India's only dedicated platform for warehousing and logistics solutions. The show is co-located with the India Cold Chain Show, featuring the Cold Chain Conclave. SOTI is the Title Partner for the India Warehousing & Logistics Show.",
+    "blogs": [],
+    "category": "Warehousing, Logistics & Cold Chain",
+    "registrationLink": "https://www.indiawlshow.com/en-gb.html"
+  },
+  {
+    "id": 1,
+    "title": "Intralogistics & Warehousing Expo 2025",
+    "slug": "intralogistics-warehousing-expo-2025-bengaluru",
+    "startDate": "2025-11-06",
+    "endDate": "2025-11-08",
+    "time": "10:00 AM – 6:00 PM",
+    "location": "Bengaluru, KTPO, Whitefield",
+    "image": "/event.jpg",
+    "ogImage": "/event.jpg",
+    "description": "Be Part of India Warehousing & Logistics Expo 2025 – Bengaluru's Biggest Industry Gathering! Experience cutting-edge Material Handling and Logistics solutions, meet top manufacturers, and drive business growth with MHE Bazar at IW Expo Bengaluru 2025. This premier event brings together industry leaders to showcase the future of intralogistics, automation, and supply chain technology.",
+    "organizer": "MHE Bazar",
+    "organizerInfo": "MHE Bazar, India’s trusted marketplace for Material Handling Equipment (MHE), actively participates in and hosts key industry events, trade fairs, and technology showcases across the country. These platforms allow us to highlight our latest innovations in forklifts, stackers, lithium-ion conversion kits, and energy-efficient warehouse solutions. As part of Greentech India Material Handling LLP, MHE Bazar is committed to driving India’s transition toward sustainable and smart material handling operations, aligning with the nation’s vision for net-zero emissions by 2070. Through our presence at these events, we connect with manufacturers, distributors, and logistics professionals—demonstrating how our digital platform simplifies the buying, selling, and renting of new or used equipment. We’re proud to announce that MHE Bazar is the official eCommerce Partner for this Expo. Visit us at Booth No. A-41 to explore the future of material handling technology and discover opportunities to build meaningful industry partnerships.",
+    "blogs": [
+      {
+        "title": "Why You Should Attend Intralogistics and Warehousing Expo 2025 – Bengaluru",
+        "link": "https://www.mhebazar.in/blog/intralogistics-warehousing-expo-2025-bengaluru",
+        "image": "/event.jpg",
+        "author": "MHE Bazar Team",
+        "category": "Industry Events",
+        "description": "Discover why the Intralogistics and Warehousing Expo 2025 in Bengaluru is a must-attend event for professionals in material handling and logistics."
+      }
+    ],
+    "category": "Warehousing & Logistics",
+    "registrationLink": "https://fmeregistrations.com/iwe25/visitor-registration"
+  }
+]
