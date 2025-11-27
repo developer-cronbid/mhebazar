@@ -1,9 +1,9 @@
 "use client";
+import { useEffect } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { Calendar, MapPin, Clock, ArrowLeft, Building2, ChevronRight, ExternalLink, Users, TrendingUp, Sparkles } from "lucide-react";
 
-// NOTE: Metadata import is removed as generateMetadata is no longer supported in this file.
 // --- Data Import ---
 import eventData from '../events.json';
 
@@ -36,7 +36,7 @@ interface EventType {
 }
 
 // --- Utility Functions (kept as is) ---
-
+// ... (Utility Functions kept as is) ...
 const getEventStatus = (startDate: string, endDate: string): 'upcoming' | 'ongoing' | 'completed' => {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -71,17 +71,6 @@ const formatDateRange = (startDate: string, endDate: string): string => {
   return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${year}`;
 };
 
-// --- Next.js Server Functions REMOVED ---
-/*
-// REMOVED: export async function generateMetadata() {...}
-// This function is incompatible with "use client"
-*/
-
-/*
-// REMOVED: export async function generateStaticParams() {...}
-// This function is incompatible with "use client"
-*/
-
 
 // --- Detail Component ---
 
@@ -89,7 +78,6 @@ const handleRegister = (link: string) => {
     window.open(link, '_blank', 'noopener,noreferrer');
 };
 
-// Status Badge Component (kept as is)
 const StatusBadge = ({ status }: { status: 'upcoming' | 'ongoing' | 'completed' }) => {
   const styles = {
     upcoming: 'bg-indigo-600/95 text-white backdrop-blur-sm shadow-lg shadow-indigo-500/50',
@@ -104,7 +92,7 @@ const StatusBadge = ({ status }: { status: 'upcoming' | 'ongoing' | 'completed' 
   };
 
   return (
-    <span className={`inline-flex items-center px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${styles[status]}`}>
+    <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${styles[status]}`}>
       {status === 'ongoing' && (
         <span className="relative flex h-2.5 w-2.5 mr-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -126,21 +114,47 @@ interface EventDetailPageProps {
 
 export default function EventDetailPage({ params }: EventDetailPageProps) {
   const slug = params['event-slug'];
-  // Find the event based on the slug
   const selectedEvent = (eventData as EventType[]).find(e => e.slug === slug);
 
   if (!selectedEvent) {
-    notFound(); // Next.js built-in function to show 404 page
+    notFound(); 
   }
   
   const status = getEventStatus(selectedEvent.startDate, selectedEvent.endDate);
   const formattedDate = formatDateRange(selectedEvent.startDate, selectedEvent.endDate);
 
+  const title = `${selectedEvent.title} | MHE Bazar Event Details`;
+  const description = selectedEvent.description.substring(0, 160) + '...';
+  const url = `/events/${selectedEvent.slug}`;
+  const ogImage = selectedEvent.ogImage;
+
+  // --- FIX: Dynamic OG Meta Tags (Client-side) ---
+  useEffect(() => {
+    document.title = title;
+    const currentUrl = typeof window !== 'undefined' ? window.location.href : 'https://yourdomain.com' + url;
+
+    const setMetaTag = (property: string, content: string) => {
+        let tag = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+        if (!tag) { tag = document.createElement('meta'); tag.setAttribute('property', property); document.head.appendChild(tag); }
+        tag.setAttribute('content', content);
+    };
+
+    setMetaTag('og:title', title);
+    setMetaTag('og:description', description);
+    setMetaTag('og:image', ogImage); 
+    setMetaTag('og:url', currentUrl);
+    setMetaTag('og:type', 'article');
+    
+    // Twitter Card
+    setMetaTag('twitter:card', 'summary_large_image');
+    setMetaTag('twitter:image', ogImage);
+
+
+  }, [title, description, ogImage, url]);
+
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white antialiased">
-        {/* NOTE: If you still require dynamic SEO, you will need to rely on 
-           a global layout.tsx file or use a client-side solution like react-helmet, 
-           as generateMetadata is now removed. */}
         {/* Schema Markup for the specific Event */}
         <script
           type="application/ld+json"
@@ -169,7 +183,7 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
         {/* --- Event Detail View --- */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <Link
-            href="/events" // <-- FIX: Corrected link to /events (plural)
+            href="/events"
             className="inline-flex items-center text-gray-600 hover:text-emerald-600 font-bold mb-8 transition-all group px-5 py-3 rounded-xl hover:bg-emerald-50 border-2 border-transparent hover:border-emerald-200"
           >
             <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
@@ -177,18 +191,20 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
           </Link>
 
           <article className="bg-white rounded-3xl shadow-2xl overflow-hidden border-2 border-gray-100">
-            {/* Image Div - Enhanced */}
-            <div className="relative aspect-[2/1] w-full bg-gradient-to-br from-emerald-100 to-green-100">
+            {/* FIX: Image Div - Changed aspect ratio to 16/9 for wider view and less cropping */}
+            <div className="relative aspect-[16/9] w-full bg-gradient-to-br from-emerald-100 to-green-100">
               <img
                 src={selectedEvent.image}
                 alt={selectedEvent.title}
                 className="object-cover w-full h-full"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-              <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-10">
+              {/* FIX: Reduced the opacity of the overlay so image is clearer */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent"></div>
+              {/* FIX: Tags repositioned to the bottom to avoid covering the image focus area */}
+              <div className="absolute bottom-4 left-6 right-6 flex justify-between items-end z-10">
                 <StatusBadge status={status} />
                 {selectedEvent.category && (
-                  <span className="inline-flex px-4 py-2 rounded-full text-sm font-bold bg-white/95 backdrop-blur-sm text-gray-800 shadow-lg border-2 border-gray-200">
+                  <span className="inline-flex px-4 py-1.5 rounded-full text-sm font-bold bg-white/95 backdrop-blur-sm text-gray-800 shadow-lg border-2 border-gray-200">
                     {selectedEvent.category}
                   </span>
                 )}
@@ -200,8 +216,8 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                 {selectedEvent.title}
               </h1>
 
-              {/* Key Info Strip - Enhanced with better visual hierarchy */}
-              <div className="grid sm:grid-cols-3 gap-6 mb-10 p-6 sm:p-p8 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl border-2 border-emerald-200 shadow-inner">
+              {/* Key Info Strip (kept as is) */}
+              <div className="grid sm:grid-cols-3 gap-6 mb-10 p-6 sm:p-8 bg-gradient-to-br from-emerald-50 to-green-50 rounded-2xl border-2 border-emerald-200 shadow-inner">
                 <div className="flex items-start">
                   <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-white shadow-lg mr-4 flex-shrink-0 border-2 border-emerald-100">
                     <Calendar className="w-7 h-7 text-emerald-600" />

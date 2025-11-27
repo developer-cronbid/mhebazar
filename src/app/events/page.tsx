@@ -1,13 +1,12 @@
 "use client";
-import { useState, useMemo } from "react";
-import Link from 'next/link'; // Import Link for better client-side navigation
+import { useState, useMemo, useEffect } from "react";
+import Link from 'next/link'; 
 import { Calendar, MapPin, Clock, ArrowLeft, Building2, ChevronRight, ExternalLink, Users, TrendingUp, Sparkles } from "lucide-react";
 
 // --- Data Import ---
 import eventData from './events.json';
 
-// --- Type Definitions (Updated to include slug and ogImage) ---
-
+// --- Type Definitions (kept as is) ---
 interface BlogType {
   title: string;
   link: string;
@@ -20,13 +19,13 @@ interface BlogType {
 interface EventType {
   id: number;
   title: string;
-  slug: string; // Added slug for routing
+  slug: string; 
   startDate: string;
   endDate: string;
   time: string;
   location: string;
   image: string;
-  ogImage: string; // Added ogImage for SEO
+  ogImage: string; 
   description: string;
   organizer: string;
   organizerInfo: string;
@@ -35,8 +34,8 @@ interface EventType {
   registrationLink: string;
 }
 
-// --- Utility Functions ---
-
+// --- Utility Functions (kept as is) ---
+// ... (Utility Functions kept as is) ...
 const getEventStatus = (startDate: string, endDate: string): 'upcoming' | 'ongoing' | 'completed' => {
   const now = new Date();
   now.setHours(0, 0, 0, 0);
@@ -75,12 +74,9 @@ const formatDateRange = (startDate: string, endDate: string): string => {
 // --- Event Page Component ---
 
 export default function EventsPage() {
-  // Removed selectedEvent state since we are now using dedicated detail pages
   
-  // Sorting events by start date (latest first) is now handled by the JSON data structure.
-  // We use eventData directly, which is already an array of EventType.
   const eventsWithStatus = useMemo(() => 
-    (eventData as EventType[]) // Explicitly cast the imported data
+    (eventData as EventType[]) 
     .map(event => ({
       ...event,
       status: getEventStatus(event.startDate, event.endDate),
@@ -88,6 +84,41 @@ export default function EventsPage() {
     })),
     []
   );
+
+  const latestEvent = eventsWithStatus[0];
+  const pageTitle = "MHE Bazar | Explore Industry-Leading Material Handling & Logistics Events";
+  const pageDescription = "Find India's biggest upcoming events, expos, and trade fairs for warehousing, intralogistics, automation, and material handling equipment (MHE) solutions.";
+
+
+  // --- FIX: Robust Client-side OG Tags (List Page) ---
+  // Using an external function to append meta tags robustly for social sharing tools.
+  useEffect(() => {
+    if (latestEvent) {
+        document.title = pageTitle;
+        const currentUrl = typeof window !== 'undefined' ? window.location.href : 'https://yourdomain.com/events';
+
+        const setMetaTag = (property: string, content: string) => {
+            let tag = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
+            if (!tag) { 
+                tag = document.createElement('meta'); 
+                tag.setAttribute('property', property); 
+                document.head.appendChild(tag); 
+            }
+            tag.setAttribute('content', content);
+        };
+
+        setMetaTag('og:title', pageTitle);
+        setMetaTag('og:description', pageDescription);
+        setMetaTag('og:image', latestEvent.ogImage); // Using latest event's image
+        setMetaTag('og:url', currentUrl);
+        setMetaTag('og:type', 'website');
+        
+        // Twitter Card
+        setMetaTag('twitter:card', 'summary_large_image');
+        setMetaTag('twitter:image', latestEvent.ogImage);
+    }
+  }, [latestEvent, pageTitle, pageDescription]);
+
 
   const handleRegister = (link: string) => {
     window.open(link, '_blank', 'noopener,noreferrer');
@@ -108,7 +139,7 @@ export default function EventsPage() {
     };
 
     return (
-      <span className={`inline-flex items-center px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider ${styles[status]}`}>
+      <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${styles[status]}`}>
         {status === 'ongoing' && (
           <span className="relative flex h-2.5 w-2.5 mr-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -145,7 +176,7 @@ export default function EventsPage() {
                 "@type": "Organization",
                 "name": event.organizer
               },
-              "url": `/events/${event.slug}` // Link to the detail page
+              "url": `/events/${event.slug}` 
             }))
           })
         }}
@@ -153,7 +184,7 @@ export default function EventsPage() {
 
       {/* --- Event List View --- */}
       <>
-        {/* Hero Section - Enhanced with animated gradient and floating elements */}
+        {/* Hero Section (kept as is) */}
         <section className="relative overflow-hidden pt-20 pb-32 sm:pb-40 bg-gradient-to-br from-emerald-50 via-white to-green-50">
           {/* Animated Background Gradient Orbs */}
           <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl animate-pulse"></div>
@@ -196,8 +227,8 @@ export default function EventsPage() {
                     : 'border-gray-100 hover:border-emerald-400 hover:ring-4 hover:ring-emerald-100/50'
                 } transform hover:-translate-y-2 hover:scale-[1.02]`}
               >
-                {/* Image Div - Enhanced with gradient overlay and better hover effect */}
-                <div className="relative aspect-[2/1] overflow-hidden bg-gradient-to-br from-emerald-100 to-green-100">
+                {/* FIX: Image Div - Changed aspect ratio to 16/9 for wider view */}
+                <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-emerald-100 to-green-100">
                   <img
                     src={event.image}
                     alt={event.title}
@@ -205,11 +236,12 @@ export default function EventsPage() {
                     className="object-cover w-full h-full group-hover:scale-110 group-hover:rotate-1 transition-all duration-700"
                   />
                   {/* Enhanced gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
-                  <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
+                  {/* FIX: Tags repositioned to the bottom to avoid covering the image focus area */}
+                  <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end z-10">
                     <StatusBadge status={event.status} />
                     {event.category && (
-                      <span className="inline-flex px-3 py-1.5 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-800 shadow-lg border border-gray-200">
+                      <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-800 shadow-lg border border-gray-200">
                         {event.category}
                       </span>
                     )}
@@ -221,7 +253,7 @@ export default function EventsPage() {
                     {event.title}
                   </h2>
 
-                  {/* Key details presented clearly with enhanced icons */}
+                  {/* Key details (kept as is) */}
                   <div className="space-y-3 mb-5 border-y border-gray-100 py-4">
                     <div className="flex items-center text-sm text-gray-700">
                       <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center mr-3 flex-shrink-0">
@@ -275,8 +307,6 @@ export default function EventsPage() {
           </div>
         </section>
       </>
-
-      {/* --- Event Detail View Removed --- */}
       
     </div>
   );
