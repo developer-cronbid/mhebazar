@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { FileText, Image as ImageIcon, Package, AlertCircle, X, Loader2 } from 'lucide-react'
+import { FileText, Image as ImageIcon, Package, AlertCircle, X, Loader2, Youtube } from 'lucide-react'
 import api from '@/lib/api'
 import { useUser } from '@/context/UserContext'
 import Image from 'next/image'
@@ -67,12 +67,13 @@ type Subcategory = {
 
 type ProductImage = {
   id: number;
-  image: string; // URL path to the image
+  image: string; // URL path to the image or video URL
   product: number;
+  is_video?: boolean; // Now derived from the serializer, should be present
 }
 
 type ProductFormData = {
-  // 💥 ADDED: user field to manage ownership during create/update
+  // 徴 ADDED: user field to manage ownership during create/update
   user: string; 
   category: string;
   subcategory: string;
@@ -100,6 +101,10 @@ const TYPE_OPTIONS = [
   { value: 'attachments', label: 'Attachments' },
 ]
 
+// --- CONSTANTS FOR IMAGE VALIDATION ---
+const MIN_IMAGE_SIZE_BYTES = 50 * 1024; // 50 KB
+const MAX_IMAGE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
+
 interface ProductFormProps {
   product?: Product;
   onSuccess?: () => void;
@@ -108,13 +113,16 @@ interface ProductFormProps {
 export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const [defaultCategory, setDefaultCategory] = useState<string>('')
   const [defaultSubcategory, setDefaultSubcategory] = useState<string>('')
-  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [firstImageFile, setFirstImageFile] = useState<File | null>(null); // State for first/main image file
+  const [imageFiles, setImageFiles] = useState<File[]>([]) // State for additional image files
   const [brochureFile, setBrochureFile] = useState<File | null>(null)
   
+  // existingImages holds ALL media (images and video links) from the backend
   const [existingImages, setExistingImages] = useState<ProductImage[]>(
     (product?.images as ProductImage[]) || []
   ); 
   const [keptBrochureUrl, setKeptBrochureUrl] = useState<string | null>(null);
+  const [youtubeLinks, setYoutubeLinks] = useState<string[]>([]); // New state for NEW YouTube links to be saved
 
   const {
     register,
@@ -129,7 +137,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         category: String(product.category),
         subcategory: product.subcategory ? String(product.subcategory) : '',
         name: product.name,
-        // 💥 CRITICAL FIX: Set original user ID for update (prevents ownership change)
+        // 徴 CRITICAL FIX: Set original user ID for update (prevents ownership change)
         user: String(product.user), 
         description: product.description,
         meta_title: product.meta_title,
@@ -154,9 +162,13 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         online_payment: false,
         stock_quantity: 1,
         type: ['new'],
+        // ✅ Price Field: Set default to '0.00'
         price: '0.00',
         category: '',
         subcategory: '',
+        // ✅ Meta Title/Description: Set default/pre-filled values
+        meta_title: '', 
+        meta_description: '',
       },
   })
 
@@ -177,6 +189,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const productModel = watch('model');
   const descriptionValue = watch('description'); // <- new: watch description
   const { user } = useUser();
+  const [newYoutubeLink, setNewYoutubeLink] = useState(''); // State for the YouTube link input
 
   const hasSelectedRequiredFields = selectedCategoryId &&
     (!subcategories.length || (subcategories.length > 0 && selectedSubcategoryId))
@@ -187,13 +200,25 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  // 💥 NEW EFFECT: Set the user ID for NEW products from context
+  // 徴 NEW EFFECT: Set the user ID for NEW products from context
   useEffect(() => {
     if (!product && user?.id) {
       // Set the user ID for creation
       setValue("user", String(user.id));
     }
   }, [user, product, setValue]);
+
+  // ✅ Meta Title/Description: Pre-fill logic based on productName
+  useEffect(() => {
+    if (!product || !product.meta_title) {
+        const defaultTitle = productName || '';
+        setValue('meta_title', defaultTitle);
+    }
+    if (!product || !product.meta_description) {
+        const defaultDesc = productName ? `Explore the specifications and details of the new ${productName}.` : '';
+        setValue('meta_description', defaultDesc);
+    }
+  }, [productName, product, setValue])
 
 
   // Fetch categories
@@ -294,15 +319,27 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
       setKeptBrochureUrl(product.brochure);
     }
     if (product?.images) {
-        setExistingImages(product.images as ProductImage[]); 
+        // The list of all existing media (images and video links)
+        const allExistingMedia = (product.images as ProductImage[]) || [];
+        
+        // Filter out existing video links into the local state if needed (for initial deletion logic)
+        const existingVideoLinks = allExistingMedia
+          .filter(img => img.is_video)
+          .map(img => img.image);
+
+        // existingImages will hold ALL media (images and video links) from the backend
+        setExistingImages(allExistingMedia); 
+        
+        // Note: We don't populate the 'youtubeLinks' state for existing links, only for new ones
     }
   }, [product])
+
 
   const onSubmit = async (data: ProductFormData) => {
     setIsSubmitting(true);
     const formData = new FormData();
 
-    // 💥 CRITICAL FIX: Ensure user ID is the FIRST element and always sent.
+    // 徴 CRITICAL FIX: Ensure user ID is the FIRST element and always sent.
     if (data.user) {
         formData.append("user", data.user); 
     } else {
@@ -311,6 +348,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         return;
     }
     
+    // ... (append standard fields)
     formData.append('category', data.category);
     formData.append('subcategory', data.subcategory || ''); 
     formData.append('name', data.name);
@@ -319,13 +357,17 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     formData.append('meta_description', data.meta_description || '');
     formData.append('manufacturer', data.manufacturer || '');
     formData.append('model', data.model || '');
-    formData.append('price', data.price);
+    // ✅ Price Field: Default to '0.00' if empty
+    formData.append('price', data.price || '0.00'); 
     formData.append('type', JSON.stringify(data.type || [])); 
     formData.append('direct_sale', String(data.direct_sale));
     formData.append('hide_price', String(data.hide_price));
     formData.append('online_payment', String(data.online_payment));
     formData.append('stock_quantity', String(data.stock_quantity));
     formData.append('product_details', JSON.stringify(dynamicValues));
+    
+    // ✅ YouTube Link Support: Add NEW YouTube links to formData (backend handles saving these as ProductImage records)
+    formData.append('youtube_links', JSON.stringify(youtubeLinks));
 
     let productId: number | undefined;
 
@@ -333,6 +375,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
       const method = product ? 'patch' : 'post'; 
       const url = product ? `/products/${product.id}/` : '/products/';
       
+      // 1. Save/Update Main Product Data (This also saves the NEW YouTube links in the backend via perform_create/update)
       const productResponse = await api[method](url, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -341,7 +384,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
       // --- File Uploads (Brochure and Images) ---
 
-      // 1. Brochure Upload/Update
+      // 2. Brochure Upload/Update (Existing logic)
       if (brochureFile) {
         const brochureFormData = new FormData()
         brochureFormData.append('brochure', brochureFile)
@@ -356,30 +399,62 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
           toast.error("Failed to upload brochure")
         }
       }
+
+      // 3. CONSOLIDATED Image Upload (Handles First Image and Additional Images)
+      const allNewImageFiles: File[] = [];
       
-      // 2. New Images Upload
-      if (imageFiles.length > 0) {
+      // Crucially, push the main image first
+      if (firstImageFile) {
+          allNewImageFiles.push(firstImageFile); 
+      }
+      // Then push the additional images
+      allNewImageFiles.push(...imageFiles); 
+
+      // 🚨 REMOVED: The custom 'upload_first_image' section has been removed
+      
+      if (allNewImageFiles.length > 0) {
         const imagesFormData = new FormData()
-        imageFiles.forEach((img) => imagesFormData.append('images', img)) 
+        // Send all files under the 'images' key
+        allNewImageFiles.forEach((img) => imagesFormData.append('images', img)) 
+        
+        // Use the existing upload_images endpoint
         const imagesUrl = `/products/${productId}/upload_images/`;
+        
         try {
           const response = await api.post(imagesUrl, imagesFormData, { headers: { 'Content-Type': 'multipart/form-data' } })
           
-          // 💥 FIX: Safely handle response.data, which caused the "not iterable" error
-          const newImagesArray = Array.isArray(response.data) 
+          // Safely handle response data which should contain the new ProductImage records
+          const newImagesArray: ProductImage[] = Array.isArray(response.data) 
             ? response.data 
             : (response.data.images && Array.isArray(response.data.images))
                 ? response.data.images
                 : []; 
           
+          // Update the list of all existing media (images + video links)
           setExistingImages(prev => [...prev, ...newImagesArray]); 
           setImageFiles([]); 
-          toast.success("New images uploaded successfully")
+          setFirstImageFile(null); // Clear the main image file state
+          toast.success("New image files uploaded successfully")
         } catch (imagesError) {
           console.error("Failed to upload images:", imagesError)
-          toast.error("Failed to upload new images")
+          toast.error("Failed to upload new image files")
         }
       }
+
+      // 4. Re-sync media after links are saved
+      if (youtubeLinks.length > 0) {
+          try {
+              // Fetch the product again to get the IDs for the newly saved video links
+              const res = await api.get(url); 
+              setExistingImages(res.data.images || []);
+              setYoutubeLinks([]); // Clear NEW links once they're in the DB
+              toast.success("New video links saved.")
+          } catch(e) {
+              console.error("Failed to re-sync media after video upload:", e);
+              // Handle toast error if needed, but successful post is already done.
+          }
+      }
+
 
       toast.success(
         product ? "Product Updated" : "Product Created",
@@ -414,21 +489,100 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     }
   }
 
+  const handleFirstImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // ✅ Image Upload Note & Validation: Size check
+    if (file.size < MIN_IMAGE_SIZE_BYTES || file.size > MAX_IMAGE_SIZE_BYTES) {
+        toast.error(`Image size must be between 50 KB and 1 MB. This file is ${Math.round(file.size / 1024)} KB.`);
+        setFirstImageFile(null);
+        event.target.value = '';
+        return;
+    }
+    
+    if (file.type.startsWith('image/')) {
+        setFirstImageFile(file);
+    } else {
+        setFirstImageFile(null);
+        toast.warning('Please select a valid image file.');
+    }
+  }
+
   const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
     if (files) {
-      const validImages = Array.from(files).filter(file => file.type.startsWith('image/'))
-      if (validImages.length !== files.length) {
-        toast.warning('Some files were not images and were skipped.')
-      }
+      const validImages = Array.from(files).filter(file => {
+        // ✅ Image Upload Note & Validation: Size check
+        if (file.size < MIN_IMAGE_SIZE_BYTES || file.size > MAX_IMAGE_SIZE_BYTES) {
+            toast.error(`Image '${file.name}' skipped: size must be between 50 KB and 1 MB.`);
+            return false;
+        }
+        if (!file.type.startsWith('image/')) {
+            toast.warning(`File '${file.name}' was not an image and was skipped.`);
+            return false;
+        }
+        return true;
+      })
+      
       setImageFiles(prev => [...prev, ...validImages])
       event.target.value = ''; 
+    }
+  }
+
+  // ✅ YouTube Link Support: Handler for adding a link
+  const addYoutubeLink = () => {
+    const link = newYoutubeLink.trim();
+    if (link && !youtubeLinks.includes(link)) {
+        // Simple URL check 
+        if (link.toLowerCase().startsWith('http')) {
+            setYoutubeLinks(prev => [...prev, link]);
+            setNewYoutubeLink('');
+        } else {
+            toast.error("Please enter a valid URL for the YouTube link.");
+        }
+    } else if (youtubeLinks.includes(link)) {
+        toast.warning("This YouTube link is already added.");
+    }
+  }
+  
+  // ✅ YouTube Link Support: Handler for removing a link
+  const removeYoutubeLink = async (linkOrId: string | number) => {
+    if (typeof linkOrId === 'string') {
+        // Remove from NEW links (local state)
+        setYoutubeLinks(prev => prev.filter(link => link !== linkOrId));
+    } else if (typeof linkOrId === 'number' && product?.id) {
+        // Remove from EXISTING links (database by ID)
+        
+        const confirmation = window.confirm(
+            "Warning: Are you sure you want to permanently delete this video link?"
+        );
+
+        if (!confirmation) return;
+
+        try {
+            // Use the standard delete-images endpoint
+            await api.delete(`/products/${product.id}/delete-images/`, { data: { image_ids: [linkOrId] } });
+            
+            // Remove from existingImages state 
+            setExistingImages(prev => prev.filter(img => img.id !== linkOrId));
+            toast.success('Video link removed successfully');
+        } catch (error) {
+            console.error('Failed to remove video link:', error);
+            toast.error('Failed to remove video link');
+        }
     }
   }
 
   const removeBrochure = () => {
     setBrochureFile(null)
     const input = document.getElementById('brochure-input') as HTMLInputElement
+    if (input) input.value = ''
+  }
+  
+  const removeFirstImage = () => {
+    setFirstImageFile(null)
+    const input = document.getElementById('first-image-input') as HTMLInputElement
     if (input) input.value = ''
   }
 
@@ -473,13 +627,16 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
   const renderDynamicField = (field: ProductDetailField) => {
     const fieldValue = dynamicValues[field.name];
+    
+    // ✅ Placeholders: Use field.label as fallback placeholder
+    const placeholder = field.placeholder || field.label;
 
     switch (field.type) {
       case 'text':
         return (
           <Input
             className="h-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
-            placeholder={field.placeholder}
+            placeholder={placeholder}
             value={fieldValue || ''}
             onChange={(e) => handleDynamicValueChange(field.name, e.target.value)}
             required={field.required}
@@ -489,7 +646,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         return (
           <Textarea
             className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[80px] text-sm resize-none"
-            placeholder={field.placeholder}
+            placeholder={placeholder}
             value={fieldValue || ''}
             onChange={(e) => handleDynamicValueChange(field.name, e.target.value)}
             required={field.required}
@@ -604,7 +761,35 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
     }
     return null;
   }, [brochureFile, keptBrochureUrl]);
+  
+  // Filter existing media for display: Images only
+  const displayableImages = useMemo(() => {
+      // is_video is derived by the serializer based on the string value (URL vs path)
+      return existingImages.filter(img => !img.is_video); 
+  }, [existingImages]);
 
+  // Filter existing media for display: Videos only
+  const displayableVideos = useMemo(() => {
+      return existingImages.filter(img => img.is_video);
+  }, [existingImages]);
+  
+  // Get the display name for the first image
+  const firstImageDisplayName = useMemo(() => {
+    if (firstImageFile) return firstImageFile.name;
+    // Attempt to find the first NON-VIDEO image in existingImages if in edit mode
+    const existingFirstImage = displayableImages[0];
+    if (existingFirstImage) {
+        const parts = existingFirstImage.image.split('/');
+        return parts[parts.length - 1] || "Existing Image";
+    }
+    return null;
+  }, [firstImageFile, displayableImages]);
+
+  // Get the ID of the current main image (for deletion button)
+  const currentMainImageId = useMemo(() => {
+      const mainImage = displayableImages[0];
+      return mainImage ? mainImage.id : null;
+  }, [displayableImages]);
 
   // Add ref + state to support contentEditable HTML editing for description
   const descriptionRef = useRef<HTMLDivElement | null>(null)
@@ -626,6 +811,27 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const handleDescriptionInput = (e: React.FormEvent<HTMLDivElement>) => {
     const html = (e.target as HTMLDivElement).innerHTML
     setValue('description', html)
+  }
+  
+  // Handler for type selection, implementing mutual exclusivity for 'new' and 'used'
+  const handleTypeChange = (optionValue: string, checked: boolean | "indeterminate") => {
+      const currentTypes = watch('type') || [];
+      
+      let newTypes: string[];
+
+      if (checked) {
+          if (optionValue === 'new' && currentTypes.includes('used')) {
+              newTypes = [...currentTypes.filter((value) => value !== 'used'), 'new'];
+          } else if (optionValue === 'used' && currentTypes.includes('new')) {
+              newTypes = [...currentTypes.filter((value) => value !== 'new'), 'used'];
+          } else {
+              newTypes = [...currentTypes, optionValue];
+          }
+      } else {
+          newTypes = currentTypes.filter((value) => value !== optionValue);
+      }
+      
+      setValue('type', newTypes);
   }
 
   return (
@@ -655,9 +861,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                   disabled={loading}
                   required
                 >
-                  <SelectTrigger className={`h-10 border-gray-300 text-sm text-gray-500 ${errors.category ? 'border-red-500' : ''}`}>
-                    <SelectValue>
-                      {categories.find(cat => String(cat.id) === (selectedCategoryId || defaultCategory))?.name || "Select"}
+                  {/* ✅ Category/Sub-Category Inputs: Increased height to h-12 */}
+                  <SelectTrigger className={`h-12 border-gray-300 text-sm text-gray-500 ${errors.category ? 'border-red-500' : ''}`}>
+                    <SelectValue placeholder="Select Category">
+                      {loading ? "Loading..." : (categories.find(cat => String(cat.id) === (selectedCategoryId || defaultCategory))?.name || "Select Category")}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -691,9 +898,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                     value={watch('subcategory') || defaultSubcategory}
                     required
                   >
-                    <SelectTrigger className={`h-10 border-gray-300 text-sm text-gray-500 ${errors.subcategory ? 'border-red-500' : ''}`}>
-                      <SelectValue>
-                        {subcategories.find(sub => String(sub.id) === (watch('subcategory') || defaultSubcategory))?.name || "Select subcategory"}
+                    {/* ✅ Category/Sub-Category Inputs: Increased height to h-12 */}
+                    <SelectTrigger className={`h-12 border-gray-300 text-sm text-gray-500 ${errors.subcategory ? 'border-red-500' : ''}`}>
+                      <SelectValue placeholder="Select Subcategory">
+                        {subcategories.find(sub => String(sub.id) === (watch('subcategory') || defaultSubcategory))?.name || "Select Subcategory"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -788,16 +996,17 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                   </div>
                   <div>
                     <Label className="text-sm text-gray-600 mb-1 block">
-                      Price <span className="text-red-500">*</span>
+                      Price
+                      {/* ✅ Price Field: Removed * for mandatory requirement */}
                     </Label>
                     <Input
                       type="number"
                       step="0.01"
-                      {...register('price', { required: true, valueAsNumber: false })}
+                      {...register('price', { valueAsNumber: false })}
                       placeholder="0.00"
                       className="h-10 border-gray-300 text-sm"
                     />
-                    {errors.price && <p className="text-red-500 text-xs mt-1">Price is required</p>}
+                    {/* ✅ Price Field: Removed error display */}
                   </div>
                 </div>
 
@@ -810,6 +1019,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                       placeholder="SEO title"
                       className="h-10 border-gray-300 text-sm"
                     />
+                    {/* ✅ Meta Title/Description: Added note */}
+                    <p className="text-gray-500 text-xs mt-1">
+                      You can change this if you want.
+                    </p>
                   </div>
                   <div>
                     <Label className="text-sm text-gray-600 mb-1 block">Meta Description</Label>
@@ -818,6 +1031,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                       placeholder="SEO description"
                       className="h-10 border-gray-300 text-sm"
                     />
+                    {/* ✅ Meta Title/Description: Added note */}
+                    <p className="text-gray-500 text-xs mt-1">
+                      You can change this if you want.
+                    </p>
                   </div>
                 </div>
 
@@ -830,14 +1047,8 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                         <Checkbox
                           id={`type-${option.value}`}
                           checked={watch('type')?.includes(option.value) || false}
-                          onCheckedChange={(checked) => {
-                            const currentTypes = watch('type') || []
-                            if (checked) {
-                              setValue('type', [...currentTypes, option.value])
-                            } else {
-                              setValue('type', currentTypes.filter((value) => value !== option.value))
-                            }
-                          }}
+                          // ✅ New vs Used: Use custom handler for mutual exclusivity
+                          onCheckedChange={(checked) => handleTypeChange(option.value, checked)}
                         />
                         <Label
                           htmlFor={`type-${option.value}`}
@@ -914,7 +1125,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                 <div className="space-y-4 pt-4 border-t border-gray-100">
                   <h3 className="font-semibold text-gray-900">Media Upload</h3>
 
-                  {/* Brochure Upload/Display */}
+                  {/* Brochure Upload/Display (Existing logic) */}
                   <div className='border p-3 rounded-lg'>
                       <Label className="text-sm text-gray-600 mb-2 block">Brochure (PDF Only)</Label>
                       <input
@@ -959,35 +1170,113 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                   </div>
 
 
-                  {/* Images Upload */}
-                  <div className='border p-3 rounded-lg'>
-                    <Label className="text-sm text-gray-600 mb-2 block">Product Images (Upload to add)</Label>
-                    <input
-                      id="images-input"
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      style={{ display: 'none' }}
-                      onChange={handleImagesChange}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="w-full h-10 border-gray-300 text-gray-600 text-sm"
-                      onClick={() => document.getElementById('images-input')?.click()}
-                    >
-                      <ImageIcon className="w-4 h-4 mr-2" />
-                      Add New Product Images
-                    </Button>
+                  {/* Images Upload/Youtube Link Section */}
+                  <div className='border p-3 rounded-lg space-y-4'>
+                    <Label className="text-sm text-gray-600 mb-2 block">Product Images & Videos</Label>
+                    
+                    {/* Main Product Image */}
+                    <div>
+                        <Label className="text-sm font-semibold text-gray-700 mb-2 block">1. Main Product Image (First Image)</Label>
+                        <p className="text-xs text-gray-500 mb-2">
+                           {/* ✅ Image Upload Note: Added size constraint */}
+                          Image size must be between 50 KB and 1 MB.
+                        </p>
+                        <input
+                          id="first-image-input"
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleFirstImageChange}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-10 border-gray-300 text-gray-600 text-sm"
+                          onClick={() => document.getElementById('first-image-input')?.click()}
+                        >
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          Select Main Image
+                        </Button>
+                        
+                        {(firstImageFile || currentMainImageId) && (
+                           <div className="mt-3 p-3 bg-gray-50 rounded text-sm flex items-center justify-between">
+                                <div className="flex items-center truncate">
+                                    <ImageIcon className="w-4 h-4 mr-2 text-blue-600 flex-shrink-0" />
+                                    <span className="text-gray-700 truncate">
+                                        {firstImageFile?.name || firstImageDisplayName}
+                                    </span>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-red-500 hover:text-red-700 h-6 p-1 ml-2 flex-shrink-0"
+                                    // Simplified removal for main image (new file or first existing image)
+                                    onClick={firstImageFile ? removeFirstImage : () => currentMainImageId && removeExistingImage(currentMainImageId)}
+                                >
+                                    <X size={14} className="mr-1" />
+                                    Remove
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className='border-t pt-4 space-y-4'>
+                      <Label className="text-sm font-semibold text-gray-700 mb-2 block">2. Additional Media</Label>
+                        <p className="text-xs text-gray-500 mb-2">
+                           {/* ✅ Image Upload Note: Added size constraint */}
+                          Image size must be between 50 KB and 1 MB.
+                        </p>
+                        <input
+                          id="images-input"
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          style={{ display: 'none' }}
+                          onChange={handleImagesChange}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full h-10 border-gray-300 text-gray-600 text-sm"
+                          onClick={() => document.getElementById('images-input')?.click()}
+                        >
+                          <ImageIcon className="w-4 h-4 mr-2" />
+                          Add Additional Images
+                        </Button>
+                        
+                        {/* ✅ YouTube Link Support: Input for YouTube Links */}
+                        <div className="flex items-center space-x-2">
+                            <Input
+                                type="url"
+                                placeholder="Paste YouTube Link here (e.g., https://youtu.be/...)"
+                                className="h-10 border-gray-300 text-sm flex-grow"
+                                value={newYoutubeLink}
+                                onChange={(e) => setNewYoutubeLink(e.target.value)}
+                            />
+                            <Button
+                                type="button"
+                                size="sm"
+                                className="h-10 text-white bg-red-600 hover:bg-red-700 flex-shrink-0"
+                                onClick={addYoutubeLink}
+                                disabled={!newYoutubeLink.trim()}
+                            >
+                                <Youtube className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </div>
 
-                    {/* New Images Preview */}
-                    {imageFiles.length > 0 && (
+
+                    {/* New Images and New YouTube Links Preview */}
+                    {(imageFiles.length > 0 || youtubeLinks.length > 0) && (
                         <div className="mt-4">
-                            <Label className="text-xs font-semibold text-gray-700 mb-1 block">New Images to Upload:</Label>
-                            <div className="grid grid-cols-4 gap-2">
+                            <Label className="text-xs font-semibold text-gray-700 mb-1 block">New Media to Upload:</Label>
+                            <div className="flex flex-wrap gap-2">
+                                {/* New Images */}
                                 {imageFiles.map((file, idx) => (
-                                <div key={idx} className="relative group aspect-square">
+                                <div key={`new-img-${idx}`} className="relative group aspect-square w-1/5 min-w-[60px] max-w-[80px]">
                                     <Image
                                     src={URL.createObjectURL(file)}
                                     alt={`New Image Preview ${idx + 1}`}
@@ -1004,30 +1293,60 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                                     </button>
                                 </div>
                                 ))}
+                                {/* New YouTube Links */}
+                                {youtubeLinks.map((link, idx) => (
+                                    <div 
+                                        key={`new-yt-${idx}`} 
+                                        className="relative group w-1/2 min-w-[150px] max-w-[200px] p-2 border border-yellow-400 bg-yellow-50 rounded-lg flex items-center text-xs text-yellow-800"
+                                    >
+                                        <Youtube className="w-4 h-4 mr-1 text-red-600 flex-shrink-0" />
+                                        <span className="truncate flex-grow" title={link}>YouTube Link</span>
+                                        <button
+                                            type="button"
+                                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-100 transition-opacity z-10"
+                                            onClick={() => removeYoutubeLink(link)}
+                                        >
+                                            <X size={10} />
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     )}
                   
-                    {/* Existing Images Display (for editing products) */}
+                    {/* Existing Images and Videos Display (for editing products) */}
                     {existingImages.length > 0 && (
                       <div className="mt-4">
-                        <Label className="text-xs font-semibold text-gray-700 mb-1 block">Existing Images (Click to delete):</Label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <Label className="text-xs font-semibold text-gray-700 mb-1 block">Existing Media (Click to delete):</Label>
+                        <div className="flex flex-wrap gap-2">
                           {existingImages.map((img) => (
-                            <div key={img.id} className="relative group aspect-square">
-                                <Image
-                                // The image property holds the file path, we need to prefix it with the base URL if needed.
-                                // In the component context, we don't have the imgUrl, but often Next.js Image handles relative paths correctly.
-                                // Using the path directly from Django:
-                                src={img.image} 
-                                alt={product?.name || "Product Image"}
-                                fill
-                                style={{ objectFit: 'cover' }}
-                                className="rounded"
-                                />
+                            <div 
+                                key={img.id} 
+                                className="relative group aspect-square w-1/5 min-w-[60px] max-w-[80px]"
+                            >
+                                {img.is_video ? (
+                                    <div 
+                                        className="w-full h-full bg-red-100 rounded flex flex-col items-center justify-center p-1 cursor-pointer"
+                                        onClick={() => removeYoutubeLink(img.id)}
+                                        title={img.image}
+                                    >
+                                        <Youtube className="w-4 h-4 text-red-600" />
+                                        <span className='text-[8px] text-red-800 truncate w-full text-center'>Video</span>
+                                    </div>
+                                ) : (
+                                    <Image
+                                    src={img.image} 
+                                    alt={product?.name || "Product Image"}
+                                    fill
+                                    style={{ objectFit: 'cover' }}
+                                    className="rounded cursor-pointer"
+                                    onClick={() => removeExistingImage(img.id)}
+                                    />
+                                )}
+                                
                                 <button
                                 type="button"
-                                onClick={() => removeExistingImage(img.id)}
+                                onClick={() => img.is_video ? removeYoutubeLink(img.id) : removeExistingImage(img.id)}
                                 className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 opacity-100 transition-opacity z-10"
                                 >
                                 <X size={10} />
