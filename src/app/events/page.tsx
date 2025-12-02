@@ -276,7 +276,7 @@ export default function EventsPage() {
                   </div>
 
                   <p className="text-gray-600 text-base leading-relaxed line-clamp-3 mb-6">
-                    {event.description}
+                    {event.description.replace(/<[^>]+>/g, '')}
                   </p>
 
                   <div className="flex flex-col gap-3">
