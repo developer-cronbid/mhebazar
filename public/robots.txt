@@ -1,16 +1,25 @@
-User-agent: *  
+User-agent: *
 Disallow:
 Disallow: /admin/
-Disallow: /vendor/
 Disallow: /private/
+Disallow: /compare/
+Disallow: /wishlist/
+Disallow: /share-product/
+Disallow: /*.pdf$
 Disallow: /*?*
 Disallow: /*sort=
 Disallow: /*filter=
+Disallow: /cart/
+Disallow: /checkout/
+Disallow: /order/
+ 
 User-agent: Googlebot-Image
 Disallow:
+ 
 User-agent: Googlebot
-# Allow: /
+Allow: /
+ 
 User-agent: ia_archiver
 Disallow:
-
+ 
 Sitemap: https://www.mhebazar.in/sitemap.xml
