@@ -12,7 +12,16 @@
     "description": "<h3 class='font-bold text-xl mb-3'>LogiMAT India 2026 is gearing up to welcome 350+ global and Indian brands to the warehousing & logistics hub of India!</h3><p class='mb-4'>As the country’s definitive intralogistics platform, LogiMAT India brings together key public and private sector stakeholders to drive meaningful dialogue and spotlight breakthrough innovations shaping the future of warehousing, material handling, and supply chain operations.</p><p class='mb-4'>The 3rd edition, scheduled from 5–7 February 2026 at Bombay Exhibition Centre, NESCO, Mumbai, promises an enriched and future-focused experience for attendees looking to stay ahead of India’s rapidly evolving logistics landscape. The show is organised by Messe Stuttgart India, with MHE Bazar as the Digital Strategic Partner.</p><h4 class='font-semibold text-lg mt-3'>Get ready for a bigger, smarter, and more impactful LogiMAT India 2026.</h4>",
     "organizer": "Messe Stuttgart India",
     "organizerInfo": "Messe Stuttgart India is one of the leading trade fair organisers in the country. In a short span, they’ve built a strong presence through exceptional events, driven by a clear mission to bring global exhibition standards to India and support the country’s economic progress by connecting businesses and inspiring growth.",
-    "blogs": [],
+    "blogs": [
+      {
+        "title": "LogiMAT India 2026 brings 350+ global and Indian brands to India's warehousing hub",
+        "link": "https://www.mhebazar.in/blog/logimat-india-2026-event",
+        "image": "/logimatevent.jpg",
+        "author": "MHE Bazar Team",
+        "category": "Events",
+        "description": "LogiMAT India 2026 will bring together 350+ global brands, 1,000+ innovative solutions, and 12,000+ industry professionals in Mumbai from February 5–7, 2026. Discover the latest advancements in warehousing and intralogistics technology."
+      }
+    ],
     "category": "Intralogistics & Supply Chain",
     "registrationLink": "https://www.logimat.in/logimat-india-2026?utm_source=ExhibitorMHEB&utm_medium=WebPromotion&utm_campaign=EWP"
   },
@@ -52,7 +61,7 @@
         "link": "https://www.mhebazar.in/blog/intralogistics-warehousing-expo-2025-bengaluru",
         "image": "/event.jpg",
         "author": "MHE Bazar Team",
-        "category": "Industry Events",
+        "category": "Events",
         "description": "Discover why the Intralogistics and Warehousing Expo 2025 in Bengaluru is a must-attend event for professionals in material handling and logistics."
       }
     ],
