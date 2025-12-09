@@ -66,6 +66,7 @@ export default function VendorProducts({ currentProductId }: VendorProductsProps
           const allVendorProductsRes = await api.get(`/products/`, {
             params: {
               user: vendorId, // Filter by the vendor's ID
+              limit: 12, // Limit to 12 products for performance
             },
           });
 

@@ -30,6 +30,8 @@ interface Product {
   subtitle: string;
   price: number;
   currency: string;
+  type: string;
+  user_name: string;
 }
 
 interface CategoryProductsProps {
@@ -61,6 +63,7 @@ export default function CategoryProducts({ currentProductId }: CategoryProductsP
           const allCategoryProductsRes = await api.get(`/products/`, {
             params: {
               category: categoryId, // Filter by the category ID
+              limit: 12, // Limit to 12 products for performance
             },
           });
 

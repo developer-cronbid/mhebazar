@@ -32,15 +32,11 @@ const VendorProductsFeatured: React.FC = () => {
   const [scrollIndex, setScrollIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const PRODUCT_IDS = [
-    588, 614, 190, 388, 412, 177, 182, 120, 343, 94, 108, 362, 133, 145, 273, 102, 86,
-  ];
+  // Placeholder IDs for featured products - replace with actual logic if needed
+  const PRODUCT_IDS = [18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
-      setError(null);
-
       try {
         const productPromises = PRODUCT_IDS.map((id) =>
           api.get(`/products/${id}/`)
@@ -48,7 +44,7 @@ const VendorProductsFeatured: React.FC = () => {
         const responses = await Promise.allSettled(productPromises);
         const allProducts = responses
           .filter((response) => response.status === "fulfilled")
-          .map((response) => response.value.data);
+          .map((response) => (response as PromiseFulfilledResult<any>).value.data);
         setProducts(allProducts);
       } catch (err) {
         if (axios.isAxiosError(err)) {
