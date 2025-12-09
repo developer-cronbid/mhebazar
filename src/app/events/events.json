@@ -1,5 +1,22 @@
 [
   {
+    "id": 4,
+    "title": "EXCON 2025",
+    "slug": "excon-2025-bengaluru",
+    "startDate": "2025-12-09",
+    "endDate": "2025-12-13",
+    "time": "10:00 AM – 6:00 PM",
+    "location": "Bangalore International Exhibition Centre (BIEC), Bengaluru, India",
+    "image": "/excon_event.png",
+    "ogImage": "/excon_event.png",
+    "description": "<h3 class='font-bold text-xl mb-3'>EXCON is South Asia’s largest construction equipment and technology exhibition, hosted biennially by the Confederation of Indian Industry (CII).</h3><p class='mb-4'>Held at the Bangalore International Exhibition Centre (BIEC), EXCON brings together 1000+ exhibitors and global industry professionals to showcase the latest innovations in construction machinery, earthmoving equipment, material handling solutions, concrete technologies, road construction machinery, and smart IoT-enabled systems.</p><p class='mb-4'>The event features live demonstrations, technology pavilions, international pavilions, seminars, B2B meetings, and thought-leadership sessions focused on sustainability, digital transformation, safety, and productivity. EXCON supports India’s infrastructure growth across highways, metro projects, airports, smart cities, warehousing, and industrial development while enabling collaboration and business networking.</p><h4 class='font-semibold text-lg mt-3'>EXCON continues to strengthen India’s position as a hub for construction excellence and future-ready infrastructure solutions.</h4>",
+    "organizer": "Confederation of Indian Industry (CII)",
+    "organizerInfo": "The Confederation of Indian Industry (CII) is a premier, industry-led, non-government, not-for-profit organisation dedicated to India’s industrial and economic growth. With over 9,000 direct members and more than 300,000 enterprises associated through sectoral bodies, CII plays a key role in policy development, business competitiveness, and global collaboration. As the organiser of EXCON, CII brings together industry leaders, government authorities, and stakeholders to drive innovation and sustainable development in the construction and infrastructure sectors.",
+    "blogs": [],
+    "category": "Construction & Infrastructure",
+    "registrationLink": "https://viablesoft.co/ExconDec25BlrVisitorVD/RegistrationPage.aspx?rid=PR25"
+  },
+  {
     "id": 3,
     "title": "LogiMAT India 2026",
     "slug": "logimat-india-2026-mumbai",
