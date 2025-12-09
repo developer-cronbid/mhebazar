@@ -1,7 +1,7 @@
 // src/app/vendor-listing/[vendor]/page.tsx
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
 import ProductListing from "@/components/products/ProductListing";
 import { Product } from "@/types";
@@ -100,10 +100,11 @@ interface ApiProduct {
   user_name: string;
 }
 
-export default function VendorPage({ params }: { params: { vendor: string } }) {
+export default function VendorPage({ params }: { params: Promise<{ vendor: string }> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const normalizedVendorSlug = useMemo(() => normalizeVendorSlug(params.vendor), [params.vendor]);
+  const { vendor } = React.use(params);
+  const normalizedVendorSlug = useMemo(() => normalizeVendorSlug(vendor), [vendor]);
 
   // --- State for Data and Loading ---
   const [products, setProducts] = useState<Product[]>([]);

@@ -6,13 +6,13 @@ import { ChevronDown, List, Menu, X } from "lucide-react";
 import { ProductCardContainer } from "@/components/elements/Product";
 import SideFilter from "./SideFilter";
 import Image from "next/image";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
 import QuoteForm from "../forms/enquiryForm/quotesForm";
 import DOMPurify from 'dompurify';
 import { IoGrid } from "react-icons/io5";
 import { useRouter } from "next/navigation";
 import RentalForm from "../forms/enquiryForm/rentalForm";
-
+import { useUser } from "@/context/UserContext"; // Added useUser import
 
 import {
   Dialog,
@@ -49,6 +49,7 @@ export interface Product {
   category_id: number | null;
   model: string | null;
   user_name: string;
+  created_at: string | null; // Added created_at to interface
 }
 
 interface ProductGridProps {
@@ -64,6 +65,9 @@ function ProductGrid({
   noProductsMessage,
   pageUrlType,
 }: ProductGridProps) {
+  const router = useRouter();
+  const { addToCart, isProductInCart, user } = useUser(); // Use UserContext
+
   if (products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -84,6 +88,44 @@ function ProductGrid({
   const isRentalPage = pageUrlType === 'rental';
   const isUsedPage = pageUrlType === 'used';
   const buttonText = isRentalPage ? "Rent Now" : "Get a Quote";
+
+  // Handlers for List View
+  const handleAddToCart = async (productId: number) => {
+    if (!user) {
+      toast.error("Please log in to add products to your cart.");
+      router.push("/login");
+      return;
+    }
+    if (isProductInCart(productId)) {
+      toast.info("This product is already in your cart.");
+      return;
+    }
+
+    const success = await addToCart(productId);
+    if (success) {
+      toast.success("Product added to cart!", {
+        action: {
+          label: "View Cart",
+          onClick: () => router.push("/cart"),
+        },
+      });
+    } else {
+      toast.error("Failed to add product to cart.");
+    }
+  };
+
+  const handleBuyNow = async (productId: number) => {
+    if (!user) {
+      toast.error("Please log in to proceed with purchase.");
+      router.push("/login");
+      return;
+    }
+    
+    if (!isProductInCart(productId)) {
+      await addToCart(productId);
+    }
+    router.push("/cart");
+  };
 
   if (viewMode === "list") {
     return (
@@ -140,12 +182,14 @@ function ProductGrid({
                   {product.direct_sale ? (
                     <>
                       <button
+                        onClick={() => handleAddToCart(parseInt(product.id, 10))} // Added onClick
                         className="flex-1 sm:flex-none bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all duration-200 text-sm sm:text-base font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap min-w-[120px] sm:min-w-[140px]"
                         disabled={!product.is_active || product.stock_quantity === 0}
                       >
                         Add to Cart
                       </button>
                       <button
+                        onClick={() => handleBuyNow(parseInt(product.id, 10))} // Added onClick
                         className="flex-1 sm:flex-none bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 text-black px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg transition-all duration-200 text-sm sm:text-base font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 whitespace-nowrap min-w-[120px] sm:min-w-[140px]"
                         disabled={!product.is_active || product.stock_quantity === 0}
                       >

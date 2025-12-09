@@ -3,17 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     unoptimized: true, // Disable Next.js image optimization
-    domains: [
-      "api.mhebazar.in",
-      "mheback.onrender.com",
-      "placehold.co",
-      "mhebazar.in",
-      "www.mhebazar.in",
-      "images.unsplash.com",
-      "randomuser.me",
-      "ui-avatars.com",
-      "localhost",
-    ],
     remotePatterns: [
       {
         protocol: "http", // Allowing http protocol
@@ -60,9 +49,6 @@ const nextConfig: NextConfig = {
         hostname: "localhost",
       },
     ],
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,

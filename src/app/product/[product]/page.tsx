@@ -73,10 +73,11 @@ async function getProductData(productId: number): Promise<ProductApiResponse> {
 export async function generateMetadata({
   params,
 }: {
-  params: { product: string };
+  params: Promise<{ product: string }>;
 }): Promise<Metadata> {
+  const { product } = await params;
   const separator = '-';
-  const productId = parseInt(params.product.split(separator).pop() || '', 10);
+  const productId = parseInt(product.split(separator).pop() || '', 10);
 
   // Fallback metadata immediately if ID is invalid
   if (isNaN(productId)) {
@@ -94,7 +95,7 @@ export async function generateMetadata({
     const firstImageHttp = productData.images.length > 0 ? productData.images[0].image : '/mhe-logo.png';
     const firstImage = forceHttps(firstImageHttp);
     
-    const canonicalUrl = `https://www.mhebazar.in/product/${params.product}`; 
+    const canonicalUrl = `https://www.mhebazar.in/product/${product}`; 
     
     const isAvailable = productData.stock_quantity > 0 && productData.is_active;
 
@@ -170,19 +171,21 @@ export default async function IndividualProductPage({
   params,
   searchParams,
 }: {
-  params: { product: string };
-  searchParams: { id?: string };
+  params: Promise<{ product: string }>;
+  searchParams: Promise<{ id?: string }>;
 }) {
+  const { product } = await params;
+  const { id } = await searchParams;
   let productId: number;
   let productSlugFromUrl: string;
   let separator = '-'; // The reliable separator between the slug and the ID in the URL parameter.
 
   // 1. Determine Product ID
-  if (searchParams.id) {
-    productId = parseInt(searchParams.id, 10);
-    productSlugFromUrl = params.product || 'product';
+  if (id) {
+    productId = parseInt(id, 10);
+    productSlugFromUrl = product || 'product';
   } else {
-    const parts = params.product.split(separator);
+    const parts = product.split(separator);
     productId = parseInt(parts.pop() || '', 10);
     productSlugFromUrl = parts.join(separator);
   }
@@ -214,7 +217,7 @@ export default async function IndividualProductPage({
   }
   
   // Check 2: If the old query param URL was used, redirect to the new format.
-  if (searchParams.id) {
+  if (id) {
     const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
     redirect(canonicalUrl);
   }
@@ -223,7 +226,7 @@ export default async function IndividualProductPage({
   const { category_name, subcategory_name, name: productName } = productData;
   
   // Clean the product name for Breadcrumb display (allowing standard symbols)
-  const product = productName
+  const productNameClean = productName
     .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") 
     .replace(/\s+/g, " ")
     .trim()
@@ -240,11 +243,11 @@ export default async function IndividualProductPage({
           { label: category_name, href: `/${cat_slug}` },
           ...(subcategory_name ? [{ label: subcategory_name, href: `/${cat_slug}/${subcat_slug}` }] : []),
           // Use the canonical slug for the product link in the breadcrumb
-          { label: product, href: `/product/${canonicalProductSlug}${separator}${productId}` },
+          { label: productNameClean, href: `/product/${canonicalProductSlug}${separator}${productId}` },
         ]}
       />
       {/* FIX 2: Pass productSlug to the client component to resolve the prop error */}
-      <ProductSection productSlug={params.product} productId={productId} />
+      <ProductSection productSlug={product} productId={productId} />
 
       <div className={styles.animatedSection}>
         <SparePartsFeatured />

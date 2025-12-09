@@ -3,17 +3,15 @@ import BlogListClient from "./BlogListClient";
 import { Loader2 } from "lucide-react";
 
 interface BlogListPageProps {
-  searchParams: { 
+  searchParams: Promise<{ 
     search?: string;
     blog_category?: string;
     ordering?: string;
-  };
+  }>;
 }
 
-const BlogListPage: React.FC<BlogListPageProps> = ({ searchParams }) => {
-  const searchTerm = searchParams.search || "";
-  const selectedCategoryId = searchParams.blog_category || "";
-  const sortOrder = searchParams.ordering || "-created_at";
+const BlogListPage: React.FC<BlogListPageProps> = async ({ searchParams }) => {
+  const { search: searchTerm = "", blog_category: selectedCategoryId = "", ordering: sortOrder = "-created_at" } = await searchParams;
 
   return (
     <Suspense

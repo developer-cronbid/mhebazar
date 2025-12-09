@@ -2,7 +2,7 @@
 // src/app/[category]/[subcategory]/page.tsx
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
 import ProductListing, { Product as ImportedProductType } from "@/components/products/ProductListing";
 import Breadcrumb from "@/components/elements/Breadcrumb";
@@ -90,13 +90,12 @@ interface RouteContext {
 export default function SubCategoryPage({
     params,
 }: {
-    params: { category: string; subcategory: string };
+    params: Promise<{ category: string; subcategory: string }>;
 }) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const urlCategorySlug: string = params.category;
-    const urlSubcategorySlug: string = params.subcategory;
+    const { category: urlCategorySlug, subcategory: urlSubcategorySlug } = React.use(params);
 
     const [products, setProducts] = useState<Product[]>([]);
     const [totalProducts, setTotalProducts] = useState<number>(0);

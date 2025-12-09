@@ -105,14 +105,13 @@ const formatNameFromSlug = (slug: string): string => {
 export default function CategoryOrTypePage({
     params,
 }: {
-    params: { category: string; subcategory?: string };
+    params: Promise<{ category: string; subcategory?: string }>;
 }) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
     // Accessing params directly is fine here in a Client Component entry.
-    const urlParamSlug: string = params.category;
-    const subcategoryParamSlug: string | undefined = params.subcategory;
+    const { category: urlParamSlug, subcategory: subcategoryParamSlug } = React.use(params);
 
     // Use a single state object for filters to reduce re-renders and dependencies
     const [filterState, setFilterState] = useState({

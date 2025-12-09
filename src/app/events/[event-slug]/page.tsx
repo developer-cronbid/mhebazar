@@ -130,14 +130,16 @@ const StatusBadge = ({
   );
 };
 
+import React from "react";
+
 interface EventDetailPageProps {
-  params: {
+  params: Promise<{
     "event-slug": string;
-  };
+  }>;
 }
 
 export default function EventDetailPage({ params }: EventDetailPageProps) {
-  const slug = params["event-slug"];
+  const { "event-slug": slug } = React.use(params);
   const selectedEvent = (eventData as EventType[]).find((e) => e.slug === slug);
 
   if (!selectedEvent) {

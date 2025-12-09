@@ -1,7 +1,7 @@
 // app/cart/page.tsx
 'use client';
 
-import { useState, useCallback, useEffect } from 'react'; // Added useEffect
+import { useState, useCallback, useEffect, Suspense } from 'react'; // Added useEffect, Suspense
 import { motion, AnimatePresence } from 'framer-motion';
 import StepperHeader from '@/components/cart/StepperHeader';
 import CartSummary from '@/components/cart/CartSummary';
@@ -12,6 +12,8 @@ import RecentlyViewed from '@/components/cart/RecentlyViewed';
 // import SparePartsFeatured from '@/components/home/SparepartsFeatured'; // Removed as per instructions
 import RelatedProducts from '@/components/cart/RelatedProducts';
 import { Toaster } from 'sonner'; // Import Toaster for sonner
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { Loader2 } from "lucide-react";
 
 export default function CartPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -99,49 +101,59 @@ export default function CartPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <AnimatePresence mode="wait">
-          {currentStep === 1 && (
-            <motion.div
-              key="cart"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <CartSummary onNext={handleNext} onUpdateTotal={handleUpdateCartTotal} />
-            </motion.div>
-          )}
+        <ErrorBoundary>
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+              </div>
+            }
+          >
+            <AnimatePresence mode="wait">
+              {currentStep === 1 && (
+                <motion.div
+                  key="cart"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <CartSummary onNext={handleNext} onUpdateTotal={handleUpdateCartTotal} />
+                </motion.div>
+              )}
 
-          {currentStep === 2 && (
-            <motion.div
-              key="address"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <AddressStep onNext={handleAddressConfirmed} onBack={handleBack} />
-            </motion.div>
-          )}
+              {currentStep === 2 && (
+                <motion.div
+                  key="address"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <AddressStep onNext={handleAddressConfirmed} onBack={handleBack} />
+                </motion.div>
+              )}
 
-          {currentStep === 3 && (
-            <motion.div
-              key="payment"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <PaymentStep
-                onComplete={handleComplete}
-                onBack={handleBack}
-                cartTotal={cartTotal}
-                shippingAddress={shippingAddress} // Pass selected address
-                phoneNumber={phoneNumber}         // Pass selected phone
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {currentStep === 3 && (
+                <motion.div
+                  key="payment"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <PaymentStep
+                    onComplete={handleComplete}
+                    onBack={handleBack}
+                    cartTotal={cartTotal}
+                    shippingAddress={shippingAddress} // Pass selected address
+                    phoneNumber={phoneNumber}         // Pass selected phone
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </Suspense>
+        </ErrorBoundary>
       </div>
 
       {/* Additional Sections - Only show on cart step */}

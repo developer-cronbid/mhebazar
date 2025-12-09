@@ -43,8 +43,8 @@ const getAbsoluteImageUrl = (imagePath: string | null): string => {
 // 3. generateMetadata (SERVER-SIDE) - FIXES OG/Twitter Image
 // ==============================================================================
 
-export async function generateMetadata({ params }: { params: { blog: string } }): Promise<Metadata> {
-  const slug = params.blog;
+export async function generateMetadata({ params }: { params: Promise<{ blog: string }> }): Promise<Metadata> {
+  const { blog: slug } = await params;
   let blog: Blog | null = null;
 
   try {
@@ -106,8 +106,9 @@ export async function generateMetadata({ params }: { params: { blog: string } })
 // 4. Main Page Component (SERVER-SIDE RENDERER)
 // ==============================================================================
 
-export default function BlogPostPage({ params }: { params: { blog: string } }) {
+export default async function BlogPostPage({ params }: { params: Promise<{ blog: string }> }) {
   // Renders the client component, passing the slug. 
   // The client component handles its own data fetching and loading states.
-  return <BlogContentClient slug={params.blog} />;
+  const { blog } = await params;
+  return <BlogContentClient slug={blog} />;
 }
