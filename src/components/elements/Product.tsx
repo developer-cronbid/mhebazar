@@ -92,7 +92,7 @@ const FallbackImage = ({
   sizes,
   quality,
 }: {
-  src: string;
+  src: string | null | undefined;
   alt: string;
   width: number;
   height: number;
@@ -101,11 +101,11 @@ const FallbackImage = ({
   sizes?: string;
   quality?: number;
 }) => {
-  const [imgSrc, setImgSrc] = useState(src);
+  const [imgSrc, setImgSrc] = useState<string>(src || "/placeholder-image.png");
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    setImgSrc(src);
+    setImgSrc(src || "/placeholder-image.png");
     setError(false);
   }, [src]);
 
@@ -123,14 +123,14 @@ const FallbackImage = ({
   return (
     <Image
       src={imgSrc}
-      alt={alt}
+      alt={alt || "Product Image"}
       width={width}
       height={height}
       className={className}
       quality={quality}
       sizes={sizes}
       unoptimized={
-        imgSrc.startsWith("/placeholder-image.png") || imgSrc === fallbackSrc
+        imgSrc?.startsWith("/placeholder-image.png") || imgSrc === fallbackSrc
       }
       onError={handleError}
     />
@@ -225,7 +225,7 @@ const ProductCard = ({
 
   const showNewBadge = () => {
     const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
-    const productDate = new Date(productData.created_at);
+    const productDate = new Date(productData.created_at as string);
     const currentDate = new Date();
     const differenceInMs = currentDate.getTime() - productDate.getTime();
 
@@ -429,7 +429,7 @@ const ProductCard = ({
                 </DialogTrigger>
                 <DialogContent className="w-[95vw] max-w-2xl mx-auto">
                   <QuoteForm
-                    product={productData}
+                    product={productData as any}
                     onClose={() =>
                       document
                         .querySelector<HTMLButtonElement>("[data-dialog-close]")
@@ -470,7 +470,7 @@ const ProductCard = ({
                 />
               ) : (
                 <QuoteForm
-                  product={productData}
+                  product={productData as any}
                   onClose={() =>
                     document
                       .querySelector<HTMLButtonElement>("[data-dialog-close]")
@@ -814,18 +814,16 @@ export const ProductCardContainer = ({
       isWishlisted={isWishlisted}
       isInCart={isInCart}
       currentCartQuantity={currentCartQuantity}
-      // Pass the product ID to these handlers
-      onIncreaseQuantity={() => handleIncreaseQuantity(id)}
-      onDecreaseQuantity={() => handleDecreaseQuantity(id)}
-      onRemoveFromCart={() => handleRemoveFromCart(id)}
-      // The rest of the props
-      cartItemId={cartItemId} // Still available if needed elsewhere
+      cartItemId={cartItemId}
       onAddToCartClick={handleAddToCart}
       onWishlistClick={handleWishlist}
       onCompareClick={handleCompare}
       onBuyNowClick={handleBuyNow}
       onShareClick={handleShare}
-      productData={{ ...productFullData }}
+      onIncreaseQuantity={handleIncreaseQuantity}
+      onDecreaseQuantity={handleDecreaseQuantity}
+      onRemoveFromCart={handleRemoveFromCart}
+      productData={productFullData as unknown as Record<string, unknown>}
       productType={type}
       pageUrlType={pageUrlType}
     />

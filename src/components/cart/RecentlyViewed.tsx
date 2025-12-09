@@ -88,7 +88,7 @@ export default function RecentlyViewed() {
             <ProductCardContainer
               key={item.id}
               id={item.id}
-              image={item.images?.[0]?.image}
+              image={item.images?.[0]?.image || "/placeholder-image.png"}
               title={item.name}
               subtitle={item.description}
               price={item.price}
@@ -98,10 +98,12 @@ export default function RecentlyViewed() {
               hide_price={item.hide_price}
               stock_quantity={item.stock_quantity}
               type={item.type}
-              category_id={item.category}
+              category_id={typeof item.category_id === 'number' ? item.category_id : null}
               model={item.model}
               manufacturer={item.manufacturer}
               user_name={item.user_name}
+              pageUrlType="recently_viewed"
+              created_at={null}
             />
           ))
         ) : (
