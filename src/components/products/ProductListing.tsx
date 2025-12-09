@@ -405,9 +405,10 @@ export default function ProductListing({
               <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 w-full sm:w-auto">
                 {/* Title and Count */}
                 <div className="flex flex-col">
-                  <span className="text-xl sm:text-2xl font-bold text-gray-900 font-sans">
-                    {title || 'New Arrivals'}
-                  </span>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 font-sans">
+  {title || "New Arrivals"}
+</h1>
+
                   <p className="text-sm sm:text-base text-gray-500 font-normal font-sans mt-1">
                     Showing {1 + (currentPage - 1) * 12}–{(currentPage - 1) * 12 + products.length} of {totalCount} results
                   </p>
