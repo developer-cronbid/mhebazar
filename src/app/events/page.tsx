@@ -32,6 +32,7 @@ interface EventType {
   blogs: BlogType[];
   category?: string;
   registrationLink: string;
+  
 }
 
 // --- Utility Functions (kept as is) ---
@@ -139,7 +140,7 @@ export default function EventsPage() {
     };
 
     return (
-      <span className={`inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${styles[status]}`}>
+      <span className={`inline-flex items-center px-2 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${styles[status]}`}>
         {status === 'ongoing' && (
           <span className="relative flex h-2.5 w-2.5 mr-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -235,6 +236,18 @@ export default function EventsPage() {
                     loading="lazy"
                     className="object-cover w-full h-full group-hover:scale-110 group-hover:rotate-1 transition-all duration-700"
                   />
+                  {/* YELLOW BADGE ONLY (TOP-LEFT) */}
+<span
+  className="absolute top-3 left-75 px-3.5 py-0.5 rounded-full 
+             text-[10px] font-semibold tracking-wide uppercase
+             bg-yellow-300/90 text-yellow-900 
+             backdrop-blur-sm shadow-md shadow-yellow-300/40
+             border border-yellow-200/60 z-20">
+  EVENT
+</span>
+
+
+
                   {/* Enhanced gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-80 group-hover:opacity-60 transition-opacity"></div>
                   {/* FIX: Tags repositioned to the bottom to avoid covering the image focus area */}
@@ -244,7 +257,9 @@ export default function EventsPage() {
                       <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-800 shadow-lg border border-gray-200">
                         {event.category}
                       </span>
+                      
                     )}
+                    
                   </div>
                 </div>
 
