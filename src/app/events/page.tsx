@@ -76,15 +76,22 @@ const formatDateRange = (startDate: string, endDate: string): string => {
 
 export default function EventsPage() {
   
-  const eventsWithStatus = useMemo(() => 
-    (eventData as EventType[]) 
+ const eventsWithStatus = useMemo(() => {
+  const statusOrder = {
+    ongoing: 0,
+    upcoming: 1,
+    completed: 2,
+  };
+
+  return (eventData as EventType[])
     .map(event => ({
       ...event,
       status: getEventStatus(event.startDate, event.endDate),
-      formattedDate: formatDateRange(event.startDate, event.endDate)
-    })),
-    []
-  );
+      formattedDate: formatDateRange(event.startDate, event.endDate),
+    }))
+    .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+}, []);
+;
 
   const latestEvent = eventsWithStatus[0];
   const pageTitle = "MHE Bazar | Explore Industry-Leading Material Handling & Logistics Events";
