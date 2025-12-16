@@ -23,6 +23,7 @@ const RegisterPage = () => {
   const [showOtp, setShowOtp] = useState(false);
   const [otp, setOtp] = useState("");
   const [otpVerified, setOtpVerified] = useState(false);
+  const [otpverfying, setOtpVerfying] = useState(false);
   const [otpFailed, setOtpFailed] = useState(false);
 
   const sendOtp = async () => {
@@ -134,23 +135,29 @@ const RegisterPage = () => {
       return;
     }
 
+    setOtpVerfying(true);
     try {
       const res = await axios.post(
         `${API_BASE_URL}/verifyotp/`,
+
         { email: form.email, otp },
         { headers: { "Content-Type": "application/json" } }
       );
+      
 
       if (res.data.success) {
+        setOtpVerfying(false);
         toast.success("OTP verified");
         setOtpVerified(true);
         setShowOtp(false);
         setOtpFailed(false);
       } else {
+        setOtpVerfying(false);
         toast.error(res.data.message || "Invalid OTP");
         setOtpFailed(true);
       }
     } catch (err: any) {
+      setOtpVerfying(false);
       toast.error(err.response?.data?.message || "OTP verification failed");
       setOtpFailed(true);
     }
@@ -215,7 +222,7 @@ const RegisterPage = () => {
                       disabled={sendingOtp}
                       className="px-4 py-3 bg-green-600 text-white rounded"
                     >
-                      {sendingOtp ? "Sending..." : "Verify"}
+                      {sendingOtp ? "Sending..." : "Send OTP"}
                     </button>
                   )}
                 </div>
@@ -228,7 +235,7 @@ const RegisterPage = () => {
                 <label className="block font-medium mb-2">
                   Enter OTP <span className="text-red-500">*</span>
                 </label>
-                <div className="flex flex-wrap gap-2 items-center">
+                  <div className="flex gap-2 justify-center flex-wrap w-full sm:w-auto">
                   {[...Array(6)].map((_, index) => (
                     <input
                       key={index}
@@ -275,13 +282,14 @@ const RegisterPage = () => {
                     />
                   ))}
                   {/* Verify button */}
-                  <div className="relative mt-1 ml-8 -top-1.5">
+                  <div className="mt-4 sm:mt-0 flex justify-center sm:justify-start w-full sm:w-auto">
                     <button
                       type="button"
                       onClick={verifyOtp}
+                      disabled={otpverfying}
                       className="px-6 py-3 bg-green-600 text-white rounded font-medium"
                     >
-                      Verify OTP
+                    {otpverfying ? "Verifying..." : "Verify"}
                     </button>
 
                   </div>
