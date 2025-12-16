@@ -34,7 +34,11 @@ const RegisterPage = () => {
 
     setSendingOtp(true);
     try {
-      const res = await axios.post(`${API_BASE_URL}/sendotp/`, { email: form.email }, { headers: { "Content-Type": "application/json" } });
+      const res = await axios.post(
+        `${API_BASE_URL}/sendotp/`,
+        { email: form.email },
+        { headers: { "Content-Type": "application/json" } }
+      );
       if (res.data.success) {
         toast.success(res.data.message);
         setOtpSent(true);
@@ -94,13 +98,19 @@ const RegisterPage = () => {
             if (key === "username" && msg.includes("Enter a valid username")) {
               return "Invalid username: Only letters, numbers and @ . + - _ are allowed.";
             }
-            if (key === "email" && msg.includes("Enter a valid email address")) {
+            if (
+              key === "email" &&
+              msg.includes("Enter a valid email address")
+            ) {
               return "Invalid email address. Please enter a valid email like example@domain.com.";
             }
             if (key === "password" && msg.toLowerCase().includes("too short")) {
               return "Password too short. Please use at least 8 characters.";
             }
-            if (key === "password2" && msg.toLowerCase().includes("do not match")) {
+            if (
+              key === "password2" &&
+              msg.toLowerCase().includes("do not match")
+            ) {
               return "Password confirmation does not match.";
             }
 
@@ -108,7 +118,8 @@ const RegisterPage = () => {
             return `${capitalize(key)}: ${msg}`;
           };
 
-          const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+          const capitalize = (str: string) =>
+            str.charAt(0).toUpperCase() + str.slice(1);
 
           Object.entries(data).forEach(([key, value]) => {
             if (Array.isArray(value)) {
@@ -143,7 +154,6 @@ const RegisterPage = () => {
         { email: form.email, otp },
         { headers: { "Content-Type": "application/json" } }
       );
-      
 
       if (res.data.success) {
         setOtpVerfying(false);
@@ -163,7 +173,6 @@ const RegisterPage = () => {
     }
   };
 
-
   // function setOtpFailed(arg0: boolean) {
   //   throw new Error("Function not implemented.");
   // }
@@ -174,10 +183,7 @@ const RegisterPage = () => {
         <h1 className="text-center text-3xl sm:text-4xl font-bold text-green-600 mb-8">
           Welcome to MHE Bazar!
         </h1>
-        <form
-          className="flex flex-col gap-5"
-          onSubmit={handleSubmit}
-        >
+        <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           <div>
             <label className="block font-medium mb-1">
               Name<span className="text-red-500">*</span>
@@ -193,11 +199,8 @@ const RegisterPage = () => {
             />
           </div>
           <div>
-
-
             {/* EMAIL SECTION */}
             {(!showOtp || otpVerified) && (
-
               <div>
                 <label className="block font-medium mb-1">
                   Email <span className="text-red-500">*</span>
@@ -229,85 +232,109 @@ const RegisterPage = () => {
               </div>
             )}
 
-
             {showOtp && !otpVerified && (
-              <div className="flex flex-col items-start">
-                <label className="block font-medium mb-2">
+              <div className="w-full">
+                <label className="block font-medium mb-1">
                   Enter OTP <span className="text-red-500">*</span>
                 </label>
-                  <div className="flex gap-2 justify-center flex-wrap w-full sm:w-auto">
-                  {[...Array(6)].map((_, index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      maxLength={1}
-                      value={otp[index] || ""}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, "");
-                        const newOtp = otp.split("");
-                        newOtp[index] = val;
-                        setOtp(newOtp.join(""));
-                        if (val) {
-                          const next = document.getElementById(`otp-${index + 1}`);
-                          if (next) (next as HTMLInputElement).focus();
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Backspace") {
-                          e.preventDefault();
-                          const newOtp = otp.split("");
-                          if (newOtp[index]) {
-                            newOtp[index] = "";
-                            setOtp(newOtp.join(""));
-                          } else {
-                            const prev = document.getElementById(`otp-${index - 1}`);
-                            if (prev) (prev as HTMLInputElement).focus();
-                          }
-                        }
-                      }}
-                      onPaste={(e: React.ClipboardEvent<HTMLInputElement>) => {
-                        e.preventDefault();
-                        const paste = e.clipboardData.getData("Text").replace(/\D/g, "");
-                        const newOtp = otp.split("");
-                        for (let i = 0; i < 6 && i < paste.length; i++) {
-                          newOtp[i] = paste[i];
-                        }
-                        setOtp(newOtp.join(""));
-                        const nextIndex = paste.length < 6 ? paste.length : 5;
-                        const nextInput = document.getElementById(`otp-${nextIndex}`);
-                        if (nextInput) (nextInput as HTMLInputElement).focus();
-                      }}
-                      id={`otp-${index}`}
-                      className="w-12 h-12 text-center border border-gray-300 rounded-lg text-lg focus:ring-2 focus:ring-green-500 outline-none"
-                    />
-                  ))}
-                  {/* Verify button */}
-                  <div className="mt-4 sm:mt-0 flex justify-center sm:justify-start w-full sm:w-auto">
-                    <button
-                      type="button"
-                      onClick={verifyOtp}
-                      disabled={otpverfying}
-                      className="px-6 py-3 bg-green-600 text-white rounded font-medium"
-                    >
-                    {otpverfying ? "Verifying..." : "Verify"}
-                    </button>
 
+                {/* OTP ROW */}
+                <div className="grid grid-cols-[1fr_auto] gap-2 items-center">
+                  {/* OTP Inputs */}
+                  <div className="grid grid-cols-6 gap-1 sm:gap-2">
+                    {[...Array(6)].map((_, index) => (
+                      <input
+                        key={index}
+                        id={`otp-${index}`}
+                        type="text"
+                        maxLength={1}
+                        value={otp[index] || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          const newOtp = otp.split("");
+                          newOtp[index] = val;
+                          setOtp(newOtp.join(""));
+                          if (val) {
+                            const next = document.getElementById(
+                              `otp-${index + 1}`
+                            );
+                            next && (next as HTMLInputElement).focus();
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Backspace") {
+                            e.preventDefault();
+                            const newOtp = otp.split("");
+                            if (newOtp[index]) {
+                              newOtp[index] = "";
+                              setOtp(newOtp.join(""));
+                            } else {
+                              const prev = document.getElementById(
+                                `otp-${index - 1}`
+                              );
+                              prev && (prev as HTMLInputElement).focus();
+                            }
+                          }
+                        }}
+                        onPaste={(e) => {
+                          e.preventDefault();
+                          const paste = e.clipboardData
+                            .getData("Text")
+                            .replace(/\D/g, "");
+                          const newOtp = otp.split("");
+                          for (let i = 0; i < 6 && i < paste.length; i++) {
+                            newOtp[i] = paste[i];
+                          }
+                          setOtp(newOtp.join(""));
+                        }}
+                        className="
+              w-full
+              aspect-square
+              text-center
+              bg-gray-50
+              border border-gray-200
+              rounded
+              text-base sm:text-lg
+              focus:ring-2 focus:ring-green-500
+              outline-none
+            "
+                      />
+                    ))}
                   </div>
+
+                  {/* Verify Button */}
+                  <button
+                    type="button"
+                    onClick={verifyOtp}
+                    disabled={otpverfying}
+                    className="
+          h-full
+          px-3 sm:px-5
+          bg-green-600
+          text-white
+          rounded
+          font-medium
+          text-sm sm:text-base
+          disabled:opacity-60
+          whitespace-nowrap
+        "
+                  >
+                    {otpverfying ? "Verifying…" : "Verify"}
+                  </button>
                 </div>
 
-                {/* Resend / Change Email */}
+                {/* Resend / Change */}
                 {setOtpFailed && (
-                  <div className="flex gap-4 mt-3 text-green-600 text-sm font-medium">
+                  <div className="flex gap-4 mt-2 text-green-600 text-sm font-medium">
                     <button
                       type="button"
                       onClick={sendOtp}
                       disabled={sendingOtp}
                       className="hover:underline"
-
-                   
                     >
-                       {sendingOtp ? "Sending..." : "Resend OTP"}
+                      {sendingOtp ? "Sending..." : "Resend OTP"}
                     </button>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -325,10 +352,6 @@ const RegisterPage = () => {
                 )}
               </div>
             )}
-
-
-
-
           </div>
 
           <div>
@@ -343,8 +366,11 @@ const RegisterPage = () => {
               value={form.password}
               onChange={handleChange}
               disabled={!otpVerified} // 👈 disabled until OTP is verified
-              className={`w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 ${otpVerified ? "focus:ring-green-500" : "focus:ring-gray-300"
-                } text-base ${!otpVerified ? "cursor-not-allowed opacity-60" : ""}`}
+              className={`w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 ${
+                otpVerified ? "focus:ring-green-500" : "focus:ring-gray-300"
+              } text-base ${
+                !otpVerified ? "cursor-not-allowed opacity-60" : ""
+              }`}
             />
           </div>
 
@@ -360,8 +386,11 @@ const RegisterPage = () => {
               value={form.confirmPassword}
               onChange={handleChange}
               disabled={!otpVerified} // 👈 disabled until OTP is verified
-              className={`w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 ${otpVerified ? "focus:ring-green-500" : "focus:ring-gray-300"
-                } text-base ${!otpVerified ? "cursor-not-allowed opacity-60" : ""}`}
+              className={`w-full bg-gray-50 border border-gray-200 rounded px-4 py-3 outline-none focus:ring-2 ${
+                otpVerified ? "focus:ring-green-500" : "focus:ring-gray-300"
+              } text-base ${
+                !otpVerified ? "cursor-not-allowed opacity-60" : ""
+              }`}
             />
           </div>
 
@@ -396,7 +425,10 @@ const RegisterPage = () => {
               /> */}
         <div className="mt-4 text-center text-base">
           Already have an account?{" "}
-          <Link href="/login" className="text-green-600 hover:underline font-medium">
+          <Link
+            href="/login"
+            className="text-green-600 hover:underline font-medium"
+          >
             Sign In
           </Link>
         </div>
