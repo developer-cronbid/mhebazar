@@ -3,7 +3,7 @@
 import Link from "next/link";
 import axios from "axios";
 import { useState } from "react";
-import GoogleLoginButton from "@/components/elements/GoogleAuth";
+// import GoogleLoginButton from "@/components/elements/GoogleAuth";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
 import { useUser } from "@/context/UserContext";
@@ -266,7 +266,7 @@ const LoginPage = () => {
             {isLoading ? "Signing In..." : "Sign In"}
           </button>
         </form>
-        <div className="flex items-center my-6">
+        {/* <div className="flex items-center my-6">
           <div className="flex-grow border-t border-gray-200"></div>
           <span className="mx-4 text-gray-400 font-semibold">OR</span>
           <div className="flex-grow border-t border-gray-200"></div>
@@ -280,7 +280,7 @@ const LoginPage = () => {
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}
           disabled={isLoading}
-        />
+        /> */}
         <div className="mt-8 text-center text-base">
           Do not have an account{" "}
           <Link href="/register" className="text-green-600 hover:underline font-medium">

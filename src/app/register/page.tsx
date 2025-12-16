@@ -293,10 +293,12 @@ const RegisterPage = () => {
                     <button
                       type="button"
                       onClick={sendOtp}
-
+                      disabled={sendingOtp}
                       className="hover:underline"
+
+                   
                     >
-                      Resend OTP
+                       {sendingOtp ? "Sending..." : "Resend OTP"}
                     </button>
                     <button
                       type="button"
