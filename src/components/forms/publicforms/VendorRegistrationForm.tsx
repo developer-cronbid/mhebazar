@@ -69,8 +69,13 @@ export default function VendorRegistrationDrawer({ open, onClose }: Props) {
 
     // If auth check is complete and user is not logged in, redirect them.
     if (!user) {
-      toast.error("Please log in or create an account to become a vendor.");
+      toast.success( <>
+        <strong>Welcome,</strong>
+        <br />
+        Please log in or create an account to become a vendor.
+      </>);
       onClose(); // Close the drawer before redirecting
+      localStorage.setItem("become_vendor","clicked")
       router.push("/register");
     }
   }, [open, user, isLoading, router, onClose]);

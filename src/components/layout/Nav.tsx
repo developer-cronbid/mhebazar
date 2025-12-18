@@ -113,6 +113,25 @@ export default function Navbar(): JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
 
+ useEffect(() => {
+  if (!isMounted) return;
+  if (isLoading) return;
+  if (!user) return;
+
+  const intent = localStorage.getItem("become_vendor");
+
+  if (intent === "clicked") {
+    // wait one tick so dynamic drawer mounts
+    setTimeout(() => {
+      setVendorDrawerOpen(true);
+    }, 0);
+
+    localStorage.removeItem("become_vendor");
+  }
+}, [isMounted, user, isLoading]);
+
+
+
   useEffect(() => {
     // FIX 1: Set mounted true on client-side to prevent initial render issues
     setIsMounted(true);
