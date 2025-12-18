@@ -141,6 +141,10 @@ export default function DashboardStats() {
   // const [showAllNotifications, setShowAllNotifications] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+const [defaultProductType, setDefaultProductType] = useState<
+  'new' | 'used' | 'rental' | undefined
+>(undefined);
+
 
 
   // Pagination state
@@ -348,7 +352,11 @@ export default function DashboardStats() {
         {/* Bottom Action Cards */}
         <div className="grid gap-4 md:grid-cols-3 mt-5">
           {/* Sell New Products */}
-          <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#FECEBC] to-[#f81515] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+          <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#FECEBC] to-[#f81515] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => {
+  setSelectedProduct(undefined);
+  setDefaultProductType('new');
+  setIsSheetOpen(true);
+}}>
             <img src="/v1.png" alt="Sell New Products" className="h-20 w-20 object-contain" />
             {/* <Cross className="h-14 w-14 text-white" /> */}
             <div>
@@ -359,7 +367,12 @@ export default function DashboardStats() {
           </div>
 
           {/* Sell Old Products */}
-          <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#FECEBC] to-[#ff530f] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+          <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#FECEBC] to-[#ff530f] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => {
+  setSelectedProduct(undefined);
+  setDefaultProductType('used');
+  setIsSheetOpen(true);
+}}
+>
             <img src="/v2.png" alt="Sell Old Products" className="h-20 w-20 object-contain" />
             {/* <Cross className="h-14 w-14 text-white" /> */}
             <div>
@@ -370,7 +383,11 @@ export default function DashboardStats() {
           </div>
 
           {/* Rent Products */}
-          <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-6 rounded-lg cursor-pointer hover:shadow-md transition" onClick={() => setIsSheetOpen(true)}>
+          <div className="flex items-center justify-between gap-4 bg-gradient-to-r from-[#E4FBD6] to-[#93C276] p-6 rounded-lg cursor-pointer hover:shadow-md transition"onClick={() => {
+  setSelectedProduct(undefined);
+  setDefaultProductType('rental');
+  setIsSheetOpen(true);
+}}>
             <img src="/v3.png" alt="Rent Products" className="h-20 w-20 object-contain" />
             {/* <Shapes className="h-14 w-14 text-white" /> */}
             <div>
@@ -405,7 +422,13 @@ export default function DashboardStats() {
                       </Button>
                     </SheetTrigger>
                     <SheetContent>
-                      <ProductForm product={selectedProduct} />
+                      <SheetContent>
+  <ProductForm
+    product={selectedProduct}
+    defaultType={defaultProductType}
+  />
+</SheetContent>
+                    
                     </SheetContent>
                   </Sheet>
                 )}

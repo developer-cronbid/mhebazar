@@ -34,7 +34,7 @@ import ReviewSection from "./Reviews";
 import DOMPurify from "dompurify";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import categories from '@/data/categories.json'
+import categories from "@/data/categories.json";
 
 type ProductImage = {
   id: number;
@@ -93,10 +93,12 @@ interface WishlistItemApi {
 // FIX 2: Add productSlug to ProductSectionProps
 interface ProductSectionProps {
   productId: number | string | null;
-  productSlug: string; 
+  productSlug: string;
 }
 
-const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
+const imgUrl =
+  process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
 // --- Helper Functions for Media ---
 
@@ -104,27 +106,26 @@ const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PU
  * Checks for API-encoded video URLs and cleans them.
  */
 const cleanMediaUrl = (url: string): string => {
-  if (!url) return '';
-  
+  if (!url) return "";
+
   // Pattern to find the encoded protocol (http%3A or https%3A)
   const encodedProtocolRegex = /(http|https)%3A/;
-  
+
   const match = url.match(encodedProtocolRegex);
-  
+
   if (match && match.index > 0) {
     // If the encoded protocol is found, decode the rest of the string
     const encodedPart = url.substring(match.index);
     try {
-        return decodeURIComponent(encodedPart);
+      return decodeURIComponent(encodedPart);
     } catch (e) {
-        console.error("Failed to decode external URL:", url, e);
-        return url;
+      console.error("Failed to decode external URL:", url, e);
+      return url;
     }
   }
   // Return original URL if no suspicious encoding pattern is found
   return url;
 };
-
 
 const isVideoUrl = (url: string | undefined): boolean => {
   if (!url) return false;
@@ -142,23 +143,22 @@ const getYouTubeEmbedUrl = (url: string): string | null => {
 
   if (!/youtu\.be|youtube\.com/i.test(cleanedUrl)) return null;
 
-  let videoId = '';
+  let videoId = "";
   // Simple ID extraction for various YouTube URL formats
-  if (cleanedUrl.includes('v=')) {
+  if (cleanedUrl.includes("v=")) {
     // Ensure we only take the ID before any other parameters (&)
-    videoId = cleanedUrl.split('v=')[1].split('&')[0];
-  } else if (cleanedUrl.includes('youtu.be/')) {
+    videoId = cleanedUrl.split("v=")[1].split("&")[0];
+  } else if (cleanedUrl.includes("youtu.be/")) {
     // Ensure we only take the ID before any other parameters (?)
-    videoId = cleanedUrl.split('youtu.be/')[1].split('?')[0];
+    videoId = cleanedUrl.split("youtu.be/")[1].split("?")[0];
   }
-  
+
   if (videoId) {
     return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=0&rel=0&showinfo=0&controls=1`;
   }
   return null;
 };
 // --- End Helper Functions for Media ---
-
 
 // Custom Image component with an error handler to show a fallback and hide the parent element
 const FallbackImage = ({
@@ -222,15 +222,20 @@ const FallbackImage = ({
 };
 
 // New Video Component
-const VideoPlayer: React.FC<{ src: string, alt: string, className: string, fallbackSrc?: string | null }> = ({ src, alt, className }) => {
+const VideoPlayer: React.FC<{
+  src: string;
+  alt: string;
+  className: string;
+  fallbackSrc?: string | null;
+}> = ({ src, alt, className }) => {
   const youtubeEmbedUrl = getYouTubeEmbedUrl(src);
-  
+
   // YouTube iFrame
   if (youtubeEmbedUrl) {
     return (
       <iframe
         // Ensure iframe takes full container size for main view/modal and uses the aspect ratio of the parent div
-        className={`${className} border-0 w-full h-full`} 
+        className={`${className} border-0 w-full h-full`}
         src={youtubeEmbedUrl}
         title={alt}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -238,7 +243,7 @@ const VideoPlayer: React.FC<{ src: string, alt: string, className: string, fallb
       />
     );
   }
-  
+
   // Direct Video Tag (HTML5)
   return (
     <video
@@ -249,13 +254,19 @@ const VideoPlayer: React.FC<{ src: string, alt: string, className: string, fallb
       poster="/video-poster.jpg" // Optional poster image
     >
       <source src={src} type="video/mp4" />
-      <p>Your browser does not support the video tag. <a href={src}>Download the video</a> instead.</p>
+      <p>
+        Your browser does not support the video tag.{" "}
+        <a href={src}>Download the video</a> instead.
+      </p>
     </video>
   );
 };
 
 // Add this new component for video thumbnails
-const VideoThumbnail: React.FC<{ videoUrl: string, className?: string }> = ({ videoUrl, className = '' }) => {
+const VideoThumbnail: React.FC<{ videoUrl: string; className?: string }> = ({
+  videoUrl,
+  className = "",
+}) => {
   return (
     <div className={`relative ${className}`}>
       {/* Show a static thumbnail with play button overlay */}
@@ -265,10 +276,7 @@ const VideoThumbnail: React.FC<{ videoUrl: string, className?: string }> = ({ vi
         </div>
       </div>
       {/* Show first frame of video as thumbnail */}
-      <video 
-        className={`w-full h-full object-cover`}
-        preload="metadata"
-      >
+      <video className={`w-full h-full object-cover`} preload="metadata">
         <source src={videoUrl} type="video/mp4" />
       </video>
     </div>
@@ -277,8 +285,11 @@ const VideoThumbnail: React.FC<{ videoUrl: string, className?: string }> = ({ vi
 
 // Update the MediaFallbackImage component
 const MediaFallbackImage: React.FC<
-  Omit<React.ComponentProps<typeof FallbackImage>, 'onImageError' | 'id'> & 
-  { onImageError: (id: number) => void; id: number; isThumb?: boolean }
+  Omit<React.ComponentProps<typeof FallbackImage>, "onImageError" | "id"> & {
+    onImageError: (id: number) => void;
+    id: number;
+    isThumb?: boolean;
+  }
 > = (props) => {
   const { isThumb = false, ...restProps } = props;
   const cleanedSrc = cleanMediaUrl(props.src);
@@ -303,7 +314,10 @@ const containerVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
 };
 
-export default function ProductSection({ productId, productSlug }: ProductSectionProps) {
+export default function ProductSection({
+  productId,
+  productSlug,
+}: ProductSectionProps) {
   const router = useRouter();
   const { user } = useUser();
 
@@ -318,7 +332,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   const [cartItemId, setCartItemId] = useState<number | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [erroredImageIds, setErroredImageIds] = useState<Set<number>>(new Set());
+  const [erroredImageIds, setErroredImageIds] = useState<Set<number>>(
+    new Set()
+  );
 
   // State for the media gallery modal
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
@@ -329,7 +345,6 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
-
   // Use a ref to store a function that can refresh reviews
   const reviewsRefresher = useRef<(() => void) | null>(null);
 
@@ -338,10 +353,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   useEffect(() => {
     latestCartState.current = { currentCartQuantity, cartItemId, isInCart };
   }, [currentCartQuantity, cartItemId, isInCart]);
-  
+
   // In-memory cache for product data
   const productCache = useRef(new Map<string, ProductData>());
-
 
   const formatKey = (key: string) => {
     return key
@@ -363,7 +377,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   };
 
   const handleImageError = useCallback((id: number) => {
-    setErroredImageIds(prev => new Set(prev).add(id));
+    setErroredImageIds((prev) => new Set(prev).add(id));
   }, []);
 
   const fetchInitialStatus = useCallback(async () => {
@@ -405,7 +419,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         router.push("/404");
         return;
       }
-      
+
       const cacheKey = String(productId);
       if (productCache.current.has(cacheKey)) {
         const cachedData = productCache.current.get(cacheKey)!;
@@ -424,7 +438,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         const foundProduct = productRes.data;
 
         // Fetch category details for the fallback image
-        const categoryRes = await api.get(`/categories/${foundProduct.category}`);
+        const categoryRes = await api.get(
+          `/categories/${foundProduct.category}`
+        );
         const categoryWithImage = {
           ...foundProduct,
           category_details: categoryRes.data,
@@ -489,7 +505,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
           if (
             error.response.status === 400 &&
             error.response.data?.non_field_errors?.[0] ===
-            "The fields user, product must make a unique set."
+              "The fields user, product must make a unique set."
           ) {
             toast.info("Product is already in your cart.", {
               action: {
@@ -501,7 +517,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
           } else {
             toast.error(
               error.response.data?.message ||
-              `Failed to add to cart: ${error.response.statusText}`
+                `Failed to add to cart: ${error.response.statusText}`
             );
           }
         } else {
@@ -626,14 +642,14 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         if (
           error.response.status === 400 &&
           error.response.data?.non_field_errors?.[0] ===
-          "The fields user, product must make a unique set."
+            "The fields user, product must make a unique set."
         ) {
           toast.info("Product is already in your wishlist.");
           setIsWishlisted(true);
         } else {
           toast.error(
             error.response.data?.message ||
-            `Failed to add to wishlist: ${error.response.statusText}`
+              `Failed to add to wishlist: ${error.response.statusText}`
           );
         }
       } else {
@@ -695,7 +711,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
       if (axios.isAxiosError(error) && error.response) {
         toast.error(
           error.response.data?.message ||
-          `Failed to add product to cart: ${error.response.statusText}`
+            `Failed to add product to cart: ${error.response.statusText}`
         );
       } else {
         toast.error("An unexpected error occurred. Please try again.");
@@ -754,16 +770,14 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
 
   const goToNextMedia = () => {
     if (data?.images) {
-      setCurrentMediaIndex((prevIndex) =>
-        (prevIndex + 1) % data.images.length
-      );
+      setCurrentMediaIndex((prevIndex) => (prevIndex + 1) % data.images.length);
     }
   };
 
   const goToPrevMedia = () => {
     if (data?.images) {
-      setCurrentMediaIndex((prevIndex) =>
-        (prevIndex - 1 + data.images.length) % data.images.length
+      setCurrentMediaIndex(
+        (prevIndex) => (prevIndex - 1 + data.images.length) % data.images.length
       );
     }
   };
@@ -819,22 +833,32 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
   });
 
   const formButtonText =
-    data.type === "rental" || data.type === "used" || (Array.isArray(data.type) && (data.type.includes("rental") || data.type.includes("used"))) ? "Rent Now" : "Get a Quote";
+    data.type === "rental" ||
+    data.type === "used" ||
+    (Array.isArray(data.type) &&
+      (data.type.includes("rental") || data.type.includes("used")))
+      ? "Rent Now"
+      : "Get a Quote";
   const validSpecs = getValidSpecs(data.product_details);
 
   const isRentalOrUsed =
     Array.isArray(data.type) &&
     (data.type.includes("rental") || data.type.includes("used"));
-  
+
   // ✅ Clean the display title to allow ALL requested punctuation for UI presentation
-  const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${data.model} `
+  const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
+    data.model
+  } `
     // Allow letters, numbers, spaces, and all requested punctuation marks.
-    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%]/g, "") 
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
   // Determine if the currently selected media is a video
-  const isSelectedMediaVideo = data.images.length > 0 ? isVideoUrl(data.images[selectedImage]?.image) : false;
+  const isSelectedMediaVideo =
+    data.images.length > 0
+      ? isVideoUrl(data.images[selectedImage]?.image)
+      : false;
 
   return (
     <motion.div
@@ -850,20 +874,33 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
           <div
             ref={imageContainerRef}
             className={`relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-full md:h-[464px] mx-auto group ${
-              isSelectedMediaVideo ? '' : 'cursor-zoom-in'
+              isSelectedMediaVideo ? "" : "cursor-zoom-in"
             }`}
-            onClick={isSelectedMediaVideo ? undefined : (e) => openGallery(selectedImage)}
+            onClick={
+              isSelectedMediaVideo
+                ? undefined
+                : (e) => openGallery(selectedImage)
+            }
             onMouseMove={handleImageZoom}
             onMouseEnter={() => !isSelectedMediaVideo && setIsZoomed(true)}
             onMouseLeave={() => setIsZoomed(false)}
-            aria-label={isSelectedMediaVideo ? "Product video player" : "View product images in full-screen gallery"}
+            aria-label={
+              isSelectedMediaVideo
+                ? "Product video player"
+                : "View product images in full-screen gallery"
+            }
           >
             {/* Main Media Display */}
             <MediaFallbackImage
-              src={data.images[selectedImage]?.image || imgUrl + (categories.find(cat => cat.id === data.category)?.image_url || '')}
+              src={
+                data.images[selectedImage]?.image ||
+                imgUrl +
+                  (categories.find((cat) => cat.id === data.category)
+                    ?.image_url || "")
+              }
               alt={data.name}
               className={`w-full h-full object-contain transition-transform duration-200 ${
-                isZoomed && !isSelectedMediaVideo ? 'opacity-50' : ''
+                isZoomed && !isSelectedMediaVideo ? "opacity-50" : ""
               }`}
               width={700}
               height={700}
@@ -880,8 +917,8 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 style={{
                   backgroundImage: `url(${data.images[selectedImage]?.image})`,
                   backgroundPosition: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                  backgroundSize: '200%',
-                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: "200%",
+                  backgroundRepeat: "no-repeat",
                 }}
               />
             )}
@@ -900,8 +937,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 aria-label="Add to wishlist"
               >
                 <Heart
-                  className={`w-4 h-4 transition-colors ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
-                    }`}
+                  className={`w-4 h-4 transition-colors ${
+                    isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
+                  }`}
                 />
               </motion.button>
               <motion.button
@@ -940,30 +978,33 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               animate={{ y: `-${scrollOffset * 112}px` }} // This animation is for the vertical desktop view
               transition={{ duration: 0.3 }}
             >
-              {data.images.filter(img => !erroredImageIds.has(img.id)).map((img, index) => (
-                <motion.button
-                  key={img.id}
-                  onClick={() => setSelectedImage(index)}
-                  className={`rounded border-2 overflow-hidden flex-shrink-0 w-fit ${selectedImage === index
-                    ? "border-orange-500"
-                    : "border-gray-200"
+              {data.images
+                .filter((img) => !erroredImageIds.has(img.id))
+                .map((img, index) => (
+                  <motion.button
+                    key={img.id}
+                    onClick={() => setSelectedImage(index)}
+                    className={`rounded border-2 overflow-hidden flex-shrink-0 w-fit ${
+                      selectedImage === index
+                        ? "border-orange-500"
+                        : "border-gray-200"
                     } hover:border-orange-300 transition-colors`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  aria-label={`Select image ${index + 1}`}
-                >
-                  <MediaFallbackImage
-                    src={img.image}
-                    alt={`${data.name} thumbnail ${index + 1}`}
-                    className="w-full h-full object-contain"
-                    width={104}
-                    height={104}
-                    id={img.id}
-                    onImageError={handleImageError}
-                    isThumb={true}
-                  />
-                </motion.button>
-              ))}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    aria-label={`Select image ${index + 1}`}
+                  >
+                    <MediaFallbackImage
+                      src={img.image}
+                      alt={`${data.name} thumbnail ${index + 1}`}
+                      className="w-full h-full object-contain"
+                      width={104}
+                      height={104}
+                      id={img.id}
+                      onImageError={handleImageError}
+                      isThumb={true}
+                    />
+                  </motion.button>
+                ))}
             </motion.div>
 
             {/* Navigation arrows (Only visible on desktop) */}
@@ -1017,14 +1058,20 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`w-4 h-4 transition-colors ${data.average_rating !== null && star <= data.average_rating
-                        ? "fill-orange-400 text-orange-400"
-                        : "text-gray-300"
-                        }`}
+                      className={`w-4 h-4 transition-colors ${
+                        data.average_rating !== null &&
+                        star <= data.average_rating
+                          ? "fill-orange-400 text-orange-400"
+                          : "text-gray-300"
+                      }`}
                     />
                   ))}
                   <span className="text-base text-gray-600 ml-1">
-                    ({data.average_rating ? data.average_rating.toFixed(1) : "0.0"})
+                    (
+                    {data.average_rating
+                      ? data.average_rating.toFixed(1)
+                      : "0.0"}
+                    )
                   </span>
                 </div>
                 <p className="text-base text-gray-600">|</p>
@@ -1069,9 +1116,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <p className="text-base text-gray-500">
-                        Price:
-                      </p>
+                      <p className="text-base text-gray-500">Price:</p>
                       <p className="text-base text-gray-500 line-through">
                         ₹{fakePrice}
                       </p>
@@ -1114,7 +1159,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     isInCart ? (
                       <div className="mt-4 flex items-center justify-between bg-green-50 text-green-700 font-medium py-1 px-1 rounded-lg">
                         <motion.button
-                          onClick={() => handleDecreaseQuantity(cartItemId as number)}
+                          onClick={() =>
+                            handleDecreaseQuantity(cartItemId as number)
+                          }
                           disabled={currentCartQuantity <= 1 || !isPurchasable}
                           className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                           aria-label="Decrease quantity"
@@ -1125,7 +1172,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                           {currentCartQuantity}
                         </span>
                         <motion.button
-                          onClick={() => handleIncreaseQuantity(cartItemId as number)}
+                          onClick={() =>
+                            handleIncreaseQuantity(cartItemId as number)
+                          }
                           disabled={!isPurchasable}
                           className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
                           aria-label="Increase quantity"
@@ -1133,7 +1182,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                           <Plus className="w-4 h-4" />
                         </motion.button>
                         <motion.button
-                          onClick={() => handleRemoveFromCart(cartItemId as number)}
+                          onClick={() =>
+                            handleRemoveFromCart(cartItemId as number)
+                          }
                           className="h-8 w-8 flex items-center justify-center rounded-md text-red-500 hover:bg-red-50 transition-colors ml-1"
                           aria-label="Remove from cart"
                           title="Remove from Cart"
@@ -1183,7 +1234,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                             product={data}
                             onClose={() =>
                               document
-                                .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                                .querySelector<HTMLButtonElement>(
+                                  "[data-dialog-close]"
+                                )
                                 ?.click()
                             }
                           />
@@ -1222,7 +1275,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                               }}
                               onClose={() =>
                                 document
-                                  .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                                  .querySelector<HTMLButtonElement>(
+                                    "[data-dialog-close]"
+                                  )
                                   ?.click()
                               }
                             />
@@ -1245,7 +1300,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                               product={data}
                               onClose={() =>
                                 document
-                                  .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                                  .querySelector<HTMLButtonElement>(
+                                    "[data-dialog-close]"
+                                  )
                                   ?.click()
                               }
                             />
@@ -1270,7 +1327,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                             product={data}
                             onClose={() =>
                               document
-                                .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                                .querySelector<HTMLButtonElement>(
+                                  "[data-dialog-close]"
+                                )
                                 ?.click()
                             }
                           />
@@ -1322,14 +1381,21 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
             <p className="text-lg md:text-2xl font-bold">Product Details</p>
             <div className="relative">
               {/* ✅ FIX: Render description as HTML output */}
-              <div className="line-clamp-4 text-sm md:text-base prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.description) }} />
+              <div
+                className="line-clamp-4 text-sm md:text-base prose max-w-none"
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(data.description),
+                }}
+              />
               <button
                 onClick={() => {
-                  setOpenAccordion('desc');
-                  document.querySelector('#description-accordion')?.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                  });
+                  setOpenAccordion("desc");
+                  document
+                    .querySelector("#description-accordion")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "center",
+                    });
                 }}
                 className="mt-2 text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1 group"
               >
@@ -1354,18 +1420,33 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     <RentalForm
                       productId={data.id}
                       productDetails={{
-                        image: data.images[0]?.image || data.category_details?.cat_image || "/no-product.jpg",
+                        image:
+                          data.images[0]?.image ||
+                          data.category_details?.cat_image ||
+                          "/no-product.jpg",
                         title: data.name,
                         description: data.description,
                         price: data.price,
                         stock_quantity: data.stock_quantity,
                       }}
-                      onClose={() => document.querySelector<HTMLButtonElement>("[data-dialog-close]")?.click()}
+                      onClose={() =>
+                        document
+                          .querySelector<HTMLButtonElement>(
+                            "[data-dialog-close]"
+                          )
+                          ?.click()
+                      }
                     />
                   ) : (
                     <QuoteForm
                       product={data}
-                      onClose={() => document.querySelector<HTMLButtonElement>("[data-dialog-close]")?.click()}
+                      onClose={() =>
+                        document
+                          .querySelector<HTMLButtonElement>(
+                            "[data-dialog-close]"
+                          )
+                          ?.click()
+                      }
                     />
                   )}
                 </DialogContent>
@@ -1386,13 +1467,20 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                   <RentalForm
                     productId={data.id}
                     productDetails={{
-                      image: data.images[0]?.image || data.category_details?.cat_image || "/no-product.jpg",
+                      image:
+                        data.images[0]?.image ||
+                        data.category_details?.cat_image ||
+                        "/no-product.jpg",
                       title: data.name,
                       description: data.description,
                       price: data.price,
                       stock_quantity: data.stock_quantity,
                     }}
-                    onClose={() => document.querySelector<HTMLButtonElement>("[data-dialog-close]")?.click()}
+                    onClose={() =>
+                      document
+                        .querySelector<HTMLButtonElement>("[data-dialog-close]")
+                        ?.click()
+                    }
                   />
                 </DialogContent>
               </Dialog>
@@ -1404,7 +1492,10 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
       {/* Accordion Section */}
       <div className="mt-8">
         {/* Description */}
-        <div id="description-accordion" className="border rounded-lg mb-4 overflow-hidden">
+        <div
+          id="description-accordion"
+          className="border rounded-lg mb-4 overflow-hidden"
+        >
           <button
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition-colors"
             onClick={() =>
@@ -1428,7 +1519,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                 transition={{ duration: 0.3 }}
                 className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line overflow-hidden prose max-w-none"
                 // ✅ FIX: Render full description as HTML output
-                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.description) }}
+                dangerouslySetInnerHTML={{
+                  __html: DOMPurify.sanitize(data.description),
+                }}
               />
             )}
           </AnimatePresence>
@@ -1437,11 +1530,18 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
         <div className="border rounded-lg mb-4 overflow-hidden">
           <button
             className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-100 transition-colors"
-            onClick={() =>
-              setOpenAccordion(openAccordion === "spec" ? null : "spec")
-            }
+            onClick={() => {
+              if (!user) {
+                toast.error("Please log in to view product specifications.");
+                router.push("/login");
+                return;
+              }
+              setOpenAccordion(openAccordion === "spec" ? null : "spec");
+            }}
           >
-            <span className="font-bold text-base md:text-xl">Specification</span>
+            <span className="font-bold text-base md:text-xl">
+              Specification
+            </span>
             <motion.div
               animate={{ rotate: openAccordion === "spec" ? 180 : 0 }}
               transition={{ duration: 0.2 }}
@@ -1489,10 +1589,11 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                                   return (
                                     <tr
                                       key={`${key}-${specIndex}`}
-                                      className={`hover:bg-gray-50 transition-colors duration-150 ${specIndex % 2 === 0
-                                        ? "bg-white"
-                                        : "bg-gray-25"
-                                        }`}
+                                      className={`hover:bg-gray-50 transition-colors duration-150 ${
+                                        specIndex % 2 === 0
+                                          ? "bg-white"
+                                          : "bg-gray-25"
+                                      }`}
                                     >
                                       <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-medium text-gray-700">
@@ -1520,8 +1621,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                           return (
                             <tr
                               key={key}
-                              className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"
-                                }`}
+                              className={`hover:bg-gray-50 transition-colors duration-150 ${
+                                index % 2 === 0 ? "bg-white" : "bg-gray-25"
+                              }`}
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className="text-sm font-medium text-gray-700">
@@ -1610,7 +1712,9 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     {data.user_description ? (
                       <div
                         className="mt-2 text-sm text-gray-700 prose max-w-none"
-                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.user_description) }}
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(data.user_description),
+                        }}
                       />
                     ) : (
                       <p className="mt-2 text-sm text-gray-500 italic">
@@ -1656,17 +1760,19 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
               <div className="relative w-full h-[70vh] md:h-[80vh] flex items-center justify-center">
                 {/* 🎯 FIX: Render Video/Image in Modal with clean URLs */}
                 {isVideoUrl(data.images[currentMediaIndex]?.image) ? (
-                   <VideoPlayer 
-                      src={cleanMediaUrl(data.images[currentMediaIndex]?.image || "/no-product.jpg")} 
-                      alt={`${data.name} media ${currentMediaIndex + 1}`}
-                      // Use max-w/h-full to ensure it fits the container while respecting its aspect ratio
-                      className="max-h-full max-w-full rounded-md" 
-                   />
+                  <VideoPlayer
+                    src={cleanMediaUrl(
+                      data.images[currentMediaIndex]?.image || "/no-product.jpg"
+                    )}
+                    alt={`${data.name} media ${currentMediaIndex + 1}`}
+                    // Use max-w/h-full to ensure it fits the container while respecting its aspect ratio
+                    className="max-h-full max-w-full rounded-md"
+                  />
                 ) : (
                   <FallbackImage
-                    src={
-                      cleanMediaUrl(data.images[currentMediaIndex]?.image || "/no-product.jpg")
-                    }
+                    src={cleanMediaUrl(
+                      data.images[currentMediaIndex]?.image || "/no-product.jpg"
+                    )}
                     alt={`${data.name} media ${currentMediaIndex + 1}`}
                     // Use max-h/w-full to ensure it fits the container
                     className="max-h-full max-w-full object-contain rounded-md"
@@ -1678,7 +1784,7 @@ export default function ProductSection({ productId, productSlug }: ProductSectio
                     id={data.images[currentMediaIndex]?.id || 0}
                   />
                 )}
-                
+
                 {/* Navigation arrows */}
                 {data.images.length > 1 && (
                   <>

@@ -107,10 +107,11 @@ const MAX_IMAGE_SIZE_BYTES = 1 * 1024 * 1024; // 1 MB
 
 interface ProductFormProps {
   product?: Product;
+   defaultType?: 'new' | 'used' | 'rental';
   onSuccess?: () => void;
 }
 
-export default function ProductForm({ product, onSuccess }: ProductFormProps) {
+export default function ProductForm({ product, onSuccess, defaultType }: ProductFormProps) {
   const [defaultCategory, setDefaultCategory] = useState<string>('')
   const [defaultSubcategory, setDefaultSubcategory] = useState<string>('')
   const [firstImageFile, setFirstImageFile] = useState<File | null>(null); // State for first/main image file
@@ -145,7 +146,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         manufacturer: product.manufacturer,
         model: product.model,
         price: product.price,
-        type: Array.isArray(product.type) ? product.type : [],
+        type: product ? product.type : [],
+
+
+
         direct_sale: product.direct_sale,
         hide_price: product.hide_price,
         online_payment: product.online_payment,
@@ -161,7 +165,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         hide_price: false,
         online_payment: false,
         stock_quantity: 1,
-        type: ['new'],
+        type: [],
         // ✅ Price Field: Set default to '0.00'
         price: '0.00',
         category: '',
@@ -219,6 +223,13 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         setValue('meta_description', defaultDesc);
     }
   }, [productName, product, setValue])
+
+useEffect(() => {
+  if (!product && defaultType) {
+    setValue('type', [defaultType], { shouldDirty: false });
+  }
+}, [defaultType, product, setValue]);
+
 
 
   // Fetch categories
@@ -844,7 +855,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
         <div className="p-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="sticky top-0 z-20 bg-white pt-2 pb-4 space-y-2 border-b shadow-sm -mx-2 px-4">
             {/* Category Selection */}
+
+            <div className="sticky top-0 z-20 bg-white">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-sm text-gray-600 mb-1 block">
@@ -900,14 +914,19 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                   >
                     {/* ✅ Category/Sub-Category Inputs: Increased height to h-12 */}
                     <SelectTrigger className={`h-12 border-gray-300 text-sm text-gray-500 ${errors.subcategory ? 'border-red-500' : ''}`}>
-                      <SelectValue placeholder="Select Subcategory">
+                      <SelectValue placeholder="Select Subcategory"
+                         className="truncate overflow-hidden whitespace-nowrap">
+                        
                         {subcategories.find(sub => String(sub.id) === (watch('subcategory') || defaultSubcategory))?.name || "Select Subcategory"}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {subcategories.map((sub) => (
                         <SelectItem key={sub.id} value={String(sub.id)}>
+                          {/* <span className="block"> */}
                           {sub.name}
+                          {/* </span> */}
+
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -916,13 +935,33 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                     <p className="text-red-500 text-xs mt-1">Subcategory is required</p>
                   )}
                 </div>
+                
+              )}
+            </div>
+            </div>
+            {/* Product Name & Live URL (Inside Sticky) */}
+              {hasSelectedRequiredFields && (
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-sm text-gray-600 mb-1 block">Product Name <span className="text-red-500">*</span></Label>
+                    <Input
+                      {...register('name', { required: true })}
+                      placeholder="Enter product name"
+                      className="h-10 border-gray-300 text-sm"
+                    />
+                  </div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 bg-blue-50 p-2 rounded border border-blue-100">
+                    <p className="truncate"><span className="font-semibold">Live Name:</span> {livePreviewName || '...'}</p>
+                    <p className="truncate"><span className="font-semibold">Live URL:</span> <span className="text-blue-600">{livePreviewUrl}</span></p>
+                  </div>
+                </div>
               )}
             </div>
 
             {hasSelectedRequiredFields && (
               <>
-                {/* Product Name */}
-                <div>
+              
+                {/* <div>
                   <Label className="text-sm text-gray-600 mb-1 block">
                     Product Name <span className="text-red-500">*</span>
                   </Label>
@@ -934,7 +973,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                   {errors.name && (
                     <p className="text-red-500 text-xs mt-1">Product name is required</p>
                   )}
-                  {/* Live Name and URL Preview */}
+                 
                   <div className="mt-2 text-xs text-gray-500">
                     <p>
                       <span className="font-semibold text-gray-700">Live Product Name:</span>{' '}
@@ -946,8 +985,11 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                         {livePreviewUrl}
                       </Link>
                     </p>
+                    <></>
                   </div>
-                </div>
+                </div> */}
+                
+         
 
                 {/* Description */}
                 <div>
@@ -1379,6 +1421,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                 </>
               )}
             </Button>
+
           </form>
         </div>
       </div>
