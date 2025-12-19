@@ -113,17 +113,22 @@ const AnalyticsDashboard = () => {
             groupFormat: 'yyyy',
             labelFormat: 'yyyy',
           };
-        case 'daily':
-        default:
-          const thirtyDaysAgo = subDays(today, 29);
-          return {
-            startDate: thirtyDaysAgo,
-            interval: eachDayOfInterval({ start: thirtyDaysAgo, end: today }),
-            groupFormat: 'yyyy-MM-dd',
-            labelFormat: 'dd/MM',
-          };
+case 'daily':
+default:
+  // const today = new Date();
+  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of month
+  return {
+    startDate: firstDayOfMonth,
+    interval: eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth }), // all days of month
+    groupFormat: 'yyyy-MM-dd',
+    labelFormat: 'dd', // show day number
+  };
+
+
+
       }
-    };
+    }
 
     const { startDate, interval, groupFormat, labelFormat } = getDateConfig(timeRange);
 
@@ -137,22 +142,30 @@ const AnalyticsDashboard = () => {
     };
 
     // Helper to process API data into daily/monthly/yearly counts
-    const processCounts = (items: ApiItem[], dateField: keyof ApiItem): ChartDataPoint[] => {
-      const counts = initializeDateMap();
-      items.forEach(item => {
-        const dateStr = item[dateField];
-        if (dateStr) {
-          const formattedDate = format(parseISO(dateStr), groupFormat);
-          if (counts.has(formattedDate)) {
-            counts.set(formattedDate, counts.get(formattedDate)! + 1);
-          }
+ const processCounts = (items: ApiItem[], dateField: keyof ApiItem): ChartDataPoint[] => {
+  const counts = initializeDateMap(); // daily keys: 'yyyy-MM-dd'
+  
+  items.forEach(item => {
+    const dateStr = item[dateField];
+    if (dateStr) {
+      // Parse date safely
+      const parsed = new Date(dateStr);
+      if (!isNaN(parsed.getTime())) {
+        const key = format(parsed, groupFormat); // must match map key exactly
+        if (counts.has(key)) {
+          counts.set(key, counts.get(key)! + 1);
         }
-      });
-      return Array.from(counts.entries()).map(([date, value]) => ({
-        date: format(parseISO(date), labelFormat), // Use parseISO for yyyy-MM-dd and yyyy-MM
-        value
-      }));
-    };
+      }
+    }
+  });
+
+  // Convert to chart data
+  return Array.from(counts.entries()).map(([date, value]) => ({
+    date: format(new Date(date), labelFormat), // 'dd'
+    value
+  }));
+};
+
 
     // Helper for cumulative data
     const processCumulativeCounts = (rentals: ApiItem[], orders: ApiItem[]): ChartDataPoint[] => {
@@ -181,13 +194,64 @@ const AnalyticsDashboard = () => {
       setLoading(true);
       try {
         const dateFilter = { created_at__gte: format(startDate, 'yyyy-MM-dd') };
+        if (timeRange === 'monthly' || timeRange === 'yearly') {
+  const [quoteRes, rentalRes] = await Promise.all([
+    api.get('/quotes/vendor-stats/'),
+    api.get('/rentals/vendor-stats/')
+  ]);
 
-        const [quoteRes, rentalRes, orderRes, contactRes] = await Promise.all([
-          api.get('/quotes/', { params: { ...dateFilter, page_size: 5000 } }),
-          api.get('/rentals/', { params: { ...dateFilter, page_size: 5000 } }),
-          api.get('/orders/', { params: { ...dateFilter, page_size: 5000 } }),
-          api.get('/contact-forms/', { params: { ...dateFilter, page_size: 5000 } })
-        ]);
+  const quoteTrend =
+    timeRange === 'monthly'
+      ? quoteRes.data.monthly_trend
+      : quoteRes.data.yearly_trend;
+
+  const rentalTrend =
+    timeRange === 'monthly'
+      ? rentalRes.data.monthly_trend
+      : rentalRes.data.yearly_trend;
+
+if (timeRange === 'monthly') {
+  const twelveMonthsAgo = subMonths(new Date(), 11);
+  const monthInterval = eachMonthOfInterval({ start: twelveMonthsAgo, end: new Date() });
+
+  // Zero-fill map for Product Quotes
+  const quoteMap = new Map(monthInterval.map(d => [format(d, 'yyyy-MM'), 0]));
+  quoteTrend.forEach((item: any) => {
+    const monthKey = format(parseISO(item.month), 'yyyy-MM');
+    if (quoteMap.has(monthKey)) quoteMap.set(monthKey, item.count);
+  });
+  setProductQuoteData(
+    Array.from(quoteMap.entries()).map(([key, value]) => ({
+      date: format(parseISO(key + '-01'), 'MMM'),
+      value
+    }))
+  );
+
+  // Zero-fill map for Rentals
+  const rentalMap = new Map(monthInterval.map(d => [format(d, 'yyyy-MM'), 0]));
+  rentalTrend.forEach((item: any) => {
+    const monthKey = format(parseISO(item.month), 'yyyy-MM');
+    if (rentalMap.has(monthKey)) rentalMap.set(monthKey, item.count);
+  });
+  setRentalData(
+    Array.from(rentalMap.entries()).map(([key, value]) => ({
+      date: format(parseISO(key + '-01'), 'MMM'),
+      value
+    }))
+  );
+
+  setLoading(false);
+  return;
+}}
+
+
+       const [quoteRes, rentalRes, orderRes, contactRes] = await Promise.all([
+  api.get('/quotes/', { params: { ...dateFilter, page_size: 5000 } }),
+  api.get('/rentals/', { params: { ...dateFilter, page_size: 5000 } }),
+  api.get('/orders/', { params: { ...dateFilter, page_size: 5000 } }),
+  api.get('/contact-forms/', { params: { ...dateFilter, page_size: 5000 } })
+]);
+
 
         setProductQuoteData(processCounts(quoteRes.data.results, 'created_at'));
         setRentalData(processCounts(rentalRes.data.results, 'created_at'));
@@ -215,8 +279,8 @@ const AnalyticsDashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={productQuoteData} margin={{ top: 20, right: 0, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} allowDecimals={false} />
+     <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} allowDecimals={false} />
                   <Tooltip cursor={{ fill: 'rgba(243, 244, 246, 0.5)' }} />
                   <Bar dataKey="value" name="Quotes" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={20} />
                 </BarChart>
@@ -233,7 +297,7 @@ const AnalyticsDashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={rentBuyData} margin={{ top: 20, right: 5, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+   <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} allowDecimals={false} />
                   <Tooltip />
                   <Line type="monotone" dataKey="value" name="Total" stroke="#10B981" strokeWidth={3} dot={false} activeDot={{ r: 6 }} />
@@ -251,7 +315,7 @@ const AnalyticsDashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={rentalData} margin={{ top: 20, right: 0, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+ <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} allowDecimals={false} />
                   <Tooltip cursor={{ fill: 'rgba(243, 244, 246, 0.5)' }} />
                   <Bar dataKey="value" name="Rentals" fill="#8B5CF6" radius={[4, 4, 0, 0]} barSize={20} />
@@ -269,7 +333,7 @@ const AnalyticsDashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={contactData} margin={{ top: 20, right: 0, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+<XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} allowDecimals={false} />
                   <Tooltip cursor={{ fill: 'rgba(243, 244, 246, 0.5)' }} />
                   <Bar dataKey="value" name="Contacts" fill="#F59E0B" radius={[4, 4, 0, 0]} barSize={20} />

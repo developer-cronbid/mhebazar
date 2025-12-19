@@ -41,7 +41,7 @@ export interface StatsCardProps {
   label: string;
   link: string;
   // Optional: Highlight color for important cards (like pending actions)
-  highlight?: boolean; 
+  highlight?: boolean;
 }
 
 export interface VendorApplication {
@@ -152,7 +152,7 @@ const DetailRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label,
 const CompleteDashboard = () => {
   const [vendorApps, setVendorApps] = useState<VendorApplication[]>([]);
   const [pendingProducts, setPendingProducts] = useState<GroupedProducts>({});
-  
+
   // NEW: State to hold general statistics
   const [stats, setStats] = useState<DashboardStats>({
     productQuotes: 0, directBuys: 0, rentals: 0, trainingRequests: 0,
@@ -337,12 +337,12 @@ const CompleteDashboard = () => {
   };
 
   const totalPendingProducts = Object.values(pendingProducts).reduce((sum, prods) => sum + prods.length, 0);
-  
+
   // Data for the AnalyticsDashboard (Graph)
   const graphData = {
-      totalApplications: vendorStats.total_applications,
-      approvedVendors: vendorStats.approved_vendors,
-      pendingApplications: vendorStats.pending_applications,
+    totalApplications: vendorStats.total_applications,
+    approvedVendors: vendorStats.approved_vendors,
+    pendingApplications: vendorStats.pending_applications,
   };
 
 
@@ -351,19 +351,19 @@ const CompleteDashboard = () => {
       {/* Main layout and stats cards remain the same */}
       <div className="overflow-auto bg-gray-50 p-6 sm:p-8 lg:p-10 min-h-screen">
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h2>
-        
+
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Main content area */}
           <div className="flex-1 space-y-8">
             {/* Stats Cards - Adjusted grid for better flow on all screens */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
-             
+
               <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://mhebazar.in/admin/forms/quotes" />
               <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://mhebazar.in/admin/forms/direct-buy" />
               <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://mhebazar.in/admin/forms/rentals" />
               <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://mhebazar.in/admin/forms/training-registrations" />
               <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://mhebazar.in/admin/contact/contact-form" />
-               {/* NEW: Pending Vendors Card with Redirection */}
+              {/* NEW: Pending Vendors Card with Redirection */}
               <StatsCard
                 icon='' // Using Lucide icon inside the component based on highlight prop
                 number={String(vendorStats.pending_applications)}
@@ -372,10 +372,10 @@ const CompleteDashboard = () => {
                 highlight={vendorStats.pending_applications > 0} // Highlight if there are pending apps
               />
             </div>
-            
+
             {/* Analytics Dashboard (Graph) - Pass the fetched vendorStats data */}
-            <AnalyticsDashboard  />
-            
+            <AnalyticsDashboard />
+
           </div>
 
           {/* Pending Actions Sidebar (Unchanged) */}
