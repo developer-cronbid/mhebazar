@@ -39,6 +39,7 @@ interface User {
   is_account_locked: boolean;
   date_joined: string;
   last_login: string | null;
+  is_staff: boolean;
 }
 
 // API interfaces (from your original code)

@@ -227,6 +227,7 @@ export default function EventsPage() {
             {eventsWithStatus.map((event) => (
               <article
                 key={event.id}
+                 onClick={() => window.location.href = `/events/${event.slug}`}
                 className={`group bg-white rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden border-2 ${
                   event.status === 'completed' 
                     ? 'opacity-70 border-gray-200 hover:border-gray-300' 

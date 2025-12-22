@@ -111,12 +111,16 @@ interface ProductFormProps {
   onSuccess?: () => void;
 }
 
+
+
 export default function ProductForm({ product, onSuccess, defaultType }: ProductFormProps) {
   const [defaultCategory, setDefaultCategory] = useState<string>('')
   const [defaultSubcategory, setDefaultSubcategory] = useState<string>('')
   const [firstImageFile, setFirstImageFile] = useState<File | null>(null); // State for first/main image file
   const [imageFiles, setImageFiles] = useState<File[]>([]) // State for additional image files
   const [brochureFile, setBrochureFile] = useState<File | null>(null)
+  const [vendorLoading, setVendorLoading] = useState(false);
+
   
   // existingImages holds ALL media (images and video links) from the backend
   const [existingImages, setExistingImages] = useState<ProductImage[]>(
@@ -203,6 +207,41 @@ export default function ProductForm({ product, onSuccess, defaultType }: Product
   const [loading, setLoading] = useState(true)
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+
+useEffect(() => {
+  const fetchVendorBrand = async () => {
+    try {
+      if (!user?.id || product) return;
+
+      setVendorLoading(true);
+
+      const res = await api.get('/vendor/approved/');
+      const vendors = res.data?.results || [];
+
+      const myVendor = vendors.find(
+        (v: any) => v.user_info?.id === user.id
+      );
+
+      if (myVendor) {
+        const manufacturer =
+          myVendor.brand?.trim() || myVendor.company_name?.trim();
+
+        if (manufacturer) {
+          setValue('manufacturer', manufacturer, { shouldDirty: false });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load vendor brand', err);
+    } finally {
+      setVendorLoading(false);
+    }
+  };
+
+  fetchVendorBrand();
+}, [user, product, setValue]);
+
+
 
   // 徴 NEW EFFECT: Set the user ID for NEW products from context
   useEffect(() => {
@@ -846,6 +885,7 @@ useEffect(() => {
   }
 
   return (
+    
     <div className="overflow-auto bg-white">
       <div className="max-w-md mx-auto bg-white">
         {/* Header */}
@@ -856,9 +896,7 @@ useEffect(() => {
         <div className="p-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="sticky top-0 z-20 bg-white pt-2 pb-4 space-y-2 border-b shadow-sm -mx-2 px-4">
-            {/* Category Selection */}
 
-            <div className="sticky top-0 z-20 bg-white">
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-sm text-gray-600 mb-1 block">
@@ -938,7 +976,7 @@ useEffect(() => {
                 
               )}
             </div>
-            </div>
+            
             {/* Product Name & Live URL (Inside Sticky) */}
               {hasSelectedRequiredFields && (
                 <div className="space-y-3">
@@ -1018,11 +1056,13 @@ useEffect(() => {
 
                 {/* Vendor (Manufacturer) */}
                 <div>
+                  
                   <Label className="text-sm text-gray-600 mb-1 block">Vendor (Manufacturer)</Label>
                   <Input
                     {...register('manufacturer')}
                     placeholder="Vendor name"
                     className="h-10 border-gray-300 text-sm"
+                      readOnly
                   />
                 </div>
 
