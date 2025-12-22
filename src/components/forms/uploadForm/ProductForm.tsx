@@ -886,11 +886,13 @@ useEffect(() => {
 
   return (
     
-    <div className="overflow-auto bg-white">
-      <div className="max-w-md mx-auto bg-white">
+    <div className="flex flex-col h-full bg-white">
+      <div className="max-w-md mx-auto bg-white ">
         {/* Header */}
+        <div className="shrink-0  bg-white z-30">
         <div className="flex items-center justify-between p-4 border-b">
           <h1 className="text-lg font-semibold text-gray-900">{product ? "Edit Product" : "Add Product"}</h1>
+        </div>
         </div>
 
         <div className="p-4">

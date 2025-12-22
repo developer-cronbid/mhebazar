@@ -421,15 +421,21 @@ const [defaultProductType, setDefaultProductType] = useState<
                         + Add Product
                       </Button>
                     </SheetTrigger>
-                    <SheetContent>
-                      <SheetContent>
-  <ProductForm
-    product={selectedProduct}
-    defaultType={defaultProductType}
-  />
+               <SheetContent className="flex flex-col h-full p-0 sm:max-w-xl">
+  {/* The Header is fixed at the top */}
+  {/* <div className="p-4 border-b bg-white shrink-0">
+    <h2 className="text-lg font-semibold">
+      {selectedProduct ? "Edit Product" : "Add Product"}
+    </h2>
+  </div> */}
+
+  {/* This is the magic div: flex-1 takes all remaining space, 
+      overflow-y-auto enables scrolling ONLY here */}
+  <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
+    <ProductForm product={selectedProduct}  defaultType={defaultProductType} onSuccess={() => setIsSheetOpen(false)} />
+    
+  </div>
 </SheetContent>
-                    
-                    </SheetContent>
                   </Sheet>
                 )}
               </div>
