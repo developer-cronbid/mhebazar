@@ -86,6 +86,9 @@ export default function VendorsPage() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   // State to force re-filter when global data changes (since we use global var)
   const [dataVersion, setDataVersion] = useState(0);
+const [approvalFilter, setApprovalFilter] =
+  useState<'all' | 'approved' | 'pending'>('all');
+
 
 
   // --- Client-Side Filter/Sort Logic (useMemo for efficiency and stability) ---
@@ -104,13 +107,23 @@ export default function VendorsPage() {
           vendor.username?.toLowerCase().includes(lowerCaseSearch)
         )
       : sourceList;
+
+    if (approvalFilter !== 'all') {
+  filtered = filtered.filter(vendor =>
+    approvalFilter === 'approved'
+      ? vendor.is_approved === true
+      : vendor.is_approved === false
+  );
+}
+
       
     // 2. Sorting
     filtered = sortVendors(filtered, sortField, sortDirection);
     
     return filtered;
-  }, [activeTab, searchTerm, sortField, sortDirection, dataVersion]); // dataVersion added to track global var changes
+  }, [activeTab, searchTerm, sortField, sortDirection, dataVersion,approvalFilter,]); // dataVersion added to track global var changes
 
+ 
 
   // --- Pagination Logic (useEffect) ---
 
@@ -387,6 +400,8 @@ export default function VendorsPage() {
               sortField={sortField}
               sortDirection={sortDirection}
               handleSortChange={handleSortChange}
+              statusFilter={approvalFilter}          // ✅ PASS
+  setStatusFilter={setApprovalFilter} 
             />
           )}
         </div>

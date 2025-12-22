@@ -28,6 +28,7 @@ import Link from "next/link";
 import categories from '@/data/categories.json';
 import { IoDocuments } from "react-icons/io5";
 import { RecentEnquiries } from "./topEnquiries";
+import { useUser } from "@/context/UserContext";
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -145,6 +146,16 @@ const [defaultProductType, setDefaultProductType] = useState<
   'new' | 'used' | 'rental' | undefined
 >(undefined);
 
+
+ const { user } = useUser(); 
+
+  // 2. DERIVE LOGIC HERE
+  // Note: Check if 'role' is a string or an object. 
+  // If it's an object, use: user?.role?.name === 'vendor'
+  const isVendorUser = useMemo(() => {
+    // We check user.role.name instead of just user.role
+    return user?.role?.name === 'Vendor'; 
+  }, [user]);
 
 
   // Pagination state
@@ -432,11 +443,12 @@ const [defaultProductType, setDefaultProductType] = useState<
   {/* This is the magic div: flex-1 takes all remaining space, 
       overflow-y-auto enables scrolling ONLY here */}
   <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
-    <ProductForm product={selectedProduct}  defaultType={defaultProductType} onSuccess={() => setIsSheetOpen(false)} />
+    <ProductForm product={selectedProduct} isVendor={isVendorUser} defaultType={defaultProductType} onSuccess={() => setIsSheetOpen(false)} />
     
   </div>
 </SheetContent>
                   </Sheet>
+
                 )}
               </div>
 

@@ -92,6 +92,7 @@ type ProductFormData = {
   brochure?: FileList;
   images?: FileList;
   product_details: Record<string, string>;
+  isVendor?: boolean;
 }
 
 const TYPE_OPTIONS = [
@@ -109,11 +110,13 @@ interface ProductFormProps {
   product?: Product;
    defaultType?: 'new' | 'used' | 'rental';
   onSuccess?: () => void;
+  isVendor?: boolean;
+  
 }
 
 
 
-export default function ProductForm({ product, onSuccess, defaultType }: ProductFormProps) {
+export default function ProductForm({ product, onSuccess, defaultType,isVendor = false }: ProductFormProps) {
   const [defaultCategory, setDefaultCategory] = useState<string>('')
   const [defaultSubcategory, setDefaultSubcategory] = useState<string>('')
   const [firstImageFile, setFirstImageFile] = useState<File | null>(null); // State for first/main image file
@@ -889,95 +892,89 @@ useEffect(() => {
     <div className="flex flex-col h-full bg-white">
       <div className="max-w-md mx-auto bg-white ">
         {/* Header */}
-        <div className="shrink-0  bg-white z-30">
+        {/* <div className="shrink-0  bg-white z-30"> */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h1 className="text-lg font-semibold text-gray-900">{product ? "Edit Product" : "Add Product"}</h1>
-        </div>
+          <h1 className="text-lg font-semibold mb-2 text-gray-900">{product ? "Edit Product" : "Add Product"}</h1>
+        {/* </div> */}
         </div>
 
         <div className="p-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="sticky top-0 z-20 bg-white pt-2 pb-4 space-y-2 border-b shadow-sm -mx-2 px-4">
+           <div className="sticky top-0 z-20 bg-white pt-2 pb-4 space-y-4 border-b shadow-sm px-4">
+  {/* Corrected Grid: Stacked by default, 2 columns on small screens and up */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
+    
+    {/* Category Field */}
+    <div className="flex flex-col space-y-2 min-w-0">
+      <Label className="text-sm text-gray-600 mb-1 block">
+        Select category <span className="text-red-500">*</span>
+      </Label>
+      <Select
+        onValueChange={(val) => {
+          setValue('category', val);
+          setValue('subcategory', '');
+          setDefaultSubcategory('');
+        }}
+        value={selectedCategoryId || defaultCategory}
+        disabled={loading}
+        required
+      >
+        <SelectTrigger 
+          className={`h-12 w-full border-gray-300 text-sm text-gray-700 overflow-hidden ${errors.category ? 'border-red-500' : ''}`}
+        >
+          <SelectValue placeholder="Select Category">
+            <span className="truncate block">
+              {loading ? "Loading..." : (categories.find(cat => String(cat.id) === (selectedCategoryId || defaultCategory))?.name || "Select Category")}
+            </span>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {Array.isArray(categories) && categories.map((cat) => (
+            <SelectItem key={cat.id} value={String(cat.id)}>
+              {cat.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      {errors.category && (
+        <p className="text-red-500 text-xs mt-1">Category is required</p>
+      )}
+    </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-sm text-gray-600 mb-1 block">
-                  Select category <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  onValueChange={(val) => {
-                      setValue('category', val);
-                      // Clear subcategory when category changes
-                      setValue('subcategory', '');
-                      setDefaultSubcategory(''); 
-                  }}
-                  value={selectedCategoryId || defaultCategory}
-                  disabled={loading}
-                  required
-                >
-                  {/* ✅ Category/Sub-Category Inputs: Increased height to h-12 */}
-                  <SelectTrigger className={`h-12 border-gray-300 text-sm text-gray-500 ${errors.category ? 'border-red-500' : ''}`}>
-                    <SelectValue placeholder="Select Category">
-                      {loading ? "Loading..." : (categories.find(cat => String(cat.id) === (selectedCategoryId || defaultCategory))?.name || "Select Category")}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.isArray(categories) && categories.length > 0 ? (
-                      categories.map((cat) => (
-                        <SelectItem key={cat.id} value={String(cat.id)}>
-                          {cat.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      !loading && (
-                        <div className="px-2 py-1 text-sm text-gray-500">
-                          No categories available
-                        </div>
-                      )
-                    )}
-                  </SelectContent>
-                </Select>
-                {errors.category && (
-                  <p className="text-red-500 text-xs mt-1">Category is required</p>
-                )}
-              </div>
-
-              {subcategories.length > 0 && (
-                <div>
-                  <Label className="text-sm text-gray-600 mb-1 block">
-                    Select SubCategory <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    onValueChange={(val) => setValue('subcategory', val)}
-                    value={watch('subcategory') || defaultSubcategory}
-                    required
-                  >
-                    {/* ✅ Category/Sub-Category Inputs: Increased height to h-12 */}
-                    <SelectTrigger className={`h-12 border-gray-300 text-sm text-gray-500 ${errors.subcategory ? 'border-red-500' : ''}`}>
-                      <SelectValue placeholder="Select Subcategory"
-                         className="truncate overflow-hidden whitespace-nowrap">
-                        
-                        {subcategories.find(sub => String(sub.id) === (watch('subcategory') || defaultSubcategory))?.name || "Select Subcategory"}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {subcategories.map((sub) => (
-                        <SelectItem key={sub.id} value={String(sub.id)}>
-                          {/* <span className="block"> */}
-                          {sub.name}
-                          {/* </span> */}
-
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.subcategory && (
-                    <p className="text-red-500 text-xs mt-1">Subcategory is required</p>
-                  )}
-                </div>
-                
-              )}
-            </div>
+    {/* Subcategory Field */}
+    {subcategories.length > 0 && (
+      <div className="flex flex-col space-y-2 min-w-0">
+        <Label className="text-sm text-gray-600 mb-1 block">
+          Select SubCategory <span className="text-red-500">*</span>
+        </Label>
+        <Select
+          onValueChange={(val) => setValue('subcategory', val)}
+          value={watch('subcategory') || defaultSubcategory}
+          required
+        >
+          <SelectTrigger 
+            className={`h-12 w-full border-gray-300 text-sm text-gray-700 overflow-hidden ${errors.subcategory ? 'border-red-500' : ''}`}
+          >
+            <SelectValue placeholder="Select Subcategory">
+              <span className="truncate block">
+                {subcategories.find(sub => String(sub.id) === (watch('subcategory') || defaultSubcategory))?.name || "Select Subcategory"}
+              </span>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {subcategories.map((sub) => (
+              <SelectItem key={sub.id} value={String(sub.id)}>
+                {sub.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {errors.subcategory && (
+          <p className="text-red-500 text-xs mt-1">Subcategory is required</p>
+        )}
+      </div>
+    )}
+  </div>
             
             {/* Product Name & Live URL (Inside Sticky) */}
               {hasSelectedRequiredFields && (
@@ -1095,6 +1092,7 @@ useEffect(() => {
                 </div>
 
                 {/* SEO Information */}
+                {!isVendor && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-sm text-gray-600 mb-1 block">Meta Title</Label>
@@ -1121,6 +1119,7 @@ useEffect(() => {
                     </p>
                   </div>
                 </div>
+                )}
 
                 {/* Type Selection */}
                 <div>

@@ -33,6 +33,7 @@ import { Pencil, ExternalLink } from "lucide-react";
 
 import { Product } from "@/types";
 import categories_id from '@/data/categories.json';
+import { useUser } from "@/context/UserContext";
 
 const sortOptions = [
   { label: "Newest First", value: "newest" },
@@ -43,6 +44,7 @@ const sortOptions = [
 
 const TYPE_OPTIONS = ["new", "used", "rental", "attachments"] as const;
 type TabType = (typeof TYPE_OPTIONS)[number];
+
 
 const imgUrl = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -60,6 +62,16 @@ export default function ProductList() {
   const [sortBy, setSortBy] = useState(sortOptions[0].value);
   const [selectedProduct, setSelectedProduct] = useState<Product | undefined>();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const { user } = useUser(); 
+
+  // 2. DERIVE LOGIC HERE
+  // Note: Check if 'role' is a string or an object. 
+  // If it's an object, use: user?.role?.name === 'vendor'
+  const isVendorUser = useMemo(() => {
+    // We check user.role.name instead of just user.role
+    return user?.role?.name === 'Vendor'; 
+  }, [user]);
 
   const categoryImageMap = useMemo(() => {
     const map: { [key: number]: string } = {};
@@ -237,8 +249,20 @@ export default function ProductList() {
                 + Add Product
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-md">
-              <ProductForm product={selectedProduct} onSuccess={closeSheetAndRefresh} />
+                       <SheetContent className="flex flex-col h-full p-0 sm:max-w-xl">
+              {/* The Header is fixed at the top */}
+              {/* <div className="p-4 border-b bg-white shrink-0">
+                <h2 className="text-lg font-semibold">
+                  {selectedProduct ? "Edit Product" : "Add Product"}
+                </h2>
+              </div> */}
+            
+              {/* This is the magic div: flex-1 takes all remaining space, 
+                  overflow-y-auto enables scrolling ONLY here */}
+              <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
+                <ProductForm product={selectedProduct} isVendor={isVendorUser}  onSuccess={() => setIsSheetOpen(false)} />
+                
+              </div>
             </SheetContent>
           </Sheet>
         </div>

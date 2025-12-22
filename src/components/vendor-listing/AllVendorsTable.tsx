@@ -226,7 +226,7 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
         
         // This is crucial: By triggering handleSortChange (even with a dummy field), 
         // we signal the parent component (page.tsx) to reset pagination and refetch with the new filter.
-        handleSortChange('status_filter_toggle'); 
+        // handleSortChange('status_filter_toggle'); 
     };
     
     // Determine the label and icon for the Status Header
