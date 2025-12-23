@@ -35,7 +35,11 @@ export const metadata: Metadata = {
   // ✅ FIX: Moved 'verification' OUTSIDE of 'icons'
   verification: {
     google: "ipMSyejTl5WkQNzT5LVvc4U4ykIzonjK5xBhqDQoyFM",
+    other: {
+      "msvalidate.01": "4D950976E7CE3FE0672C1877057600CE",
+    },
   },
+   
 };
 
 export const viewport: Viewport = {
