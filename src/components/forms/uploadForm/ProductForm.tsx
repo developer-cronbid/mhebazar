@@ -800,9 +800,10 @@ useEffect(() => {
   }, [productName]);
 
   const livePreviewName = useMemo(() => {
-    const formattedName = `${productManufacturer || ''} ${productName || ''} ${productModel || ''}`.trim().replace(/\s+/g, ' ');
+    const productCapacity = dynamicValues['capacity'] || dynamicValues['Capacity'] || '';
+    const formattedName = `${productManufacturer || ''} ${productName || ''} ${productModel || ''}${productCapacity || ''}`.trim().replace(/\s+/g, ' ');
     return formattedName;
-  }, [productName, productManufacturer, productModel]);
+  }, [productName, productManufacturer, productModel, dynamicValues]);
 
   // Determine the file name to display for the brochure
   const brochureDisplayName = useMemo(() => {
@@ -1174,15 +1175,35 @@ useEffect(() => {
                     />
                   </div>
                   <div className="space-y-2 pt-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="direct_sale"
-                        checked={watch('direct_sale')}
-                        onCheckedChange={(checked) => setValue('direct_sale', !!checked)}
-                        className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                      />
-                      <Label htmlFor="direct_sale" className="text-sm font-medium">Direct Sale</Label>
-                    </div>
+            <div className="flex items-center space-x-2">
+  <Checkbox
+    id="direct_sale"
+    checked={watch('direct_sale')}
+    onCheckedChange={(checked) => setValue('direct_sale', !!checked)}
+    className="border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+  />
+
+  <Label htmlFor="direct_sale" className="text-sm font-medium">
+    Buy Now
+  </Label>
+
+ 
+</div>
+<div className="-mt-2">
+  <span className="text-[11px] text-gray-400 leading-snug max-w-xs sm:max-w-sm md:max-w-md break-words">
+   ( If selected, users will see{" "}
+    <strong className="font-semibold text-gray-900">
+      Buy Now
+    </strong>{" "}
+    instead of{" "}
+    <strong className="font-semibold text-gray-900">
+      Get Quote
+    </strong>. )
+  </span>
+</div>
+
+
+
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="hide_price"

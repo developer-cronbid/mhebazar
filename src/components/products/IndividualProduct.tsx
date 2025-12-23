@@ -40,6 +40,10 @@ type ProductImage = {
   id: number;
   image: string;
 };
+type ProductDetails = {
+  capacity?: string;
+  [key: string]: unknown;
+};
 
 type ProductData = {
   id: number;
@@ -49,7 +53,8 @@ type ProductData = {
   meta_description: string | null;
   manufacturer: string | null;
   model: string | null;
-  product_details: Record<string, unknown> | null;
+  product_details: ProductDetails | null;
+ 
   price: string;
   type: string | string[]; // Can be string or string[] based on product type
   is_active: boolean;
@@ -94,6 +99,7 @@ interface WishlistItemApi {
 interface ProductSectionProps {
   productId: number | string | null;
   productSlug: string;
+  //  productTitle: string;
 }
 
 const imgUrl =
@@ -846,13 +852,21 @@ export default function ProductSection({
     (data.type.includes("rental") || data.type.includes("used"));
 
   // ✅ Clean the display title to allow ALL requested punctuation for UI presentation
-  const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
-    data.model
-  } `
-    // Allow letters, numbers, spaces, and all requested punctuation marks.
-    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+const formatCapacity = (capacity?: string) => {
+  if (!capacity) return "";
+  // Automatically append units if missing
+  if (/^\d+$/.test(capacity)) return `${capacity} kg`;
+  if (/^\d+(\.\d+)?\s?t(on)?$/i.test(capacity)) return capacity.replace(/\s?ton/i, "t");
+  return capacity;
+};
+
+const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
+  data.model || ""
+} ${formatCapacity(data.product_details?.capacity)}`
+  .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%+×]/g, "")
+  .replace(/\s+/g, " ")
+  .trim();
+
 
   // Determine if the currently selected media is a video
   const isSelectedMediaVideo =
