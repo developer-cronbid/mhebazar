@@ -269,7 +269,7 @@ export default function Frame() {
     { id: "companyEmail", label: "Company Email", value: formData.companyEmail },
     { id: "brand", label: "Brand name", value: formData.brand },
     { id: "gstNumber", label: "GST Number", value: formData.gstNumber },
-    { id: "pcode", label: "P Code", value: formData.pcode },
+    { id: "pcode", label: "PinCode", value: formData.pcode },
   ];
 
   const API_BASE_URL =
