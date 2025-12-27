@@ -18,15 +18,19 @@ export default function Loading() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        <Image
-          src="/forklift.mp4"
-          alt="Loading animation showing a forklift moving" // CWV FIX: Descriptive alt text
-          width={200}
-          height={200}
-          priority
-          unoptimized 
-          
-        />
+       <video
+  width={200}
+  height={200}
+  autoPlay
+  loop
+  muted
+  playsInline
+  preload="metadata"
+  aria-label="Loading animation showing a forklift moving"
+>
+  <source src="/forklift.mp4" type="video/mp4" />
+</video>
+
       </motion.div>
 
       {/* Loading text */}
