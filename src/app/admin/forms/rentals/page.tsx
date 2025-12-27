@@ -222,31 +222,65 @@ const RentalsTable = () => {
     setTimeout(() => setIsSheetOpen(false), 500);
   };
 
-  const handleExportToExcel = () => {
+const handleExportToExcel = () => {
+    // 1. Define headers specifically for Rental data
     const headers = [
-      'Rental ID', 'Status', 'Date Requested', 'Requester Name', 'Product Name', 'Vendor Name', 'Start Date', 'End Date', 'Notes'
+      'Rental ID', 
+      'Status', 
+      'Date Requested', 
+      'Requester Name', 
+      'Product Name', 
+      'Vendor Name', 
+      'Start Date', 
+      'End Date', 
+      'Notes'
     ];
+
+    // 2. Helper to safely handle null values and escape quotes for CSV
+    const escapeCSV = (val: any) => {
+      if (val === null || val === undefined) return '""';
+      // Convert to string, escape double quotes, and flatten newlines
+      const str = String(val).replace(/"/g, '""'); 
+      return `"${str.replace(/\r\n|\n/g, ' ')}"`; 
+    };
+
     const csvRows = [headers.join(',')];
 
+    // 3. Process the memoized processedData (respects current filters/search)
     processedData.forEach(rental => {
-      const row = [
-        `"${rental.id}"`, `"${rental.status}"`, `"${new Date(rental.created_at).toLocaleString()}"`,
-        `"${rental.user_name.replace(/"/g, '""')}"`, `"${formatProductName(rental.product_details).replace(/"/g, '""')}"`,
-        `"${rental.product_details.user_name.replace(/"/g, '""')}"`, `"${new Date(rental.start_date).toLocaleDateString()}"`,
-        `"${new Date(rental.end_date).toLocaleDateString()}"`, `"${rental.notes.replace(/"/g, '""').replace(/\r\n|\n/g, ' ')}"`
-      ];
-      csvRows.push(row.join(','));
+      try {
+        const row = [
+          escapeCSV(rental.id),
+          escapeCSV(rental.status),
+          escapeCSV(new Date(rental.created_at).toLocaleString()),
+          escapeCSV(rental.user_name),
+          escapeCSV(formatProductName(rental.product_details)),
+          escapeCSV(rental.product_details?.user_name),
+          escapeCSV(new Date(rental.start_date).toLocaleDateString()),
+          escapeCSV(new Date(rental.end_date).toLocaleDateString()),
+          escapeCSV(rental.notes)
+        ];
+        csvRows.push(row.join(','));
+      } catch (err) {
+        console.error("Error processing rental row for export:", err, rental);
+      }
     });
 
+    // 4. Create the Blob with UTF-8 BOM (Essential for Excel compatibility)
     const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['\ufeff' + csvString], { type: 'text/csv;charset=utf-8;' });
+    
+    // 5. Trigger the download via a hidden link
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', 'all_rental_requests.csv');
+    link.setAttribute('download', `rental_requests_export_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
+    
+    // 6. Cleanup
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const columns = useMemo<ColumnDef<Rental>[]>(

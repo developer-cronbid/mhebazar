@@ -192,10 +192,10 @@ const QuotesTable = () => {
   }, [allQuotes, statusFilter, debouncedGlobalFilter, sortBy, dateRange]);
 
   const totalQuotes = processedData.length;
-  const totalPages = Math.ceil(totalQuotes / pageSize);
+ const totalPages = Math.ceil(processedData.length / pageSize);
 
   // Memoized function to get the current page's data
-  const paginatedData = useMemo(() => {
+ const paginatedData = useMemo(() => {
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
     return processedData.slice(start, end);
@@ -232,36 +232,57 @@ const QuotesTable = () => {
     setTimeout(() => setIsSheetOpen(false), 500);
   };
 
-  const handleExportToExcel = () => {
-    const headers = [
-      'Quote ID', 'Status', 'Date Requested', 'Requester Name',
-      'Product Name', 'Vendor Name', 'Message'
-    ];
-    const csvRows = [headers.join(',')];
+const handleExportToExcel = () => {
+  // 1. Define headers
+  const headers = [
+    'Quote ID', 'Status', 'Date Requested', 'Requester Name',
+    'Product Name', 'Vendor Name', 'Message'
+  ];
 
-    processedData.forEach(quote => {
+  // 2. Create a helper to safely handle null values and escape quotes
+  const escapeCSV = (val: any) => {
+    if (val === null || val === undefined) return '""';
+    // Ensure it's a string, then escape double quotes and remove newlines
+    const str = String(val).replace(/"/g, '""'); 
+    return `"${str.replace(/\r\n|\n/g, ' ')}"`; 
+  };
+
+  const csvRows = [headers.join(',')];
+
+  // 3. Process the data
+  processedData.forEach(quote => {
+    try {
       const row = [
-        `"${quote.id}"`,
-        `"${quote.status}"`,
-        `"${new Date(quote.created_at).toLocaleString()}"`,
-        `"${quote.user_name.replace(/"/g, '""')}"`,
-        `"${formatProductName(quote.product_details).replace(/"/g, '""')}"`,
-        `"${quote.product_details.user_name.replace(/"/g, '""')}"`,
-        `"${quote.message.replace(/"/g, '""').replace(/\r\n|\n/g, ' ')}"`
+        escapeCSV(quote.id),
+        escapeCSV(quote.status),
+        escapeCSV(new Date(quote.created_at).toLocaleString()),
+        escapeCSV(quote.user_name),
+        escapeCSV(formatProductName(quote.product_details)),
+        escapeCSV(quote.product_details?.user_name),
+        escapeCSV(quote.message)
       ];
       csvRows.push(row.join(','));
-    });
+    } catch (err) {
+      console.error("Error processing row for export:", err, quote);
+    }
+  });
 
-    const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'all_quotes.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  // 4. Create the Blob with UTF-8 BOM (prevents character errors in Excel)
+  const csvString = csvRows.join('\n');
+  const blob = new Blob(['\ufeff' + csvString], { type: 'text/csv;charset=utf-8;' });
+  
+  // 5. Trigger the download
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', `quotes_export_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  
+  // 6. Cleanup
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
   // Define table columns
   const columns = useMemo<ColumnDef<Quote>[]>
@@ -344,7 +365,7 @@ const QuotesTable = () => {
     state: { sorting: sortBy },
     onSortingChange: setSortBy,
     getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
+    manualPagination: false,
     manualFiltering: true,
     manualSorting: true,
     pageCount: totalPages,

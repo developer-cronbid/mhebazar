@@ -1,7 +1,7 @@
 // src/components/products/IndividualProduct.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   Heart,
   Share2,
@@ -26,15 +26,41 @@ import api from "@/lib/api";
 import axios from "axios";
 import { toast } from "sonner";
 import { useUser } from "@/context/UserContext";
-import QuoteForm from "@/components/forms/enquiryForm/quotesForm";
+// import QuoteForm from "@/components/forms/enquiryForm/quotesForm";
 import RentalForm from "@/components/forms/enquiryForm/rentalForm";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
-import ReviewSection from "./Reviews";
+// import MheWriteAReview from "@/components/forms/product/ProductReviewForm";
+// import ReviewSection from "./Reviews";
 import DOMPurify from "dompurify";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import categories from "@/data/categories.json";
+import dynamic from 'next/dynamic';
+
+const ReviewSection = dynamic(() => import("./Reviews"), {
+  ssr: false,
+  // 🎯 FIX: Match the real height (~500px) to prevent the footer from jumping
+  loading: () => <div className="min-h-[500px] w-full bg-gray-50 animate-pulse rounded-xl mt-10" />
+});
+
+const QuoteForm = dynamic(() => import("@/components/forms/enquiryForm/quotesForm"), {
+  ssr: false
+});
+const MheWriteAReview = dynamic(() => import("@/components/forms/product/ProductReviewForm"), { ssr: false });
+
+const sanitizeHTML = (html: string) => {
+  // If we are on the server (SSR), return the raw HTML
+  // Next.js will hydrate the safe version once it hits the browser.
+  if (typeof window === "undefined") return html;
+  
+  // Handle Turbopack's module resolution quirk
+  const purify = (DOMPurify as any).default || DOMPurify;
+  
+  // Double-check if sanitize exists before calling it to prevent the crash
+  return (typeof purify.sanitize === 'function') 
+    ? purify.sanitize(html) 
+    : html;
+};
 
 type ProductImage = {
   id: number;
@@ -54,7 +80,7 @@ type ProductData = {
   manufacturer: string | null;
   model: string | null;
   product_details: ProductDetails | null;
- 
+
   price: string;
   type: string | string[]; // Can be string or string[] based on product type
   is_active: boolean;
@@ -99,6 +125,7 @@ interface WishlistItemApi {
 interface ProductSectionProps {
   productId: number | string | null;
   productSlug: string;
+  initialData: ProductData;
   //  productTitle: string;
 }
 
@@ -190,37 +217,38 @@ const FallbackImage = ({
   onImageError: (id: number) => void;
   id: number;
 }) => {
-  const [imgSrc, setImgSrc] = useState(src);
+  // const [imgSrc, setImgSrc] = useState(src);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    setImgSrc(src);
+    // setImgSrc(src);
     setError(false);
   }, [src]);
 
-  const handleError = () => {
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (!error) {
-      if (fallbackSrc) {
-        setImgSrc(fallbackSrc);
-      } else {
-        setImgSrc("/placeholder-image.png");
-      }
       setError(true);
-      onImageError(id); // Call the parent handler to hide the thumbnail box
+      const target = e.currentTarget;
+      // Fallback logic happens only on error, not on initial load
+      target.src = fallbackSrc || "/placeholder-image.png";
+      onImageError(id);
     }
   };
 
   return (
     <Image
-      src={imgSrc}
+      src={src}
       alt={alt}
       width={width}
       height={height}
       className={className}
       style={style}
       priority={priority}
+      // Keep this
+      fetchPriority="high" // Keep this
+      sizes="(max-width: 768px) 100vw, 40vw"
       unoptimized={
-        imgSrc.startsWith("/placeholder-image.png") || imgSrc === fallbackSrc
+        src.startsWith("/placeholder-image.png") || src === fallbackSrc
       }
       onError={handleError}
     />
@@ -323,11 +351,12 @@ const containerVariants = {
 export default function ProductSection({
   productId,
   productSlug,
+  initialData,
 }: ProductSectionProps) {
   const router = useRouter();
   const { user } = useUser();
 
-  const [data, setData] = useState<ProductData | null>(null);
+  const [data, setData] = useState<ProductData>(initialData);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<
@@ -337,7 +366,7 @@ export default function ProductSection({
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
   const [cartItemId, setCartItemId] = useState<number | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [erroredImageIds, setErroredImageIds] = useState<Set<number>>(
     new Set()
   );
@@ -353,6 +382,24 @@ export default function ProductSection({
 
   // Use a ref to store a function that can refresh reviews
   const reviewsRefresher = useRef<(() => void) | null>(null);
+
+ const sanitizedDescription = useMemo(() => {
+  // Only attempt to sanitize if window is available (Client Side)
+  if (typeof window === "undefined") return data.description;
+  
+  return sanitizeHTML(data.description);
+}, [data.description]);
+
+const sanitizedVendorDesc = useMemo(() => {
+  if (!data.user_description) return "";
+  if (typeof window === "undefined") return data.user_description;
+  return sanitizeHTML(data.user_description);
+}, [data.user_description]);
+
+  // IMPROVEMENT: Memoize cleaned media URLs to avoid regex overhead on every frame
+  const cleanedImages = useMemo(() =>
+    data.images.map(img => ({ ...img, image: cleanMediaUrl(img.image) })),
+    [data.images]);
 
   // Ref to hold the latest state values for async operations
   const latestCartState = useRef({ currentCartQuantity, cartItemId, isInCart });
@@ -418,58 +465,58 @@ export default function ProductSection({
     }
   }, [user, data?.id]);
 
-  useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
-      if (!productId) {
-        router.push("/404");
-        return;
-      }
+  // useEffect(() => {
+  //   async function fetchData() {
+  //     setIsLoading(true);
+  //     if (!productId) {
+  //       router.push("/404");
+  //       return;
+  //     }
 
-      const cacheKey = String(productId);
-      if (productCache.current.has(cacheKey)) {
-        const cachedData = productCache.current.get(cacheKey)!;
-        setData(cachedData);
-        if (cachedData.images.length > 0) {
-          setSelectedImage(0);
-        }
-        setIsLoading(false);
-        return;
-      }
+  //     const cacheKey = String(productId);
+  //     if (productCache.current.has(cacheKey)) {
+  //       const cachedData = productCache.current.get(cacheKey)!;
+  //       setData(cachedData);
+  //       if (cachedData.images.length > 0) {
+  //         setSelectedImage(0);
+  //       }
+  //       setIsLoading(false);
+  //       return;
+  //     }
 
-      try {
-        const productRes = await api.get<ProductData>(
-          `/products/${productId}/`
-        );
-        const foundProduct = productRes.data;
+  //     try {
+  //       const productRes = await api.get<ProductData>(
+  //         `/products/${productId}/`
+  //       );
+  //       const foundProduct = productRes.data;
 
-        // Fetch category details for the fallback image
-        const categoryRes = await api.get(
-          `/categories/${foundProduct.category}`
-        );
-        const categoryWithImage = {
-          ...foundProduct,
-          category_details: categoryRes.data,
-        };
+  //       // Fetch category details for the fallback image
+  //       const categoryRes = await api.get(
+  //         `/categories/${foundProduct.category}`
+  //       );
+  //       const categoryWithImage = {
+  //         ...foundProduct,
+  //         category_details: categoryRes.data,
+  //       };
 
-        if (categoryWithImage) {
-          setData(categoryWithImage);
-          productCache.current.set(cacheKey, categoryWithImage);
-          if (categoryWithImage.images.length > 0) {
-            setSelectedImage(0);
-          }
-        } else {
-          router.push("/404");
-        }
-      } catch (error) {
-        console.error("Failed to fetch product data:", error);
-        router.push("/404");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchData();
-  }, [productId, router]);
+  //       if (categoryWithImage) {
+  //         setData(categoryWithImage);
+  //         productCache.current.set(cacheKey, categoryWithImage);
+  //         if (categoryWithImage.images.length > 0) {
+  //           setSelectedImage(0);
+  //         }
+  //       } else {
+  //         router.push("/404");
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch product data:", error);
+  //       router.push("/404");
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   }
+  //   fetchData();
+  // }, [productId, router]);
 
   useEffect(() => {
     fetchInitialStatus();
@@ -511,7 +558,7 @@ export default function ProductSection({
           if (
             error.response.status === 400 &&
             error.response.data?.non_field_errors?.[0] ===
-              "The fields user, product must make a unique set."
+            "The fields user, product must make a unique set."
           ) {
             toast.info("Product is already in your cart.", {
               action: {
@@ -523,7 +570,7 @@ export default function ProductSection({
           } else {
             toast.error(
               error.response.data?.message ||
-                `Failed to add to cart: ${error.response.statusText}`
+              `Failed to add to cart: ${error.response.statusText}`
             );
           }
         } else {
@@ -648,14 +695,14 @@ export default function ProductSection({
         if (
           error.response.status === 400 &&
           error.response.data?.non_field_errors?.[0] ===
-            "The fields user, product must make a unique set."
+          "The fields user, product must make a unique set."
         ) {
           toast.info("Product is already in your wishlist.");
           setIsWishlisted(true);
         } else {
           toast.error(
             error.response.data?.message ||
-              `Failed to add to wishlist: ${error.response.statusText}`
+            `Failed to add to wishlist: ${error.response.statusText}`
           );
         }
       } else {
@@ -717,7 +764,7 @@ export default function ProductSection({
       if (axios.isAxiosError(error) && error.response) {
         toast.error(
           error.response.data?.message ||
-            `Failed to add product to cart: ${error.response.statusText}`
+          `Failed to add product to cart: ${error.response.statusText}`
         );
       } else {
         toast.error("An unexpected error occurred. Please try again.");
@@ -840,9 +887,9 @@ export default function ProductSection({
 
   const formButtonText =
     data.type === "rental" ||
-    data.type === "used" ||
-    (Array.isArray(data.type) &&
-      (data.type.includes("rental") || data.type.includes("used")))
+      data.type === "used" ||
+      (Array.isArray(data.type) &&
+        (data.type.includes("rental") || data.type.includes("used")))
       ? "Rent Now"
       : "Get a Quote";
   const validSpecs = getValidSpecs(data.product_details);
@@ -852,20 +899,19 @@ export default function ProductSection({
     (data.type.includes("rental") || data.type.includes("used"));
 
   // ✅ Clean the display title to allow ALL requested punctuation for UI presentation
-const formatCapacity = (capacity?: string) => {
-  if (!capacity) return "";
-  // Automatically append units if missing
-  if (/^\d+$/.test(capacity)) return `${capacity} kg`;
-  if (/^\d+(\.\d+)?\s?t(on)?$/i.test(capacity)) return capacity.replace(/\s?ton/i, "t");
-  return capacity;
-};
+  const formatCapacity = (capacity?: string) => {
+    if (!capacity) return "";
+    // Automatically append units if missing
+    if (/^\d+$/.test(capacity)) return `${capacity} kg`;
+    if (/^\d+(\.\d+)?\s?t(on)?$/i.test(capacity)) return capacity.replace(/\s?ton/i, "t");
+    return capacity;
+  };
 
-const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
-  data.model || ""
-} ${formatCapacity(data.product_details?.capacity)}`
-  .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%+×]/g, "")
-  .replace(/\s+/g, " ")
-  .trim();
+  const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${data.model || ""
+    } ${formatCapacity(data.product_details?.capacity)}`
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%+×]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 
   // Determine if the currently selected media is a video
@@ -887,9 +933,8 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
           {/* Main Product Image/Video Container */}
           <div
             ref={imageContainerRef}
-            className={`relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-full md:h-[464px] mx-auto group ${
-              isSelectedMediaVideo ? "" : "cursor-zoom-in"
-            }`}
+            className={`relative bg-gray-50 rounded-lg overflow-hidden aspect-square w-full md:w-full md:h-[464px] mx-auto group ${isSelectedMediaVideo ? "" : "cursor-zoom-in"
+              }`}
             onClick={
               isSelectedMediaVideo
                 ? undefined
@@ -907,19 +952,18 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
             {/* Main Media Display */}
             <MediaFallbackImage
               src={
-                data.images[selectedImage]?.image ||
+                cleanedImages[selectedImage]?.image ||
                 imgUrl +
-                  (categories.find((cat) => cat.id === data.category)
-                    ?.image_url || "")
+                (categories.find((cat) => cat.id === data.category)
+                  ?.image_url || "")
               }
               alt={data.name}
-              className={`w-full h-full object-contain transition-transform duration-200 ${
-                isZoomed && !isSelectedMediaVideo ? "opacity-50" : ""
-              }`}
+              className={`w-full h-full object-contain transition-transform duration-200 ${isZoomed && !isSelectedMediaVideo ? "opacity-50" : ""
+                }`}
               width={700}
               height={700}
               fallbackSrc={data.category_details?.cat_image}
-              priority
+              priority={true}
               onImageError={handleImageError}
               id={data.images[selectedImage]?.id || 0}
             />
@@ -951,9 +995,8 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                 aria-label="Add to wishlist"
               >
                 <Heart
-                  className={`w-4 h-4 transition-colors ${
-                    isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
-                  }`}
+                  className={`w-4 h-4 transition-colors ${isWishlisted ? "fill-red-500 text-red-500" : "text-gray-600"
+                    }`}
                 />
               </motion.button>
               <motion.button
@@ -998,11 +1041,10 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                   <motion.button
                     key={img.id}
                     onClick={() => setSelectedImage(index)}
-                    className={`rounded border-2 overflow-hidden flex-shrink-0 w-fit ${
-                      selectedImage === index
+                    className={`rounded border-2 overflow-hidden flex-shrink-0 w-fit ${selectedImage === index
                         ? "border-orange-500"
                         : "border-gray-200"
-                    } hover:border-orange-300 transition-colors`}
+                      } hover:border-orange-300 transition-colors`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     aria-label={`Select image ${index + 1}`}
@@ -1014,6 +1056,7 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                       width={104}
                       height={104}
                       id={img.id}
+                      priority={true}
                       onImageError={handleImageError}
                       isThumb={true}
                     />
@@ -1072,12 +1115,11 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                   {[1, 2, 3, 4, 5].map((star) => (
                     <Star
                       key={star}
-                      className={`w-4 h-4 transition-colors ${
-                        data.average_rating !== null &&
-                        star <= data.average_rating
+                      className={`w-4 h-4 transition-colors ${data.average_rating !== null &&
+                          star <= data.average_rating
                           ? "fill-orange-400 text-orange-400"
                           : "text-gray-300"
-                      }`}
+                        }`}
                     />
                   ))}
                   <span className="text-base text-gray-600 ml-1">
@@ -1397,9 +1439,7 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
               {/* ✅ FIX: Render description as HTML output */}
               <div
                 className="line-clamp-4 text-sm md:text-base prose max-w-none"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(data.description),
-                }}
+                dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
               />
               <button
                 onClick={() => {
@@ -1532,10 +1572,7 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
                 className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line overflow-hidden prose max-w-none"
-                // ✅ FIX: Render full description as HTML output
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(data.description),
-                }}
+                dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
               />
             )}
           </AnimatePresence>
@@ -1603,11 +1640,10 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                                   return (
                                     <tr
                                       key={`${key}-${specIndex}`}
-                                      className={`hover:bg-gray-50 transition-colors duration-150 ${
-                                        specIndex % 2 === 0
+                                      className={`hover:bg-gray-50 transition-colors duration-150 ${specIndex % 2 === 0
                                           ? "bg-white"
                                           : "bg-gray-25"
-                                      }`}
+                                        }`}
                                     >
                                       <td className="px-6 py-4 whitespace-nowrap">
                                         <span className="text-sm font-medium text-gray-700">
@@ -1635,9 +1671,8 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                           return (
                             <tr
                               key={key}
-                              className={`hover:bg-gray-50 transition-colors duration-150 ${
-                                index % 2 === 0 ? "bg-white" : "bg-gray-25"
-                              }`}
+                              className={`hover:bg-gray-50 transition-colors duration-150 ${index % 2 === 0 ? "bg-white" : "bg-gray-25"
+                                }`}
                             >
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <span className="text-sm font-medium text-gray-700">
@@ -1726,9 +1761,7 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                     {data.user_description ? (
                       <div
                         className="mt-2 text-sm text-gray-700 prose max-w-none"
-                        dangerouslySetInnerHTML={{
-                          __html: DOMPurify.sanitize(data.user_description),
-                        }}
+                        dangerouslySetInnerHTML={{ __html: sanitizedVendorDesc }}
                       />
                     ) : (
                       <p className="mt-2 text-sm text-gray-500 italic">
@@ -1745,8 +1778,8 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
       {data.id && (
         <ReviewSection
           productId={data.id}
-          // The prop 'registerRefresher' has been removed from ReviewSection
-          // based on your request to ignore the previous error.
+        // The prop 'registerRefresher' has been removed from ReviewSection
+        // based on your request to ignore the previous error.
         />
       )}
 
@@ -1794,7 +1827,7 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                     height={1000}
                     fallbackSrc={data.category_details?.cat_image}
                     priority
-                    onImageError={() => {}} // No-op handler since this image is critical
+                    onImageError={() => { }} // No-op handler since this image is critical
                     id={data.images[currentMediaIndex]?.id || 0}
                   />
                 )}
@@ -1830,11 +1863,10 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                   <motion.button
                     key={img.id}
                     onClick={() => setCurrentMediaIndex(index)}
-                    className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                      currentMediaIndex === index
+                    className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${currentMediaIndex === index
                         ? "border-orange-500"
                         : "border-transparent hover:border-gray-600"
-                    }`}
+                      }`}
                     aria-label={`Select media thumbnail ${index + 1}`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -1846,7 +1878,7 @@ const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${
                       width={80}
                       height={80}
                       id={img.id}
-                      onImageError={() => {}}
+                      onImageError={() => { }}
                       isThumb={true}
                     />
                   </motion.button>

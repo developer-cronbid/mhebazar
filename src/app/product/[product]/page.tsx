@@ -12,24 +12,41 @@ import { Metadata } from 'next';
 // --- START: FIXED API Type Definitions ---
 interface ProductApiResponse {
   id: number;
-  category_name: string;
-  subcategory_name: string | null;
-  user_name: string | null;
-  images: { id: number; image: string }[];
-  average_rating: number | null;
   name: string;
-  description: string | null;
+  description: string;
   meta_title: string | null;
   meta_description: string | null;
   manufacturer: string | null;
   model: string | null;
+  product_details: {
+    capacity?: string;
+    [key: string]: unknown;
+  } | null;
   price: string;
-  type: string[] | string;
+  type: string | string[];
   is_active: boolean;
   direct_sale: boolean;
-  stock_quantity: number; 
-  // NOTE: Assuming review_count is needed for accurate schema, but not in current API interface.
-  // We'll use a safe placeholder count (1) in the schema below.
+  online_payment: boolean;
+  hide_price: boolean;
+  stock_quantity: number;
+  created_at: string;
+  updated_at: string;
+  status:string;
+  user: number;
+  category: number;
+  subcategory: number | null;
+  category_name: string;
+  subcategory_name: string | null;
+  user_name: string;
+  images: { id: number; image: string }[];
+  brochure: string | null;
+  average_rating: number | null;
+  review_count: number;
+  user_description: string | null;
+  user_image: string | null;
+  category_details: {
+    cat_image: string | null;
+  };
 }
 // --- END: FIXED API Type Definitions ---
 
@@ -63,8 +80,14 @@ const forceHttps = (url: string): string => {
 
 // Helper function to fetch product data (Reusable for Metadata and Page)
 async function getProductData(productId: number): Promise<ProductApiResponse> {
-  // Use .get<ProductApiResponse> to enforce type checking on the API response
-  const response = await api.get<ProductApiResponse>(`/products/${productId}`);
+  // Add cache-control headers to bypass Next.js and API caching
+  const response = await api.get<ProductApiResponse>(`/products/${productId}`, {
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+    }
+  });
   return response.data;
 }
 
@@ -72,12 +95,25 @@ async function getProductData(productId: number): Promise<ProductApiResponse> {
 // --- SEO AND METADATA GENERATION (CWV FIX) ---
 export async function generateMetadata({
   params,
+  searchParams, 
 }: {
   params: Promise<{ product: string }>;
+  searchParams: Promise<{ id?: string }>; 
 }): Promise<Metadata> {
-  const { product } = await params;
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  const product = resolvedParams.product;
+  const queryId = resolvedSearchParams.id;
+  
   const separator = '-';
-  const productId = parseInt(product.split(separator).pop() || '', 10);
+  let productId: number;
+
+  // Logic to find ID from query string first, then slug
+  if (queryId) {
+    productId = parseInt(queryId, 10);
+  } else {
+    productId = parseInt(product.split(separator).pop() || '', 10);
+  }
 
   // Fallback metadata immediately if ID is invalid
   if (isNaN(productId)) {
@@ -174,34 +210,61 @@ export default async function IndividualProductPage({
   params: Promise<{ product: string }>;
   searchParams: Promise<{ id?: string }>;
 }) {
-  const { product } = await params;
-  const { id } = await searchParams;
-  let productId: number;
-  let productSlugFromUrl: string;
-  let separator = '-'; // The reliable separator between the slug and the ID in the URL parameter.
+  const resolvedParams = await params; // Await the promise first
+const resolvedSearchParams = await searchParams;
 
-  // 1. Determine Product ID
-  if (id) {
-    productId = parseInt(id, 10);
-    productSlugFromUrl = product || 'product';
-  } else {
-    const parts = product.split(separator);
-    productId = parseInt(parts.pop() || '', 10);
-    productSlugFromUrl = parts.join(separator);
-  }
+const productPath = resolvedParams.product;
+const queryId = resolvedSearchParams.id; 
+
+let productId: number;
+let productSlugFromUrl: string;
+let separator = '-';
+
+if (queryId) {
+  productId = parseInt(queryId, 10); // Use the ID from the URL query
+  productSlugFromUrl = productPath || 'product';
+} else {
+  const parts = productPath.split(separator);
+  productId = parseInt(parts.pop() || '', 10); // Fallback to slug ID
+  productSlugFromUrl = parts.join(separator);
+}
 
   if (isNaN(productId)) {
     notFound();
   }
 
-  let productData: ProductApiResponse;
-  try {
-    // CWV FIX: Reuse the fetched product data (or trigger a cached fetch)
-    productData = await getProductData(productId); 
-  } catch (error) {
-    console.error('Failed to fetch product:', error);
-    notFound();
+let productData: ProductApiResponse;
+try {
+  // 1. Fetch main product data
+  const productRes = await getProductData(productId); 
+
+  // 2. Logic: If Approved and User is Active, continue; otherwise, redirect to Home
+  if (productRes.status !== 'approved' || !productRes.is_active) {
+    console.warn(`Redirecting: Product ${productId} is ${productRes.status} or inactive.`);
+    redirect('/'); // Sends user to home if status is wrong
   }
+
+  // 3. Fetch category details
+  const categoryRes = await api.get(`/categories/${productRes.category}`, {
+    headers: { 'Cache-Control': 'no-cache' }
+  });
+
+  productData = {
+    ...productRes,
+    category_details: categoryRes.data,
+  };
+} catch (error: any) {
+  // 4. FIX: Handle Django's 404. If the API says 404, it means the product 
+  // exists but is hidden by your 'get_queryset' logic
+  if (error.response?.status === 404) {
+     console.error('Product hidden by backend (404), redirecting to home...');
+     redirect('/'); // Redirect instead of showing notFound()
+  }
+  
+  // For other serious errors (like server down), you can still show 404
+  console.error('Unexpected error:', error);
+  notFound(); 
+}
 
   // 2. Canonicalization Check and Redirects
   
@@ -217,10 +280,10 @@ export default async function IndividualProductPage({
   }
   
   // Check 2: If the old query param URL was used, redirect to the new format.
-  if (id) {
-    const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
-    redirect(canonicalUrl);
-  }
+ if (queryId) { // FIX: Use the variable you defined at the top
+  const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
+  redirect(canonicalUrl);
+}
 
   // 3. Prepare Data for Rendering
   const { category_name, subcategory_name, name: productName } = productData;
@@ -247,7 +310,7 @@ export default async function IndividualProductPage({
         ]}
       />
       {/* FIX 2: Pass productSlug to the client component to resolve the prop error */}
-      <ProductSection productSlug={product} productId={productId} />
+    <ProductSection productSlug={productPath} productId={productId} initialData={productData} />
 
       <div className={styles.animatedSection}>
         <SparePartsFeatured />

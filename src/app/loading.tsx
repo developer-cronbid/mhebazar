@@ -19,12 +19,13 @@ export default function Loading() {
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <Image
-          src="/forklift.gif"
+          src="/forklift.mp4"
           alt="Loading animation showing a forklift moving" // CWV FIX: Descriptive alt text
           width={200}
           height={200}
           priority
           unoptimized 
+          
         />
       </motion.div>
 

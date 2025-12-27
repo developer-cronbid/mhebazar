@@ -234,7 +234,7 @@ export default function Navbar(): JSX.Element {
                 className="flex-shrink-0 relative overflow-hidden rounded-md shine-effect hidden sm:block"
               >
                   <Image
-                  src="/brand-image.png"
+                  src="/brand-image.webp"
                   alt="Brand Store"
                   width={120}
                   height={40}
@@ -625,7 +625,7 @@ export default function Navbar(): JSX.Element {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   <Image
-                    src="/mhe-logo.png"
+                    src="/mhe-logo.webp"
                     alt="MHE BAZAR Logo"
                     width={120}
                     height={32}
