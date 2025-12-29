@@ -1194,8 +1194,8 @@ const sanitizedVendorDesc = useMemo(() => {
                       Only {data.stock_quantity} left in stock
                     </p>
                   ) : data.stock_quantity === 0 && data.direct_sale ? (
-                    <p className="text-base font-semibold text-red-600">
-                      Out of Stock
+                    <p className="text-base font-semibold text-green-600">
+                      In Stock
                     </p>
                   ) : (
                     <p className="text-sm md:text-base font-semibold">

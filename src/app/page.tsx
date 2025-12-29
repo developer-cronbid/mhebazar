@@ -8,6 +8,7 @@ import Link from "next/link";
 import SectionWrapper from "@/components/common/SectionWrapper";
 import ImagePopup from "@/components/common/ImagePopup";
 import dynamic from "next/dynamic"; // Import dynamic for lazy loading
+import api from "@/lib/api";
 
 // CWV FIX: Dynamically import components below the fold to improve LCP/INP
 const VendorProductsFeatured = dynamic(() => import("@/components/home/VendorFeatured"));
@@ -17,6 +18,17 @@ const BlogCarousel = dynamic(() => import("@/components/home/BlogCarousal").then
 
 
 export default async function HomePage() {
+
+// --- DATA FETCHING ---
+  // We fetch this here so it's ready for the MostPopular component immediately
+  let popularProducts = [];
+  try {
+    const response = await api.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/products/most_popular/`);
+    popularProducts = response.data?.results || response.data || [];
+  } catch (err) {
+    console.error("Error fetching popular products:", err);
+  }
+  
   return (
     <>
       {/* CWV FIX: Ensure HomeBanner's main image uses the 'priority' prop for LCP */}
@@ -30,7 +42,7 @@ export default async function HomePage() {
         <div className="max-w-[93vw] mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-10 justify-center items-start">
           <SectionWrapper>
             {/* These are likely above the fold, keep static */}
-            <MostPopular /> 
+            <MostPopular initialData={popularProducts} />
           </SectionWrapper>
           <SectionWrapper>
             <NewArrivalsAndTopSearches />

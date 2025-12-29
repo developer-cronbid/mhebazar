@@ -1,12 +1,12 @@
 // src/components/elements/MostPopular.tsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Marquee from "react-fast-marquee";
-import api from "@/lib/api";
 import categoriesData from "@/data/categories.json";
+
 
 interface ApiProduct {
   id: number;
@@ -84,51 +84,16 @@ const transformApiData = (apiProducts: ApiProduct[]): Category[] => {
   return [transformedCategory];
 };
 
-export default function MostPopular() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [mainImageError, setMainImageError] = useState(false);
-  const [marqueeSpeed, setMarqueeSpeed] = useState(40);
-  const [isMarqueePaused, setIsMarqueePaused] = useState(false);
 
-  const fetchData = useCallback(async () => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    if (!baseUrl) {
-      setIsLoading(false);
-      return;
-    }
-    try {
-      const response = await api.get(`${baseUrl}/products/most_popular/`);
-      const apiProducts = response.data?.results || response.data;
-      if (Array.isArray(apiProducts) && apiProducts.length > 0) {
-        const formattedData = transformApiData(apiProducts);
-        setCategories(formattedData);
-      }
-    } catch (err) {
-      setError("Failed to fetch popular products.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  const popularData = categories[0];
-  const visibleProducts = popularData?.products || [];
-
-  const CarouselProductItem = ({ product, idx }: { product: TransformedProduct; idx: number }) => {
-    const [itemImageError, setItemImageError] = useState(false);
-    
-    if (itemImageError || !product.image) return null;
+const CarouselProductItem = memo(({ product, idx }: { product: TransformedProduct; idx: number }) => {
+  const [itemImageError, setItemImageError] = useState(false);
+  if (itemImageError || !product.image) return null;
     
     return (
       <div key={`${product.id}-${idx}`} className="w-48 flex-shrink-0 mr-4 group">
         <Link href={`/product/${product.slug}-${product.id}`} className="block">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300 p-4 h-48 flex flex-col items-center justify-center group-hover:border-green-300">
-            <div className="relative w-36 h-32 mb-3 overflow-hidden rounded-lg">
+            <div className="relative w-36 h-32 mb-3 overflow-hidden rounded-lg bg-gray-100">
               <Image
                 src={product.image}
                 alt={product.label}
@@ -146,7 +111,57 @@ export default function MostPopular() {
         </Link>
       </div>
     );
-  };
+  });
+
+interface MostPopularProps {
+  initialData: ApiProduct[];
+}
+
+export default function MostPopular({ initialData }: MostPopularProps) {
+  // const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  // const [categories, setCategories] = useState<Category[]>([]);
+  const [mainImageError, setMainImageError] = useState(false);
+  const [marqueeSpeed, setMarqueeSpeed] = useState(40);
+  const [isMarqueePaused, setIsMarqueePaused] = useState(false);
+
+  // const fetchData = useCallback(async () => {
+  //   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  //   if (!baseUrl) {
+  //     setIsLoading(false);
+  //     return;
+  //   }
+  //   try {
+  //     const response = await api.get(`${baseUrl}/products/most_popular/`);
+  //     const apiProducts = response.data?.results || response.data;
+  //     if (Array.isArray(apiProducts) && apiProducts.length > 0) {
+  //       const formattedData = transformApiData(apiProducts);
+  //       setCategories(formattedData);
+  //     }
+  //   } catch (err) {
+  //     setError("Failed to fetch popular products.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, []);
+
+  // useEffect(() => {
+  //   fetchData();
+  // }, [fetchData]);
+
+ const popularData = useMemo(() => {
+    const transformed = transformApiData(initialData);
+    return transformed[0] || null;
+  }, [initialData]);
+
+  const visibleProducts = useMemo(() => {
+    return popularData?.products || [];
+  }, [popularData]);
+
+  // const popularData = categories[0];
+  // const visibleProducts = popularData?.products || [];
+
+  
 
   const handleMarqueeControl = (action: 'pause' | 'play' | 'slower' | 'faster') => {
     switch (action) {
@@ -165,7 +180,7 @@ export default function MostPopular() {
     }
   };
 
-  if (isLoading) return <LoadingSkeleton />;
+  // if (isLoading) return <LoadingSkeleton />;
 
   if (error || !popularData || mainImageError) {
     return (
@@ -224,10 +239,11 @@ export default function MostPopular() {
                     src={popularData.mainImage}
                     alt={popularData.mainLabel}
                     fill
+                    priority
                     className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
                     onError={() => setMainImageError(true)}
                     sizes="(max-width: 640px) 256px, 320px"
-                    priority
+                    
                   />
                 </div>
                 <div className="mt-4 text-center">
@@ -287,6 +303,8 @@ export default function MostPopular() {
                 gradient={true}
                 gradientColor="#f9fafb"
                 gradientWidth={50}
+                will-change-transform
+                style={{ willChange: "transform" }}
               >
                 {visibleProducts.map((product, idx) => (
                   <CarouselProductItem key={`${product.id}-${idx}`} product={product} idx={idx} />
@@ -304,31 +322,31 @@ export default function MostPopular() {
   );
 }
 
-function LoadingSkeleton() {
-  return (
-    <div className="w-full">
-      <div className="flex justify-between items-center mb-6">
-        <div className="h-8 bg-gray-200 rounded-lg w-48 animate-pulse" />
-      </div>
-      <div className="w-full border border-gray-200 rounded-xl bg-white overflow-hidden">
-        {/* Header skeleton */}
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-          <div className="h-8 bg-gray-200 rounded w-3/4 mb-2 animate-pulse" />
-          <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
-        </div>
+// function LoadingSkeleton() {
+//   return (
+//     <div className="w-full">
+//       <div className="flex justify-between items-center mb-6">
+//         <div className="h-8 bg-gray-200 rounded-lg w-48 animate-pulse" />
+//       </div>
+//       <div className="w-full border border-gray-200 rounded-xl bg-white overflow-hidden">
+//         {/* Header skeleton */}
+//         <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+//           <div className="h-8 bg-gray-200 rounded w-3/4 mb-2 animate-pulse" />
+//           <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse" />
+//         </div>
         
-        {/* Content skeleton */}
-        <div className="p-6">
-          <div className="flex justify-center mb-8">
-            <div className="w-64 h-64 sm:w-80 sm:h-80 bg-gray-200 rounded-xl animate-pulse" />
-          </div>
-          <div className="flex gap-4 overflow-hidden">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="w-48 h-48 bg-gray-200 rounded-xl flex-shrink-0 animate-pulse" />
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+//         {/* Content skeleton */}
+//         <div className="p-6">
+//           <div className="flex justify-center mb-8">
+//             <div className="w-64 h-64 sm:w-80 sm:h-80 bg-gray-200 rounded-xl animate-pulse" />
+//           </div>
+//           <div className="flex gap-4 overflow-hidden">
+//             {[1, 2, 3, 4].map((i) => (
+//               <div key={i} className="w-48 h-48 bg-gray-200 rounded-xl flex-shrink-0 animate-pulse" />
+//             ))}
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }

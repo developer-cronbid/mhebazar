@@ -1,11 +1,14 @@
+
+
 "use client";
 
 import { LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { JSX, useState } from "react";
+import { JSX, useMemo, useState } from "react";
 import categoriesData from "@/data/categories.json";
 import { motion } from "framer-motion";
+import Loading from '../../app/loading';
 
 const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -50,6 +53,7 @@ const itemVariants = {
 const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element => {
   const [showInitials, setShowInitials] = useState<boolean>(false);
   const fullImageUrl = getImageUrl(imageSrc);
+  
 
   const handleImageError = () => {
     setShowInitials(true);
@@ -69,6 +73,8 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
       <motion.div
         variants={itemVariants}
         whileHover={{ scale: 1.05 }}
+        whileInView="visible"
+        viewport={{once:true}}
         whileTap={{ scale: 0.95 }}
         className="flex flex-col w-[130px] h-[130px] items-center justify-center px-0 py-6 relative rounded-[1000px] aspect-[1] bg-[linear-gradient(143deg,rgba(212,234,250,1)_0%,rgba(255,255,255,1)_100%)] group"
       >
@@ -76,19 +82,21 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
           <motion.div
             className="relative w-[100px] h-[100px]"
             whileHover={{
-              scale: 1.65,
+              scale: 1.1,
               z: 10,
             }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
           >
             <Image
+              loading="lazy"
               src={fullImageUrl}
               alt={label}
               fill
               className="object-contain"
               onError={handleImageError}
               sizes="100px"
-              priority
+            
+              // priority
             />
           </motion.div>
         ) : (
@@ -112,17 +120,18 @@ const containerVariants = {
 
 export default function CategoriesSection(): JSX.Element {
   const [showAll, setShowAll] = useState(false);
-  const categories = categoriesData as Category[];
-
-  const displayedCategories = showAll ? categories : categories.slice(0, 7);
-
-  const createSlug = (name: string): string => {
-  // Convert to lowercase and replace spaces, parentheses, and underscores with a single hyphen.
-  const slug = name.toLowerCase().replace(/[\s()]+/g, '-');
   
-  // Remove any leading or trailing hyphens that might have been created.
-  return slug.replace(/^-+|-+$/g, '');
-};
+ // PRE-PROCESS DATA ONCE
+  const processedCategories = useMemo(() => {
+    return (categoriesData as Category[]).map(cat => ({
+      ...cat,
+      // Calculate slug once here
+      slug: cat.name.toLowerCase().replace(/[\s()]+/g, '-').replace(/^-+|-+$/g, '')
+    }));
+  }, []); // Empty dependency array means this runs only once
+
+  const displayedCategories = showAll ? processedCategories : processedCategories.slice(0, 7);
+  // console.log(displayedCategories)
 
   return (
     <section className="py-10 mb-4 w-full mx-auto px-4 md:px-8 bg-black-50">
@@ -131,25 +140,30 @@ export default function CategoriesSection(): JSX.Element {
       </h2>
       
       <motion.div
+        
         variants={containerVariants}
         initial="hidden"
-        animate="visible"
-        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8 gap-x-4 gap-y-8 justify-items-center"
+        whileInView="visible"
+        
+        viewport={{ once: true, margin: "-50px" }}
+        
+        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8 gap-x-4 min-h-[150px] gap-y-8 justify-items-center"
       >
         {displayedCategories.map((cat) => (
           <CategoryItem
             key={cat.id}
             imageSrc={cat.image_url}
             label={cat.name}
-            slug={createSlug(cat.name)}
+            slug={cat.slug}
           />
         ))}
-        {categories.length > 7 && (
+        {processedCategories.length > 7 && (
           <motion.div
             variants={itemVariants}
             className="flex flex-col items-center"
           >
             <motion.button
+            
               onClick={() => setShowAll(!showAll)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

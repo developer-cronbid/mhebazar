@@ -149,7 +149,7 @@ export async function generateMetadata({
         "url": canonicalUrl,
         "priceCurrency": "INR",
         "price": productData.price,
-        "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/InStock",
       },
       // FIX 1: Ensure AggregateRating structure is complete for rich snippets (Price/Rating shown)
       // This requires "reviewCount" even if estimated or placeholder.
