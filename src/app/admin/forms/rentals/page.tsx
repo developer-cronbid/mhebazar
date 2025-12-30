@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { RentalDetailsSheet } from './rentalDetails';
 import { ImageIcon, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import rentData from '@/data/rentData.json';
+// import rentData from '@/data/rentData.json';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { DateRange } from "react-day-picker";
@@ -72,7 +72,7 @@ const RentalsTable = () => {
     { id: 'created_at', desc: true }
   ]);
   const [dateRange, setDateRange] = useState<DateRange>();
-  const pageSize = 20;
+  const pageSize = 1000;
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -83,73 +83,48 @@ const RentalsTable = () => {
   }, [globalFilter]);
 
   useEffect(() => {
-    const fetchAndCombineData = async () => {
+    const fetchRentals = async () => {
       setLoading(true);
       try {
+        // Fetching directly from the API (Backend now has pagination_class = None)
         const apiResponse = await api.get(`/rentals/`);
-        const liveRentals: Rental[] = apiResponse.data.results || [];
-
-        const archivedRentals: Rental[] = rentData.map((rental, index) => {
-          const createdDate = new Date(rental.created_at);
-          return {
-            id: `archive-${rental.id}`,
-            user_name: rental.name,
-            notes: rental.meg,
-            status: (['pending', 'approved', 'rejected', 'returned'] as const)[index % 4],
-            created_at: rental.created_at,
-            start_date: createdDate.toISOString(),
-            end_date: new Date(createdDate.setDate(createdDate.getDate() + 30)).toISOString(),
-            product_details: {
-              name: rental.pname,
-              user_name: rental.cname,
-              price: 'N/A',
-              description: '',
-              manufacturer: '',
-              model: '',
-              images: [],
-            },
-          };
-        });
-
-        setAllRentals([...liveRentals, ...archivedRentals]);
-
+        
+        // Handle both standard arrays and paginated object wrappers
+        const liveRentals: Rental[] = apiResponse.data.results || apiResponse.data || [];
+        
+        console.log("Database Rentals Loaded:", liveRentals.length);
+        setAllRentals(liveRentals);
       } catch (error) {
-        console.error("Failed to fetch or process rental data:", error);
-        const archivedRentals: Rental[] = rentData.map((rental, index) => {
-          const createdDate = new Date(rental.created_at);
-          return {
-            id: `archive-${rental.id}`, user_name: rental.name, notes: rental.meg,
-            status: (['pending', 'approved', 'rejected', 'returned'] as const)[index % 4],
-            created_at: rental.created_at, start_date: createdDate.toISOString(),
-            end_date: new Date(createdDate.setDate(createdDate.getDate() + 30)).toISOString(),
-            product_details: {
-              name: rental.pname, user_name: rental.cname, price: 'N/A', description: '',
-              manufacturer: '', model: '', images: [],
-            },
-          };
-        });
-        setAllRentals(archivedRentals);
+        console.error("Failed to fetch rental data:", error);
+        setAllRentals([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAndCombineData();
+    fetchRentals();
   }, []);
 
   const processedData = useMemo(() => {
     let filteredData = [...allRentals];
 
     // Apply date range filter
-    if (dateRange?.from) {
-      filteredData = filteredData.filter(rental => {
-        const rentalDate = new Date(rental.created_at);
-        if (dateRange.to) {
-          return rentalDate >= dateRange.from && rentalDate <= dateRange.to;
-        }
-        return rentalDate >= dateRange.from;
-      });
-    }
+  // Apply date range filter with Time Normalization
+// Apply date range filter with Time Normalization
+if (dateRange?.from) {
+  const filterStart = new Date(dateRange.from);
+  filterStart.setHours(0, 0, 0, 0); // Start of first selected day: 00:00:00
+
+  // If 'to' is missing (single click), use 'from' as end.
+  const filterEnd = new Date(dateRange.to || dateRange.from);
+  filterEnd.setHours(23, 59, 59, 999); // End of last selected day: 23:59:59
+
+  filteredData = filteredData.filter(item => {
+    const itemDate = new Date(item.created_at);
+    // Comparison now includes the entire duration of the month
+    return itemDate >= filterStart && itemDate <= filterEnd;
+  });
+}
 
     if (statusFilter !== 'all') {
       filteredData = filteredData.filter(rental => rental.status === statusFilter);
@@ -190,9 +165,10 @@ const RentalsTable = () => {
   const totalRentals = processedData.length;
   const totalPages = Math.ceil(totalRentals / pageSize);
 
-  const paginatedData = useMemo(() => {
+ const paginatedData = useMemo(() => {
     const start = (page - 1) * pageSize;
     const end = start + pageSize;
+    // This will now correctly return all items since pageSize is 1000
     return processedData.slice(start, end);
   }, [processedData, page, pageSize]);
 
@@ -222,17 +198,17 @@ const RentalsTable = () => {
     setTimeout(() => setIsSheetOpen(false), 500);
   };
 
-const handleExportToExcel = () => {
+  const handleExportToExcel = () => {
     // 1. Define headers specifically for Rental data
     const headers = [
-      'Rental ID', 
-      'Status', 
-      'Date Requested', 
-      'Requester Name', 
-      'Product Name', 
-      'Vendor Name', 
-      'Start Date', 
-      'End Date', 
+      'Rental ID',
+      'Status',
+      'Date Requested',
+      'Requester Name',
+      'Product Name',
+      'Vendor Name',
+      'Start Date',
+      'End Date',
       'Notes'
     ];
 
@@ -240,8 +216,8 @@ const handleExportToExcel = () => {
     const escapeCSV = (val: any) => {
       if (val === null || val === undefined) return '""';
       // Convert to string, escape double quotes, and flatten newlines
-      const str = String(val).replace(/"/g, '""'); 
-      return `"${str.replace(/\r\n|\n/g, ' ')}"`; 
+      const str = String(val).replace(/"/g, '""');
+      return `"${str.replace(/\r\n|\n/g, ' ')}"`;
     };
 
     const csvRows = [headers.join(',')];
@@ -269,7 +245,7 @@ const handleExportToExcel = () => {
     // 4. Create the Blob with UTF-8 BOM (Essential for Excel compatibility)
     const csvString = csvRows.join('\n');
     const blob = new Blob(['\ufeff' + csvString], { type: 'text/csv;charset=utf-8;' });
-    
+
     // 5. Trigger the download via a hidden link
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -277,7 +253,7 @@ const handleExportToExcel = () => {
     link.setAttribute('download', `rental_requests_export_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
-    
+
     // 6. Cleanup
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
@@ -310,12 +286,12 @@ const handleExportToExcel = () => {
           );
         },
       },
-      { 
-        id: 'product_name', 
-        accessorFn: row => formatProductName(row.product_details), 
+      {
+        id: 'product_name',
+        accessorFn: row => formatProductName(row.product_details),
         header: 'Product Name',
         cell: ({ row }) => (
-          <Link 
+          <Link
             href={`/products-details/${row.original.product_details.id}`}
             onClick={(e) => e.stopPropagation()} // Prevent sheet from opening
             className="text-blue-600 hover:underline"
@@ -352,8 +328,8 @@ const handleExportToExcel = () => {
     onSortingChange: setSortBy,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
-    manualFiltering: true,
-    manualSorting: true,
+    manualFiltering: false,
+    manualSorting: false,
     pageCount: totalPages,
   });
 
@@ -399,29 +375,29 @@ const handleExportToExcel = () => {
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => handlePageChange(page - 1)} 
-                      disabled={page === 1} 
-                      className={page === 1 ? "pointer-events-none opacity-50" : ""} 
+                    <PaginationPrevious
+                      onClick={() => handlePageChange(page - 1)}
+                      disabled={page === 1}
+                      className={page === 1 ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
                   <PaginationItem>
                     <span className="px-4 py-2">{`Page ${page} of ${totalPages}`}</span>
                   </PaginationItem>
                   <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => handlePageChange(page + 1)} 
-                      disabled={page === totalPages} 
-                      className={page === totalPages ? "pointer-events-none opacity-50" : ""} 
+                    <PaginationNext
+                      onClick={() => handlePageChange(page + 1)}
+                      disabled={page === totalPages}
+                      className={page === totalPages ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
                 </PaginationContent>
               </Pagination>
             )}
           </div>
-          <Button 
-            onClick={handleExportToExcel} 
-            disabled={loading || paginatedData.length === 0} 
+          <Button
+            onClick={handleExportToExcel}
+            disabled={loading || paginatedData.length === 0}
             className="flex items-center gap-2 whitespace-nowrap"
           >
             <Download size={16} />
@@ -431,7 +407,7 @@ const handleExportToExcel = () => {
       </div>
 
       {/* Stats Section */}
-      <RequestStats 
+      <RequestStats
         data={allRentals}
         dateField="created_at"
         periodFilter={periodFilter}
@@ -487,6 +463,7 @@ const handleExportToExcel = () => {
             date={dateRange}
             onDateChange={setDateRange}
             periodFilter={periodFilter}
+            
             className="w-full"
           />
         </div>

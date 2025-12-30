@@ -15,33 +15,41 @@ interface StatsProps {
 export function RequestStats({ data, dateField, periodFilter, onPeriodChange }: StatsProps) {
   const stats = useMemo(() => {
     const now = new Date();
-    const periods = {
-      thisMonth: new Date(now.getFullYear(), now.getMonth(), 1),
-      lastMonth: new Date(now.getFullYear(), now.getMonth() - 1, 1),
-      last3Months: new Date(now.getFullYear(), now.getMonth() - 3, 1),
-      last6Months: new Date(now.getFullYear(), now.getMonth() - 6, 1),
-      thisYear: new Date(now.getFullYear(), 0, 1),
-      lastYear: new Date(now.getFullYear() - 1, 0, 1),
-      total: new Date(0),
-    };
+    
+    // Boundary for This Month
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Boundaries for Last Month (Strict)
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+
+    // Boundary for Last 6 Months
+    const last6MonthsStart = new Date(now.getFullYear(), now.getMonth() - 6, 1);
 
     const counts = {
       thisMonth: 0,
       lastMonth: 0,
-      last3Months: 0,
       last6Months: 0,
-      thisYear: 0,
-      lastYear: 0,
-      total: data.length,
     };
 
     data.forEach(item => {
       const date = new Date(item[dateField]);
-      Object.entries(periods).forEach(([key, periodDate]) => {
-        if (date >= periodDate) {
-          counts[key as keyof typeof counts]++;
-        }
-      });
+
+      // 1. Logic for This Month (Start of month to now)
+      if (date >= thisMonthStart) {
+        counts.thisMonth++;
+      }
+
+      // 2. Logic for Last Month (Strictly Start of Last Month to End of Last Month)
+      // This prevents "This Month" data from leaking into the "Last Month" count
+      if (date >= lastMonthStart && date <= lastMonthEnd) {
+        counts.lastMonth++;
+      }
+
+      // 3. Logic for Last 6 Months (6 months ago to now)
+      if (date >= last6MonthsStart) {
+        counts.last6Months++;
+      }
     });
 
     return counts;

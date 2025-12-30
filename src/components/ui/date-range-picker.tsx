@@ -34,7 +34,7 @@ export function DateRangePicker({
 }: DateRangePickerProps) {
   const [isPopoverOpen, setIsPopoverOpen] = React.useState(false);
 
-  // Update date range when period filter changes
+  // Update date range when period filter changes (from external stats)
   React.useEffect(() => {
     if (!periodFilter || periodFilter === 'all') {
       onDateChange(undefined);
@@ -47,29 +47,32 @@ export function DateRangePicker({
     switch (periodFilter) {
       case "thisMonth":
         from.setDate(1);
+        from.setHours(0, 0, 0, 0);
         onDateChange({ from, to: today });
         break;
       case "lastMonth":
-        const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
-        onDateChange({ from: lastMonth, to: lastMonthEnd });
+        const lmFrom = new Date(today.getFullYear(), today.getMonth() - 1, 1, 0, 0, 0, 0);
+        const lmTo = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59, 999);
+        onDateChange({ from: lmFrom, to: lmTo });
         break;
       case "last3Months":
         from.setMonth(today.getMonth() - 3);
+        from.setHours(0, 0, 0, 0);
         onDateChange({ from, to: today });
         break;
       case "last6Months":
         from.setMonth(today.getMonth() - 6);
+        from.setHours(0, 0, 0, 0);
         onDateChange({ from, to: today });
         break;
       case "thisYear":
-        from.setMonth(0, 1);
-        onDateChange({ from, to: today });
+        const tyFrom = new Date(today.getFullYear(), 0, 1, 0, 0, 0, 0);
+        onDateChange({ from: tyFrom, to: today });
         break;
       case "lastYear":
-        const lastYear = new Date(today.getFullYear() - 1, 0, 1);
-        const lastYearEnd = new Date(today.getFullYear() - 1, 11, 31);
-        onDateChange({ from: lastYear, to: lastYearEnd });
+        const lyFrom = new Date(today.getFullYear() - 1, 0, 1, 0, 0, 0, 0);
+        const lyTo = new Date(today.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+        onDateChange({ from: lyFrom, to: lyTo });
         break;
     }
   }, [periodFilter, onDateChange]);

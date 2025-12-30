@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { QuoteDetailsSheet } from './quotesDetails';
 import { ImageIcon, Download } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import quoteData from '@/data/quoteData.json';
+// import quoteData from '@/data/quoteData.json';
 import Link from 'next/link';
 import { DateRange } from "react-day-picker";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
@@ -74,7 +74,7 @@ const QuotesTable = () => {
     { id: 'created_at', desc: true }
   ]);
   const [dateRange, setDateRange] = useState<DateRange>();
-  const pageSize = 20;
+  const pageSize = 1000;
 
   // Debounce search input for performance
   useEffect(() => {
@@ -86,86 +86,71 @@ const QuotesTable = () => {
   }, [globalFilter]);
 
   // Fetch and combine data from API and local JSON on component mount
-  useEffect(() => {
-    const fetchAndCombineData = async () => {
-      setLoading(true);
-      try {
-        // Fetch live data from the API
-        const apiResponse = await api.get(`/quotes/`);
-        const liveQuotes: Quote[] = apiResponse.data.results || [];
+useEffect(() => {
+  const fetchQuotes = async () => {
+    setLoading(true);
+    try {
+      // The backend QuoteViewSet has pagination_class = None, 
+      // so we fetch all actual database rows directly.
+      const response = await api.get(`/quotes/`);
+      
+      // Since pagination is None, the data is the array itself
+      const actualDatabaseQuotes = Array.isArray(response.data) 
+        ? response.data 
+        : response.data.results || [];
+      
+      console.log("Actual Database Quotes Count:", actualDatabaseQuotes.length);
+      setAllQuotes(actualDatabaseQuotes);
+    } catch (error) {
+      console.error("Failed to fetch database quotes:", error);
+      setAllQuotes([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        // Load and normalize archived data from JSON
-        const archivedQuotes: Quote[] = quoteData.map((quote, index) => ({
-          id: `archive-${quote.id}`, // Ensure unique ID
-          user_name: quote.name,
-          message: quote.meg,
-          status: (['pending', 'approved', 'rejected'] as const)[index % 3], // Assign a mock status
-          created_at: quote.created_at,
-          product_details: {
-            name: quote.pname,
-            user_name: quote.cname,
-            price: 'N/A',
-            description: '',
-            manufacturer: quote.brand || '',
-            model: quote.model || '',
-            images: [],
-          },
-        }));
-
-        setAllQuotes([...liveQuotes, ...archivedQuotes]);
-
-      } catch (error) {
-        console.error("Failed to fetch or process quote data:", error);
-        // Fallback to only archived data if API fails
-        const archivedQuotes: Quote[] = quoteData.map((quote, index) => ({
-          id: `archive-${quote.id}`,
-          user_name: quote.name,
-          message: quote.meg,
-          status: (['pending', 'approved', 'rejected'] as const)[index % 3],
-          created_at: quote.created_at,
-          product_details: {
-            name: quote.pname, user_name: quote.cname, price: 'N/A',
-            description: '', manufacturer: quote.brand || '', model: quote.model || '', images: [],
-          },
-        }));
-        setAllQuotes(archivedQuotes);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAndCombineData();
-  }, []); // Empty dependency array ensures this runs only once
-
+  fetchQuotes();
+}, []);
   // Memoized function to process data based on filters, search, and sort
-  const processedData = useMemo(() => {
+ const processedData = useMemo(() => {
     let filteredData = [...allQuotes];
 
-    // Apply status filter
     if (statusFilter !== 'all') {
       filteredData = filteredData.filter(quote => quote.status === statusFilter);
     }
 
     // Apply global search filter
-    if (debouncedGlobalFilter) {
-      const lowercasedFilter = debouncedGlobalFilter.toLowerCase();
-      filteredData = filteredData.filter(quote =>
-        formatProductName(quote.product_details).toLowerCase().includes(lowercasedFilter) ||
-        quote.user_name?.toLowerCase().includes(lowercasedFilter) ||
-        quote.product_details.user_name?.toLowerCase().includes(lowercasedFilter)
-      );
-    }
+   if (debouncedGlobalFilter) {
+  const lowerFilter = debouncedGlobalFilter.toLowerCase();
+  filteredData = filteredData.filter(quote => {
+    const productName = formatProductName(quote.product_details).toLowerCase();
+    const requesterName = (quote.user_name || '').toLowerCase();
+    const vendorName = (quote.product_details.user_name || '').toLowerCase();
+    const message = (quote.message || '').toLowerCase();
+
+    return productName.includes(lowerFilter) || 
+           requesterName.includes(lowerFilter) || 
+           vendorName.includes(lowerFilter) ||
+           message.includes(lowerFilter);
+  });
+}
 
     // Apply date range filter
-    if (dateRange?.from) {
-      filteredData = filteredData.filter(quote => {
-        const quoteDate = new Date(quote.created_at);
-        if (dateRange.to) {
-          return quoteDate >= dateRange.from && quoteDate <= dateRange.to;
-        }
-        return quoteDate >= dateRange.from;
-      });
-    }
+if (dateRange?.from) {
+  const filterStart = new Date(dateRange.from);
+  filterStart.setHours(0, 0, 0, 0);
+
+  // If 'to' is missing (single click), use 'from' as end. 
+  // Otherwise, use the selected 'to'.
+  const filterEnd = new Date(dateRange.to || dateRange.from);
+  filterEnd.setHours(23, 59, 59, 999);
+
+  filteredData = filteredData.filter(rental => {
+    const rentalDate = new Date(rental.created_at);
+    // This comparison now includes the entire last day
+    return rentalDate >= filterStart && rentalDate <= filterEnd;
+  });
+}
 
     // Apply sorting
     if (sortBy.length > 0) {
@@ -191,45 +176,46 @@ const QuotesTable = () => {
     return filteredData;
   }, [allQuotes, statusFilter, debouncedGlobalFilter, sortBy, dateRange]);
 
-  const totalQuotes = processedData.length;
- const totalPages = Math.ceil(processedData.length / pageSize);
+const totalQuotes = processedData.length;
+const totalPages = Math.ceil(totalQuotes / pageSize);
 
   // Memoized function to get the current page's data
- const paginatedData = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    return processedData.slice(start, end);
-  }, [processedData, page, pageSize]);
+const paginatedData = useMemo(() => {
+  const start = (page - 1) * pageSize;
+  const end = start + pageSize;
+  return processedData.slice(start, end); // This is what limits the view to 20
+}, [processedData, page, pageSize]);
 
   /**
    * Handles the approve and reject actions for a quote.
    * If the quote ID is a number, it's treated as a live API quote and a POST request is made.
    * For all quotes (live and archived), the local state is updated for an immediate UI response.
    */
-  const handleApproveReject = async (quoteId: number | string, action: 'approve' | 'reject') => {
+const handleApproveReject = async (quoteId: number | string, action: 'approve' | 'reject') => {
     setIsUpdating(true);
-    // If the ID is a number, it's from the API, so we make a real API call
-    if (typeof quoteId === 'number') {
-      try {
-        await api.post(`/quotes/${quoteId}/${action}/`);
-      } catch (error) {
-        console.error(`Failed to ${action} quote:`, error);
-        alert(`Error: Could not ${action} the quote. You may not have permission.`);
-        setIsUpdating(false);
-        return;
-      }
+    
+    try {
+      // All IDs are now live IDs from the API
+      await api.post(`/quotes/${quoteId}/${action}/`);
+      
+      // Update local state so the UI reflects the change immediately
+      setAllQuotes(prevData =>
+        prevData.map(quote =>
+          quote.id === quoteId ? { ...quote, status: action === 'approve' ? 'approved' : 'rejected' } : quote
+        )
+      );
+      
+      // Update the selected quote in the sheet view
+      setSelectedQuote(prev => prev ? { ...prev, status: action === 'approve' ? 'approved' : 'rejected' } : null);
+      
+      // Close the sheet after a short delay
+      setTimeout(() => setIsSheetOpen(false), 500);
+    } catch (error) {
+      console.error(`Failed to ${action} quote:`, error);
+      alert(`Error: Could not ${action} the quote. Please check your permissions.`);
+    } finally {
+      setIsUpdating(false);
     }
-
-    // For both API and local data, we update the client state for immediate feedback
-    setAllQuotes(prevData =>
-      prevData.map(quote =>
-        quote.id === quoteId ? { ...quote, status: action === 'approve' ? 'approved' : 'rejected' } : quote
-      )
-    );
-    setSelectedQuote(prev => prev ? { ...prev, status: action === 'approve' ? 'approved' : 'rejected' } : null);
-
-    setIsUpdating(false);
-    setTimeout(() => setIsSheetOpen(false), 500);
   };
 
 const handleExportToExcel = () => {
@@ -365,9 +351,9 @@ const handleExportToExcel = () => {
     state: { sorting: sortBy },
     onSortingChange: setSortBy,
     getCoreRowModel: getCoreRowModel(),
-    manualPagination: false,
-    manualFiltering: true,
-    manualSorting: true,
+    manualPagination: true,
+    manualFiltering: false,
+    manualSorting: false,
     pageCount: totalPages,
   });
 

@@ -93,9 +93,9 @@ const AnalyticsDashboard = () => {
 
   // --- Data Fetching and Processing Logic ---
   useEffect(() => {
-    // Helper to get date configurations based on the selected time range
+    const today = new Date();
+
     const getDateConfig = (range: TimeRange) => {
-      const today = new Date();
       switch (range) {
         case 'monthly':
           const twelveMonthsAgo = subMonths(today, 11);
@@ -113,161 +113,95 @@ const AnalyticsDashboard = () => {
             groupFormat: 'yyyy',
             labelFormat: 'yyyy',
           };
-case 'daily':
-default:
-  // const today = new Date();
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of month
-  return {
-    startDate: firstDayOfMonth,
-    interval: eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth }), // all days of month
-    groupFormat: 'yyyy-MM-dd',
-    labelFormat: 'dd', // show day number
-  };
-
-
-
+        default:
+          const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+          const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          return {
+            startDate: firstDayOfMonth,
+            interval: eachDayOfInterval({ start: firstDayOfMonth, end: lastDayOfMonth }),
+            groupFormat: 'yyyy-MM-dd',
+            labelFormat: 'dd',
+          };
       }
-    }
+    };
 
     const { startDate, interval, groupFormat, labelFormat } = getDateConfig(timeRange);
 
-    // Helper to create a map of dates for the selected interval, initialized to zero
-    const initializeDateMap = () => {
+    const processCounts = (items: ApiItem[], dateField: keyof ApiItem): ChartDataPoint[] => {
       const map = new Map<string, number>();
-      interval.forEach(day => {
-        map.set(format(day, groupFormat), 0);
-      });
-      return map;
-    };
+      interval.forEach(day => map.set(format(day, groupFormat), 0));
 
-    // Helper to process API data into daily/monthly/yearly counts
- const processCounts = (items: ApiItem[], dateField: keyof ApiItem): ChartDataPoint[] => {
-  const counts = initializeDateMap(); // daily keys: 'yyyy-MM-dd'
-  
-  items.forEach(item => {
-    const dateStr = item[dateField];
-    if (dateStr) {
-      // Parse date safely
-      const parsed = new Date(dateStr);
-      if (!isNaN(parsed.getTime())) {
-        const key = format(parsed, groupFormat); // must match map key exactly
-        if (counts.has(key)) {
-          counts.set(key, counts.get(key)! + 1);
-        }
-      }
-    }
-  });
-
-  // Convert to chart data
-  return Array.from(counts.entries()).map(([date, value]) => ({
-    date: format(new Date(date), labelFormat), // 'dd'
-    value
-  }));
-};
-
-
-    // Helper for cumulative data
-    const processCumulativeCounts = (rentals: ApiItem[], orders: ApiItem[]): ChartDataPoint[] => {
-      const totals = initializeDateMap();
-      [...rentals, ...orders].forEach(item => {
-        const dateStr = item.created_at;
+      items.forEach(item => {
+        const dateStr = item[dateField];
         if (dateStr) {
-          const formattedDate = format(parseISO(dateStr), groupFormat);
-          if (totals.has(formattedDate)) {
-            totals.set(formattedDate, totals.get(formattedDate)! + 1);
+          const parsed = parseISO(dateStr);
+          if (!isNaN(parsed.getTime())) {
+            const key = format(parsed, groupFormat);
+            if (map.has(key)) map.set(key, map.get(key)! + 1);
           }
         }
       });
 
+      return Array.from(map.entries()).map(([dateKey, value]) => {
+        let labelDate = parseISO(timeRange === 'monthly' ? `${dateKey}-01` : dateKey);
+        if (timeRange === 'yearly') labelDate = new Date(parseInt(dateKey), 0, 1);
+        return { date: format(labelDate, labelFormat), value };
+      });
+    };
+
+    const processCumulativeCounts = (rentals: ApiItem[], orders: ApiItem[]): ChartDataPoint[] => {
+      const map = new Map<string, number>();
+      interval.forEach(day => map.set(format(day, groupFormat), 0));
+
+      [...rentals, ...orders].forEach(item => {
+        const dateStr = item.created_at;
+        if (dateStr) {
+          const key = format(parseISO(dateStr), groupFormat);
+          if (map.has(key)) map.set(key, map.get(key)! + 1);
+        }
+      });
+
       let cumulativeTotal = 0;
-      return Array.from(totals.entries()).map(([date, dailyValue]) => {
+      return Array.from(map.entries()).map(([dateKey, dailyValue]) => {
         cumulativeTotal += dailyValue;
-        return {
-          date: format(parseISO(date), labelFormat),
-          value: cumulativeTotal
-        };
+        const labelDate = parseISO(timeRange === 'monthly' ? `${dateKey}-01` : dateKey);
+        return { date: format(labelDate, labelFormat), value: cumulativeTotal };
       });
     };
 
     const fetchAllData = async () => {
       setLoading(true);
       try {
-        const dateFilter = { created_at__gte: format(startDate, 'yyyy-MM-dd') };
-        if (timeRange === 'monthly' || timeRange === 'yearly') {
-  const [quoteRes, rentalRes] = await Promise.all([
-    api.get('/quotes/vendor-stats/'),
-    api.get('/rentals/vendor-stats/')
-  ]);
+        const dateFilterParams = { created_at__gte: format(startDate, 'yyyy-MM-dd') };
+        
+        const [quoteRes, rentalRes, orderRes, contactRes] = await Promise.all([
+          api.get('/quotes/', { params: { ...dateFilterParams, page_size: 5000 } }),
+          api.get('/rentals/', { params: { ...dateFilterParams, page_size: 5000 } }),
+          api.get('/orders/', { params: { ...dateFilterParams, page_size: 5000 } }),
+          api.get('/contact-forms/', { params: { ...dateFilterParams, page_size: 5000 } })
+        ]);
 
-  const quoteTrend =
-    timeRange === 'monthly'
-      ? quoteRes.data.monthly_trend
-      : quoteRes.data.yearly_trend;
+        // Fix for raw arrays (pagination_class = None)
+        const quotes = Array.isArray(quoteRes.data) ? quoteRes.data : (quoteRes.data.results || []);
+        const rentals = Array.isArray(rentalRes.data) ? rentalRes.data : (rentalRes.data.results || []);
+        const orders = Array.isArray(orderRes.data) ? orderRes.data : (orderRes.data.results || []);
+        const contacts = Array.isArray(contactRes.data) ? contactRes.data : (contactRes.data.results || []);
 
-  const rentalTrend =
-    timeRange === 'monthly'
-      ? rentalRes.data.monthly_trend
-      : rentalRes.data.yearly_trend;
-
-if (timeRange === 'monthly') {
-  const twelveMonthsAgo = subMonths(new Date(), 11);
-  const monthInterval = eachMonthOfInterval({ start: twelveMonthsAgo, end: new Date() });
-
-  // Zero-fill map for Product Quotes
-  const quoteMap = new Map(monthInterval.map(d => [format(d, 'yyyy-MM'), 0]));
-  quoteTrend.forEach((item: any) => {
-    const monthKey = format(parseISO(item.month), 'yyyy-MM');
-    if (quoteMap.has(monthKey)) quoteMap.set(monthKey, item.count);
-  });
-  setProductQuoteData(
-    Array.from(quoteMap.entries()).map(([key, value]) => ({
-      date: format(parseISO(key + '-01'), 'MMM'),
-      value
-    }))
-  );
-
-  // Zero-fill map for Rentals
-  const rentalMap = new Map(monthInterval.map(d => [format(d, 'yyyy-MM'), 0]));
-  rentalTrend.forEach((item: any) => {
-    const monthKey = format(parseISO(item.month), 'yyyy-MM');
-    if (rentalMap.has(monthKey)) rentalMap.set(monthKey, item.count);
-  });
-  setRentalData(
-    Array.from(rentalMap.entries()).map(([key, value]) => ({
-      date: format(parseISO(key + '-01'), 'MMM'),
-      value
-    }))
-  );
-
-  setLoading(false);
-  return;
-}}
-
-
-       const [quoteRes, rentalRes, orderRes, contactRes] = await Promise.all([
-  api.get('/quotes/', { params: { ...dateFilter, page_size: 5000 } }),
-  api.get('/rentals/', { params: { ...dateFilter, page_size: 5000 } }),
-  api.get('/orders/', { params: { ...dateFilter, page_size: 5000 } }),
-  api.get('/contact-forms/', { params: { ...dateFilter, page_size: 5000 } })
-]);
-
-
-        setProductQuoteData(processCounts(quoteRes.data.results, 'created_at'));
-        setRentalData(processCounts(rentalRes.data.results, 'created_at'));
-        setContactData(processCounts(contactRes.data.results, 'created_at'));
-        setRentBuyData(processCumulativeCounts(rentalRes.data.results, orderRes.data.results));
+        setProductQuoteData(processCounts(quotes, 'created_at'));
+        setRentalData(processCounts(rentals, 'created_at'));
+        setContactData(processCounts(contacts, 'created_at'));
+        setRentBuyData(processCumulativeCounts(rentals, orders));
 
       } catch (error) {
-        console.error("Failed to fetch analytics data:", error);
+        console.error("Analytics fetch error:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchAllData();
-  }, [timeRange]); // Re-run effect when timeRange changes
-
+  }, [timeRange]);
+  
   return (
     <div className="bg-gray-50 pb-24">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

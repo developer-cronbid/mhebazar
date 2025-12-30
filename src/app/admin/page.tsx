@@ -188,14 +188,14 @@ const CompleteDashboard = () => {
         vendorResponse, productResponse, vendorStatsResponse, quoteResponse,
         rentalResponse, orderResponse, trainingResponse, contactResponse
       ] = await Promise.all([
-        api.get('/vendor/'),
-        api.get('/products/'),
-        api.get('/vendor/stats/'), // Fetch vendor stats
-        api.get('/quotes/?page_size=1'),
-        api.get('/rentals/?page_size=1'),
-        api.get('/orders/?page_size=1'),
-        api.get('/training-registrations/?page_size=1'),
-        api.get('/contact-forms/?page_size=1'),
+       api.get('/vendor/'),
+  api.get('/products/'),
+  api.get('/vendor/stats/'),
+  api.get('/quotes/'), // Fetch standard list
+  api.get('/rentals/'),
+  api.get('/orders/'),
+  api.get('/training-registrations/'),
+  api.get('/contact-forms/'),
       ]);
 
       const pendingVendors = vendorResponse.data.results.filter((app: any) => !app.is_approved);
@@ -212,22 +212,34 @@ const CompleteDashboard = () => {
       setPendingProducts(grouped);
 
       // Set general counts
-      setStats({
-        productQuotes: quoteResponse.data.count, directBuys: orderResponse.data.count,
-        rentals: rentalResponse.data.count, trainingRequests: trainingResponse.data.count,
-        contactRequests: contactResponse.data.count,
-      });
+     setStats({
+      // Use .length because quoteResponse.data is a direct array from the database
+      productQuotes: Array.isArray(quoteResponse.data) 
+        ? quoteResponse.data.length 
+        : (quoteResponse.data.count || 0),
+
+      // Use .length because rentalResponse.data is a direct array from the database
+      rentals: Array.isArray(rentalResponse.data) 
+        ? rentalResponse.data.length 
+        : (rentalResponse.data.count || 0),
+
+      directBuys: orderResponse.data.count || 0,
+      trainingRequests: trainingResponse.data.count || 0,
+      contactRequests: contactResponse.data.count || 0,
+    });
+
+    setVendorStats(vendorStatsResponse.data);
 
       // Set vendor stats separately
-      setVendorStats(vendorStatsResponse.data);
+      // setVendorStats(vendorStatsResponse.data);
 
-    } catch (error) {
-      console.error("Failed to fetch dashboard data:", error);
-      toast.error("Error", { description: "Could not fetch dashboard data." });
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+   } catch (error) {
+    console.error("Failed to fetch dashboard data:", error);
+    toast.error("Error", { description: "Could not fetch dashboard data." });
+  } finally {
+    setIsLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     const checkUserAndFetch = async () => {
@@ -358,17 +370,17 @@ const CompleteDashboard = () => {
             {/* Stats Cards - Adjusted grid for better flow on all screens */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
 
-              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://mhebazar.in/admin/forms/quotes" />
-              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://mhebazar.in/admin/forms/direct-buy" />
-              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://mhebazar.in/admin/forms/rentals" />
-              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://mhebazar.in/admin/forms/training-registrations" />
-              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://mhebazar.in/admin/contact/contact-form" />
+              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="http://localhost:3000/admin/forms/quotes" />
+              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="http://localhost:3000/admin/forms/direct-buy" />
+              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="http://localhost:3000/admin/forms/rentals" />
+              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="http://localhost:3000/admin/forms/training-registrations" />
+              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="http://localhost:3000/admin/contact/contact-form" />
               {/* NEW: Pending Vendors Card with Redirection */}
               <StatsCard
                 icon='' // Using Lucide icon inside the component based on highlight prop
                 number={String(vendorStats.pending_applications)}
                 label="Pending Vendors"
-                link="https://www.mhebazar.in/admin/accounts/registered-vendors"
+                link="http://localhost:3000/admin/accounts/registered-vendors"
                 highlight={vendorStats.pending_applications > 0} // Highlight if there are pending apps
               />
             </div>
