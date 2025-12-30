@@ -370,17 +370,17 @@ const CompleteDashboard = () => {
             {/* Stats Cards - Adjusted grid for better flow on all screens */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
 
-              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="http://localhost:3000/admin/forms/quotes" />
-              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="http://localhost:3000/admin/forms/direct-buy" />
-              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="http://localhost:3000/admin/forms/rentals" />
-              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="http://localhost:3000/admin/forms/training-registrations" />
-              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="http://localhost:3000/admin/contact/contact-form" />
+              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://www.mhebazar.in/forms/quotes" />
+              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://www.mhebazar.in/forms/direct-buy" />
+              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://www.mhebazar.in/forms/rentals" />
+              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://www.mhebazar.in/forms/training-registrations" />
+              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://www.mhebazar.in/contact/contact-form" />
               {/* NEW: Pending Vendors Card with Redirection */}
               <StatsCard
                 icon='' // Using Lucide icon inside the component based on highlight prop
                 number={String(vendorStats.pending_applications)}
                 label="Pending Vendors"
-                link="http://localhost:3000/admin/accounts/registered-vendors"
+                link="https://www.mhebazar.in/accounts/registered-vendors"
                 highlight={vendorStats.pending_applications > 0} // Highlight if there are pending apps
               />
             </div>
