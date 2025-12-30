@@ -370,17 +370,17 @@ const CompleteDashboard = () => {
             {/* Stats Cards - Adjusted grid for better flow on all screens */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
 
-              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://www.mhebazar.in/admin/adminforms/quotes" />
-              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://www.mhebazar.in/admin/adminforms/direct-buy" />
-              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://www.mhebazar.in/admin/adminforms/rentals" />
-              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://www.mhebazar.in/admin/adminforms/training-registrations" />
-              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://www.mhebazar.in/admin/admincontact/contact-form" />
+              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://www.mhebazar.in/admin/forms/quotes" />
+              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://www.mhebazar.in/admin/forms/direct-buy" />
+              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://www.mhebazar.in/admin/forms/rentals" />
+              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://www.mhebazar.in/admin/forms/training-registrations" />
+              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://www.mhebazar.in/admin/contact/contact-form" />
               {/* NEW: Pending Vendors Card with Redirection */}
               <StatsCard
                 icon='' // Using Lucide icon inside the component based on highlight prop
                 number={String(vendorStats.pending_applications)}
                 label="Pending Vendors"
-                link="https://www.mhebazar.in/admin/adminaccounts/registered-vendors"
+                link="https://www.mhebazar.in/admin/accounts/registered-vendors"
                 highlight={vendorStats.pending_applications > 0} // Highlight if there are pending apps
               />
             </div>
