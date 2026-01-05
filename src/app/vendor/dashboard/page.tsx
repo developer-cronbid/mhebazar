@@ -486,19 +486,19 @@ const [defaultProductType, setDefaultProductType] = useState<
                       className="flex flex-col sm:flex-row items-center justify-between p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow transition"
                     >
                       <div className="flex items-center gap-4 w-full">
-                        <div className="h-20 w-20 relative flex-shrink-0">
-                          <img
-                            src={getImageSrc(product.images)}
-                            alt={product.name}
-                            // fill
-                            className="object-contain rounded"
-                            sizes="80px"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = `${imgUrl}${categoryImageMap[product.category]}`;
-                            }}
-                          />
-                        </div>
+                        <div className="h-20 w-20 relative flex-shrink-0 overflow-hidden">
+  <img
+    src={getImageSrc(product.images)}
+    alt={product.name}
+    className="w-full h-full object-contain rounded"
+    sizes="80px"
+    onError={(e) => {
+      const target = e.target as HTMLImageElement;
+      target.src = `${imgUrl}${categoryImageMap[product.category]}`;
+    }}
+  />
+</div>
+
                         {/* 👇 Add min-w-0 here */}
                         <div className="space-y-1 w-full min-w-0">
                           <div className="flex flex-wrap justify-between items-center gap-2">
