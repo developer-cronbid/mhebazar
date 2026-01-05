@@ -74,7 +74,7 @@ const QuotesTable = () => {
     { id: 'created_at', desc: true }
   ]);
   const [dateRange, setDateRange] = useState<DateRange>();
-  const pageSize = 1000;
+  const pageSize = 10;
 
   // Debounce search input for performance
   useEffect(() => {
@@ -90,16 +90,12 @@ useEffect(() => {
   const fetchQuotes = async () => {
     setLoading(true);
     try {
-      // The backend QuoteViewSet has pagination_class = None, 
-      // so we fetch all actual database rows directly.
-      const response = await api.get(`/quotes/`);
+      // We pass a large page_size to the backend to get all data for client-side filtering
+      // This ensures your "processedData" useMemo has the full list to filter through
+      const response = await api.get(`/quotes/?page_size=10000`);
       
-      // Since pagination is None, the data is the array itself
-      const actualDatabaseQuotes = Array.isArray(response.data) 
-        ? response.data 
-        : response.data.results || [];
+      const actualDatabaseQuotes = response.data.results || response.data || [];
       
-      console.log("Actual Database Quotes Count:", actualDatabaseQuotes.length);
       setAllQuotes(actualDatabaseQuotes);
     } catch (error) {
       console.error("Failed to fetch database quotes:", error);
@@ -108,7 +104,6 @@ useEffect(() => {
       setLoading(false);
     }
   };
-
   fetchQuotes();
 }, []);
   // Memoized function to process data based on filters, search, and sort
@@ -398,27 +393,39 @@ const handleExportToExcel = () => {
               </span>
             )}
             {!loading && totalPages > 1 && (
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => handlePageChange(page - 1)} 
-                      disabled={page === 1} 
-                      className={page === 1 ? "pointer-events-none opacity-50" : ""} 
-                    />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <span className="px-4 py-2">{`Page ${page} of ${totalPages}`}</span>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => handlePageChange(page + 1)} 
-                      disabled={page === totalPages} 
-                      className={page === totalPages ? "pointer-events-none opacity-50" : ""} 
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+             <Pagination>
+  <PaginationContent>
+    <PaginationItem>
+      <PaginationPrevious 
+        className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+        onClick={() => handlePageChange(page - 1)} 
+      />
+    </PaginationItem>
+
+    {generatePagination().map((p, idx) => (
+      <PaginationItem key={idx}>
+        {p === '...' ? (
+          <PaginationEllipsis />
+        ) : (
+          <PaginationLink
+            isActive={page === p}
+            className="cursor-pointer"
+            onClick={() => setPage(p as number)}
+          >
+            {p}
+          </PaginationLink>
+        )}
+      </PaginationItem>
+    ))}
+
+    <PaginationItem>
+      <PaginationNext 
+        className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+        onClick={() => handlePageChange(page + 1)} 
+      />
+    </PaginationItem>
+  </PaginationContent>
+</Pagination>
             )}
           </div>
           <Button 

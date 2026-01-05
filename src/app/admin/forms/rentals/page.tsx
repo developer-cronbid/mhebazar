@@ -72,7 +72,7 @@ const RentalsTable = () => {
     { id: 'created_at', desc: true }
   ]);
   const [dateRange, setDateRange] = useState<DateRange>();
-  const pageSize = 1000;
+  const pageSize = 10;
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -82,28 +82,24 @@ const RentalsTable = () => {
     return () => clearTimeout(handler);
   }, [globalFilter]);
 
-  useEffect(() => {
-    const fetchRentals = async () => {
-      setLoading(true);
-      try {
-        // Fetching directly from the API (Backend now has pagination_class = None)
-        const apiResponse = await api.get(`/rentals/`);
-        
-        // Handle both standard arrays and paginated object wrappers
-        const liveRentals: Rental[] = apiResponse.data.results || apiResponse.data || [];
-        
-        console.log("Database Rentals Loaded:", liveRentals.length);
-        setAllRentals(liveRentals);
-      } catch (error) {
-        console.error("Failed to fetch rental data:", error);
-        setAllRentals([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRentals();
-  }, []);
+ useEffect(() => {
+  const fetchRentals = async () => {
+    setLoading(true);
+    try {
+      // Request a large page size so all filters work on the full dataset
+      const response = await api.get(`/rentals/?page_size=10000`);
+      
+      // Check if backend returned data in .results or as a direct array
+      const data = response.data.results || response.data || [];
+      setAllRentals(data); // Assuming state name is allQuotes or allRentals
+    } catch (error) {
+      console.error("Failed to fetch rentals:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchRentals();
+}, []);
 
   const processedData = useMemo(() => {
     let filteredData = [...allRentals];
@@ -365,37 +361,50 @@ if (dateRange?.from) {
         </div>
         <div className="flex items-center gap-4">
           {/* Entries count and pagination */}
-          <div className="flex items-center gap-4">
-            {!loading && (
-              <span className="text-sm text-gray-600 whitespace-nowrap">
-                {`Showing ${totalRentals > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalRentals)} of ${totalRentals} entries`}
-              </span>
+         <div className="flex items-center gap-4">
+  {!loading && (
+    <span className="text-sm text-gray-600 whitespace-nowrap">
+      {`Showing ${totalRentals > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, totalRentals)} of ${totalRentals} entries`}
+    </span>
+  )}
+  {!loading && totalPages > 1 && (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious 
+            onClick={() => handlePageChange(page - 1)} 
+            disabled={page === 1} 
+            className={page === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"} 
+          />
+        </PaginationItem>
+
+        {generatePagination().map((p, idx) => (
+          <PaginationItem key={idx}>
+            {p === '...' ? (
+              <PaginationEllipsis />
+            ) : (
+              <PaginationLink
+                isActive={page === p}
+                className="cursor-pointer"
+                onClick={() => setPage(p as number)}
+              >
+                {p}
+              </PaginationLink>
             )}
-            {!loading && totalPages > 1 && (
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious
-                      onClick={() => handlePageChange(page - 1)}
-                      disabled={page === 1}
-                      className={page === 1 ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <span className="px-4 py-2">{`Page ${page} of ${totalPages}`}</span>
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationNext
-                      onClick={() => handlePageChange(page + 1)}
-                      disabled={page === totalPages}
-                      className={page === totalPages ? "pointer-events-none opacity-50" : ""}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            )}
-          </div>
-          <Button
+          </PaginationItem>
+        ))}
+
+        <PaginationItem>
+          <PaginationNext 
+            onClick={() => handlePageChange(page + 1)} 
+            disabled={page === totalPages} 
+            className={page === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"} 
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  )}
+</div>          <Button
             onClick={handleExportToExcel}
             disabled={loading || paginatedData.length === 0}
             className="flex items-center gap-2 whitespace-nowrap"
