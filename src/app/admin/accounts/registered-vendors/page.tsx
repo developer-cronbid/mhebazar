@@ -3,11 +3,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 // VendorCard is assumed to be present at this path
-import VendorCard from "@/components/vendor-listing/VendorCard"; 
+import VendorCard from "@/components/vendor-listing/VendorCard";
 // AllVendor type is imported from the other component
 import AllVendorsTable, { AllVendor } from "@/components/vendor-listing/AllVendorsTable";
 import api from "@/lib/api";
-import { Loader2, AlertTriangle, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, AlertTriangle, Search, ChevronLeft, ChevronRight, CheckCircle, Clock, Users } from "lucide-react";
+import { Calendar as CalendarIcon, X } from "lucide-react";
+
 
 // Define the Vendor type to be compatible with both API structures.
 type Vendor = AllVendor & {
@@ -36,41 +38,41 @@ const ROLE_VENDOR = 2;
 
 // --- Helper Functions ---
 const sortVendors = (vendors: Vendor[], field: string, direction: 'asc' | 'desc'): Vendor[] => {
-    return [...vendors].sort((a, b) => {
-        let valA: any;
-        let valB: any;
+  return [...vendors].sort((a, b) => {
+    let valA: any;
+    let valB: any;
 
-        switch (field) {
-            case 'brand':
-                valA = a.brand || '';
-                valB = b.brand || '';
-                break;
-            case 'full_name':
-                valA = a.full_name || a.username || '';
-                valB = b.full_name || b.username || '';
-                break;
-            case 'application_date':
-                valA = new Date(a.application_date).getTime();
-                valB = new Date(b.application_date).getTime();
-                break;
-            default:
-                return 0;
-        }
+    switch (field) {
+      case 'brand':
+        valA = a.brand || '';
+        valB = b.brand || '';
+        break;
+      case 'full_name':
+        valA = a.full_name || a.username || '';
+        valB = b.full_name || b.username || '';
+        break;
+      case 'application_date':
+        valA = new Date(a.application_date).getTime();
+        valB = new Date(b.application_date).getTime();
+        break;
+      default:
+        return 0;
+    }
 
-        if (typeof valA === 'string') {
-            const comparison = valA.localeCompare(valB, undefined, { sensitivity: 'base' });
-            return direction === 'asc' ? comparison : -comparison;
-        } else {
-            const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
-            return direction === 'asc' ? comparison : -comparison;
-        }
-    });
+    if (typeof valA === 'string') {
+      const comparison = valA.localeCompare(valB, undefined, { sensitivity: 'base' });
+      return direction === 'asc' ? comparison : -comparison;
+    } else {
+      const comparison = valA < valB ? -1 : valA > valB ? 1 : 0;
+      return direction === 'asc' ? comparison : -comparison;
+    }
+  });
 };
 
 
 export default function VendorsPage() {
   const PAGE_SIZE = 10;
-  
+
   const [activeTab, setActiveTab] = useState<"approved" | "all">("approved");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,51 +81,71 @@ export default function VendorsPage() {
   const [displayedVendors, setDisplayedVendors] = useState<Vendor[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalFilteredCount, setTotalFilteredCount] = useState(0); 
+  const [totalFilteredCount, setTotalFilteredCount] = useState(0);
 
   // --- Sorting State ---
   const [sortField, setSortField] = useState<string>('application_date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   // State to force re-filter when global data changes (since we use global var)
   const [dataVersion, setDataVersion] = useState(0);
-const [approvalFilter, setApprovalFilter] =
-  useState<'all' | 'approved' | 'pending'>('all');
+  const [approvalFilter, setApprovalFilter] =
+    useState<'all' | 'approved' | 'pending'>('all');
+  const [filterDate, setFilterDate] = useState<string>("");
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
 
-
-
-  // --- Client-Side Filter/Sort Logic (useMemo for efficiency and stability) ---
-  
+ const statusCounts = useMemo(() => {
+    return {
+      total: allApplications.length,
+      approved: allApplications.filter(v => v.is_approved === true).length,
+      pending: allApplications.filter(v => v.is_approved === false).length
+    };
+  }, [dataVersion, allApplications]);
+  // --- Updated Filter Logic ---
   const filteredAndSortedVendors = useMemo(() => {
     const sourceList = activeTab === "approved" ? allApprovedVendors : allApplications;
-    
-    // 1. Filtering
     const lowerCaseSearch = searchTerm.toLowerCase().trim();
-    let filtered = lowerCaseSearch
-      ? sourceList.filter(vendor => 
-          vendor.brand?.toLowerCase().includes(lowerCaseSearch) ||
-          vendor.company_name?.toLowerCase().includes(lowerCaseSearch) ||
-          vendor.email?.toLowerCase().includes(lowerCaseSearch) ||
-          vendor.full_name?.toLowerCase().includes(lowerCaseSearch) ||
-          vendor.username?.toLowerCase().includes(lowerCaseSearch)
-        )
-      : sourceList;
 
-    if (approvalFilter !== 'all') {
-  filtered = filtered.filter(vendor =>
-    approvalFilter === 'approved'
-      ? vendor.is_approved === true
-      : vendor.is_approved === false
-  );
+    let filtered = sourceList.filter(vendor => {
+      // 1. Text Search
+      const matchesSearch = !lowerCaseSearch || (
+        vendor.brand?.toLowerCase().includes(lowerCaseSearch) ||
+        vendor.company_name?.toLowerCase().includes(lowerCaseSearch) ||
+        vendor.email?.toLowerCase().includes(lowerCaseSearch) ||
+        vendor.full_name?.toLowerCase().includes(lowerCaseSearch) ||
+        vendor.username?.toLowerCase().includes(lowerCaseSearch)
+      );
+
+      // 2. Date Range (Admin Only)
+     // 2. Date Range (Admin Only)
+let matchesDate = true;
+if (activeTab === "all" && (dateRange.start || dateRange.end)) {
+  const vendorDate = vendor.application_date ? vendor.application_date.split('T')[0] : "";
+  
+  if (dateRange.start && dateRange.end) {
+    // Both dates provided: use range filtration
+    matchesDate = vendorDate >= dateRange.start && vendorDate <= dateRange.end;
+  } else if (dateRange.start) {
+    // Only start date provided: match exactly that day
+    matchesDate = vendorDate === dateRange.start;
+  } else if (dateRange.end) {
+    // Only end date provided: match exactly that day
+    matchesDate = vendorDate === dateRange.end;
+  }
 }
 
-      
-    // 2. Sorting
-    filtered = sortVendors(filtered, sortField, sortDirection);
-    
-    return filtered;
-  }, [activeTab, searchTerm, sortField, sortDirection, dataVersion,approvalFilter,]); // dataVersion added to track global var changes
+      // 3. Status Selection (Admin Only)
+      let matchesStatus = true;
+      if (activeTab === "all" && approvalFilter !== 'all') {
+        matchesStatus = approvalFilter === 'approved' ? vendor.is_approved === true : vendor.is_approved === false;
+      }
 
- 
+      return matchesSearch && matchesDate && matchesStatus;
+    });
+
+    return sortVendors(filtered, sortField, sortDirection);
+  }, [activeTab, searchTerm, dateRange, sortField, sortDirection, dataVersion, approvalFilter]);// dataVersion added to track global var changes
+
+
 
   // --- Pagination Logic (useEffect) ---
 
@@ -137,24 +159,24 @@ const [approvalFilter, setApprovalFilter] =
 
 
   // --- Handlers ---
-  
+
   // FIX: Dedicated handler for search input change (stable cursor)
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newSearchTerm = e.target.value;
-      setSearchTerm(newSearchTerm);
-      // Reset page to 1 if search term changes (to start filtering from the beginning)
-      setCurrentPage(1); 
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
+    // Reset page to 1 if search term changes (to start filtering from the beginning)
+    setCurrentPage(1);
   };
 
   // Handler for column sorting
   const handleSortChange = (field: string) => {
     if (field === sortField) {
-        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
-        setSortField(field);
-        setSortDirection('desc');
+      setSortField(field);
+      setSortDirection('desc');
     }
-    setCurrentPage(1); 
+    setCurrentPage(1);
   };
 
 
@@ -165,45 +187,45 @@ const [approvalFilter, setApprovalFilter] =
     setError(null);
 
     const cleanUrl = (url: string | null): string | null => {
-        if (!url) return null;
-        let cleaned = url;
-        
-        if (process.env.NODE_ENV === "production" && cleaned.startsWith('http://')) {
-            cleaned = cleaned.replace('http://', 'https://');
-        }
+      if (!url) return null;
+      let cleaned = url;
 
-        const apiIndex = cleaned.indexOf('/api/');
-        if (apiIndex !== -1) {
-             cleaned = cleaned.substring(cleaned.indexOf('/api/') + 5);
-        }
-        return cleaned;
+      if (process.env.NODE_ENV === "production" && cleaned.startsWith('http://')) {
+        cleaned = cleaned.replace('http://', 'https://');
+      }
+
+      const apiIndex = cleaned.indexOf('/api/');
+      if (apiIndex !== -1) {
+        cleaned = cleaned.substring(cleaned.indexOf('/api/') + 5);
+      }
+      return cleaned;
     };
-    
+
     try {
       let approvedNextUrl: string | null = "vendor/approved/";
-      let allNextUrl: string | null = "vendor/"; 
-      
+      let allNextUrl: string | null = "vendor/";
+
       let accumulatedApproved: Vendor[] = [];
       let accumulatedAll: Vendor[] = [];
 
       // Fetch ALL approved vendors
       while (approvedNextUrl) {
-          const response = await api.get<VendorListResponse>(approvedNextUrl);
-          accumulatedApproved = accumulatedApproved.concat(response.data.results as Vendor[] || []);
-          approvedNextUrl = cleanUrl(response.data.next); 
+        const response = await api.get<VendorListResponse>(approvedNextUrl);
+        accumulatedApproved = accumulatedApproved.concat(response.data.results as Vendor[] || []);
+        approvedNextUrl = cleanUrl(response.data.next);
       }
-      
+
       // Fetch ALL applications
       while (allNextUrl) {
-          const response = await api.get<VendorListResponse>(allNextUrl);
-          accumulatedAll = accumulatedAll.concat(response.data.results as Vendor[] || []);
-          allNextUrl = cleanUrl(response.data.next); 
+        const response = await api.get<VendorListResponse>(allNextUrl);
+        accumulatedAll = accumulatedAll.concat(response.data.results as Vendor[] || []);
+        allNextUrl = cleanUrl(response.data.next);
       }
-      
+
       // Store accumulated data globally (This mutation triggers the useMemo/useEffect chain)
       allApprovedVendors = accumulatedApproved;
       allApplications = accumulatedAll;
-      
+
       // Update version to confirm data loaded
       setDataVersion(v => v + 1);
       setCurrentPage(1);
@@ -218,37 +240,45 @@ const [approvalFilter, setApprovalFilter] =
     } finally {
       setLoading(false);
     }
-  }, []); 
+  }, []);
 
   useEffect(() => {
     // Initial fetch
-    fetchData(); 
+    fetchData();
   }, [fetchData]);
 
 
   // Handle Tab Switch
   useEffect(() => {
     setSearchTerm('');
+    setDateRange({ start: "", end: "" });
+    setApprovalFilter("all");
     setCurrentPage(1);
     setSortField('application_date');
     setSortDirection('desc');
   }, [activeTab]);
 
+  const clearAllFilters = () => {
+    setSearchTerm("");
+    setDateRange({ start: "", end: "" });
+    setApprovalFilter("all");
+    setCurrentPage(1);
+  };
 
   // --- Toggle Approval Logic ---
-  
+
   // New function to force UI update after global state change
   const forceUpdate = () => {
-      // Increment data version to force the useMemo/useEffect chain to run again
-      setDataVersion(v => v + 1); 
+    // Increment data version to force the useMemo/useEffect chain to run again
+    setDataVersion(v => v + 1);
   }
 
   // Helper function to update lists locally after API action
   const updateVendorInList = (list: Vendor[], vendorId: number, isApproved: boolean) => {
-    return list.map(v => 
-      v.id === vendorId ? { 
-          ...v, 
-          is_approved: isApproved,
+    return list.map(v =>
+      v.id === vendorId ? {
+        ...v,
+        is_approved: isApproved,
       } : v
     );
   }
@@ -257,22 +287,22 @@ const [approvalFilter, setApprovalFilter] =
   const handleToggleApproval = useCallback(
     async (vendorId: number, isCurrentlyApproved: boolean): Promise<void> => {
       const action = isCurrentlyApproved ? "reject" : "approve";
-      const reason = action === "reject" ? "Unapproved by Admin via dashboard." : "Approved via dashboard."; 
-      
+      const reason = action === "reject" ? "Unapproved by Admin via dashboard." : "Approved via dashboard.";
+
       try {
-        await api.post(`vendor/${vendorId}/approve/`, { action, reason }); 
+        await api.post(`vendor/${vendorId}/approve/`, { action, reason });
 
         const newIsApproved = !isCurrentlyApproved;
-        
+
         // Update the global lists locally for instant feedback
         allApplications = updateVendorInList(allApplications, vendorId, newIsApproved);
-        allApprovedVendors = updateVendorInList(allApprovedVendors, vendorId, newIsApproved).filter(v => 
-            v.is_approved === true
-        ); 
+        allApprovedVendors = updateVendorInList(allApprovedVendors, vendorId, newIsApproved).filter(v =>
+          v.is_approved === true
+        );
 
         // Trigger re-render
         forceUpdate(); // Force a re-filter and re-display
-        
+
       } catch (err) {
         console.error(`Error toggling vendor status for ID ${vendorId}:`, err);
         throw new Error(`Failed to perform ${action} action.`);
@@ -286,11 +316,10 @@ const [approvalFilter, setApprovalFilter] =
   const TabButton = ({ tabName, label }: { tabName: "approved" | "all", label: string }) => (
     <button
       onClick={() => setActiveTab(tabName)}
-      className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 border-b-2 ${
-        activeTab === tabName
+      className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 border-b-2 ${activeTab === tabName
           ? "border-[#5CA131] text-[#5CA131] bg-white shadow-md"
           : "border-transparent text-gray-500 hover:text-[#5CA131] hover:border-gray-300"
-      }`}
+        }`}
     >
       {label}
     </button>
@@ -310,18 +339,16 @@ const [approvalFilter, setApprovalFilter] =
           <button
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1 || loading}
-            className={`p-2 rounded-full border transition-colors ${
-              currentPage === 1 ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-[#5CA131] hover:bg-gray-100 border-gray-300'
-            }`}
+            className={`p-2 rounded-full border transition-colors ${currentPage === 1 ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-[#5CA131] hover:bg-gray-100 border-gray-300'
+              }`}
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages || loading}
-            className={`p-2 rounded-full border transition-colors ${
-              currentPage === totalPages ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-[#5CA131] hover:bg-gray-100 border-gray-300'
-            }`}
+            className={`p-2 rounded-full border transition-colors ${currentPage === totalPages ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-[#5CA131] hover:bg-gray-100 border-gray-300'
+              }`}
           >
             <ChevronRight className="w-5 h-5" />
           </button>
@@ -343,21 +370,106 @@ const [approvalFilter, setApprovalFilter] =
 
         {/* Search Input */}
         <div className="mb-6 flex items-center border border-gray-300 rounded-xl overflow-hidden shadow-sm focus-within:border-[#5CA131] focus-within:ring-1 focus-within:ring-[#5CA131]">
-            <Search className="w-5 h-5 text-gray-400 ml-4" />
-            <input
-                type="text"
-                placeholder={`Search ${activeTab === "approved" ? "approved" : "all"} vendors by name, brand, or email...`}
-                value={searchTerm}
-                onChange={handleSearchChange} 
-                className="w-full p-3 outline-none text-gray-700"
-                disabled={loading}
-            />
+          <Search className="w-5 h-5 text-gray-400 ml-4" />
+          <input
+            type="text"
+            placeholder={`Search ${activeTab === "approved" ? "approved" : "all"} vendors by name, brand, or email...`}
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full p-3 outline-none text-gray-700"
+            disabled={loading}
+          />
         </div>
+        {/* Date Range Selector UI */}
+
+        {activeTab === "all" && (
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
+            
+            {/* Status Filtration Buttons */}
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => { setApprovalFilter('all'); setCurrentPage(1); }}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl border transition-all duration-200 ${
+                  approvalFilter === 'all' 
+                  ? "bg-[#5CA131] border-[#5CA131] text-white shadow-md" 
+                  : "bg-white border-gray-200 text-gray-600 hover:border-[#5CA131]"
+                }`}
+              >
+                <Users size={16} />
+                <span className="font-semibold text-sm whitespace-nowrap">All Vendors</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${approvalFilter === 'all' ? "bg-white/20" : "bg-gray-100"}`}>
+                  {statusCounts.total}
+                </span>
+              </button>
+
+              <button
+                onClick={() => { setApprovalFilter('approved'); setCurrentPage(1); }}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl border transition-all duration-200 ${
+                  approvalFilter === 'approved' 
+                  ? "bg-green-600 border-green-600 text-white shadow-md" 
+                  : "bg-white border-gray-200 text-gray-600 hover:border-green-600"
+                }`}
+              >
+                <CheckCircle size={16} />
+                <span className="font-semibold text-sm whitespace-nowrap">Approved</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${approvalFilter === 'approved' ? "bg-white/20" : "bg-gray-100"}`}>
+                  {statusCounts.approved}
+                </span>
+              </button>
+
+              <button
+                onClick={() => { setApprovalFilter('pending'); setCurrentPage(1); }}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl border transition-all duration-200 ${
+                  approvalFilter === 'pending' 
+                  ? "bg-amber-500 border-amber-500 text-white shadow-md" 
+                  : "bg-white border-gray-200 text-gray-600 hover:border-amber-500"
+                }`}
+              >
+                <Clock size={16} />
+                <span className="font-semibold text-sm whitespace-nowrap">Pending</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${approvalFilter === 'pending' ? "bg-white/20" : "bg-gray-100"}`}>
+                  {statusCounts.pending}
+                </span>
+              </button>
+            </div>
+
+            {/* Date Range Selector In-Line */}
+            <div className="flex items-center gap-2">
+               <div className="flex items-center space-x-2 border border-gray-300 rounded-xl px-3 py-2 bg-white shadow-sm focus-within:ring-1 focus-within:ring-[#5CA131] focus-within:border-[#5CA131]">
+                <CalendarIcon className="w-4 h-4 text-gray-400" />
+                <div className="flex items-center text-xs text-gray-700">
+                  <input
+                    type="date"
+                    value={dateRange.start}
+                    onChange={(e) => { setDateRange(prev => ({ ...prev, start: e.target.value })); setCurrentPage(1); }}
+                    className="bg-transparent outline-none cursor-pointer"
+                  />
+                  <span className="mx-1 text-gray-400">—</span>
+                  <input
+                    type="date"
+                    value={dateRange.end}
+                    onChange={(e) => { setDateRange(prev => ({ ...prev, end: e.target.value })); setCurrentPage(1); }}
+                    className="bg-transparent outline-none cursor-pointer"
+                  />
+                </div>
+                {(dateRange.start || dateRange.end) && (
+                  <button
+                    onClick={() => { setDateRange({ start: "", end: "" }); setCurrentPage(1); }}
+                    className="ml-1 p-1 text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        {/* </div> */}
 
 
         {/* Content Area */}
         <div className="min-h-[400px]">
-          {loading && displayedVendors.length === 0 && ( 
+          {loading && displayedVendors.length === 0 && (
             <div className="flex justify-center items-center h-full pt-20">
               <Loader2 className="w-8 h-8 animate-spin text-[#5CA131]" />
               <span className="ml-3 text-lg text-gray-600">Loading initial data...</span>
@@ -385,27 +497,27 @@ const [approvalFilter, setApprovalFilter] =
                   key={vendor.id}
                   vendor={vendor}
                   // @ts-ignore: VendorCard doesn't need this prop in this tab
-                  onToggleApproval={undefined} 
+                  onToggleApproval={undefined}
                 />
               ))}
             </div>
           )}
-          
+
           {/* Render all vendors as a table (Admin View) */}
           {!loading && !error && activeTab === "all" && (
             <AllVendorsTable
-              vendors={displayedVendors as AllVendor[]} 
-              onToggleApproval={handleToggleApproval} 
+              vendors={displayedVendors as AllVendor[]}
+              onToggleApproval={handleToggleApproval}
               isLoading={loading}
               sortField={sortField}
               sortDirection={sortDirection}
               handleSortChange={handleSortChange}
               statusFilter={approvalFilter}          // ✅ PASS
-  setStatusFilter={setApprovalFilter} 
+              setStatusFilter={setApprovalFilter}
             />
           )}
         </div>
-        
+
         {/* Pagination Controls */}
         {totalFilteredCount > 0 && !error && <PaginationControls />}
       </main>

@@ -907,11 +907,15 @@ const sanitizedVendorDesc = useMemo(() => {
     return capacity;
   };
 
-  const cleanTitle = `${data.user_name.replace("_", " ")} ${data.name} ${data.model || ""
-    } ${formatCapacity(data.product_details?.capacity)}`
-    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%+×]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
+ const userName = (data?.user_name || "").replace("_", " ");
+const productName = data?.name || "";
+const model = data?.model || "";
+const capacity = formatCapacity(data?.product_details?.capacity) || "";
+
+const cleanTitle = `${userName} ${productName} ${model} ${capacity}`
+  .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%+×]/g, "")
+  .replace(/\s+/g, " ")
+  .trim();
 
 
   // Determine if the currently selected media is a video

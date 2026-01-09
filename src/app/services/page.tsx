@@ -7,28 +7,28 @@ import Link from "next/link";
 
 const ServicesPage = () => {
 
-  useEffect(() => {
-  // Set the document title
-  document.title = "AMC & CMC Services for Material Handling Equipment | MHEBazar";
+//   useEffect(() => {
+//   // Set the document title
+//   document.title = "AMC & CMC Services for Material Handling Equipment | MHEBazar";
 
-  // Create or update the meta title tag
-  let metaTitle = document.querySelector('meta[name="title"]');
-  if (!metaTitle) {
-    metaTitle = document.createElement('meta');
-    metaTitle.setAttribute('name', 'title');
-    document.head.appendChild(metaTitle);
-  }
-  metaTitle.setAttribute('content', "AMC Services for Equipment Maintenance | MHEBazar");
+//   // Create or update the meta title tag
+//   let metaTitle = document.querySelector('meta[name="title"]');
+//   if (!metaTitle) {
+//     metaTitle = document.createElement('meta');
+//     metaTitle.setAttribute('name', 'title');
+//     document.head.appendChild(metaTitle);
+//   }
+//   metaTitle.setAttribute('content', "AMC Services for Equipment Maintenance | MHEBazar");
 
-  // Create or update the meta description tag
-  let metaDescription = document.querySelector('meta[name="description"]');
-  if (!metaDescription) {
-    metaDescription = document.createElement('meta');
-    metaDescription.setAttribute('name', 'description');
-    document.head.appendChild(metaDescription);
-  }
-  metaDescription.setAttribute('content', "Discover reliable CMC maintenance services for your equipment. Ensure peak performance with MHEBazar’s expert solutions. Contact us today !");
-}, []);
+//   // Create or update the meta description tag
+//   let metaDescription = document.querySelector('meta[name="description"]');
+//   if (!metaDescription) {
+//     metaDescription = document.createElement('meta');
+//     metaDescription.setAttribute('name', 'description');
+//     document.head.appendChild(metaDescription);
+//   }
+//   metaDescription.setAttribute('content', "Discover reliable CMC maintenance services for your equipment. Ensure peak performance with MHEBazar’s expert solutions. Contact us today !");
+// }, []);
   const [amcOpen, setAmcOpen] = useState(true);
   const [cmcOpen, setCmcOpen] = useState(false);
 

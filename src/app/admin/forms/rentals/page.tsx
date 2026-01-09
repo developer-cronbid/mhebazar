@@ -82,20 +82,28 @@ const RentalsTable = () => {
     return () => clearTimeout(handler);
   }, [globalFilter]);
 
- useEffect(() => {
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+useEffect(() => {
   const fetchRentals = async () => {
-    setLoading(true);
+    // Only show the heavy spinner if we have zero data
+    if (allRentals.length === 0) setLoading(true);
+    
     try {
-      // Request a large page size so all filters work on the full dataset
       const response = await api.get(`/rentals/?page_size=10000`);
-      
-      // Check if backend returned data in .results or as a direct array
       const data = response.data.results || response.data || [];
-      setAllRentals(data); // Assuming state name is allQuotes or allRentals
+      
+      // OPTIMIZATION: Pre-calculate the search string once when data arrives
+      const enhancedData = data.map((item: Rental) => ({
+        ...item,
+        _searchString: `${formatProductName(item.product_details)} ${item.user_name} ${item.product_details.user_name}`.toLowerCase()
+      }));
+
+      setAllRentals(enhancedData);
     } catch (error) {
       console.error("Failed to fetch rentals:", error);
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   };
   fetchRentals();

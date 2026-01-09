@@ -19,7 +19,7 @@ type ProductListingBaseType = Omit<ImportedProductType, 'subcategory_name' | 'us
 // Define the local Product interface to safely override properties with string | null
 interface Product extends ProductListingBaseType {
     // FIX: Redefine the conflicting properties to include 'string | null'
-    subcategory_name: string | null; 
+    subcategory_name: string | null;
     user_name: string | null;
 }
 
@@ -122,12 +122,12 @@ export default function CategoryOrTypePage({
         sortBy: 'relevance' as string,
         currentPage: 1 as number,
     });
-    
+
     // UI/Data states
     const [products, setProducts] = useState<Product[]>([]);
     const [totalProducts, setTotalProducts] = useState<number>(0);
     const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null); 
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [noProductsFoundMessage, setNoProductsFoundMessage] = useState<string | null>(null);
     const [totalPages, setTotalPages] = useState<number>(1);
     const [metaTitle, setMetaTitle] = useState<string>('');
@@ -147,7 +147,7 @@ export default function CategoryOrTypePage({
         if (activeTypeName) filters.add(activeTypeName);
         return filters;
     }, [activeCategoryName, activeSubcategoryName, activeTypeName]);
-    
+
     // Effect to apply filters from URL search params on initial load
     useEffect(() => {
         // PERF: Only update state if values actually change
@@ -192,7 +192,7 @@ export default function CategoryOrTypePage({
             }
             const typeName = formatNameFromSlug(paramSlug);
             setActiveTypeName(typeName);
-            
+
             const defaultTitle = `${typeName} Products | MHE Bazar`;
             const defaultDescription = `Browse our selection of ${typeName} products.`;
             return { type: 'type', name: typeName, subName: null, id: null, subId: null, metaTitle: defaultTitle, metaDescription: defaultDescription };
@@ -316,7 +316,7 @@ export default function CategoryOrTypePage({
                     price: parseFloat(p.price),
                     currency: "₹",
                     category_name: p.category_name,
-                    subcategory_name: p.subcategory_name, 
+                    subcategory_name: p.subcategory_name,
                     direct_sale: p.direct_sale,
                     is_active: p.is_active,
                     hide_price: p.hide_price,
@@ -326,7 +326,7 @@ export default function CategoryOrTypePage({
                     type: p.type,
                     category_id: p.category,
                     model: p.model,
-                    user_name: p.user_name, 
+                    user_name: p.user_name,
                     created_at: p.created_at
                 }));
 
@@ -396,21 +396,21 @@ export default function CategoryOrTypePage({
     ]);
 
     // Effect to handle dynamic meta title and description updates
-    useEffect(() => {
-        // PERF: This dynamic DOM manipulation is required for client components without Next.js 13+ hooks
-        if (metaTitle) {
-            document.title = metaTitle;
-        }
-        if (metaDescription) {
-            let meta = document.querySelector('meta[name="description"]');
-            if (!meta) {
-                meta = document.createElement('meta');
-                meta.setAttribute('name', 'description');
-                document.head.appendChild(meta);
-            }
-            meta.setAttribute('content', metaDescription);
-        }
-    }, [metaTitle, metaDescription]);
+    // useEffect(() => {
+    //     // PERF: This dynamic DOM manipulation is required for client components without Next.js 13+ hooks
+    //     if (metaTitle) {
+    //         document.title = metaTitle;
+    //     }
+    //     if (metaDescription) {
+    //         let meta = document.querySelector('meta[name="description"]');
+    //         if (!meta) {
+    //             meta = document.createElement('meta');
+    //             meta.setAttribute('name', 'description');
+    //             document.head.appendChild(meta);
+    //         }
+    //         meta.setAttribute('content', metaDescription);
+    //     }
+    // }, [metaTitle, metaDescription]);
 
 
     // Handle filter changes (consolidated logic)
@@ -463,7 +463,7 @@ export default function CategoryOrTypePage({
             } else if (filterType === "sort_by" && typeof filterValue === 'string') {
                 filterValue === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', filterValue);
             }
-            
+
             newSearchParams.set('page', '1');
             router.push(`${currentPath}?${newSearchParams.toString()}`);
         }
@@ -475,7 +475,7 @@ export default function CategoryOrTypePage({
         const newSearchParams = new URLSearchParams(searchParams.toString());
         newSearchParams.set('page', page.toString());
         router.push(`${currentPath}?${newSearchParams.toString()}`);
-        
+
         // Local state updates handled by useEffect(searchParams) above, but setting it here for immediate feedback
         setFilterState(prev => ({ ...prev, currentPage: page }));
     };
@@ -484,12 +484,12 @@ export default function CategoryOrTypePage({
         // PERF: Consolidate state updates and navigation
         const currentPath = `/${urlParamSlug}${subcategoryParamSlug ? `/${subcategoryParamSlug}` : ''}`;
         const newSearchParams = new URLSearchParams(searchParams.toString());
-        
+
         value === 'relevance' ? newSearchParams.delete('sort_by') : newSearchParams.set('sort_by', value);
         newSearchParams.set('page', '1');
-        
+
         router.push(`${currentPath}?${newSearchParams.toString()}`);
-        
+
         // Local state updates handled by useEffect(searchParams) above, but setting it here for immediate feedback
         setFilterState(prev => ({ ...prev, sortBy: value, currentPage: 1 }));
     };
@@ -520,20 +520,20 @@ export default function CategoryOrTypePage({
     }
 
     if (errorMessage) {
-         return (
+        return (
             <div className="text-center p-8 min-h-[50vh] text-red-600">
                 <h2>Error Loading Data</h2>
                 <p>{errorMessage}</p>
             </div>
         );
     }
-    
+
     return (
         <>
             <Breadcrumb items={breadcrumbItems} />
             <ProductListing
                 // The cast is needed because we extended the local Product type
-                products={products as ImportedProductType[]} 
+                products={products as ImportedProductType[]}
                 title={activeSubcategoryName || activeCategoryName || activeTypeName || "All Products"}
                 totalCount={totalProducts}
                 onFilterChange={handleFilterChange}

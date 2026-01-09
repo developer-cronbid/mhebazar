@@ -12,7 +12,7 @@ import "@/styles/blog-styles.css";
 interface Blog {
   id: number;
   blog_title: string;
-  image1: string; 
+  image1: string;
   description: string;
   author_name: string | null;
   created_at: string;
@@ -36,7 +36,7 @@ const getImageUrl = (imagePath: string | null, hasError: boolean): string => {
   if (!imagePath) return "/mhe-logo.png";
   if (hasError) {
     const filename = imagePath.split("/").pop();
-    return `/css/asset/blogimg/${filename}`; 
+    return `/css/asset/blogimg/${filename}`;
   }
   if (imagePath.startsWith("http://")) return imagePath.replace("http://", "https://");
   if (imagePath.startsWith("https://")) return imagePath;
@@ -90,7 +90,7 @@ export default function BlogContentClient({ slug }: { slug: string }) {
       setError(null);
       try {
         // Corrected API path for consistency with your backend structure: /blogs/slug/
-        const response = await api.get(`/blogs/${slug}/`); 
+        const response = await api.get(`/blogs/${slug}/`);
         setBlog(response.data);
       } catch (err) {
         console.error("Failed to fetch blog post:", err);
@@ -112,7 +112,7 @@ export default function BlogContentClient({ slug }: { slug: string }) {
     const words = textContent.trim().split(/\s+/).length;
     const time = Math.ceil(words / wordsPerMinute);
     setReadingTime(time);
-    
+
     const headingElements = Array.from(contentRef.current.querySelectorAll("h2")) as HTMLElement[];
     const newToc = headingElements.map((heading, index) => {
       const text = heading.innerText.trim();
@@ -153,7 +153,7 @@ export default function BlogContentClient({ slug }: { slug: string }) {
       </div>
     );
   }
-  
+
   const renderImageUrl = getImageUrl(blog.image1, imageError[blog.id] || false);
 
   return (
@@ -161,7 +161,7 @@ export default function BlogContentClient({ slug }: { slug: string }) {
       <div className="bg-background text-foreground">
         <div className="container mx-auto px-2 py-8 lg:py-16">
           <div className="grid grid-cols-12 lg:gap-12">
-            
+
             {/* --- Desktop Sidebar: Table of Contents --- */}
             <aside className="hidden lg:block col-span-3">
               <div className="sticky top-40">

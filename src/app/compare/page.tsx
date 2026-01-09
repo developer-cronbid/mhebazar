@@ -170,13 +170,34 @@ const ComparePage = () => {
     }
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
-        const storedProducts: CompareProduct[] = JSON.parse(localStorage.getItem(COMPARE_KEY) || '[]');
+        const rawData = localStorage.getItem(COMPARE_KEY);
+        const storedProducts: any[] = JSON.parse(rawData || '[]');
+        
         if (storedProducts.length > 0) {
-          setProducts(storedProducts);
-          setSelectedCategory(storedProducts[0].category_name);
+          // --- FIX: Normalize data structure ---
+          const normalized = storedProducts.map(p => ({
+            ...p,
+            // Map 'name' to 'title' if 'title' is missing
+            title: p.title || p.name || "Unnamed Product",
+            
+            // Map ratings correctly (Backend often returns 'average_rating')
+            average_rating: p.average_rating !== undefined ? p.average_rating : (p.rating || 0),
+            
+            // Map images correctly (Product page might save 'images' array or just 'image' string)
+            image: p.image || (p.images && p.images[0]?.image) || "/images/placeholder.jpg",
+            
+            // Ensure product_details is an object to prevent table crashes
+            product_details: p.product_details || {}
+          }));
+
+          setProducts(normalized);
+          // Auto-select category based on the first item found
+          if (normalized[0].category_name) {
+            setSelectedCategory(normalized[0].category_name);
+          }
         }
       } catch (error) {
         console.error("Failed to parse products from local storage:", error);
@@ -184,7 +205,6 @@ const ComparePage = () => {
       }
     }
   }, []);
-
   const handleAddProduct = (product: ApiProduct) => {
     if (products.some((p) => p.id === product.id)) {
       toast.info("This product is already in comparison.");
@@ -271,10 +291,13 @@ const ComparePage = () => {
 
   const displayProducts = products.slice(0, MAX_COLUMNS);
 
-  const productSlugify = (name: string) => {
-    return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  };
-  
+const productSlugify = (name: string | undefined | null) => {
+  if (!name) return 'product'; // Fallback to avoid .toLowerCase() crash
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+};
   // --- 5. REFINED RENDER COMPONENTS ---
 
   const RatingDisplay = ({ rating }: { rating: number | null }) => {
@@ -381,6 +404,8 @@ const ComparePage = () => {
               
               if (product) {
                 const productUrl = `/product/${productSlugify(product.title)}-${product.id}`;
+                const safeTitle = product.title || "product";
+    const safeId = product.id || "0";
                 return (
                   <Card 
                     key={product.id} 

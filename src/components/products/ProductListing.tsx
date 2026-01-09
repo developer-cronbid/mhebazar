@@ -29,6 +29,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import api from "@/lib/api";
 
 export interface Product {
   type: string;
@@ -66,25 +67,96 @@ function ProductGrid({
   pageUrlType,
 }: ProductGridProps) {
   const router = useRouter();
-  const { addToCart, isProductInCart, user } = useUser(); // Use UserContext
+  const { addToCart, isProductInCart, user } = useUser();
+  const [fallbackProducts, setFallbackProducts] = React.useState<Product[]>([]);
+  const [isFallbackLoading, setIsFallbackLoading] = React.useState(false);
 
+  // 1. Fetch Fallback Logic
+  React.useEffect(() => {
+    if (products.length === 0) {
+      const fetchMHEProducts = async () => {
+        setIsFallbackLoading(true);
+        try {
+          // Changed query param to 'user' as per your URL sample
+          const response = await api.get('/products/?user=24&page_size=1to12');
+          
+          if (response.data && response.data.results) {
+            const transformed = response.data.results.map((p: any) => ({
+              id: p.id.toString(),
+              image: p.images?.[0]?.image || "/placeholder.jpg",
+              title: p.name,
+              subtitle: p.description,
+              price: parseFloat(p.price),
+              currency: "₹",
+              direct_sale: p.direct_sale,
+              category_name: p.category_name,
+              subcategory_name: p.subcategory_name,
+              is_active: p.is_active,
+              hide_price: p.hide_price,
+              stock_quantity: p.stock_quantity,
+              manufacturer: p.manufacturer,
+              average_rating: p.average_rating,
+              category_id: p.category,
+              model: p.model,
+              user_name: p.user_name,
+              created_at: p.created_at
+            }));
+            setFallbackProducts(transformed);
+          }
+        } catch (error) {
+          console.error("Error fetching MHE Bazar products", error);
+        } finally {
+          setIsFallbackLoading(false);
+        }
+      };
+      fetchMHEProducts();
+    }
+  }, [products.length]);
+
+  // 2. consolidated empty products logic
   if (products.length === 0) {
+    // if (isFallbackLoading) {
+    //   return (
+    //     <div className="flex justify-center items-center py-20 w-full">
+    //       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+    //     </div>
+    //   );
+    // }
+
+    // This is the critical fix: return the fallbackProducts grid here!
     return (
-      <div className="flex flex-col items-center justify-center py-16 px-4">
-        <div className="text-center max-w-md">
-          <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-            <div className="w-12 h-12 bg-gray-300 rounded-full opacity-50"></div>
-          </div>
-          <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mb-2">No Products Found</h3>
-          <p className="text-gray-500 text-sm md:text-base leading-relaxed">
-            {noProductsMessage || "No products found matching your criteria. Try adjusting your filters or search terms."}
-          </p>
+      <div className="w-full">
+        <div className="mb-8 border-b border-gray-100 pb-4">
+           <h3 className="text-xl font-bold text-gray-800  tracking-tight">Recommended for You </h3>
+           <p className="text-gray-400 text-sm italic mt-1">No exact matches found. Showing top picks from MHE Bazar.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6">
+          {fallbackProducts.map((product: Product) => (
+            <ProductCardContainer
+              key={product.id}
+              id={parseInt(product.id, 10)}
+              image={product.image}
+              title={product.title}
+              subtitle={product.subtitle}
+              price={product.price}
+              currency={product.currency}
+              directSale={product.direct_sale}
+              is_active={product.is_active}
+              hide_price={product.hide_price}
+              type={product.type}
+              stock_quantity={product.stock_quantity}
+              category_id={product.category_id}
+              pageUrlType={pageUrlType}
+              model={product.model}
+              manufacturer={product.manufacturer}
+              user_name={product.user_name}
+              created_at={product.created_at}
+            />
+          ))}
         </div>
       </div>
     );
-  }
-
-  // Determine button logic based on URL type
+  }  // Determine button logic based on URL type
   const isRentalPage = pageUrlType === 'rental';
   const isUsedPage = pageUrlType === 'used';
   const buttonText = isRentalPage ? "Rent Now" : "Get a Quote";
@@ -596,3 +668,11 @@ export default function ProductListing({
     </div>
   );
 }
+
+// function setIsFallbackLoading(arg0: boolean) {
+//   throw new Error("Function not implemented.");
+// }
+// function setFallbackProducts(transformed: any) {
+//   throw new Error("Function not implemented.");
+// }
+

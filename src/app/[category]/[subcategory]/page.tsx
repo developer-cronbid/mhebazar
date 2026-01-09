@@ -405,20 +405,20 @@ export default function SubCategoryPage({
     ]);
 
     // Effect to handle dynamic meta title and description updates (Minimal impact, required for Client Component SEO)
-    useEffect(() => {
-        if (metaTitle) {
-            document.title = metaTitle;
-        }
-        if (metaDescription) {
-            let meta = document.querySelector('meta[name="description"]');
-            if (!meta) {
-                meta = document.createElement('meta');
-                meta.setAttribute('name', 'description');
-                document.head.appendChild(meta);
-            }
-            meta.setAttribute('content', metaDescription);
-        }
-    }, [metaTitle, metaDescription]);
+    // useEffect(() => {
+    //     if (metaTitle) {
+    //         document.title = metaTitle;
+    //     }
+    //     if (metaDescription) {
+    //         let meta = document.querySelector('meta[name="description"]');
+    //         if (!meta) {
+    //             meta = document.createElement('meta');
+    //             meta.setAttribute('name', 'description');
+    //             document.head.appendChild(meta);
+    //         }
+    //         meta.setAttribute('content', metaDescription);
+    //     }
+    // }, [metaTitle, metaDescription]);
 
     // Handle filter changes (MEMOIZED)
     const handleFilterChange = useCallback((

@@ -154,8 +154,19 @@ export default function MheWriteAReview({ productId, onOpenChange }: Props) {
         onOpenChange(false);
       }
     } catch (error: unknown) {
+
+      if (axios.isAxiosError(error) && error.response) {
+
+    if (error.response.data?.detail) {
+      toast.success(error.response.data.detail);
+      return;
+    }
+
+      
       console.error("Error submitting review:", error);
       if (axios.isAxiosError(error) && error.response) {
+
+        
         if (error.response.status === 400 &&
           (error.response.data?.non_field_errors?.[0]?.includes("user, product") ||
             error.response.data?.non_field_errors?.[0]?.includes("The fields user, product must make a unique set."))) {
@@ -171,7 +182,7 @@ export default function MheWriteAReview({ productId, onOpenChange }: Props) {
       } else {
         toast.error("An unexpected error occurred while submitting review. Please try again.");
       }
-    } finally {
+    } }finally {
       setIsSubmitting(false);
     }
   };

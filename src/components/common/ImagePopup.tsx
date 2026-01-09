@@ -42,6 +42,7 @@ const ImagePopup = () => {
               width={450}
               height={450}
               priority
+              fetchPriority="high"
               className="max-w-[90vw] max-h-[100vh]"
             />
           </div>

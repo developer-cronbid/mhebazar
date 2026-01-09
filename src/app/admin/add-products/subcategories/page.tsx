@@ -56,34 +56,49 @@ const SubcategoriesTable = () => {
   const [subcategoryToDelete, setSubcategoryToDelete] = useState<Subcategory | null>(null);
 
   // Fetch subcategories and categories
+// --- MODIFIED fetchData Logic to "Cheat" the User ---
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
+      setLoading(true); // Only show the main loader for the very first batch
       try {
-        // Fetch subcategories
-        const subcategoriesResponse = await api.get('subcategories/');
-        if (Array.isArray(subcategoriesResponse.data.results || subcategoriesResponse.data)) {
-          setSubcategories(subcategoriesResponse.data.results || subcategoriesResponse.data);
-        } else {
-          console.warn("API response for subcategories was not an array:", subcategoriesResponse.data);
-          setSubcategories([]);
-        }
-
-        // Fetch categories for filter dropdown
+        // 1. Fetch Categories for filter (usually small, can stay as is)
         const categoriesResponse = await api.get('categories/');
-        if (Array.isArray(categoriesResponse.data.results || categoriesResponse.data)) {
-          setCategories(categoriesResponse.data.results || categoriesResponse.data);
-        } else {
-          setCategories([]);
-        }
+        setCategories(categoriesResponse.data.results || categoriesResponse.data || []);
 
+        // 2. Incremental Subcategories Fetch
+        let nextPage = 1;
+        let hasMore = true;
+        const allDataAccumulator: Subcategory[] = [];
+
+        while (hasMore) {
+          const response = await api.get('subcategories/', {
+            params: { page: String(nextPage), page_size: '100' }
+          });
+
+          const results = response.data.results || response.data || [];
+          allDataAccumulator.push(...results);
+
+          // --- THE "CHEAT" LOGIC ---
+          if (nextPage === 1) {
+            // Show the first 100 subcategories immediately (covers first several pages of pagination)
+            setSubcategories([...allDataAccumulator]);
+            setLoading(false); // Stop the spinner so admin can work immediately
+          } else {
+            // Silently grow the dataset in the background
+            setSubcategories([...allDataAccumulator]);
+          }
+
+          if (response.data.next) {
+            nextPage++;
+          } else {
+            hasMore = false;
+          }
+        }
         setError(null);
       } catch (err) {
         console.error("Failed to fetch data:", err);
-        setError("Could not load subcategories. Please try again later.");
+        setError("Could not load subcategories.");
         toast.error("Failed to fetch subcategories!");
-        setSubcategories([]);
-        setCategories([]);
       } finally {
         setLoading(false);
       }

@@ -79,25 +79,45 @@ const CategoriesTable = () => {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   // Fetch categories
+
   useEffect(() => {
     const fetchCategories = async () => {
-      setLoading(true);
+      setLoading(true); 
       try {
-        const response = await api.get('categories/');
+        let nextPage = 1;
+        let hasMore = true;
+        const allDataAccumulator: Category[] = [];
 
-        if (Array.isArray(response.data.results || response.data)) {
-          setCategories(response.data.results || response.data);
-        } else {
-          console.warn("API response for categories was not an array:", response.data);
-          setCategories([]);
+        while (hasMore) {
+          
+          const response = await api.get('categories/', {
+            params: { page: String(nextPage), page_size: '100' }
+          });
+
+          const results = response.data.results || response.data || [];
+          allDataAccumulator.push(...results);
+
+          
+          if (nextPage === 1) {
+          
+            setCategories([...allDataAccumulator]);
+            setLoading(false);
+          } else {
+    
+            setCategories([...allDataAccumulator]);
+          }
+
+          if (response.data.next) {
+            nextPage++;
+          } else {
+            hasMore = false;
+          }
         }
-
         setError(null);
       } catch (err) {
         console.error("Failed to fetch categories:", err);
-        setError("Could not load categories. Please try again later.");
+        setError("Could not load categories.");
         toast.error("Failed to fetch categories!");
-        setCategories([]);
       } finally {
         setLoading(false);
       }

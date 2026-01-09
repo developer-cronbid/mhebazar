@@ -135,9 +135,9 @@ export default function CategoriesSection(): JSX.Element {
 
   return (
     <section className="py-10 mb-4 w-full mx-auto px-4 md:px-8 bg-black-50">
-      <h2 className="text-3xl font-bold mb-8 text-left text-black-900">
+      <h1 className="text-3xl font-bold mb-8 text-left text-black-900">
         MHE Categories
-      </h2>
+      </h1>
       
       <motion.div
         

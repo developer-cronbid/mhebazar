@@ -76,14 +76,14 @@ export default function VendorCard({ vendor }: Props) {
 
       <div className="flex flex-col sm:flex-row gap-2 w-full mt-auto">
         <Link href={href} className="flex-1">
-          <Button className="w-full text-sm font-medium py-2 rounded-lg bg-[#5CA131] hover:bg-[#4a8f28] text-white transition-colors duration-150">
+          <Button className="w-full text-sm font-medium py-2 rounded-lg bg-[#5CA131] hover:bg-[#4a8f28] text-white transition-colors duration-150 cursor-pointer">
             View Product
           </Button>
         </Link>
         <Link href="/contact" className="flex-1">
           <Button
             variant="outline"
-            className="w-full flex-1 text-sm font-medium py-2 rounded-lg border border-[#5CA131] text-[#5CA131] hover:bg-[#f2fbf2] transition-colors duration-150"
+            className="w-full flex-1 text-sm font-medium py-2 rounded-lg border border-[#5CA131] text-[#5CA131] hover:bg-[#f2fbf2] transition-colors duration-150 cursor-pointer"
           >
             Contact
           </Button>

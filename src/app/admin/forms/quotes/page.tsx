@@ -70,6 +70,7 @@ const QuotesTable = () => {
   const [page, setPage] = useState(1);
   const [globalFilter, setGlobalFilter] = useState('');
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = useState('');
+  const [serverTotalCount, setServerTotalCount] = useState(0); // New state for total count from server
   const [sortBy, setSortBy] = useState<SortingState>([
     { id: 'created_at', desc: true }
   ]);
@@ -86,28 +87,32 @@ const QuotesTable = () => {
   }, [globalFilter]);
 
   // Fetch and combine data from API and local JSON on component mount
+// 1. ADD THIS STATE at the top of your component
+const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+// 2. MODIFY the useEffect
 useEffect(() => {
   const fetchQuotes = async () => {
-    setLoading(true);
+    // Only show the spinner on the very first visit
+    if (allQuotes.length === 0) setLoading(true);
+    
     try {
-      // We pass a large page_size to the backend to get all data for client-side filtering
-      // This ensures your "processedData" useMemo has the full list to filter through
       const response = await api.get(`/quotes/?page_size=10000`);
-      
       const actualDatabaseQuotes = response.data.results || response.data || [];
       
       setAllQuotes(actualDatabaseQuotes);
     } catch (error) {
       console.error("Failed to fetch database quotes:", error);
-      setAllQuotes([]);
     } finally {
       setLoading(false);
+      setIsInitialLoad(false); // Mark that we have data
     }
   };
   fetchQuotes();
 }, []);
   // Memoized function to process data based on filters, search, and sort
  const processedData = useMemo(() => {
+  // if (!allQuotes.length) return [];
     let filteredData = [...allQuotes];
 
     if (statusFilter !== 'all') {
@@ -115,20 +120,17 @@ useEffect(() => {
     }
 
     // Apply global search filter
-   if (debouncedGlobalFilter) {
-  const lowerFilter = debouncedGlobalFilter.toLowerCase();
-  filteredData = filteredData.filter(quote => {
-    const productName = formatProductName(quote.product_details).toLowerCase();
-    const requesterName = (quote.user_name || '').toLowerCase();
-    const vendorName = (quote.product_details.user_name || '').toLowerCase();
-    const message = (quote.message || '').toLowerCase();
-
-    return productName.includes(lowerFilter) || 
-           requesterName.includes(lowerFilter) || 
-           vendorName.includes(lowerFilter) ||
-           message.includes(lowerFilter);
-  });
-}
+ if (debouncedGlobalFilter) {
+    const searchTerms = debouncedGlobalFilter.toLowerCase().trim(); // Define once
+    filteredData = filteredData.filter(quote => {
+      // Use logical OR short-circuiting for speed
+      return (
+        formatProductName(quote.product_details).toLowerCase().includes(searchTerms) ||
+        (quote.user_name || '').toLowerCase().includes(searchTerms) ||
+        (quote.product_details.user_name || '').toLowerCase().includes(searchTerms)
+      );
+    }); 
+  }
 
     // Apply date range filter
 if (dateRange?.from) {
@@ -522,7 +524,7 @@ const handleExportToExcel = () => {
               ))}
             </thead>
             <tbody>
-              {loading ? (
+              {loading && allQuotes.length === 0 ? (
                 <tr><td colSpan={columns.length} className="text-center py-10">Loading...</td></tr>
               ) : table.getRowModel().rows.length === 0 ? (
                 <tr><td colSpan={columns.length} className="text-center py-10">No quotes found.</td></tr>

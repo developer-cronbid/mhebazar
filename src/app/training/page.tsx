@@ -1,7 +1,7 @@
 // training/page.tsx
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, {  useState } from 'react';
 import { CheckCircle, Shield, Wrench, Zap, Flame, HardHat, Building, User, AlertTriangle, Grid3X3, List, ChevronDown } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import Image from 'next/image';
@@ -196,28 +196,28 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ title, isOpen, onClick, c
 
 const TrainingPage = () => {
 
-  useEffect(() => {
-  // Set the document title
-  document.title = "Expert Training in Material Handling Equipment | Enhance Your Skills with MHEBazar";
+//   useEffect(() => {
+//   // Set the document title
+//   document.title = "Expert Training in Material Handling Equipment | Enhance Your Skills with MHEBazar";
 
-  // Create or update the meta title tag
-  let metaTitle = document.querySelector('meta[name="title"]');
-  if (!metaTitle) {
-    metaTitle = document.createElement('meta');
-    metaTitle.setAttribute('name', 'title');
-    document.head.appendChild(metaTitle);
-  }
-  metaTitle.setAttribute('content', "Material Handling Equipment Training | MHEBazar");
+//   // Create or update the meta title tag
+//   let metaTitle = document.querySelector('meta[name="title"]');
+//   if (!metaTitle) {
+//     metaTitle = document.createElement('meta');
+//     metaTitle.setAttribute('name', 'title');
+//     document.head.appendChild(metaTitle);
+//   }
+//   metaTitle.setAttribute('content', "Material Handling Equipment Training | MHEBazar");
 
-  // Create or update the meta description tag
-  let metaDescription = document.querySelector('meta[name="description"]');
-  if (!metaDescription) {
-    metaDescription = document.createElement('meta');
-    metaDescription.setAttribute('name', 'description');
-    document.head.appendChild(metaDescription);
-  }
-  metaDescription.setAttribute('content', "Get expert Workplace Safety Training and improve efficiency. Learn the best practices in material handling with MHEBazar. Register now !");
-}, []);
+//   // Create or update the meta description tag
+//   let metaDescription = document.querySelector('meta[name="description"]');
+//   if (!metaDescription) {
+//     metaDescription = document.createElement('meta');
+//     metaDescription.setAttribute('name', 'description');
+//     document.head.appendChild(metaDescription);
+//   }
+//   metaDescription.setAttribute('content', "Get expert Workplace Safety Training and improve efficiency. Learn the best practices in material handling with MHEBazar. Register now !");
+// }, []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTrainingName, setSelectedTrainingName] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');

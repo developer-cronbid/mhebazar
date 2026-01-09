@@ -285,18 +285,32 @@ const [defaultProductType, setDefaultProductType] = useState<
     );
   }
 
-  if (error && !application) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Dashboard</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
-        </div>
+if (error && !application) {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center max-w-md px-4">
+        <AlertCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          Your vendor application is currently under review
+        </h2>
+
+        <p className="text-gray-600 mb-4">
+          Thank you for your patience. Our team is reviewing your details, and your dashboard
+          will be available once the process is complete.
+        </p>
+
+        <Button
+          variant="outline"
+          onClick={() => window.location.reload()}
+        >
+          Refresh Page
+        </Button>
       </div>
-    );
-  }
+    </div>
+  );
+}
+
 
   return (
     <>
@@ -433,15 +447,7 @@ const [defaultProductType, setDefaultProductType] = useState<
                       </Button>
                     </SheetTrigger>
                <SheetContent className="flex flex-col h-full p-0 sm:max-w-xl">
-  {/* The Header is fixed at the top */}
-  {/* <div className="p-4 border-b bg-white shrink-0">
-    <h2 className="text-lg font-semibold">
-      {selectedProduct ? "Edit Product" : "Add Product"}
-    </h2>
-  </div> */}
-
-  {/* This is the magic div: flex-1 takes all remaining space, 
-      overflow-y-auto enables scrolling ONLY here */}
+ 
   <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
     <ProductForm product={selectedProduct} isVendor={isVendorUser} defaultType={defaultProductType} onSuccess={() => setIsSheetOpen(false)} />
     
@@ -472,9 +478,13 @@ const [defaultProductType, setDefaultProductType] = useState<
                         Add Your First Product
                       </Button>
                     </SheetTrigger>
-                    <SheetContent>
-                      <ProductForm />
-                    </SheetContent>
+                            <SheetContent className="flex flex-col h-full p-0 sm:max-w-xl">
+ 
+  <div className="flex-1 overflow-y-auto px-4 py-2 custom-scrollbar">
+    <ProductForm product={selectedProduct} isVendor={isVendorUser}  onSuccess={() => setIsSheetOpen(false)} />
+    
+  </div>
+</SheetContent>
                   </Sheet>
                 </Card>
               ) : (

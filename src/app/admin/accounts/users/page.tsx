@@ -553,22 +553,21 @@ const UsersTable = () => {
   };
 
   // Fetch data
+  // --- MODIFIED fetchAllData Logic ---
   const fetchAllData = useCallback(async () => {
-    setLoading(true);
+    setLoading(true); // Only show loader for the very first batch
     try {
       const params = new URLSearchParams();
-
       if (statusFilter !== 'all') {
         params.append('is_email_verified', statusFilter === 'verified' ? 'true' : 'false');
       }
-
       if (roleFilter !== 'all') {
         params.append('role__name', roleFilter);
       }
 
-      const allData: UserWithVendor[] = [];
       let nextPage = 1;
       let hasMore = true;
+      const allDataAccumulator: UserWithVendor[] = [];
 
       while (hasMore) {
         const response = await api.get(`/users/`, {
@@ -579,38 +578,41 @@ const UsersTable = () => {
           },
         });
         
-        // Fetch vendor data for each user (only for vendors)
-        const usersWithVendors = await Promise.all(
+        // Fetch vendor data for this specific batch
+        const batchWithVendors = await Promise.all(
           response.data.results.map(async (user: User) => {
-            try {
-              if (user.role.id === 2) { // Vendor role
-                const vendorData = await fetchVendorData(user.id);
-                return { ...user, vendor: vendorData || undefined }; // Use undefined to exclude from JSON if null
-              }
-              return user;
-            } catch {
-              return user;
+            if (user.role.id === 2) {
+              const vendorData = await fetchVendorData(user.id);
+              return { ...user, vendor: vendorData || undefined };
             }
+            return user;
           })
         );
 
-        allData.push(...usersWithVendors);
+        allDataAccumulator.push(...batchWithVendors);
+
+        // --- THE "CHEAT" LOGIC ---
+        // If this is the first page, show it to the user immediately
+        if (nextPage === 1) {
+          setData([...allDataAccumulator]);
+          setLoading(false); // Hide spinner so user can start interacting
+        } else {
+          // Update data silently in background for subsequent pages
+          setData([...allDataAccumulator]);
+        }
+
         if (response.data.next) {
           nextPage++;
         } else {
           hasMore = false;
         }
       }
-      
-      setData(allData);
-      setPage(1);
     } catch (error) {
       console.error("Failed to fetch user data:", error);
-    } finally {
       setLoading(false);
     }
   }, [statusFilter, roleFilter]);
-
+  
   useEffect(() => {
     fetchAllData();
   }, [fetchAllData]);

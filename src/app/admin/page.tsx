@@ -4,13 +4,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
 // IMPORT THE LOADER ICON
 import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info, Loader2, Users } from 'lucide-react';
-import AnalyticsDashboard from '@/components/admin/Graph';
+// import AnalyticsDashboard from '@/components/admin/Graph';
 import api from '@/lib/api';
-import Cookies from 'js-cookie';
+import dynamic from 'next/dynamic';
+// import Cookies from 'js-cookie';
 import { toast } from "sonner";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
-
+const AnalyticsDashboard = dynamic(() => import('@/components/admin/Graph'), {
+  ssr: false,
+  loading: () => <div className="h-[300px] animate-pulse bg-gray-100 rounded-xl" />
+});
 // Shadcn UI Components
 import { Button } from "@/components/ui/button";
 import {
@@ -100,10 +104,20 @@ interface DashboardStats {
 
 
 // --- Helper Components ---
-const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link, highlight }) => {
+const StatsCard = React.memo(({ icon, number, label, link, highlight, isLoading }: any) => {
   const router = useRouter();
   const handleCardClick = () => router.push(link);
-
+  if (isLoading) {
+    return (
+      <div className="bg-white p-4 md:p-6 rounded-xl shadow-lg border border-gray-100 min-h-[160px] animate-pulse">
+        <div className="w-12 h-12 bg-gray-200 rounded-full mb-4" />
+        <div className="space-y-3">
+          <div className="h-8 w-16 bg-gray-200 rounded" />
+          <div className="h-4 w-24 bg-gray-100 rounded" />
+        </div>
+      </div>
+    );
+  }
   const cardClasses = highlight
     ? "group relative p-4 md:p-6 rounded-xl shadow-lg border-2 border-red-400 bg-red-50 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-red-500 w-full min-h-[160px]"
     : "group relative bg-white p-4 md:p-6 rounded-xl shadow-lg border border-gray-100 flex flex-col justify-between cursor-pointer transition-shadow duration-300 hover:shadow-2xl hover:border-gray-200 w-full min-h-[160px]";
@@ -138,7 +152,9 @@ const StatsCard: React.FC<StatsCardProps> = ({ icon, number, label, link, highli
       </div>
     </div>
   );
-};
+});
+
+StatsCard.displayName = "StatsCard";
 
 const DetailRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
   <div className="grid grid-cols-3 gap-2 py-2 border-b border-gray-100">
@@ -164,7 +180,7 @@ const CompleteDashboard = () => {
     total_applications: 0, approved_vendors: 0, pending_applications: 0, recent_applications: 0
   });
 
-  const [isLoading, setIsLoading] = useState(true);
+
 
   // MODAL STATES (kept the same)
   const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
@@ -179,85 +195,47 @@ const CompleteDashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingVendorId, setLoadingVendorId] = useState<number | null>(null);
 
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
+  const [isListsLoading, setIsListsLoading] = useState(true);
+
 
   // --- Data Fetching ---
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [
-        vendorResponse, productResponse, vendorStatsResponse, quoteResponse,
-        rentalResponse, orderResponse, trainingResponse, contactResponse
-      ] = await Promise.all([
-       api.get('/vendor/'),
-  api.get('/products/'),
-  api.get('/vendor/stats/'),
-  api.get('/quotes/'), // Fetch standard list
-  api.get('/rentals/'),
-  api.get('/orders/'),
-  api.get('/training-registrations/'),
-  api.get('/contact-forms/'),
-      ]);
+ const fetchData = useCallback(async () => {
+  setIsStatsLoading(true);
+  setIsListsLoading(true);
 
-      const pendingVendors = vendorResponse.data.results.filter((app: any) => !app.is_approved);
-      setVendorApps(pendingVendors);
+  try {
+    const res = await api.get('/admin/summary/');
+    const { stats, vendorStats, vendorApps, pendingProducts } = res.data;
 
-      const pendingProductsList = productResponse.data.results.filter((product: Product) => !product.is_active);
+    // These setStates are nearly instant now
+    setStats(stats);
+    setVendorStats(vendorStats);
+    setVendorApps(vendorApps);
 
-      const grouped = pendingProductsList.reduce((acc: GroupedProducts, product: Product) => {
-        const vendorName = product.user_name || 'Unknown Vendor';
-        if (!acc[vendorName]) acc[vendorName] = [];
-        acc[vendorName].push(product);
-        return acc;
-      }, {});
-      setPendingProducts(grouped);
+    const onlyPending = pendingProducts.filter((p: Product) => !p.is_active);
+    // Grouping products (logic remains the same)
+    const grouped = onlyPending.reduce((acc: GroupedProducts, p: Product) => {
+  const vName = p.user_name || 'Unknown Vendor';
+  if (!acc[vName]) acc[vName] = [];
+  acc[vName].push(p);
+  return acc;
+}, {});
+setPendingProducts(grouped);
 
-      // Set general counts
-     setStats({
-      // Use .length because quoteResponse.data is a direct array from the database
-      productQuotes: Array.isArray(quoteResponse.data) 
-        ? quoteResponse.data.length 
-        : (quoteResponse.data.count || 0),
-
-      // Use .length because rentalResponse.data is a direct array from the database
-      rentals: Array.isArray(rentalResponse.data) 
-        ? rentalResponse.data.length 
-        : (rentalResponse.data.count || 0),
-
-      directBuys: orderResponse.data.count || 0,
-      trainingRequests: trainingResponse.data.count || 0,
-      contactRequests: contactResponse.data.count || 0,
-    });
-
-    setVendorStats(vendorStatsResponse.data);
-
-      // Set vendor stats separately
-      // setVendorStats(vendorStatsResponse.data);
-
-   } catch (error) {
-    console.error("Failed to fetch dashboard data:", error);
-    toast.error("Error", { description: "Could not fetch dashboard data." });
-  } finally {
-    setIsLoading(false);
+  }  catch (error: any) {
+  // This will tell you if it's a 404 (wrong URL) or 500 (Backend crashed)
+  console.error("Sync Error:", error);
+  toast.error(`Sync Failed: ${error.response?.status || error.message}`);
+} finally {
+    setIsStatsLoading(false);
+    setIsListsLoading(false);
   }
 }, []);
 
   useEffect(() => {
-    const checkUserAndFetch = async () => {
-      try {
-        const userResponse = await api.get('/users/me/');
-        if (userResponse.data?.role?.name.toLowerCase() !== 'admin') {
-          window.location.href = "/"; return;
-        }
-        fetchData();
-      } catch (err: any) {
-        console.error("Auth check failed:", err);
-        if ([401, 403].includes(err?.response?.status)) {
-          Cookies.remove("access_token");
-          window.location.href = "/login";
-        }
-      }
-    };
-    checkUserAndFetch();
+    //  api.get('/users/me/') check because proxy.ts handles it!
+    fetchData();
   }, [fetchData]);
 
   // --- Handler Functions (Unchanged) ---
@@ -351,11 +329,11 @@ const CompleteDashboard = () => {
   const totalPendingProducts = Object.values(pendingProducts).reduce((sum, prods) => sum + prods.length, 0);
 
   // Data for the AnalyticsDashboard (Graph)
-  const graphData = {
-    totalApplications: vendorStats.total_applications,
-    approvedVendors: vendorStats.approved_vendors,
-    pendingApplications: vendorStats.pending_applications,
-  };
+  // const graphData = {
+  //   totalApplications: vendorStats.total_applications,
+  //   approvedVendors: vendorStats.approved_vendors,
+  //   pendingApplications: vendorStats.pending_applications,
+  // };
 
 
   return (
@@ -370,17 +348,18 @@ const CompleteDashboard = () => {
             {/* Stats Cards - Adjusted grid for better flow on all screens */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
 
-              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" link="https://www.mhebazar.in/admin/forms/quotes" />
-              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" link="https://www.mhebazar.in/admin/forms/direct-buy" />
-              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" link="https://www.mhebazar.in/admin/forms/rentals" />
-              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" link="https://www.mhebazar.in/admin/forms/training-registrations" />
-              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" link="https://www.mhebazar.in/admin/contact/contact-form" />
+              <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" isLoading={isStatsLoading} link=" http://localhost:3000/admin/forms/quotes" />
+              <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" isLoading={isStatsLoading} link=" http://localhost:3000/admin/forms/direct-buy" />
+              <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" isLoading={isStatsLoading} link=" http://localhost:3000/admin/forms/rentals" />
+              <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" isLoading={isStatsLoading} link=" http://localhost:3000/admin/forms/training-registrations" />
+              <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" isLoading={isStatsLoading} link=" http://localhost:3000/admin/contact/contact-form" />
               {/* NEW: Pending Vendors Card with Redirection */}
               <StatsCard
+                isLoading={isStatsLoading}
                 icon='' // Using Lucide icon inside the component based on highlight prop
                 number={String(vendorStats.pending_applications)}
                 label="Pending Vendors"
-                link="https://www.mhebazar.in/admin/accounts/registered-vendors"
+                link=" http://localhost:3000/admin/accounts/registered-vendors"
                 highlight={vendorStats.pending_applications > 0} // Highlight if there are pending apps
               />
             </div>
@@ -394,7 +373,7 @@ const CompleteDashboard = () => {
           <div className="w-full lg:w-1/3 space-y-8">
             <div>
               <h3 className="text-2xl font-semibold text-gray-800 mb-4">Pending Actions</h3>
-              {isLoading ? <div className='text-center py-10'><Loader2 className='mx-auto h-8 w-8 text-green-600 animate-spin' /> <p className='text-sm text-gray-500 mt-2'>Loading...</p></div> : (vendorApps.length === 0 && totalPendingProducts === 0) ? (
+              {isListsLoading ? <div className='text-center py-10'><Loader2 className='mx-auto h-8 w-8 text-green-600 animate-spin' /> <p className='text-sm text-gray-500 mt-2'>Loading...</p></div> : (vendorApps.length === 0 && totalPendingProducts === 0) ? (
                 <div className="text-center py-10 bg-white rounded-lg border shadow-sm">
                   <Check className="mx-auto h-12 w-12 text-green-500" />
                   <h4 className="mt-3 text-lg font-medium">All Caught Up!</h4>
@@ -448,7 +427,7 @@ const CompleteDashboard = () => {
                         {products.map(product => (
                           <div key={product.id} className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4 min-w-0">
-                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded object-cover border w-12 h-12 flex-shrink-0" />
+                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name}  width={48} height={48} className="rounded object-cover border w-12 h-12 flex-shrink-0" />
                               <div className='min-w-0'>
                                 <p className="font-medium text-gray-900 truncate">{product.name}</p>
                                 <p className="text-sm text-gray-500">{product.category_name}</p>
@@ -524,7 +503,7 @@ const CompleteDashboard = () => {
                   {selectedProduct.images.length > 0 ? (
                     <div className="grid grid-cols-3 gap-2">
                       {selectedProduct.images.map((img, index) => (
-                        <Image key={index} src={img.image} alt={`${selectedProduct.name} image ${index + 1}`} width={150} height={150} className="rounded-md object-cover border" />
+                        <Image key={index} src={img.image} alt={`${selectedProduct.name}  image ${index + 1}`} width={150} height={150} priority={index < 3} className="rounded-md object-cover border" />
                       ))}
                     </div>
                   ) : (
