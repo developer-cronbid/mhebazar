@@ -327,7 +327,7 @@ try {
               "@type": "Offer",
               "price": productData.price,
               "priceCurrency": "INR",
-              "availability": productData.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              "availability": "https://schema.org/InStock",
               "url": `https://www.mhebazar.in/product/${canonicalProductSlug}${separator}${productId}`
             }
           })
