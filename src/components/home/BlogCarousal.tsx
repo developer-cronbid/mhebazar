@@ -1,5 +1,4 @@
 // src/components/BlogCarousel.tsx
-import React from 'react';
 import _BlogCarouselClient from './BlogCarouselClient';
 
 // --- FIXED TYPE DEFINITION (Source of Truth) ---

@@ -39,6 +39,11 @@ export const metadata: Metadata = {
       "msvalidate.01": "4D950976E7CE3FE0672C1877057600CE",
     },
   },
+other: {
+    "ahrefs-site-verification":
+      "f00084defcc447953c70500593c316fa8f9da95dfa69d289a02069a7f3304e88",
+  },
+
    
 };
 

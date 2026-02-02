@@ -1,31 +1,12 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
-import api from "@/lib/api";
+// import api from "@/lib/api";
 import ProductCard from "@/components/elements/Product";
 import { motion, useInView } from "framer-motion";
 import Link from "next/link";
 
-interface SparePart {
-  type: string;
-  images: { image: string }[];
-  is_active: boolean;
-  hide_price: boolean;
-  direct_sale: boolean;
-  stock_quantity: number;
-  name: string;
-  id: string | number;
-  title?: string;
-  subtitle: string;
-  price: number;
-  currency: string;
-  category: number;
-  model: string;
-  manufacturer: string;
-  user_name: string;
-  created_at: string;
-}
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 50 },
@@ -44,40 +25,14 @@ const itemVariants = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } }
 };
 
-export default function SparePartsFeatured() {
-  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function SparePartsFeatured({ initialData = [] }: { initialData: any[] }) {
   const [scrollIndex, setScrollIndex] = useState(0);
 
   const sectionRef = useRef(null);
   const inView = useInView(sectionRef, { once: true, amount: 0.3 });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  const fetchSpareParts = useCallback(async () => {
-    try {
-      const res = await api.get(`/products/`, {
-        params: {
-          category: 18,
-          limit: 10,
-        },
-      });
-      // The API response for `results` is an array of objects.
-      setSpareParts(res.data?.results || []);
-    } catch (error) {
-      setError('Failed to fetch spare parts.');
-      setSpareParts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchSpareParts();
-  }, [fetchSpareParts]);
-
   const handleDotClick = useCallback((index: number) => {
-    if (scrollContainerRef.current && spareParts.length > 0) {
+    if (scrollContainerRef.current && initialData.length > 0) {
       const container = scrollContainerRef.current;
       const itemsPerView = Math.floor(container.clientWidth / 240);
       const targetIndex = index * itemsPerView;
@@ -88,32 +43,42 @@ export default function SparePartsFeatured() {
       });
       setScrollIndex(index);
     }
-  }, [spareParts]);
+  }, [initialData]);
 
   const handleScroll = useCallback(() => {
-    if (scrollContainerRef.current && spareParts.length > 0) {
+    if (scrollContainerRef.current && initialData.length > 0) {
       const container = scrollContainerRef.current;
       const itemsPerView = Math.floor(container.clientWidth / 240);
       const itemWidth = (container.children[0] as HTMLElement)?.clientWidth + 16 || 240;
       const newIndex = Math.floor(container.scrollLeft / (itemWidth * itemsPerView));
       setScrollIndex(newIndex);
     }
-  }, [spareParts]);
+  }, [initialData]);
 
   const totalDots = useMemo(() => {
-    if (spareParts.length === 0) return 0;
+    if (initialData.length === 0) return 0;
     const itemsPerView = Math.floor(((scrollContainerRef.current?.clientWidth || 240) + 16) / 256); // 240px width + 16px gap
-    return Math.ceil(spareParts.length / Math.max(1, itemsPerView));
-  }, [spareParts, scrollContainerRef.current?.clientWidth]);
+    return Math.ceil(initialData.length / Math.max(1, itemsPerView));
+  }, [initialData, scrollContainerRef.current?.clientWidth]);
 
 
   return (
     <motion.section
       ref={sectionRef}
-      initial="hidden"
+      // initial="hidden"
+      initial={false}
       animate={inView ? "visible" : "hidden"}
       variants={sectionVariants}
-      className="w-full mx-auto md:px-4 py-2"
+      className="
+  w-full 
+  mx-auto 
+  py-2 
+  md:px-4
+  min-h-[420px]
+  md:min-h-[480px]
+  lg:min-h-[520px]
+"
+
     >
       <motion.div variants={itemVariants} className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Spare Parts</h2>
@@ -124,16 +89,7 @@ export default function SparePartsFeatured() {
           View More
         </Link>
       </motion.div>
-
-      {loading ? (
-        <div className="w-full flex justify-center items-center py-16 text-gray-500 text-lg">
-          Loading...
-        </div>
-      ) : error ? (
-        <div className="flex flex-col items-center justify-center py-16 bg-white rounded-lg shadow-sm border border-gray-100">
-          <p className="text-red-500 text-center">{error}</p>
-        </div>
-      ) : spareParts.length > 0 ? (
+      {initialData.length > 0 ? (
         <div className="relative">
           <div
             ref={scrollContainerRef}
@@ -145,7 +101,7 @@ export default function SparePartsFeatured() {
             }}
             onScroll={handleScroll}
           >
-            {spareParts.map((spare) => (
+            {initialData.map((spare) => (
               <motion.div
                 variants={itemVariants}
                 key={spare.id}
@@ -167,7 +123,7 @@ export default function SparePartsFeatured() {
                   model={spare.model}
                   manufacturer={spare.manufacturer}
                   user_name={spare.user_name}
-                  created_at={spare.created_at} pageUrlType={""}                />
+                  created_at={spare.created_at} pageUrlType={""} />
               </motion.div>
             ))}
           </div>
@@ -178,9 +134,8 @@ export default function SparePartsFeatured() {
                 <button
                   key={idx}
                   onClick={() => handleDotClick(idx)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                    idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
-                  }`}
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
+                    }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
               ))}

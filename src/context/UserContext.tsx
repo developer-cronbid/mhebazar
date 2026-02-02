@@ -431,8 +431,29 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
 export const useUser = () => {
   const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error("useUser must be used within a UserProvider");
+ if (context === undefined) {
+    return {
+      user: null,
+      setUser: () => {},
+      isLoading: true,
+      logout: () => {},
+      wishlistItems: [],
+      cartItems: [],
+      isWishlistLoading: false,
+      isCartLoading: false,
+      isProductWishlisted: () => false,
+      isProductInCart: () => false,
+      getCartItemQuantity: () => 0,
+      getCartItemId: () => null,
+      addToWishlist: async () => false,
+      removeFromWishlist: async () => false,
+      addToCart: async () => false,
+      removeFromCart: async () => false,
+      updateCartQuantity: async () => false,
+      refreshWishlist: async () => {},
+      refreshCart: async () => {},
+    };
   }
+  
   return context;
 };

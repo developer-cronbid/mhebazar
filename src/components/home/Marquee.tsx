@@ -1,8 +1,6 @@
 // VendorMarquee.tsx
 "use client";
 
-import api from '@/lib/api';
-import { useEffect, useState, useCallback } from 'react';
 import Marquee from "react-fast-marquee";
 import Link from 'next/link';
 import Image from 'next/image';
@@ -26,14 +24,17 @@ interface ApprovedVendor {
     product_count: number;
     // Add other fields as needed, but for the marquee, these are sufficient
 }
+interface VendorProps {
+    initialData: any[];
+}
 
 // --- Component Logic ---
 
-const VendorMarquee = () => {
+const VendorMarquee = ({ initialData = [] }: VendorProps) => {
     // We use the ApprovedVendor type here
-    const [vendors, setVendors] = useState<ApprovedVendor[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    // const [vendors, setVendors] = useState<ApprovedVendor[]>([]);
+    // const [isLoading, setIsLoading] = useState(true);
+    // const [error, setError] = useState<string | null>(null);
 
     const cleanImageUrl = (url: string | null): string => {
         if (!url) return '/default-profile.png';
@@ -46,38 +47,38 @@ const VendorMarquee = () => {
     };
 
 
-    const fetchVendors = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            // 1. Fetch data from the approved vendors endpoint
-            const vendorsResponse = await api.get<{ results: ApprovedVendor[] }>('/vendor/approved/');
+    // const fetchVendors = useCallback(async () => {
+    //     setIsLoading(true);
+    //     setError(null);
+    //     try {
+    //         // 1. Fetch data from the approved vendors endpoint
+    //         const vendorsResponse = await api.get<{ results: ApprovedVendor[] }>('/vendor/approved/');
             
-            // 2. The data is already complete, no need for extra /users/{id}/ calls
-            setVendors(vendorsResponse.data.results);
+    //         // 2. The data is already complete, no need for extra /users/{id}/ calls
+    //         setVendors(vendorsResponse.data.results);
 
-        } catch (err) {
-            // console.error("Vendor Marquee Fetch Error:", err);
-            setError('Failed to load approved vendors.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+    //     } catch (err) {
+    //         // console.error("Vendor Marquee Fetch Error:", err);
+    //         setError('Failed to load approved vendors.');
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // }, []);
 
-    useEffect(() => {
-        fetchVendors();
-    }, [fetchVendors]);
+    // useEffect(() => {
+    //     fetchVendors();
+    // }, [fetchVendors]);
 
-    if (isLoading) return <div className="text-center py-8 text-gray-500">Loading approved vendors...</div>;
-    if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
-    if (vendors.length === 0) return <div className="text-center py-8 text-gray-500">No approved vendors found.</div>;
+    // if (isLoading) return <div className="text-center py-8 text-gray-500">Loading approved vendors...</div>;
+    // if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
+    if (initialData.length === 0) return <div className="text-center py-8 text-gray-500">No approved vendors found.</div>;
 
 
     return (
         <div className="w-full py-6">
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-8">Our Trusted Vendors</h2>
             <Marquee className="my-8" pauseOnHover={true} speed={40}>
-                {vendors.map((vendor) => (
+                {initialData.map((vendor) => (
                     <Link
                         key={vendor.id}
                         // Use vendor.brand for the slug as typically done

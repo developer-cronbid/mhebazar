@@ -1,7 +1,7 @@
 // src/components/elements/MostPopular.tsx
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, memo } from "react";
+import { useState, useMemo, memo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Marquee from "react-fast-marquee";
@@ -118,36 +118,10 @@ interface MostPopularProps {
 }
 
 export default function MostPopular({ initialData }: MostPopularProps) {
-  // const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  // const [categories, setCategories] = useState<Category[]>([]);
-  const [mainImageError, setMainImageError] = useState(false);
   const [marqueeSpeed, setMarqueeSpeed] = useState(40);
   const [isMarqueePaused, setIsMarqueePaused] = useState(false);
 
-  // const fetchData = useCallback(async () => {
-  //   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-  //   if (!baseUrl) {
-  //     setIsLoading(false);
-  //     return;
-  //   }
-  //   try {
-  //     const response = await api.get(`${baseUrl}/products/most_popular/`);
-  //     const apiProducts = response.data?.results || response.data;
-  //     if (Array.isArray(apiProducts) && apiProducts.length > 0) {
-  //       const formattedData = transformApiData(apiProducts);
-  //       setCategories(formattedData);
-  //     }
-  //   } catch (err) {
-  //     setError("Failed to fetch popular products.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // }, []);
 
-  // useEffect(() => {
-  //   fetchData();
-  // }, [fetchData]);
 
  const popularData = useMemo(() => {
     const transformed = transformApiData(initialData);
@@ -158,8 +132,7 @@ export default function MostPopular({ initialData }: MostPopularProps) {
     return popularData?.products || [];
   }, [popularData]);
 
-  // const popularData = categories[0];
-  // const visibleProducts = popularData?.products || [];
+  
 
   
 
@@ -180,28 +153,9 @@ export default function MostPopular({ initialData }: MostPopularProps) {
     }
   };
 
-  // if (isLoading) return <LoadingSkeleton />;
 
-  if (error || !popularData || mainImageError) {
-    return (
-      <section className="w-full">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Top Selling Products
-          </h2>
-        </div>
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-5.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H1" />
-            </svg>
-          </div>
-          <p className="text-gray-600 font-medium">No popular products to display</p>
-          {error && <p className="text-sm text-gray-500 mt-1">{error}</p>}
-        </div>
-      </section>
-    );
-  }
+
+
 
   return (
     <section className="w-full">
@@ -241,7 +195,6 @@ export default function MostPopular({ initialData }: MostPopularProps) {
                     fill
                     priority
                     className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-                    onError={() => setMainImageError(true)}
                     sizes="(max-width: 640px) 256px, 320px"
                     
                   />

@@ -349,14 +349,12 @@ const containerVariants = {
 };
 
 export default function ProductSection({
-  productId,
-  productSlug,
   initialData,
 }: ProductSectionProps) {
   const router = useRouter();
   const { user } = useUser();
 
-  const [data, setData] = useState<ProductData>(initialData);
+  // const [data, setData] = useState<ProductData>(initialData);
   const [selectedImage, setSelectedImage] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<
@@ -366,7 +364,7 @@ export default function ProductSection({
   const [currentCartQuantity, setCurrentCartQuantity] = useState(0);
   const [cartItemId, setCartItemId] = useState<number | null>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [erroredImageIds, setErroredImageIds] = useState<Set<number>>(
     new Set()
   );
@@ -379,7 +377,7 @@ export default function ProductSection({
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
-
+const data = initialData;
   // Use a ref to store a function that can refresh reviews
   const reviewsRefresher = useRef<(() => void) | null>(null);
 
@@ -464,63 +462,7 @@ const sanitizedVendorDesc = useMemo(() => {
       setCartItemId(null);
     }
   }, [user, data?.id]);
-
-  // useEffect(() => {
-  //   async function fetchData() {
-  //     setIsLoading(true);
-  //     if (!productId) {
-  //       router.push("/404");
-  //       return;
-  //     }
-
-  //     const cacheKey = String(productId);
-  //     if (productCache.current.has(cacheKey)) {
-  //       const cachedData = productCache.current.get(cacheKey)!;
-  //       setData(cachedData);
-  //       if (cachedData.images.length > 0) {
-  //         setSelectedImage(0);
-  //       }
-  //       setIsLoading(false);
-  //       return;
-  //     }
-
-  //     try {
-  //       const productRes = await api.get<ProductData>(
-  //         `/products/${productId}/`
-  //       );
-  //       const foundProduct = productRes.data;
-
-  //       // Fetch category details for the fallback image
-  //       const categoryRes = await api.get(
-  //         `/categories/${foundProduct.category}`
-  //       );
-  //       const categoryWithImage = {
-  //         ...foundProduct,
-  //         category_details: categoryRes.data,
-  //       };
-
-  //       if (categoryWithImage) {
-  //         setData(categoryWithImage);
-  //         productCache.current.set(cacheKey, categoryWithImage);
-  //         if (categoryWithImage.images.length > 0) {
-  //           setSelectedImage(0);
-  //         }
-  //       } else {
-  //         router.push("/404");
-  //       }
-  //     } catch (error) {
-  //       console.error("Failed to fetch product data:", error);
-  //       router.push("/404");
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   }
-  //   fetchData();
-  // }, [productId, router]);
-
-  useEffect(() => {
-    fetchInitialStatus();
-  }, [fetchInitialStatus]);
+  
 
   const handleAddToCart = useCallback(
     async (productId: number) => {

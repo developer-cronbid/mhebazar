@@ -8,7 +8,7 @@ import Image from "next/image";
 import { JSX, useMemo, useState } from "react";
 import categoriesData from "@/data/categories.json";
 import { motion } from "framer-motion";
-import Loading from '../../app/loading';
+
 
 const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_MEDIA_URL || process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
 
@@ -26,6 +26,7 @@ interface CategoryItemProps {
   imageSrc: string | null;
   label: string;
   slug: string;
+  isPriority: boolean;
 }
 
 function getImageUrl(imagePath: string | null): string | null {
@@ -73,6 +74,7 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
       <motion.div
         variants={itemVariants}
         whileHover={{ scale: 1.05 }}
+        initial={false}
         whileInView="visible"
         viewport={{once:true}}
         whileTap={{ scale: 0.95 }}
@@ -80,6 +82,7 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
       >
         {fullImageUrl && !showInitials ? (
           <motion.div
+          
             className="relative w-[100px] h-[100px]"
             whileHover={{
               scale: 1.1,
@@ -142,7 +145,8 @@ export default function CategoriesSection(): JSX.Element {
       <motion.div
         
         variants={containerVariants}
-        initial="hidden"
+        initial={false}
+        // initial="hidden"
         whileInView="visible"
         
         viewport={{ once: true, margin: "-50px" }}

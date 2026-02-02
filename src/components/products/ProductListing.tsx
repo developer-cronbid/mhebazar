@@ -232,8 +232,14 @@ function ProductGrid({
                     {product.title}
                   </h3>
                   <div className="text-sm sm:text-base md:text-lg text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-                    <span dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(product.subtitle) }} />
-                  </div>
+  <span 
+    dangerouslySetInnerHTML={{ 
+      __html: typeof window !== 'undefined' 
+        ? DOMPurify.sanitize(product.subtitle) 
+        : product.subtitle // On server, send raw text to avoid the crash
+    }} 
+  />
+</div>
 
                   {/* Price */}
                   <div className="flex items-center gap-2">

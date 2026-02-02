@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import ProductCardContainer from "@/components/elements/Product";
 import Image from "next/image";
-import axios from "axios";
+// import axios from "axios";
 import categoriesData from "@/data/categories.json";
 import { motion, useInView } from "framer-motion";
 import Link from "next/link";
-import api from "@/lib/api";
+// import api from "@/lib/api";
 
 const NEXT_PUBLIC_BACKEND_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
 const NEXT_PUBLIC_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "";
@@ -27,24 +27,24 @@ const getCategoryImageUrl = (categoryId: number | string | null): string => {
   return "/placeholder-image.jpg";
 };
 
-interface ExportProduct {
-  id: string | number;
-  title: string;
-  subtitle: string | null;
-  price: string | number;
-  currency: string;
-  image: string;
-  direct_sale: boolean;
-  is_active: boolean;
-  hide_price: boolean;
-  stock_quantity: number;
-  type: string;
-  category_id: string | number | null;
-  model: string;
-  manufacturer: string;
-  user_name: string;
-  created_at: string;
-}
+// interface ExportProduct {
+//   id: string | number;
+//   title: string;
+//   subtitle: string | null;
+//   price: string | number;
+//   currency: string;
+//   image: string;
+//   direct_sale: boolean;
+//   is_active: boolean;
+//   hide_price: boolean;
+//   stock_quantity: number;
+//   type: string;
+//   category_id: string | number | null;
+//   model: string;
+//   manufacturer: string;
+//   user_name: string;
+//   created_at: string;
+// }
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 50 },
@@ -63,57 +63,57 @@ const itemVariants = {
   visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } }
 };
 
-export default function ExportProductsFeatured() {
-  const [exportProducts, setExportProducts] = useState<ExportProduct[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ExportProductsFeatured({ initialData = [] }: { initialData: any[] }) {
+  // const [exportProducts, setExportProducts] = useState<ExportProduct[]>([]);
+  // const [loading, setLoading] = useState(true);
   const [scrollIndex, setScrollIndex] = useState(0);
 
   const sectionRef = useRef(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inView = useInView(sectionRef, { once: true, amount: 0.3 });
 
-  useEffect(() => {
-    const fetchPopularProducts = async () => {
-      setLoading(true);
-      try {
-        const response = await api.get(`${NEXT_PUBLIC_API_BASE_URL}/products/?type=used&limit=10`);
+  // useEffect(() => {
+  //   const fetchPopularProducts = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const response = await api.get(`${NEXT_PUBLIC_API_BASE_URL}/products/?type=used&limit=10`);
 
-        const rawData = Array.isArray(response.data)
-          ? response.data
-          : response.data?.results ?? [];
+  //       const rawData = Array.isArray(response.data)
+  //         ? response.data
+  //         : response.data?.results ?? [];
 
-        const formattedProducts: ExportProduct[] = rawData.map((item: any) => ({
-          id: item.id,
-          title: item.name,
-          subtitle: item.description || null,
-          price: item.price,
-          currency: "₹",
-          image: (item.images && item.images.length > 0) ? item.images[0].image : getCategoryImageUrl(item.category),
-          direct_sale: item.direct_sale,
-          is_active: item.is_active,
-          hide_price: item.hide_price,
-          stock_quantity: item.stock_quantity,
-          type: item.type,
-          category_id: item.category,
-          model: item.model,
-          manufacturer: item.manufacturer,
-          user_name: item.user_name,
-          created_at: item.created_at
-        }));
+  //       const formattedProducts: ExportProduct[] = rawData.map((item: any) => ({
+  //         id: item.id,
+  //         title: item.name,
+  //         subtitle: item.description || null,
+  //         price: item.price,
+  //         currency: "₹",
+  //         image: (item.images && item.images.length > 0) ? item.images[0].image : getCategoryImageUrl(item.category),
+  //         direct_sale: item.direct_sale,
+  //         is_active: item.is_active,
+  //         hide_price: item.hide_price,
+  //         stock_quantity: item.stock_quantity,
+  //         type: item.type,
+  //         category_id: item.category,
+  //         model: item.model,
+  //         manufacturer: item.manufacturer,
+  //         user_name: item.user_name,
+  //         created_at: item.created_at
+  //       }));
 
-        setExportProducts(formattedProducts);
-      } catch (error) {
-        setExportProducts([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  //       setExportProducts(formattedProducts);
+  //     } catch (error) {
+  //       setExportProducts([]);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchPopularProducts();
-  }, []);
+  //   fetchPopularProducts();
+  // }, []);
 
   const handleDotClick = useCallback((index: number) => {
-    if (scrollContainerRef.current && exportProducts.length > 0) {
+    if (scrollContainerRef.current && initialData.length > 0) {
       const container = scrollContainerRef.current;
       const itemsPerView = Math.floor(container.clientWidth / 280);
       const targetIndex = index * itemsPerView;
@@ -124,44 +124,41 @@ export default function ExportProductsFeatured() {
       });
       setScrollIndex(index);
     }
-  }, [exportProducts]);
+  }, [initialData]);
 
   const handleScroll = useCallback(() => {
-    if (scrollContainerRef.current && exportProducts.length > 0) {
+    if (scrollContainerRef.current && initialData.length > 0) {
       const container = scrollContainerRef.current;
       const itemsPerView = Math.floor(container.clientWidth / 280);
       const itemWidth = (container.children[0] as HTMLElement)?.clientWidth + 16 || 280;
       const newIndex = Math.floor(container.scrollLeft / (itemWidth * itemsPerView));
       setScrollIndex(newIndex);
     }
-  }, [exportProducts]);
+  }, [initialData]);
 
   const totalDots = useMemo(() => {
-    if (exportProducts.length === 0) return 0;
+    if (initialData.length === 0) return 0;
     const itemsPerView = Math.floor(((scrollContainerRef.current?.clientWidth || 280) + 16) / 296); // 280px width + 16px gap
-    return Math.ceil(exportProducts.length / Math.max(1, itemsPerView));
-  }, [exportProducts, scrollContainerRef.current?.clientWidth]);
+    return Math.ceil(initialData.length / Math.max(1, itemsPerView));
+  }, [initialData, scrollContainerRef.current?.clientWidth]);
 
   return (
     <motion.section
       ref={sectionRef}
-      initial="hidden"
+      // initial="hidden"
+      initial={false}
       animate={inView ? "visible" : "hidden"}
       variants={sectionVariants}
-      className="w-full mx-auto md:px-4 py-4"
+      className="w-full mx-auto md:px-4 min-h-[480px] py-4"
     >
-      <motion.div variants={itemVariants} className="flex justify-between items-center mb-6">
+      <motion.div variants={itemVariants} initial={false} className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Used Products</h2>
         <Link href="/used" className="text-[#42a856] font-medium hover:text-[#369447] transition-colors duration-200">
           View More
         </Link>
       </motion.div>
 
-      {loading ? (
-        <div className="w-full flex justify-center items-center py-16 text-gray-500 text-lg">
-          Loading...
-        </div>
-      ) : exportProducts.length > 0 ? (
+     { initialData.length > 0 ? (
         <div className="relative">
           <div
             ref={scrollContainerRef}
@@ -173,7 +170,7 @@ export default function ExportProductsFeatured() {
             }}
             onScroll={handleScroll}
           >
-            {exportProducts.map((export_product) => (
+            {initialData.map((export_product) => (
               <motion.div
                 variants={itemVariants}
                 key={export_product.id}

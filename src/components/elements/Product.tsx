@@ -337,11 +337,13 @@ const ProductCard = ({
           </Link>
           <p className="text-sm text-gray-500 mb-2 line-clamp-1">
             {/* ✅ FIX: Sanitize the subtitle/description for display, stripping HTML tags */}
-            <span
-              dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(subtitle || "", { ALLOWED_TAGS: [] }), // Strips all tags for plain text display
-              }}
-            />
+           <span
+    dangerouslySetInnerHTML={{
+      __html: typeof window !== "undefined"
+        ? DOMPurify.sanitize(subtitle || "", { ALLOWED_TAGS: [] }) 
+        : (subtitle || "").replace(/<[^>]*>?/gm, '') // Simple regex to strip tags on server
+    }}
+  />
           </p>
           {/* Price */}
           <div className="flex justify-between mb-4">
@@ -559,20 +561,19 @@ export const ProductCardContainer = ({
   created_at, // Add created_at to the destructured props
 }: ProductCardContainerProps) => {
   const router = useRouter();
-  const {
-    user,
-    // State derived from context
-    isProductWishlisted,
-    isProductInCart,
-    getCartItemQuantity,
-    getCartItemId,
-    // Actions from context
-    addToWishlist,
-    removeFromWishlist,
-    addToCart,
-    removeFromCart,
-    updateCartQuantity,
-  } = useUser();
+  const userContext = useUser();
+ const {
+    user = null,
+    isProductWishlisted = () => false,
+    isProductInCart = () => false,
+    getCartItemQuantity = () => 0,
+    getCartItemId = () => null,
+    addToWishlist = async () => {},
+    removeFromWishlist = async () => {},
+    addToCart = async () => {},
+    removeFromCart = async () => {},
+    updateCartQuantity = async () => {},
+  } = userContext || {}; // Added the || {} fallback
 
   const isWishlisted = isProductWishlisted(id);
   const isInCart = isProductInCart(id);
