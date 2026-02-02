@@ -3,11 +3,13 @@ import { notFound, redirect } from 'next/navigation';
 import api from '@/lib/api';
 import Breadcrumb from '@/components/elements/Breadcrumb';
 import ProductSection from '@/components/products/IndividualProduct';
-import SparePartsFeatured from '@/components/home/SparepartsFeatured';
+import SparePartsSection from '@/components/home/product/SparePartsSectionApiCalling';
+// import SparePartsFeatured from '@/components/home/SparepartsFeatured';
 import VendorProducts from '@/components/elements/VendorFeaturedProducts';
 import CategoryProducts from '@/components/elements/CategoryProducts';
 import styles from './page.module.css';
 import { Metadata } from 'next';
+import { Suspense } from 'react';
 
 // --- START: FIXED API Type Definitions ---
 interface ProductApiResponse {
@@ -153,11 +155,12 @@ export async function generateMetadata({
       },
       // FIX 1: Ensure AggregateRating structure is complete for rich snippets (Price/Rating shown)
       // This requires "reviewCount" even if estimated or placeholder.
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": (productData.average_rating || 5.0).toFixed(1), // Use 5.0 if null, as per common practice
-        "reviewCount": 1, // Placeholder count to satisfy rich snippet requirement
-      }
+     "aggregateRating": productData.review_count > 0 ? {
+    "@type": "AggregateRating",
+    "ratingValue": productData.average_rating || 5,
+    "reviewCount": productData.review_count
+  } : undefined,
+  
     };
 
     return {
@@ -300,6 +303,36 @@ try {
   // 4. Render
   return (
     <>
+    <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            "name": productData.name,
+            "description": productData.meta_description || productData.description,
+            "image": productData.images.length > 0 ? forceHttps(productData.images[0].image) : 'https://www.mhebazar.in/mhe-logo.png',
+            "sku": productData.model || `MHE-${productData.id}`,
+            "brand": {
+              "@type": "Brand",
+              "name": productData.manufacturer || productData.user_name || "MHE Bazar"
+            },
+            // This logic ensures stars only show if reviews exist
+            "aggregateRating": productData.review_count > 0 ? {
+              "@type": "AggregateRating",
+              "ratingValue": (productData.average_rating || 5.0).toFixed(1),
+              "reviewCount": productData.review_count
+            } : undefined,
+            "offers": {
+              "@type": "Offer",
+              "price": productData.price,
+              "priceCurrency": "INR",
+              "availability": productData.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+              "url": `https://www.mhebazar.in/product/${canonicalProductSlug}${separator}${productId}`
+            }
+          })
+        }}
+      />
       <Breadcrumb
         items={[
           { label: 'Home', href: '/' },
@@ -313,15 +346,15 @@ try {
     <ProductSection productSlug={productPath} productId={productId} initialData={productData} />
 
       <div className={styles.animatedSection}>
-        <SparePartsFeatured />
+        <Suspense><SparePartsSection /></Suspense>
       </div>
 
       <div className={styles.animatedSection}>
-        <VendorProducts currentProductId={productId} />
+        <Suspense><VendorProducts currentProductId={productId} /></Suspense>
       </div>
 
       <div className={styles.animatedSection}>
-        <CategoryProducts currentProductId={productId} />
+        <Suspense><CategoryProducts currentProductId={productId} /></Suspense>
       </div>
     </>
   );
