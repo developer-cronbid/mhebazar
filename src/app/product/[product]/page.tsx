@@ -190,9 +190,9 @@ export async function generateMetadata({
       },
       // Schema Markup (Rich Snippets for Google)
       metadataBase: new URL('https://www.mhebazar.in'),
-      other: {
-        'json-ld': JSON.stringify(productSchema),
-      },
+      // other: {
+      //   'json-ld': JSON.stringify(productSchema),
+      // },
     };
   } catch (error) {
     // Soft fail for metadata if API throws
