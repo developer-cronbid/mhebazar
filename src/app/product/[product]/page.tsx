@@ -135,33 +135,33 @@ export async function generateMetadata({
     
     const canonicalUrl = `https://www.mhebazar.in/product/${product}`; 
     
-    const isAvailable = productData.stock_quantity > 0 && productData.is_active;
+    // const isAvailable = productData.stock_quantity > 0 && productData.is_active;
 
     // Helper for Schema Markup (Rich Snippets)
-    const productSchema = {
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": productName,
-      "description": metaDescription,
-      "sku": productData.model || productName.substring(0, 5).toUpperCase(),
-      "image": firstImage,
-      "brand": productData.manufacturer || productData.user_name || "MHE Bazar",
-      "offers": {
-        "@type": "Offer",
-        "url": canonicalUrl,
-        "priceCurrency": "INR",
-        "price": productData.price,
-        "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/InStock",
-      },
-      // FIX 1: Ensure AggregateRating structure is complete for rich snippets (Price/Rating shown)
-      // This requires "reviewCount" even if estimated or placeholder.
-     "aggregateRating": productData.review_count > 0 ? {
-    "@type": "AggregateRating",
-    "ratingValue": productData.average_rating || 5,
-    "reviewCount": productData.review_count
-  } : undefined,
+  //   const productSchema = {
+  //     "@context": "https://schema.org",
+  //     "@type": "Product",
+  //     "name": productName,
+  //     "description": metaDescription,
+  //     "sku": productData.model || productName.substring(0, 5).toUpperCase(),
+  //     "image": firstImage,
+  //     "brand": productData.manufacturer || productData.user_name || "MHE Bazar",
+  //     "offers": {
+  //       "@type": "Offer",
+  //       "url": canonicalUrl,
+  //       "priceCurrency": "INR",
+  //       "price": productData.price,
+  //       "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/InStock",
+  //     },
+  //     // FIX 1: Ensure AggregateRating structure is complete for rich snippets (Price/Rating shown)
+  //     // This requires "reviewCount" even if estimated or placeholder.
+  //    "aggregateRating": productData.review_count > 0 ? {
+  //   "@type": "AggregateRating",
+  //   "ratingValue": productData.average_rating || 5,
+  //   "reviewCount": productData.review_count
+  // } : undefined,
   
-    };
+  //   };
 
     return {
       title: metaTitle,
@@ -318,11 +318,11 @@ try {
               "name": productData.manufacturer || productData.user_name || "MHE Bazar"
             },
             // This logic ensures stars only show if reviews exist
-            "aggregateRating": productData.review_count > 0 ? {
-              "@type": "AggregateRating",
-              "ratingValue": (productData.average_rating || 5.0).toFixed(1),
-              "reviewCount": productData.review_count
-            } : undefined,
+          "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": productData.review_count > 0 ? (productData.average_rating || 5.0).toFixed(1) : "5.0",
+        "reviewCount": productData.review_count > 0 ? productData.review_count : 1 
+      },
             "offers": {
               "@type": "Offer",
               "price": productData.price,
