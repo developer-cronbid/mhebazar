@@ -33,7 +33,7 @@ interface ProductApiResponse {
   stock_quantity: number;
   created_at: string;
   updated_at: string;
-  status:string;
+  status: string;
   user: number;
   category: number;
   subcategory: number | null;
@@ -74,10 +74,10 @@ const slugify = (text: string): string => {
 
 // Helper function to force HTTPS on image URLs
 const forceHttps = (url: string): string => {
-    if (url.startsWith('http://')) {
-        return url.replace('http://', 'https://');
-    }
-    return url;
+  if (url.startsWith('http://')) {
+    return url.replace('http://', 'https://');
+  }
+  return url;
 };
 
 // Helper function to fetch product data (Reusable for Metadata and Page)
@@ -97,16 +97,16 @@ async function getProductData(productId: number): Promise<ProductApiResponse> {
 // --- SEO AND METADATA GENERATION (CWV FIX) ---
 export async function generateMetadata({
   params,
-  searchParams, 
+  searchParams,
 }: {
   params: Promise<{ product: string }>;
-  searchParams: Promise<{ id?: string }>; 
+  searchParams: Promise<{ id?: string }>;
 }): Promise<Metadata> {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
   const product = resolvedParams.product;
   const queryId = resolvedSearchParams.id;
-  
+
   const separator = '-';
   let productId: number;
 
@@ -128,40 +128,40 @@ export async function generateMetadata({
     const productName = productData.name;
     const metaTitle = productData.meta_title || `${productName} - MHE Product Details`;
     const metaDescription = productData.meta_description || `Detailed information about ${productName} and customer reviews.`;
-    
+
     // FIX 2: Ensure the image URL is HTTPS
     const firstImageHttp = productData.images.length > 0 ? productData.images[0].image : '/mhe-logo.png';
     const firstImage = forceHttps(firstImageHttp);
-    
-    const canonicalUrl = `https://www.mhebazar.in/product/${product}`; 
-    
+
+    const canonicalUrl = `https://www.mhebazar.in/product/${product}`;
+
     // const isAvailable = productData.stock_quantity > 0 && productData.is_active;
 
     // Helper for Schema Markup (Rich Snippets)
-  //   const productSchema = {
-  //     "@context": "https://schema.org",
-  //     "@type": "Product",
-  //     "name": productName,
-  //     "description": metaDescription,
-  //     "sku": productData.model || productName.substring(0, 5).toUpperCase(),
-  //     "image": firstImage,
-  //     "brand": productData.manufacturer || productData.user_name || "MHE Bazar",
-  //     "offers": {
-  //       "@type": "Offer",
-  //       "url": canonicalUrl,
-  //       "priceCurrency": "INR",
-  //       "price": productData.price,
-  //       "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/InStock",
-  //     },
-  //     // FIX 1: Ensure AggregateRating structure is complete for rich snippets (Price/Rating shown)
-  //     // This requires "reviewCount" even if estimated or placeholder.
-  //    "aggregateRating": productData.review_count > 0 ? {
-  //   "@type": "AggregateRating",
-  //   "ratingValue": productData.average_rating || 5,
-  //   "reviewCount": productData.review_count
-  // } : undefined,
-  
-  //   };
+    //   const productSchema = {
+    //     "@context": "https://schema.org",
+    //     "@type": "Product",
+    //     "name": productName,
+    //     "description": metaDescription,
+    //     "sku": productData.model || productName.substring(0, 5).toUpperCase(),
+    //     "image": firstImage,
+    //     "brand": productData.manufacturer || productData.user_name || "MHE Bazar",
+    //     "offers": {
+    //       "@type": "Offer",
+    //       "url": canonicalUrl,
+    //       "priceCurrency": "INR",
+    //       "price": productData.price,
+    //       "availability": isAvailable ? "https://schema.org/InStock" : "https://schema.org/InStock",
+    //     },
+    //     // FIX 1: Ensure AggregateRating structure is complete for rich snippets (Price/Rating shown)
+    //     // This requires "reviewCount" even if estimated or placeholder.
+    //    "aggregateRating": productData.review_count > 0 ? {
+    //   "@type": "AggregateRating",
+    //   "ratingValue": productData.average_rating || 5,
+    //   "reviewCount": productData.review_count
+    // } : undefined,
+
+    //   };
 
     return {
       title: metaTitle,
@@ -176,9 +176,9 @@ export async function generateMetadata({
         description: metaDescription,
         url: canonicalUrl,
         // FIX: Using 'website' as the safe type
-        type: 'website', 
+        type: 'website',
         // FIX 2: Use the HTTPS image URL
-        images: [{ url: firstImage, alt: productName }], 
+        images: [{ url: firstImage, alt: productName }],
       },
       // Social Sharing: Twitter Card
       twitter: {
@@ -186,7 +186,7 @@ export async function generateMetadata({
         title: metaTitle,
         description: metaDescription,
         // FIX 2: Use the HTTPS image URL
-        images: [firstImage], 
+        images: [firstImage],
       },
       // Schema Markup (Rich Snippets for Google)
       metadataBase: new URL('https://www.mhebazar.in'),
@@ -214,72 +214,72 @@ export default async function IndividualProductPage({
   searchParams: Promise<{ id?: string }>;
 }) {
   const resolvedParams = await params; // Await the promise first
-const resolvedSearchParams = await searchParams;
+  const resolvedSearchParams = await searchParams;
 
-const productPath = resolvedParams.product;
-const queryId = resolvedSearchParams.id; 
+  const productPath = resolvedParams.product;
+  const queryId = resolvedSearchParams.id;
 
-let productId: number;
-let productSlugFromUrl: string;
-let separator = '-';
+  let productId: number;
+  let productSlugFromUrl: string;
+  let separator = '-';
 
-if (queryId) {
-  productId = parseInt(queryId, 10); // Use the ID from the URL query
-  productSlugFromUrl = productPath || 'product';
-} else {
-  const parts = productPath.split(separator);
-  productId = parseInt(parts.pop() || '', 10); // Fallback to slug ID
-  productSlugFromUrl = parts.join(separator);
-}
+  if (queryId) {
+    productId = parseInt(queryId, 10); // Use the ID from the URL query
+    productSlugFromUrl = productPath || 'product';
+  } else {
+    const parts = productPath.split(separator);
+    productId = parseInt(parts.pop() || '', 10); // Fallback to slug ID
+    productSlugFromUrl = parts.join(separator);
+  }
 
   if (isNaN(productId)) {
     notFound();
   }
 
-let productData: ProductApiResponse;
-let reviews: any[] = [];
-try {
-  // 1. Fetch main product data
-  // const productRes = await getProductData(productId); 
-  const [productRes, reviewsRes] = await Promise.all([
-    getProductData(productId),
-    api.get(`/reviews/?product=${productId}`, {
+  let productData: ProductApiResponse;
+  let reviews: any[] = [];
+  try {
+    // 1. Fetch main product data
+    // const productRes = await getProductData(productId); 
+    const [productRes, reviewsRes] = await Promise.all([
+      getProductData(productId),
+      api.get(`/reviews/?product=${productId}`, {
+        headers: { 'Cache-Control': 'no-cache' }
+      })
+    ]);
+
+    // 2. Logic: If Approved and User is Active, continue; otherwise, redirect to Home
+    if (productRes.status !== 'approved' || !productRes.is_active) {
+      console.warn(`Redirecting: Product ${productId} is ${productRes.status} or inactive.`);
+      redirect('/'); // Sends user to home if status is wrong
+    }
+
+    reviews = reviewsRes.data;
+
+    // 3. Fetch category details
+    const categoryRes = await api.get(`/categories/${productRes.category}`, {
       headers: { 'Cache-Control': 'no-cache' }
-    })
-  ]);
+    });
 
-  // 2. Logic: If Approved and User is Active, continue; otherwise, redirect to Home
-  if (productRes.status !== 'approved' || !productRes.is_active) {
-    console.warn(`Redirecting: Product ${productId} is ${productRes.status} or inactive.`);
-    redirect('/'); // Sends user to home if status is wrong
+    productData = {
+      ...productRes,
+      category_details: categoryRes.data,
+    };
+  } catch (error: any) {
+    // 4. FIX: Handle Django's 404. If the API says 404, it means the product 
+    // exists but is hidden by your 'get_queryset' logic
+    if (error.response?.status === 404) {
+      console.error('Product hidden by backend (404), redirecting to home...');
+      redirect('/'); // Redirect instead of showing notFound()
+    }
+
+    // For other serious errors (like server down), you can still show 404
+    console.error('Unexpected error:', error);
+    notFound();
   }
-
-  reviews = reviewsRes.data;
-
-  // 3. Fetch category details
-  const categoryRes = await api.get(`/categories/${productRes.category}`, {
-    headers: { 'Cache-Control': 'no-cache' }
-  });
-
-  productData = {
-    ...productRes,
-    category_details: categoryRes.data,
-  };
-} catch (error: any) {
-  // 4. FIX: Handle Django's 404. If the API says 404, it means the product 
-  // exists but is hidden by your 'get_queryset' logic
-  if (error.response?.status === 404) {
-     console.error('Product hidden by backend (404), redirecting to home...');
-     redirect('/'); // Redirect instead of showing notFound()
-  }
-  
-  // For other serious errors (like server down), you can still show 404
-  console.error('Unexpected error:', error);
-  notFound(); 
-}
 
   // 2. Canonicalization Check and Redirects
-  
+
   // Generate the correct, canonical slug from the product name 
   // (Crucial for SEO and preventing duplicate content)
   const productTitleForSlug = `${productData.user_name || ''} ${productData.name} ${productData.model || ''}`;
@@ -290,29 +290,30 @@ try {
     const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
     redirect(canonicalUrl);
   }
-  
+
   // Check 2: If the old query param URL was used, redirect to the new format.
- if (queryId) { // FIX: Use the variable you defined at the top
-  const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
-  redirect(canonicalUrl);
-}
+  if (queryId) { // FIX: Use the variable you defined at the top
+    const canonicalUrl = `/product/${canonicalProductSlug}${separator}${productId}`;
+    redirect(canonicalUrl);
+  }
 
   // 3. Prepare Data for Rendering
   const { category_name, subcategory_name, name: productName } = productData;
-  
+
   // Clean the product name for Breadcrumb display (allowing standard symbols)
   const productNameClean = productName
-    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "") 
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*]/g, "")
     .replace(/\s+/g, " ")
     .trim()
-  
+
   const cat_slug = category_name.toLowerCase().replace(/\s+/g, '-');
   const subcat_slug = subcategory_name?.toLowerCase().replace(/\s+/g, '-');
 
   // 4. Render
   return (
     <>
-    <script
+   // Replace your existing JSON-LD return block with this more robust version:
+      <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
@@ -326,28 +327,31 @@ try {
               "@type": "Brand",
               "name": productData.manufacturer || productData.user_name || "MHE Bazar"
             },
-            // This logic ensures stars only show if reviews exist
-          "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": productData.review_count > 0 ? (productData.average_rating || 5.0).toFixed(1) : "5.0",
-        "reviewCount": productData.review_count
-      },
-      "review": reviews.length > 0 ? reviews.map((rev: any) => ({
-        "@type": "Review",
-        "author": { "@type": "Person", "name": rev.user_name || "MHE Bazar User" },
-        "datePublished": rev.created_at,
-        "reviewBody": rev.comment || "Excellent product",
-        "reviewRating": {
-          "@type": "Rating",
-          "ratingValue": rev.rating || 5
-        }
-      })) : undefined,
+            // ONLY show aggregateRating if there are reviews
+            ...(productData.review_count > 0 ? {
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": (productData.average_rating || 5.0).toFixed(1),
+                "reviewCount": productData.review_count
+              }
+            } : {}),
+            "review": reviews.length > 0 ? reviews.map((rev: any) => ({
+              "@type": "Review",
+              "author": { "@type": "Person", "name": rev.user_name || "MHE Bazar User" },
+              "datePublished": rev.created_at,
+              "reviewBody": rev.comment || "Excellent product",
+              "reviewRating": {
+                "@type": "Rating",
+                "ratingValue": rev.rating || 5
+              }
+            })) : undefined,
             "offers": {
               "@type": "Offer",
               "price": productData.price,
               "priceCurrency": "INR",
               "availability": "https://schema.org/InStock",
-              "url": `https://www.mhebazar.in/product/${canonicalProductSlug}${separator}${productId}`
+              "url": `https://www.mhebazar.in/product/${canonicalProductSlug}${separator}${productId}`,
+              "priceValidUntil": "2026-12-31" // ADD THIS to fix Merchant Listing warning
             }
           })
         }}
@@ -362,7 +366,7 @@ try {
         ]}
       />
       {/* FIX 2: Pass productSlug to the client component to resolve the prop error */}
-    <ProductSection productSlug={productPath} productId={productId} initialData={productData} />
+      <ProductSection productSlug={productPath} productId={productId} initialData={productData} />
 
       <div className={styles.animatedSection}>
         <Suspense><SparePartsSection /></Suspense>
