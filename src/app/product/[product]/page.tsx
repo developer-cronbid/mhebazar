@@ -237,15 +237,24 @@ if (queryId) {
   }
 
 let productData: ProductApiResponse;
+let reviews: any[] = [];
 try {
   // 1. Fetch main product data
-  const productRes = await getProductData(productId); 
+  // const productRes = await getProductData(productId); 
+  const [productRes, reviewsRes] = await Promise.all([
+    getProductData(productId),
+    api.get(`/reviews/?product=${productId}`, {
+      headers: { 'Cache-Control': 'no-cache' }
+    })
+  ]);
 
   // 2. Logic: If Approved and User is Active, continue; otherwise, redirect to Home
   if (productRes.status !== 'approved' || !productRes.is_active) {
     console.warn(`Redirecting: Product ${productId} is ${productRes.status} or inactive.`);
     redirect('/'); // Sends user to home if status is wrong
   }
+
+  reviews = reviewsRes.data;
 
   // 3. Fetch category details
   const categoryRes = await api.get(`/categories/${productRes.category}`, {
@@ -321,8 +330,18 @@ try {
           "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": productData.review_count > 0 ? (productData.average_rating || 5.0).toFixed(1) : "5.0",
-        "reviewCount": productData.review_count > 0 ? productData.review_count : 1 
+        "reviewCount": productData.review_count
       },
+      "review": reviews.length > 0 ? reviews.map((rev: any) => ({
+        "@type": "Review",
+        "author": { "@type": "Person", "name": rev.user_name || "MHE Bazar User" },
+        "datePublished": rev.created_at,
+        "reviewBody": rev.comment || "Excellent product",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": rev.rating || 5
+        }
+      })) : undefined,
             "offers": {
               "@type": "Offer",
               "price": productData.price,
