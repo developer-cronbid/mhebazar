@@ -312,7 +312,7 @@ export default async function IndividualProductPage({
   // 4. Render
   return (
     <>
-   // Replace your existing JSON-LD return block with this more robust version:
+   
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
