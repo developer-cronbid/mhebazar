@@ -350,7 +350,7 @@ export default async function IndividualProductPage({
         "@type": "Offer",
         "price": productData.price,
         "priceCurrency": "INR",
-        "availability": productData.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        "availability": productData.stock_quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/inStock",
         "url": `https://www.mhebazar.in/product/${canonicalProductSlug}-${productId}`,
         "priceValidUntil": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] // Sets it 1 year from today
       }
