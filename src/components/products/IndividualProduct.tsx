@@ -52,13 +52,13 @@ const sanitizeHTML = (html: string) => {
   // If we are on the server (SSR), return the raw HTML
   // Next.js will hydrate the safe version once it hits the browser.
   if (typeof window === "undefined") return html;
-  
+
   // Handle Turbopack's module resolution quirk
   const purify = (DOMPurify as any).default || DOMPurify;
-  
+
   // Double-check if sanitize exists before calling it to prevent the crash
-  return (typeof purify.sanitize === 'function') 
-    ? purify.sanitize(html) 
+  return (typeof purify.sanitize === 'function')
+    ? purify.sanitize(html)
     : html;
 };
 
@@ -377,22 +377,22 @@ export default function ProductSection({
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 0, y: 0 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
-const data = initialData;
+  const data = initialData;
   // Use a ref to store a function that can refresh reviews
   const reviewsRefresher = useRef<(() => void) | null>(null);
 
- const sanitizedDescription = useMemo(() => {
-  // Only attempt to sanitize if window is available (Client Side)
-  if (typeof window === "undefined") return data.description;
-  
-  return sanitizeHTML(data.description);
-}, [data.description]);
+  const sanitizedDescription = useMemo(() => {
+    // Only attempt to sanitize if window is available (Client Side)
+    if (typeof window === "undefined") return data.description;
 
-const sanitizedVendorDesc = useMemo(() => {
-  if (!data.user_description) return "";
-  if (typeof window === "undefined") return data.user_description;
-  return sanitizeHTML(data.user_description);
-}, [data.user_description]);
+    return sanitizeHTML(data.description);
+  }, [data.description]);
+
+  const sanitizedVendorDesc = useMemo(() => {
+    if (!data.user_description) return "";
+    if (typeof window === "undefined") return data.user_description;
+    return sanitizeHTML(data.user_description);
+  }, [data.user_description]);
 
   // IMPROVEMENT: Memoize cleaned media URLs to avoid regex overhead on every frame
   const cleanedImages = useMemo(() =>
@@ -462,7 +462,7 @@ const sanitizedVendorDesc = useMemo(() => {
       setCartItemId(null);
     }
   }, [user, data?.id]);
-  
+
 
   const handleAddToCart = useCallback(
     async (productId: number) => {
@@ -809,8 +809,7 @@ const sanitizedVendorDesc = useMemo(() => {
     return null;
   }
 
-  const isPurchasable =
-    data.is_active && (!data.direct_sale || data.stock_quantity > 0);
+const isPurchasable = data.is_active;
   const displayPrice = parseFloat(data.price).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -849,15 +848,15 @@ const sanitizedVendorDesc = useMemo(() => {
     return capacity;
   };
 
- const userName = (data?.user_name || "").replace("_", " ");
-const productName = data?.name || "";
-const model = data?.model || "";
-const capacity = formatCapacity(data?.product_details?.capacity) || "";
+  const userName = (data?.user_name || "").replace("_", " ");
+  const productName = data?.name || "";
+  const model = data?.model || "";
+  const capacity = formatCapacity(data?.product_details?.capacity) || "";
 
-const cleanTitle = `${userName} ${productName} ${model} ${capacity}`
-  .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%+×]/g, "")
-  .replace(/\s+/g, " ")
-  .trim();
+  const cleanTitle = `${userName} ${productName} ${model} ${capacity}`
+    .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%+×]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 
 
   // Determine if the currently selected media is a video
@@ -988,8 +987,8 @@ const cleanTitle = `${userName} ${productName} ${model} ${capacity}`
                     key={img.id}
                     onClick={() => setSelectedImage(index)}
                     className={`rounded border-2 overflow-hidden flex-shrink-0 w-fit ${selectedImage === index
-                        ? "border-orange-500"
-                        : "border-gray-200"
+                      ? "border-orange-500"
+                      : "border-gray-200"
                       } hover:border-orange-300 transition-colors`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -1062,9 +1061,9 @@ const cleanTitle = `${userName} ${productName} ${model} ${capacity}`
                     <Star
                       key={star}
                       className={`w-4 h-4 transition-colors ${data.average_rating !== null &&
-                          star <= data.average_rating
-                          ? "fill-orange-400 text-orange-400"
-                          : "text-gray-300"
+                        star <= data.average_rating
+                        ? "fill-orange-400 text-orange-400"
+                        : "text-gray-300"
                         }`}
                     />
                   ))}
@@ -1135,18 +1134,13 @@ const cleanTitle = `${userName} ${productName} ${model} ${capacity}`
               {/* Delivery Info */}
               <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                 <div className="space-y-2">
-                  {data.stock_quantity > 0 && data.direct_sale ? (
-                    <p className="text-base font-bold text-green-600">
-                      Only {data.stock_quantity} left in stock
-                    </p>
-                  ) : data.stock_quantity === 0 && data.direct_sale ? (
+                  {data.direct_sale ? (
                     <p className="text-base font-semibold text-green-600">
                       In Stock
                     </p>
                   ) : (
                     <p className="text-sm md:text-base font-semibold">
-                      Available for{" "}
-                      {data.type === "rental" ? "Rental" : "Quote"}
+                      Available for {data.type === "rental" ? "Rental" : "Quote"}
                     </p>
                   )}
                   {!data.is_active && (
@@ -1587,8 +1581,8 @@ const cleanTitle = `${userName} ${productName} ${model} ${capacity}`
                                     <tr
                                       key={`${key}-${specIndex}`}
                                       className={`hover:bg-gray-50 transition-colors duration-150 ${specIndex % 2 === 0
-                                          ? "bg-white"
-                                          : "bg-gray-25"
+                                        ? "bg-white"
+                                        : "bg-gray-25"
                                         }`}
                                     >
                                       <td className="px-6 py-4 whitespace-nowrap">
@@ -1810,8 +1804,8 @@ const cleanTitle = `${userName} ${productName} ${model} ${capacity}`
                     key={img.id}
                     onClick={() => setCurrentMediaIndex(index)}
                     className={`relative flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-md overflow-hidden border-2 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 ${currentMediaIndex === index
-                        ? "border-orange-500"
-                        : "border-transparent hover:border-gray-600"
+                      ? "border-orange-500"
+                      : "border-transparent hover:border-gray-600"
                       }`}
                     aria-label={`Select media thumbnail ${index + 1}`}
                     whileHover={{ scale: 1.05 }}
