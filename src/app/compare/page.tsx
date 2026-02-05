@@ -328,7 +328,7 @@ const productSlugify = (name: string | undefined | null) => {
           if (stock > 0) {
               displayValue = <span className="text-green-600 font-semibold">Available ({stock})</span>;
           } else if (stock === 0) {
-              displayValue = <span className="text-green-600 font-semibold">In Stock</span>;
+              displayValue = <span className="text-red-600 font-semibold">Out of Stock</span>;
           }
       } else if (typeof value === 'boolean') {
           if (value === true) {
