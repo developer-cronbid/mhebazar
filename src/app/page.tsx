@@ -4,7 +4,7 @@ import NewArrivalsAndTopSearches from "@/components/home/NewArrivalsAndTopSearch
 import VendorMarqueeSection from "@/components/home/product/VendorMarqueeSectionApiCalling";
 import Link from "next/link";
 import SectionWrapper from "@/components/common/SectionWrapper";
-import ImagePopup from "@/components/common/ImagePopup";
+// import ImagePopup from "@/components/common/ImagePopup";
 import SparePartsSection from "@/components/home/product/SparePartsSectionApiCalling";
 import VendorFeaturedsection from "@/components/home/product/VendorFeaturedApiCalling";
 import UsedProductsSection from "@/components/home/product/UsedProductsSectionApiCalling";
@@ -90,7 +90,7 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <ImagePopup />
+      {/* <ImagePopup /> */}
     </>
   );
 }
