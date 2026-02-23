@@ -16,8 +16,6 @@ const inter = Inter({
   display: "swap",
 });
 
-const FAVICON_VERSION = "v1.2";
-
 export const metadata: Metadata = {
   title:
     "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
@@ -30,21 +28,17 @@ export const metadata: Metadata = {
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
-    
   },
-  // ✅ FIX: Moved 'verification' OUTSIDE of 'icons'
-  verification: {
+  verification: {
     google: "ipMSyejTl5WkQNzT5LVvc4U4ykIzonjK5xBhqDQoyFM",
     other: {
       "msvalidate.01": "4D950976E7CE3FE0672C1877057600CE",
     },
   },
-other: {
+  other: {
     "ahrefs-site-verification":
       "f00084defcc447953c70500593c316fa8f9da95dfa69d289a02069a7f3304e88",
   },
-
-   
 };
 
 export const viewport: Viewport = {
@@ -62,8 +56,8 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        
-        {/* CWV FIX: Add preconnect hints for faster resource loading (TTFB/LCP) */}
+
+        {/* Preconnects */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
@@ -71,63 +65,78 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link rel="preconnect" href="https://api.mhebazar.in" />
-        {/* Assuming NEXT_PUBLIC_API_BASE_URL might be different */}
-        <link rel="preconnect" href={process.env.NEXT_PUBLIC_API_BASE_URL} /> 
 
-        {/* Google Analytics Script - Strategy 'afterInteractive' is good */}
+        {/* ✅ Google Tag Manager */}
         <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-QV2CVBNETT"
-          strategy="afterInteractive"
-        />
-        <Script
-          id="google-analytics"
+          id="gtm-script"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-QV2CVBNETT');
+              (function(w,d,s,l,i){w[l]=w[l]||[];
+              w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
+              var f=d.getElementsByTagName(s)[0],
+              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';
+              j.async=true;j.src=
+              'https://www.googletagmanager.com/gtm.js?id='+i+dl;
+              f.parentNode.insertBefore(j,f);
+              })(window,document,'script','dataLayer','GTM-MV4K7WG');
             `,
           }}
         />
 
-        {/* Microsoft Clarity - Strategy 'afterInteractive' is good */}
+        {/* ✅ Organization Schema */}
         <Script
-          id="clarity-script"
+          id="organization-schema"
+          type="application/ld+json"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
-            __html: `
-              (function(c,l,a,r,i,t,y){
-                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-              })(window, document, "clarity", "script", "tkd3v3kvbs");
-            `,
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              legalName: "mhebazar",
+              url: "https://www.mhebazar.in/",
+              logo: "https://www.mhebazar.in/mhe-logo.png",
+              contactPoint: {
+                "@type": "ContactPoint",
+                telephone: "+91 928 909 4445",
+                contactType: "customer service",
+              },
+              address: {
+                "@type": "PostalAddress",
+                streetAddress:
+                  "E-228, Goyla Vihar, Block D, Lajpat Nagar I, Lajpat Nagar",
+                addressLocality: "New Delhi",
+                addressRegion: "Delhi",
+                postalCode: "110024",
+                addressCountry: "IN",
+              },
+              sameAs: [
+                "https://www.linkedin.com/company/mhe-bazar/",
+                "https://www.instagram.com/mhebazar.in/",
+                "https://www.facebook.com/mhebazar.in/",
+                "https://www.youtube.com/@mhebazar",
+              ],
+            }),
           }}
         />
-
-        {/* Product JSON-LD Schema (Ensure this is valid JSON to prevent CLS or errors) */}
-       
 
         <Suspense>
           <Canonical />
         </Suspense>
       </head>
+
       <body className="antialiased font-sans">
-        <Toaster
-          position="top-right"
-          richColors
-          closeButton
-          toastOptions={{
-            className: "bg-white text-gray-800 shadow-lg",
-            style: {
-              fontFamily: "var(--font-inter)",
-              fontSize: "14px",
-            },
-          }}
-        />
+        {/* ✅ GTM NoScript */}
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-MV4K7WG"
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
+
+        <Toaster position="top-right" richColors closeButton />
 
         <UserProvider>
           <SiteLayout>
