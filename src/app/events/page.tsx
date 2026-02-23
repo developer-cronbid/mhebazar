@@ -1,6 +1,6 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
-import Link from 'next/link'; 
+import { useState, useMemo } from "react";
+import Link from 'next/link';
 import { Calendar, MapPin, Clock, ArrowLeft, Building2, ChevronRight, ExternalLink, Users, TrendingUp, Sparkles } from "lucide-react";
 
 // --- Data Import ---
@@ -19,20 +19,22 @@ interface BlogType {
 interface EventType {
   id: number;
   title: string;
-  slug: string; 
+  slug: string;
   startDate: string;
   endDate: string;
   time: string;
+  meta_title: string;
+  meta_description: string
   location: string;
   image: string;
-  ogImage: string; 
+  ogImage: string;
   description: string;
   organizer: string;
   organizerInfo: string;
   blogs: BlogType[];
   category?: string;
   registrationLink: string;
-  
+
 }
 
 // --- Utility Functions (kept as is) ---
@@ -53,11 +55,11 @@ const getEventStatus = (startDate: string, endDate: string): 'upcoming' | 'ongoi
 const formatDateRange = (startDate: string, endDate: string): string => {
   const start = new Date(startDate);
   const end = new Date(endDate);
-  
+
   if (start.toDateString() === end.toDateString()) {
     return start.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
   }
-  
+
   const startDay = start.getDate();
   const endDay = end.getDate();
   const startMonth = start.toLocaleDateString('en-IN', { month: 'short' });
@@ -67,7 +69,7 @@ const formatDateRange = (startDate: string, endDate: string): string => {
   if (startMonth === endMonth) {
     return `${startDay} – ${endDay} ${startMonth} ${year}`;
   }
-  
+
   return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${year}`;
 };
 
@@ -75,57 +77,75 @@ const formatDateRange = (startDate: string, endDate: string): string => {
 // --- Event Page Component ---
 
 export default function EventsPage() {
-  
- const eventsWithStatus = useMemo(() => {
-  const statusOrder = {
-    ongoing: 0,
-    upcoming: 1,
-    completed: 2,
-  };
 
-  return (eventData as EventType[])
-    .map(event => ({
-      ...event,
-      status: getEventStatus(event.startDate, event.endDate),
-      formattedDate: formatDateRange(event.startDate, event.endDate),
-    }))
-    .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
-}, []);
-;
+  const eventsWithStatus = useMemo(() => {
+    const statusOrder = {
+      ongoing: 0,
+      upcoming: 1,
+      completed: 2,
+    };
 
-  const latestEvent = eventsWithStatus[0];
-  const pageTitle = "MHE Bazar | Explore Industry-Leading Material Handling & Logistics Events";
-  const pageDescription = "Find India's biggest upcoming events, expos, and trade fairs for warehousing, intralogistics, automation, and material handling equipment (MHE) solutions.";
+    return (eventData as EventType[])
+      .map(event => ({
+        ...event,
+        status: getEventStatus(event.startDate, event.endDate),
+        formattedDate: formatDateRange(event.startDate, event.endDate),
+      }))
+      .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+  }, []);
+  ;
 
+  // const latestEvent = eventsWithStatus[0];
+  // const pageTitle = latestEvent?.meta_title || "MHE Bazar | Explore Industry-Leading Material Handling & Logistics Events";
+  // const pageDescription = latestEvent?.meta_description || "Find India's biggest upcoming events, expos, and trade fairs for warehousing, intralogistics, automation, and material handling equipment (MHE) solutions.";
 
   // --- FIX: Robust Client-side OG Tags (List Page) ---
   // Using an external function to append meta tags robustly for social sharing tools.
-  useEffect(() => {
-    if (latestEvent) {
-        document.title = pageTitle;
-        const currentUrl = typeof window !== 'undefined' ? window.location.href : 'https://yourdomain.com/events';
+  // useEffect(() => {
+  //   if (latestEvent) {
+  //     // Update the actual Browser Tab Title
+  //     document.title = pageTitle;
 
-        const setMetaTag = (property: string, content: string) => {
-            let tag = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement;
-            if (!tag) { 
-                tag = document.createElement('meta'); 
-                tag.setAttribute('property', property); 
-                document.head.appendChild(tag); 
-            }
-            tag.setAttribute('content', content);
-        };
+  //     // Update standard Meta Description
+  //     let metaDesc = document.querySelector('meta[name="description"]');
+  //     if (!metaDesc) {
+  //       metaDesc = document.createElement('meta');
+  //       metaDesc.setAttribute('name', 'description');
+  //       document.head.appendChild(metaDesc);
+  //     }
+  //     metaDesc.setAttribute('content', pageDescription);
 
-        setMetaTag('og:title', pageTitle);
-        setMetaTag('og:description', pageDescription);
-        setMetaTag('og:image', latestEvent.ogImage); // Using latest event's image
-        setMetaTag('og:url', currentUrl);
-        setMetaTag('og:type', 'website');
-        
-        // Twitter Card
-        setMetaTag('twitter:card', 'summary_large_image');
-        setMetaTag('twitter:image', latestEvent.ogImage);
-    }
-  }, [latestEvent, pageTitle, pageDescription]);
+  //     const currentUrl = typeof window !== 'undefined' ? window.location.href : 'https://yourdomain.com/events';
+
+  //     const setMetaTag = (property: string, content: string) => {
+  //       // Check for both 'property' (OG) and 'name' (Twitter/Standard)
+  //       let tag = document.querySelector(`meta[property="${property}"], meta[name="${property}"]`) as HTMLMetaElement;
+  //       if (!tag) {
+  //         tag = document.createElement('meta');
+  //         if (property.startsWith('og:')) {
+  //           tag.setAttribute('property', property);
+  //         } else {
+  //           tag.setAttribute('name', property);
+  //         }
+  //         document.head.appendChild(tag);
+  //       }
+  //       tag.setAttribute('content', content);
+  //     };
+
+  //     // Social Media Tags
+  //     setMetaTag('og:title', pageTitle);
+  //     setMetaTag('og:description', pageDescription);
+  //     setMetaTag('og:image', latestEvent.ogImage || latestEvent.image);
+  //     setMetaTag('og:url', currentUrl);
+  //     setMetaTag('og:type', 'website');
+
+  //     // Twitter Card
+  //     setMetaTag('twitter:card', 'summary_large_image');
+  //     setMetaTag('twitter:title', pageTitle);
+  //     setMetaTag('twitter:description', pageDescription);
+  //     setMetaTag('twitter:image', latestEvent.ogImage || latestEvent.image);
+  //   }
+  // }, [latestEvent, pageTitle, pageDescription]);
 
 
   const handleRegister = (link: string) => {
@@ -184,7 +204,7 @@ export default function EventsPage() {
                 "@type": "Organization",
                 "name": event.organizer
               },
-              "url": `/events/${event.slug}` 
+              "url": `/events/${event.slug}`
             }))
           })
         }}
@@ -197,10 +217,10 @@ export default function EventsPage() {
           {/* Animated Background Gradient Orbs */}
           <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl animate-pulse"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-green-400/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          
+
           {/* Geometric Pattern Overlay */}
           <div className="absolute inset-0 bg-repeat opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235ca131' fill-opacity='1'%3E%3Cpath d='M36 34L48 24 42 30 39 33 36 34zm9 3c-.71 0-1.38.21-1.93.57L33.72 45.42C33.2 46.84 31.69 48 30 48c-1.69 0-3.2-.84-3.72-2.58L16.93 37.57A3.99 3.99 0 0 1 15 37c-2.21 0-4 1.79-4 4s1.79 4 4 4c.21 0 .42-.02.63-.07l9.89 12.08C25.84 58.74 27.8 60 30 60c2.2 0 4.16-1.26 5.48-3.04l9.89-12.08c.21.05.42.07.63.07 2.21 0 4-1.79 4-4s-1.79-4-4-4z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}></div>
-          
+
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             {/* Animated Badge with Pulse */}
             <div className="inline-flex items-center px-5 py-2 rounded-full bg-white border-2 border-emerald-200 mb-8 shadow-xl animate-bounce" style={{ animationDuration: '3s' }}>
@@ -210,7 +230,7 @@ export default function EventsPage() {
               </span>
               <span className="text-sm font-bold text-gray-800 uppercase tracking-wide">The Future of Logistics & MHE</span>
             </div>
-            
+
             {/* Main Heading with Enhanced Typography */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-gray-900 leading-tight tracking-tight">
               Explore Industry-Leading
@@ -227,14 +247,13 @@ export default function EventsPage() {
             {eventsWithStatus.map((event) => (
               <article
                 key={event.id}
-                 onClick={() => window.location.href = `/events/${event.slug}`}
-                className={`group bg-white rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden border-2 ${
-                  event.status === 'completed' 
-                    ? 'opacity-70 border-gray-200 hover:border-gray-300' 
+                onClick={() => window.location.href = `/events/${event.slug}`}
+                className={`group bg-white rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 overflow-hidden border-2 ${event.status === 'completed'
+                    ? 'opacity-70 border-gray-200 hover:border-gray-300'
                     : event.status === 'ongoing'
-                    ? 'border-emerald-500 ring-8 ring-emerald-100/50 shadow-emerald-200/50' 
-                    : 'border-gray-100 hover:border-emerald-400 hover:ring-4 hover:ring-emerald-100/50'
-                } transform hover:-translate-y-2 hover:scale-[1.02]`}
+                      ? 'border-emerald-500 ring-8 ring-emerald-100/50 shadow-emerald-200/50'
+                      : 'border-gray-100 hover:border-emerald-400 hover:ring-4 hover:ring-emerald-100/50'
+                  } transform hover:-translate-y-2 hover:scale-[1.02]`}
               >
                 {/* FIX: Image Div - Changed aspect ratio to 16/9 for wider view */}
                 <div className="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-emerald-100 to-green-100">
@@ -245,14 +264,14 @@ export default function EventsPage() {
                     className="object-cover w-full h-full group-hover:scale-110 group-hover:rotate-1 transition-all duration-700"
                   />
                   {/* YELLOW BADGE ONLY (TOP-LEFT) */}
-<span
-  className="absolute top-3 left-75 px-3.5 py-0.5 rounded-full 
+                  <span
+                    className="absolute top-3 left-75 px-3.5 py-0.5 rounded-full 
              text-[10px] font-semibold tracking-wide uppercase
              bg-yellow-300/90 text-yellow-900 
              backdrop-blur-sm shadow-md shadow-yellow-300/40
              border border-yellow-200/60 z-20">
-  EVENT
-</span>
+                    EVENT
+                  </span>
 
 
 
@@ -265,9 +284,9 @@ export default function EventsPage() {
                       <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-white/95 backdrop-blur-sm text-gray-800 shadow-lg border border-gray-200">
                         {event.category}
                       </span>
-                      
+
                     )}
-                    
+
                   </div>
                 </div>
 
@@ -306,11 +325,10 @@ export default function EventsPage() {
                     <button
                       onClick={() => handleRegister(event.registrationLink)}
                       disabled={event.status === 'completed'}
-                      className={`w-full inline-flex items-center justify-center px-6 py-3.5 rounded-xl font-bold text-base transition-all shadow-lg ${
-                        event.status === 'completed'
+                      className={`w-full inline-flex items-center justify-center px-6 py-3.5 rounded-xl font-bold text-base transition-all shadow-lg ${event.status === 'completed'
                           ? 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none'
                           : 'bg-gradient-to-r from-emerald-500 via-emerald-600 to-green-600 text-white hover:shadow-2xl hover:shadow-emerald-300/50 transform hover:scale-[1.02]'
-                      }`}
+                        }`}
                     >
                       {event.status === 'completed' ? 'Event Completed' : 'Register Now Free'}
                       {event.status !== 'completed' && <ExternalLink className="w-4 h-4 ml-2" />}
@@ -330,7 +348,7 @@ export default function EventsPage() {
           </div>
         </section>
       </>
-      
+
     </div>
   );
 }
