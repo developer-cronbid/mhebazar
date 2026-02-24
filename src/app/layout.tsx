@@ -120,6 +120,26 @@ export default function RootLayout({
           }}
         />
 
+        <Script
+          id="homepage-breadcrumb-schema"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
+                  "item": "https://www.mhebazar.in/"
+                }
+              ]
+            })
+          }}
+        />
+
         <Suspense>
           <Canonical />
         </Suspense>
