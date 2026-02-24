@@ -530,6 +530,43 @@ export default function CategoryOrTypePage({
 
     return (
         <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "http://schema.org",
+                        "@type": "BreadcrumbList",
+                        "itemListElement": [
+                            {
+                                "@type": "ListItem",
+                                "position": 1,
+                                "name": "Material Handling Equipment Manufacturer and Supplier in India | MHE Bazar",
+                                "item": "https://www.mhebazar.in/"
+                            },
+                            ...(activeCategoryName
+                                ? [
+                                    {
+                                        "@type": "ListItem",
+                                        "position": 2,
+                                        "name": `${activeCategoryName} – MHE Bazar`,
+                                        "item": `https://www.mhebazar.in/${urlParamSlug}`
+                                    }
+                                ]
+                                : []),
+                            ...(activeSubcategoryName
+                                ? [
+                                    {
+                                        "@type": "ListItem",
+                                        "position": 3,
+                                        "name": `${activeSubcategoryName} – MHE Bazar`,
+                                        "item": `https://www.mhebazar.in/${urlParamSlug}/${subcategoryParamSlug}`
+                                    }
+                                ]
+                                : [])
+                        ]
+                    })
+                }}
+            />
             <Breadcrumb items={breadcrumbItems} />
             <ProductListing
                 // The cast is needed because we extended the local Product type

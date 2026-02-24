@@ -60,13 +60,17 @@ const Navbar = () => {
       <div className="flex items-center justify-between flex-wrap sm:flex-nowrap gap-4">
         {/* Left side - Logo and greeting */}
         <div className="flex items-center space-x-3 w-full sm:w-auto">
-          <Link href="/" className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity">
+          <Link
+            href="/"
+            className="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+          >
             <Image
-              src="/favicon-32x32.png"
-              alt="MHE Logo"
-              width={40}
-              height={40}
-              className="w-10 h-10 object-contain"
+              src="/mhe-logo.png"   // ✅ use high-res logo
+              alt="MHE Bazar Logo"
+              width={56}            // ✅ larger logical size
+              height={56}
+              priority              // ✅ ensures crisp render above the fold
+              className="w-14 h-14 object-contain"
             />
           </Link>
 

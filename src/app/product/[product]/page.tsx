@@ -312,51 +312,49 @@ export default async function IndividualProductPage({
   // 4. Render
   return (
     <>
-    <script
-  type="application/ld+json"
-  dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "Product",
-      "name": productData.name,
-      "description": productData.meta_description || productData.description,
-      "image": productData.images.length > 0 ? forceHttps(productData.images[0].image) : 'https://www.mhebazar.in/mhe-logo.png',
-      "sku": productData.model || `MHE-${productData.id}`,
-      "brand": {
-        "@type": "Brand",
-        "name": productData.manufacturer || productData.user_name || "MHE Bazar"
-      },
-      // IMPORTANT: AggregateRating MUST be inside the Product object
-      ...(productData.review_count > 0 ? {
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": (productData.average_rating || 5.0).toFixed(1),
-          "reviewCount": productData.review_count,
-          "bestRating": "5",
-          "worstRating": "1"
-        },
-        "review": reviews.map((rev: any) => ({
-          "@type": "Review",
-          "author": { "@type": "Person", "name": rev.user_name || "Verified Buyer" },
-          "datePublished": rev.created_at,
-          "reviewBody": rev.comment || "Excellent material handling equipment.",
-          "reviewRating": {
-            "@type": "Rating",
-            "ratingValue": rev.rating || 5
-          }
-        }))
-      } : {}),
-      "offers": {
-        "@type": "Offer",
-        "price": productData.price,
-        "priceCurrency": "INR",
-        "availability": "https://schema.org/InStock",
-        "url": `https://www.mhebazar.in/product/${canonicalProductSlug}-${productId}`,
-        "priceValidUntil": new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0] // Sets it 1 year from today
-      }
-    })
-  }}
-/>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "http://schema.org",
+            "@type": "Product",
+
+            /* -------- Product identity (existing, working) -------- */
+            "name": productData.name || "https://www.mhebazar.in/",
+            "image":
+              productData.images.length > 0
+                ? forceHttps(productData.images[0].image)
+                : "https://www.mhebazar.in/mhe-logo.png",
+
+            /* -------- NEW schema (AggregateRating – required format) -------- */
+            ...(productData.review_count > 0
+              ? {
+                "aggregateRating": {
+                  "@type": "AggregateRating",
+                  "ratingValue": (
+                    productData.average_rating || 4.5
+                  ).toFixed(1),
+                  "ratingCount": productData.review_count,
+                  "reviewCount": productData.review_count
+                }
+              }
+              : {}),
+
+            /* -------- Existing working logic (ONLY InStock) -------- */
+            ...(productData.stock_quantity > 0 && productData.is_active
+              ? {
+                "offers": {
+                  "@type": "Offer",
+                  "price": productData.price,
+                  "priceCurrency": "INR",
+                  "availability": "https://schema.org/InStock",
+                  "url": `https://www.mhebazar.in/product/${canonicalProductSlug}-${productId}`
+                }
+              }
+              : {})
+          })
+        }}
+      />
       <Breadcrumb
         items={[
           { label: 'Home', href: '/' },
