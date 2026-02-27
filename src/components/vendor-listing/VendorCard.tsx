@@ -96,7 +96,7 @@ export default function VendorCard({ vendor }: Props) {
 
       const isMissingInfo =
         !userData.first_name ||
-        !userData.last_name ||
+        // !userData.last_name ||
         !userData.phone ||
         !userData.email;
 
@@ -294,8 +294,9 @@ export default function VendorCard({ vendor }: Props) {
                     <div className="space-y-1">
                       <label className="text-xs font-medium text-gray-700">Last Name</label>
                       <input
-                        required
+                        
                         type="text"
+                        placeholder="optional"
                         value={formData.last_name}
                         onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#5CA131]"
