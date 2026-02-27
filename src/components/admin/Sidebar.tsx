@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ChevronDown,
   LayoutTemplate,
+  User2,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -74,6 +75,14 @@ const Sidebar = () => {
       icon: LayoutTemplate,
       label: "Blogs",
       href: "/admin/blogs",
+      // subItems: [
+      //   { label: 'Add Blog', href: '/admin/blogs/newsletter' },
+      // ]
+    },
+     {
+      icon: User2,
+      label: "Vendor Tracking",
+      href: "/admin/vendor-tracking",
       // subItems: [
       //   { label: 'Add Blog', href: '/admin/blogs/newsletter' },
       // ]
