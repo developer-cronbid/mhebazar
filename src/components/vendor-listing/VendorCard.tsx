@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import api from "@/lib/api";
 
 // --- Types ---
 type Vendor = {
@@ -71,29 +72,13 @@ export default function VendorCard({ vendor }: Props) {
     ? `/admin/accounts/registered-vendors/${vendorSlug}/?user=${vendor?.user_info?.id}`
     : `/vendor-listing/${vendorSlug}`;
   const trackVendorClick = async () => {
-    const token = Cookies.get("access_token");
-    if (!token) return;
-
-    // 1. Get the base URL
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:8000/api';
-
-    // 2. Remove trailing slash if present to prevent double slashes
-    const cleanBaseUrl = baseUrl.replace(/\/$/, "");
-
-    const url = `${cleanBaseUrl}/track-vendor-click/`;
-
-
     try {
-      fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({ vendor_id: vendor.id }),
+      await api.post("/track-vendor-click/", {
+        vendor_id: vendor.id,
       });
     } catch (error) {
       console.error("Tracking failed:", error);
+
     }
   };
 
@@ -103,27 +88,10 @@ export default function VendorCard({ vendor }: Props) {
     setModalStep("loading");
     setError("");
 
-    const token = Cookies.get("access_token");
-
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/me/`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+      const res = await api.get("/users/me/");
+      const userData: UserProfile = res.data;
 
-      if (res.status === 401) {
-        setModalStep("login_required");
-        return;
-      }
-
-      if (!res.ok) {
-        throw new Error("Unable to fetch user profile");
-      }
-
-      const userData: UserProfile = await res.json();
       setCurrentUser(userData);
 
       const isMissingInfo =
@@ -141,44 +109,59 @@ export default function VendorCard({ vendor }: Props) {
         });
         setModalStep("form");
       } else {
-        // ✅ User has complete profile, show info AND track the click
         setModalStep("contact_info");
         trackVendorClick();
       }
 
-    } catch (err) {
-      console.error(err);
-      setError("Something went wrong. Please check your connection.");
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setModalStep("login_required");
+        return;
+      }
+
+      console.error("Profile fetch error:", error);
+      setError(
+        error.response?.data?.detail ||
+        "Unable to load profile. Please try again."
+      );
     }
   };
 
   // --- 2. HANDLE FORM SUBMIT ---
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = Cookies.get("access_token");
+
     if (!currentUser) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/${currentUser.id}/`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify(formData),
-      });
+      const res = await api.patch(
+        `/users/${currentUser.id}/`,
+        formData
+      );
 
-      if (res.ok) {
-        // ✅ User updated profile, show info AND track the click
+      // ✅ Same success logic as before
+      if (res.status >= 200 && res.status < 300) {
         setModalStep("contact_info");
         trackVendorClick();
-      } else {
-        const errData = await res.json();
-        setError(JSON.stringify(errData.detail || errData));
       }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to update profile. Please try again.");
+
+    } catch (error: any) {
+      console.error(error);
+
+      // ✅ Keep same 401 handling logic style
+      if (error.response?.status === 401) {
+        setModalStep("login_required");
+        return;
+      }
+
+      // ✅ Keep same backend error extraction logic
+      const errData = error.response?.data;
+
+      if (errData) {
+        setError(JSON.stringify(errData.detail || errData));
+      } else {
+        setError("Failed to update profile. Please try again.");
+      }
     }
   };
 
