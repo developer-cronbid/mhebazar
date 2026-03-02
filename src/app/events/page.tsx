@@ -78,22 +78,37 @@ const formatDateRange = (startDate: string, endDate: string): string => {
 
 export default function EventsPage() {
 
-  const eventsWithStatus = useMemo(() => {
-    const statusOrder = {
-      ongoing: 0,
-      upcoming: 1,
-      completed: 2,
-    };
+const eventsWithStatus = useMemo(() => {
+  const statusOrder = {
+    upcoming: 0,
+    ongoing: 1,
+    completed: 2,
+  };
 
-    return (eventData as EventType[])
-      .map(event => ({
-        ...event,
-        status: getEventStatus(event.startDate, event.endDate),
-        formattedDate: formatDateRange(event.startDate, event.endDate),
-      }))
-      .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
-  }, []);
-  ;
+  return (eventData as EventType[])
+    .map(event => ({
+      ...event,
+      status: getEventStatus(event.startDate, event.endDate),
+      formattedDate: formatDateRange(event.startDate, event.endDate),
+    }))
+    .sort((a, b) => {
+      // 1️⃣ Sort by status first (Upcoming → Ongoing → Completed)
+      const statusCompare = statusOrder[a.status] - statusOrder[b.status];
+      if (statusCompare !== 0) return statusCompare;
+
+      // 2️⃣ If same status → sort by date
+      const dateA = new Date(a.startDate).getTime();
+      const dateB = new Date(b.startDate).getTime();
+
+      if (a.status === "completed") {
+        // Latest completed first
+        return dateB - dateA;
+      }
+
+      // Upcoming & Ongoing → nearest first
+      return dateA - dateB;
+    });
+}, []);
 
   // const latestEvent = eventsWithStatus[0];
   // const pageTitle = latestEvent?.meta_title || "MHE Bazar | Explore Industry-Leading Material Handling & Logistics Events";
