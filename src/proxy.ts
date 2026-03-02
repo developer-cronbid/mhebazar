@@ -1,7 +1,7 @@
 // middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import axios from "axios";
+
 import redirects from "./data/redirects.json";
 
 const ROLES = {
@@ -129,30 +129,32 @@ export async function proxy(request: NextRequest) {
   // 1. Try validating access token
   if (accessToken) {
     try {
-      const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+      const userRes = await fetch(`${API_BASE_URL}/users/me/`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "X-API-KEY": API_KEY,
+          "X-API-KEY": API_KEY ?? "",
         },
       });
+      if (!userRes.ok) throw new Error("User validation failed");
+      const userData = await userRes.json();
       isAuthenticated = true;
-      userRole = userResponse.data?.role?.id;
+      userRole = userData?.role?.id;
     } catch (err) {
       // 2. Try refreshing token if access token fails
       if (refreshToken) {
         try {
-          const refreshResponse = await axios.post(
-            `${API_BASE_URL}/token/refresh/`,
-            { refresh: refreshToken },
-            {
-              headers: {
-                "X-API-KEY": API_KEY,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          const refreshRes = await fetch(`${API_BASE_URL}/token/refresh/`, {
+            method: "POST",
+            headers: {
+              "X-API-KEY": API_KEY ?? "",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ refresh: refreshToken }),
+          });
+          if (!refreshRes.ok) throw new Error("Refresh failed");
+          const refreshData = await refreshRes.json();
 
-          const newAccessToken = refreshResponse.data?.access;
+          const newAccessToken = refreshData?.access;
           const response = NextResponse.next();
           response.cookies.set("access_token", newAccessToken, {
             httpOnly: true,
@@ -161,14 +163,16 @@ export async function proxy(request: NextRequest) {
             maxAge: 60 * 60,
           });
 
-          const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
+          const userRes2 = await fetch(`${API_BASE_URL}/users/me/`, {
             headers: {
               Authorization: `Bearer ${newAccessToken}`,
-              "X-API-KEY": API_KEY,
+              "X-API-KEY": API_KEY ?? "",
             },
           });
+          if (!userRes2.ok) throw new Error("User fetch after refresh failed");
+          const userData2 = await userRes2.json();
           isAuthenticated = true;
-          userRole = userResponse.data?.role?.id;
+          userRole = userData2?.role?.id;
 
           return response;
         } catch (refreshError) {
