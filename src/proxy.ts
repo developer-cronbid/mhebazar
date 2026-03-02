@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import redirects from "./data/redirects.json";
+// import redirects from "./data/redirects.json";
 
 const ROLES = {
   ADMIN: 1,
@@ -19,53 +19,53 @@ const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
 // **********************************************
 // CWV FIX: Process Redirects ONLY ONCE at module load
 // **********************************************
-const redirectMap = redirects as Record<string, string>;
+// const redirectMap = redirects as Record<string, string>;
 
-// 1. Create a URL-encoded version of the redirect map keys.
-const encodedRedirectMap = Object.keys(redirectMap).reduce((acc: Record<string, string>, key: string) => {
-  if (key === "URL") { // Skip the header key
-    acc[key] = redirectMap[key];
-    return acc;
-  }
-  
-  // Clean and encode the key: replace newlines with a space, then replace spaces with %20
-  const cleanedKey = key.replace(/\n/g, ' ').replace(/\s/g, '%20');
-  acc[cleanedKey] = redirectMap[key];
-  return acc;
-}, {});
+// // 1. Create a URL-encoded version of the redirect map keys.
+// const encodedRedirectMap = Object.keys(redirectMap).reduce((acc: Record<string, string>, key: string) => {
+//   if (key === "URL") { // Skip the header key
+//     acc[key] = redirectMap[key];
+//     return acc;
+//   }
+//   
+//   // Clean and encode the key: replace newlines with a space, then replace spaces with %20
+//   const cleanedKey = key.replace(/\n/g, ' ').replace(/\s/g, '%20');
+//   acc[cleanedKey] = redirectMap[key];
+//   return acc;
+// }, {});
 
 
-// 2. Filter out any entries that are now covered by dynamic redirects.
-const filteredRedirects = Object.keys(encodedRedirectMap).reduce((acc: Record<string, string>, key: string) => {
-  
-  if (key === "URL") {
-    acc[key] = encodedRedirectMap[key];
-    return acc;
-  }
-  
-  let keyPathname: string;
-  try {
-    // Attempt to parse the key as a URL to get a cleaner pathname
-    keyPathname = new URL(key, API_BASE_URL).pathname; 
-  } catch (e) {
-    keyPathname = key;
-  }
+// // 2. Filter out any entries that are now covered by dynamic redirects.
+// const filteredRedirects = Object.keys(encodedRedirectMap).reduce((acc: Record<string, string>, key: string) => {
+//   
+//   if (key === "URL") {
+//     acc[key] = encodedRedirectMap[key];
+//     return acc;
+//   }
+//   
+//   let keyPathname: string;
+//   try {
+//     // Attempt to parse the key as a URL to get a cleaner pathname
+//     keyPathname = new URL(key, API_BASE_URL).pathname; 
+//   } catch (e) {
+//     keyPathname = key;
+//   }
 
-  // It's safer to decode for content-based matching logic (like checking for /vendors-listing)
-  const keyDecodedPathname = decodeURIComponent(keyPathname);
-  
-  // Dynamic patterns
-  const isProductUrl = keyDecodedPathname.match(/-\d+$/);
-  const isVendorsListing = keyDecodedPathname.includes('/vendors-listing');
-  const isCompare = keyDecodedPathname.includes('/compare/');
-  const isWishlist = keyDecodedPathname.includes('/wishlist/');
-  
-  // Include the redirect only if it doesn't match any of the dynamic patterns
-  if (!isProductUrl && !isVendorsListing && !isCompare && !isWishlist) {
-    acc[key] = encodedRedirectMap[key]; 
-  }
-  return acc;
-}, {});
+//   // It's safer to decode for content-based matching logic (like checking for /vendors-listing)
+//   const keyDecodedPathname = decodeURIComponent(keyPathname);
+//   
+//   // Dynamic patterns
+//   const isProductUrl = keyDecodedPathname.match(/-\d+$/);
+//   const isVendorsListing = keyDecodedPathname.includes('/vendors-listing');
+//   const isCompare = keyDecodedPathname.includes('/compare/');
+//   const isWishlist = keyDecodedPathname.includes('/wishlist/');
+//   
+//   // Include the redirect only if it doesn't match any of the dynamic patterns
+//   if (!isProductUrl && !isVendorsListing && !isCompare && !isWishlist) {
+//     acc[key] = encodedRedirectMap[key]; 
+//   }
+//   return acc;
+// }, {});
 
 // **********************************************
 // End CWV FIX: Process Redirects ONLY ONCE
@@ -111,12 +111,12 @@ export async function proxy(request: NextRequest) {
 
   // --- Filtered Hardcoded Redirects (Now fast) ---
 
-  // We check against the current path and the full URL (normalized)
-  const redirectTarget = filteredRedirects[fullUrl] || filteredRedirects[pathname];
-  
-  if (redirectTarget) {
-      return NextResponse.redirect(new URL(redirectTarget, fullUrl));
-  }
+  // // We check against the current path and the full URL (normalized)
+  // const redirectTarget = filteredRedirects[fullUrl] || filteredRedirects[pathname];
+  // 
+  // if (redirectTarget) {
+  //     return NextResponse.redirect(new URL(redirectTarget, fullUrl));
+  // }
 
   // --- Authentication and Authorization Logic ---
 
