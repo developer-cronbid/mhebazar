@@ -312,11 +312,10 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
               <button
                 onClick={() => handleRegister(selectedEvent.registrationLink)}
                 disabled={status === "completed"}
-                className={`inline-flex items-center px-12 py-5 rounded-xl font-black text-lg transition-all shadow-2xl ${
-                  status === "completed"
+                className={`inline-flex items-center px-12 py-5 rounded-xl font-black text-lg transition-all shadow-2xl ${status === "completed"
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-inner"
                     : "bg-gradient-to-r from-emerald-500 via-emerald-600 to-green-600 text-white hover:shadow-2xl hover:shadow-emerald-400/50 transform hover:scale-[1.03] animate-pulse"
-                }`}
+                  }`}
                 style={
                   status !== "completed" ? { animationDuration: "2s" } : {}
                 }
@@ -344,9 +343,10 @@ export default function EventDetailPage({ params }: EventDetailPageProps) {
                   </span>
                 </h2>
               </div>
-              <p className="text-gray-700 leading-relaxed mb-10 text-base">
-                {selectedEvent.organizerInfo}
-              </p>
+              <div
+                className="text-gray-700 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: selectedEvent.organizerInfo }}
+              />
 
               {/* Featured Insights/Blogs Section */}
               {selectedEvent.blogs.length > 0 && (
