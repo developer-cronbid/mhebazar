@@ -103,5 +103,24 @@
     "blogs": [],
     "category": "Warehousing & Logistics",
     "registrationLink": "https://shorturl.at/01eIr"
+  },
+  {
+    "id": 6,
+    "title": "IWE Expo Mumbai 2026",
+    "slug": "iwe-expo-mumbai-2026-event",
+    "meta_title": "IWE Expo Mumbai 2026 | Warehousing & Intralogistics Exhibition | 14–16 May",
+    "meta_description": "Join South Asia's largest warehousing & logistics expo, supported by MHE Bazar. 275+ exhibitors, live demos & B2B networking at Bombay Exhibition Centre, Mumbai. Register free — 14–16 May 2026",
+    "startDate": "2026-3-14",
+    "endDate": "2026-3-16",
+    "time": "10:00 AM – 6:00 PM",
+    "location": "Bombay Exhibition Centre, Mumbai, Maharashtra, India",
+    "image": "/soti-partner.jpeg",
+    "ogImage": "/soti-partner.jpeg",
+    "description": "<h3 class=' text-xl mb-3'>The Intralogistics & Warehousing Expo (IWE Expo) is South Asia’s largest warehousing, logistics, material handling, automation & supply chain exhibition. This 5th edition brings together over 275 exhibitors from India, the Middle East and South Asia, showcasing cutting-edge technologies and solutions across warehousing, logistics operations, fulfillment, automation and supply chain management. The event also runs alongside the Material Handling Expo and the E-Commerce Logistics Expo, making it a comprehensive industry showcase and a key B2B networking platform for brands, OEMs, D2C businesses, exporters/importers and logistics leaders.  </h4>",
+    "organizer": "FME Media Pvt. Ltd. ",
+    "organizerInfo": "FME Media Pvt. Ltd. (Future Market Events) FME Media (also known as Future Market Events) is the organiser behind the Intralogistics & Warehousing Expo series. The company is headquartered in Noida, Uttar Pradesh, with a regional office in Andheri East, Mumbai. They specialise in industry trade shows and B2B expos that drive growth, innovation, and business networking across sectors such as logistics, warehousing, material handling, supply chain, automation and industrial technologies",
+    "blogs": [],
+    "category": "Material Handling & supply chain. ",
+    "registrationLink": "https://fmeregistrations.com/iwe25/visitor-registration"
   }
 ]
