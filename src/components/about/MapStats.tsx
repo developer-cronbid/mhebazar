@@ -78,7 +78,7 @@ export default function GlobalMapStats() {
               if (isTabSwitchingEnabled) setActiveTab('clicks');
             }}
           >
-            Date - 1st Feb - 28th July 2026
+            Date - 1st Jan - 28th Feb 2026
           </button>
         </div>
 
