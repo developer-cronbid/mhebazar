@@ -6,23 +6,29 @@ import { motion, useInView } from 'framer-motion';
 
 // Updated data with values from the provided image
 const data = [
-  { country: 'India', impressions: 438634 },
-  { country: 'United States', impressions: 42076 },
-  { country: 'Brazil', impressions: 13830 },
-  { country: 'United Kingdom', impressions: 9466 },
-  { country: 'Australia', impressions: 5628 },
-  { country: 'Vietnam', impressions: 5059 },
+  { country: 'India', impressions: 411487 },
+  { country: 'United States', impressions: 26743 },
+  { country: 'Brazil', impressions: 1771 },
+  { country: 'United Kingdom', impressions: 7185 },
+  { country: 'Australia', impressions: 3999 },
+  { country: 'Vietnam', impressions: 1066 },
   { country: 'Russia', impressions: 4577 },
-  { country: 'Indonesia', impressions: 3574 },
-  { country: 'Canada', impressions: 3516 },
-  { country: 'Malaysia', impressions: 3225 },
-  { country: 'South Korea', impressions: 3431 },
-  { country: 'United Arab Emirates', impressions: 3150 },
-  { country: 'Philippines', impressions: 2820 },
-  { country: 'Saudi Arabia', impressions: 2503 },
-  { country: 'Germany', impressions: 2259 },
+  { country: 'Indonesia', impressions: 3176 },
+  { country: 'Canada', impressions: 3667 },
+  { country: 'Malaysia', impressions: 3875 },
+  { country: 'South Korea', impressions: 1410 },
+   { country: 'South Africa', impressions: 2297 },
+    { country: 'Turkey', impressions: 1406 },
+    { country: 'Thailand', impressions: 1263 },
+    { country: 'Pakistan', impressions: 1217 },
+      { country: 'Mexico', impressions: 1188 },
+       { country: 'Netherlands', impressions: 1009 },
+  { country: 'United Arab Emirates', impressions: 3450 },
+  { country: 'Philippines', impressions: 2755 },
+  { country: 'Saudi Arabia', impressions: 3450 },
+  { country: 'Germany', impressions: 1864 },
   { country: 'Italy', impressions: 2241 },
-  { country: 'Singapore', impressions: 2213 },
+  { country: 'Singapore', impressions: 2599 },
 ];
 
 export default function GlobalMapStats() {
@@ -72,7 +78,7 @@ export default function GlobalMapStats() {
               if (isTabSwitchingEnabled) setActiveTab('clicks');
             }}
           >
-            Date - 1st July - 31st July 2024
+            Date - 1st Feb - 28th July 2026
           </button>
         </div>
 
