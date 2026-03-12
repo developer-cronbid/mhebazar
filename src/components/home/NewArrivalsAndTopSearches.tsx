@@ -119,25 +119,57 @@ function NewArrivalItem({ item }: { item: DisplayItem }): JSX.Element | null {
   );
 }
 
+const createSlugHelper = (text: string | undefined) =>
+  text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#";
+
 // --- Main Component ---
-export default function NewArrivalsAndTopSearches() {
-  const [newArrivals, setNewArrivals] = useState<DisplayItem[]>(FALLBACK_NEW_ARRIVALS);
-  const [topRated, setTopRated] = useState<DisplayItem[]>(FALLBACK_TOP_RATED);
-  const [newArrivalsCount, setNewArrivalsCount] = useState<number>(0);
-  const [isLoadingNewArrivals, setIsLoadingNewArrivals] = useState<boolean>(true);
-  const [isLoadingTopRated, setIsLoadingTopRated] = useState<boolean>(true);
+export default function NewArrivalsAndTopSearches({
+  initialNewArrivals = [],
+  initialTopRated = [],
+  newArrivalsCount: initialNewArrivalsCount = 0
+}: {
+  initialNewArrivals?: any[];
+  initialTopRated?: any[];
+  newArrivalsCount?: number;
+}) {
+
+  const initialNewArrivalsTransformed = initialNewArrivals.length > 0
+    ? initialNewArrivals.map((p: any) => ({
+      id: p.id,
+      image: p.images?.[0]?.image || null,
+      label: p.title || p.name || "New Product",
+      alt: p.title || p.name || "New Product",
+      slug: createSlugHelper(p.title || p.name),
+    })).filter((item: DisplayItem) => item.image !== null).slice(0, 15)
+    : FALLBACK_NEW_ARRIVALS;
+
+  const initialTopRatedTransformed = initialTopRated.length > 0
+    ? initialTopRated.map((p: any) => ({
+      id: p.id,
+      image: p.images?.[0]?.image || null,
+      label: p.title || p.name || "Top Rated Product",
+      alt: p.title || p.name || "Top Rated Product",
+      slug: createSlugHelper(p.title || p.name),
+    })).slice(0, 10)
+    : FALLBACK_TOP_RATED;
+
+  const [newArrivals, setNewArrivals] = useState<DisplayItem[]>(initialNewArrivalsTransformed);
+  const [topRated, setTopRated] = useState<DisplayItem[]>(initialTopRatedTransformed);
+  const [newArrivalsCount, setNewArrivalsCount] = useState<number>(initialNewArrivalsCount);
+  const [isLoadingNewArrivals, setIsLoadingNewArrivals] = useState<boolean>(initialNewArrivals.length === 0);
+  const [isLoadingTopRated, setIsLoadingTopRated] = useState<boolean>(initialTopRated.length === 0);
   const [showAllTopRated, setShowAllTopRated] = useState<boolean>(false);
   const [marqueeSpeed, setMarqueeSpeed] = useState(40);
   const [isMarqueePaused, setIsMarqueePaused] = useState(false);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-  const createSlug = useCallback((text: string | undefined) => 
-    text ? text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') : "#", []);
+  const createSlug = useCallback(createSlugHelper, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!API_BASE_URL) {
+      // If we already have server-injected data, skip fetching
+      if (!API_BASE_URL || (initialNewArrivals.length > 0 && initialTopRated.length > 0)) {
         setIsLoadingNewArrivals(false);
         setIsLoadingTopRated(false);
         return;
@@ -237,7 +269,7 @@ export default function NewArrivalsAndTopSearches() {
             View more →
           </Link>
         </div>
-        
+
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           {/* New Arrivals Header */}
           <div className="bg-gradient-to-r from-blue-50 to-green-50 px-6 py-4 border-b border-gray-200">
@@ -344,29 +376,29 @@ export default function NewArrivalsAndTopSearches() {
               <>
                 <div className="space-y-3">
                   {displayedTopRated.map((item, index) => (
-                    <TopRatedItem 
-                      key={`${item.id}-${index}`} 
-                      item={item} 
+                    <TopRatedItem
+                      key={`${item.id}-${index}`}
+                      item={item}
                       index={showAllTopRated ? index : index}
                     />
                   ))}
                 </div>
-                
+
                 {/* Collapse Animation for Additional Items */}
                 {showAllTopRated && topRated.length > 3 && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="grid gap-3">
                       {topRated.slice(3).map((item, index) => (
-                        <TopRatedItem 
-                          key={`${item.id}-additional-${index}`} 
-                          item={item} 
+                        <TopRatedItem
+                          key={`${item.id}-additional-${index}`}
+                          item={item}
                           index={index + 3}
                         />
                       ))}
                     </div>
                   </div>
                 )}
-                
+
                 {topRated.length === 0 && !isLoadingTopRated && (
                   <div className="text-center py-8 text-gray-500">
                     <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">

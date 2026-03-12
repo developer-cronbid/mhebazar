@@ -46,7 +46,9 @@ const getCategoryImageUrl = (categoryId: number | string | null): string => {
 //   created_at: string;
 // }
 
-const sectionVariants = {
+import { Variants } from "framer-motion";
+
+const sectionVariants: Variants = {
   hidden: { opacity: 0, y: 50 },
   visible: {
     opacity: 1,
@@ -158,7 +160,7 @@ export default function ExportProductsFeatured({ initialData = [] }: { initialDa
         </Link>
       </motion.div>
 
-     { initialData.length > 0 ? (
+      {initialData.length > 0 ? (
         <div className="relative">
           <div
             ref={scrollContainerRef}
@@ -193,6 +195,7 @@ export default function ExportProductsFeatured({ initialData = [] }: { initialDa
                   manufacturer={export_product.manufacturer}
                   user_name={export_product.user_name}
                   created_at={export_product.created_at}
+                  pageUrlType={""}
                 />
               </motion.div>
             ))}

@@ -79,7 +79,7 @@ function ProductGrid({
         try {
           // Changed query param to 'user' as per your URL sample
           const response = await api.get('/products/?user=24&page_size=1to12');
-          
+
           if (response.data && response.data.results) {
             const transformed = response.data.results.map((p: any) => ({
               id: p.id.toString(),
@@ -127,8 +127,8 @@ function ProductGrid({
     return (
       <div className="w-full">
         <div className="mb-8 border-b border-gray-100 pb-4">
-           <h3 className="text-xl font-bold text-gray-800  tracking-tight">Recommended for You </h3>
-           <p className="text-gray-400 text-sm italic mt-1">No exact matches found. Showing top picks from MHE Bazar.</p>
+          <h3 className="text-xl font-bold text-gray-800  tracking-tight">Recommended for You </h3>
+          <p className="text-gray-400 text-sm italic mt-1">No exact matches found. Showing top picks from MHE Bazar.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6">
           {fallbackProducts.map((product: Product) => (
@@ -192,7 +192,7 @@ function ProductGrid({
       router.push("/login");
       return;
     }
-    
+
     if (!isProductInCart(productId)) {
       await addToCart(productId);
     }
@@ -232,14 +232,14 @@ function ProductGrid({
                     {product.title}
                   </h3>
                   <div className="text-sm sm:text-base md:text-lg text-gray-600 mb-3 line-clamp-2 leading-relaxed">
-  <span 
-    dangerouslySetInnerHTML={{ 
-      __html: typeof window !== 'undefined' 
-        ? DOMPurify.sanitize(product.subtitle) 
-        : product.subtitle // On server, send raw text to avoid the crash
-    }} 
-  />
-</div>
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: typeof window !== 'undefined'
+                          ? DOMPurify.sanitize(product.subtitle)
+                          : product.subtitle // On server, send raw text to avoid the crash
+                      }}
+                    />
+                  </div>
 
                   {/* Price */}
                   <div className="flex items-center gap-2">
@@ -249,7 +249,7 @@ function ProductGrid({
                       </span>
                     ) : (
                       <span className="text-xl md:text-2xl lg:text-3xl font-bold text-emerald-600 tracking-wide">
-                        {product.currency} {typeof product.price === "number" ? product.price.toLocaleString("en-IN") : parseFloat(product.price.toString()).toLocaleString("en-IN")}
+                        {product.currency} {typeof product.price === "number" ? product.price.toLocaleString("en-IN") : parseFloat(String(product.price)).toLocaleString("en-IN")}
                       </span>
                     )}
                   </div>
@@ -299,7 +299,7 @@ function ProductGrid({
                             onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                           />
                         ) : (
-                          <QuoteForm product={product} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
+                          <QuoteForm product={product as any} onClose={() => document.querySelector<HTMLButtonElement>('[data-dialog-close]')?.click()}
                           />
                         )}
                       </DialogContent>
@@ -350,7 +350,7 @@ interface ProductListingProps {
   onFilterChange: (
     filterValue: string | number,
     filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
-    newValue?: number | string | { min: number | ''; max: number | '' } | null
+    newValue?: number | string | string[] | { min: number | ''; max: number | '' } | null
   ) => void;
   selectedFilters: Set<string>;
   selectedCategoryName: string | null;
@@ -422,7 +422,7 @@ export default function ProductListing({
                 onFilterChange={onFilterChange}
                 selectedCategoryName={selectedCategoryName}
                 selectedSubcategoryName={selectedSubcategoryName}
-                selectedTypeName={selectedTypeName}
+                selectedTypes={selectedTypeName ? [selectedTypeName] : []}
                 minPrice={minPrice}
                 maxPrice={maxPrice}
                 selectedManufacturer={selectedManufacturer}
@@ -461,7 +461,7 @@ export default function ProductListing({
                   onFilterChange={onFilterChange}
                   selectedCategoryName={selectedCategoryName}
                   selectedSubcategoryName={selectedSubcategoryName}
-                  selectedTypeName={selectedTypeName}
+                  selectedTypes={selectedTypeName ? [selectedTypeName] : []}
                   minPrice={minPrice}
                   maxPrice={maxPrice}
                   selectedManufacturer={selectedManufacturer}
@@ -484,8 +484,8 @@ export default function ProductListing({
                 {/* Title and Count */}
                 <div className="flex flex-col">
                   <h1 className="text-xl sm:text-2xl font-bold text-gray-900 font-sans">
-  {title || "New Arrivals"}
-</h1>
+                    {title || "New Arrivals"}
+                  </h1>
 
                   <p className="text-sm sm:text-base text-gray-500 font-normal font-sans mt-1">
                     Showing {1 + (currentPage - 1) * 12}–{(currentPage - 1) * 12 + products.length} of {totalCount} results
@@ -532,8 +532,8 @@ export default function ProductListing({
                   <button
                     onClick={() => handleViewChange("grid")}
                     className={`p-2 transition-colors duration-200 ${currentView === "grid"
-                        ? "bg-green-500 text-white hover:bg-green-600"
-                        : "text-gray-500 hover:bg-gray-100"
+                      ? "bg-green-500 text-white hover:bg-green-600"
+                      : "text-gray-500 hover:bg-gray-100"
                       }`}
                     aria-label="Grid View"
                   >
@@ -542,8 +542,8 @@ export default function ProductListing({
                   <button
                     onClick={() => handleViewChange("list")}
                     className={`p-2 transition-colors duration-200 border-l border-gray-300 ${currentView === "list"
-                        ? "bg-green-500 text-white hover:bg-green-600"
-                        : "text-gray-500 hover:bg-gray-100"
+                      ? "bg-green-500 text-white hover:bg-green-600"
+                      : "text-gray-500 hover:bg-gray-100"
                       }`}
                     aria-label="List View"
                   >

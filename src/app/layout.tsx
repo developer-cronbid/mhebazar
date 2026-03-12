@@ -9,6 +9,7 @@ import { UserProvider } from "@/context/UserContext";
 import Script from "next/script";
 import Canonical from "@/components/Canonical";
 import "@/utils/disableConsole";
+import { Providers } from "@/components/Providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -159,9 +160,11 @@ export default function RootLayout({
         <Toaster position="top-right" richColors closeButton />
 
         <UserProvider>
-          <SiteLayout>
-            <Suspense fallback={<Loading />}>{children}</Suspense>
-          </SiteLayout>
+          <Providers>
+            <SiteLayout>
+              <Suspense fallback={<Loading />}>{children}</Suspense>
+            </SiteLayout>
+          </Providers>
         </UserProvider>
       </body>
     </html>

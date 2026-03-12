@@ -13,8 +13,8 @@ const VendorProductsFeatured: React.FC<Props> = ({ initialProducts }) => {
   const [scrollIndex, setScrollIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-if (!initialProducts || initialProducts.length === 0) {
-    return null; 
+  if (!initialProducts || initialProducts.length === 0) {
+    return null;
   }
   const handleDotClick = (index: number) => {
     if (scrollContainerRef.current && initialProducts.length > 0) {
@@ -108,6 +108,7 @@ if (!initialProducts || initialProducts.length === 0) {
                 manufacturer={product.manufacturer}
                 user_name={product.user_name}
                 created_at={product.created_at}
+                pageUrlType={""}
               />
             </div>
           ))}
@@ -121,9 +122,8 @@ if (!initialProducts || initialProducts.length === 0) {
                 <button
                   key={idx}
                   onClick={() => handleDotClick(idx)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                    idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
-                  }`}
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${idx === scrollIndex ? "bg-[#42a856]" : "bg-gray-300"
+                    }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />
               ))}

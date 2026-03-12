@@ -21,8 +21,12 @@ export default async function VendorFeaturedSection() {
     console.log("SERVER FETCH SUCCESS:", products.length, "items");
 
     return <VendorProductsFeatured initialProducts={products} />;
-  } catch (error) {
-    console.error("SERVER FETCH ERROR:", error);
-    return null;
+  } catch (error: any) {
+    if (error.response) {
+      console.error(`SERVER FETCH ERROR VendorFeatured: ${error.response.status} ${error.response.statusText}`);
+    } else {
+      console.error("SERVER FETCH ERROR VendorFeatured:", error.message || error);
+    }
+    return <VendorProductsFeatured initialProducts={[]} />;
   }
 }

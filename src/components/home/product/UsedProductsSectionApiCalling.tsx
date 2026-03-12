@@ -10,6 +10,7 @@ export default async function UsedProductsSection() {
         const rawData = Array.isArray(response.data)
             ? response.data
             : response.data?.results ?? [];
+
         const formattedData = rawData.map((item: any) => ({
             ...item,
             title: item.name,
@@ -20,8 +21,12 @@ export default async function UsedProductsSection() {
         console.log(`USED PRODUCTS FETCHED: ${formattedData.length} items`);
 
         return <ExportProductsFeatured initialData={formattedData} />;
-    } catch (error) {
-        console.error("Used Products Fetch Error:", error);
+    } catch (error: any) {
+        if (error.response) {
+            console.error(`Used Products Fetch Error: ${error.response.status} ${error.response.statusText}`);
+        } else {
+            console.error("Used Products Fetch Error:", error.message || error);
+        }
         return <ExportProductsFeatured initialData={[]} />;
     }
 }

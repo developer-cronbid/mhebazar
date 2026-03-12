@@ -146,7 +146,7 @@ const cleanMediaUrl = (url: string): string => {
 
   const match = url.match(encodedProtocolRegex);
 
-  if (match && match.index > 0) {
+  if (match && match.index !== undefined && match.index > 0) {
     // If the encoded protocol is found, decode the rest of the string
     const encodedPart = url.substring(match.index);
     try {
@@ -809,7 +809,7 @@ export default function ProductSection({
     return null;
   }
 
-const isPurchasable = data.is_active;
+  const isPurchasable = data.is_active;
   const displayPrice = parseFloat(data.price).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -1227,7 +1227,7 @@ const isPurchasable = data.is_active;
                         </DialogTrigger>
                         <DialogContent className="w-full max-w-2xl z-[120]">
                           <QuoteForm
-                            product={data}
+                            product={data as any}
                             onClose={() =>
                               document
                                 .querySelector<HTMLButtonElement>(
@@ -1293,7 +1293,7 @@ const isPurchasable = data.is_active;
                           </DialogTrigger>
                           <DialogContent className="w-full max-w-2xl z-[120]">
                             <QuoteForm
-                              product={data}
+                              product={data as any}
                               onClose={() =>
                                 document
                                   .querySelector<HTMLButtonElement>(
@@ -1320,7 +1320,7 @@ const isPurchasable = data.is_active;
                         </DialogTrigger>
                         <DialogContent className="w-full max-w-2xl z-[120]">
                           <QuoteForm
-                            product={data}
+                            product={data as any}
                             onClose={() =>
                               document
                                 .querySelector<HTMLButtonElement>(
@@ -1433,7 +1433,7 @@ const isPurchasable = data.is_active;
                     />
                   ) : (
                     <QuoteForm
-                      product={data}
+                      product={data as any}
                       onClose={() =>
                         document
                           .querySelector<HTMLButtonElement>(
@@ -1573,9 +1573,9 @@ const isPurchasable = data.is_active;
                               const parsedArray = JSON.parse(value);
                               if (Array.isArray(parsedArray)) {
                                 return parsedArray.map((item, specIndex) => {
-                                  const parts = item.split(/:\s*(.*)/s);
-                                  const specKey = parts[0] || "Detail";
-                                  const specValue = parts[1] || item;
+                                  const colonIndex = item.indexOf(':');
+                                  const specKey = colonIndex !== -1 ? item.substring(0, colonIndex).trim() : "Detail";
+                                  const specValue = colonIndex !== -1 ? item.substring(colonIndex + 1).trim() : item;
 
                                   return (
                                     <tr

@@ -7,7 +7,7 @@ import { useRouter, useSearchParams, notFound } from "next/navigation";
 import Breadcrumb from "@/components/elements/Breadcrumb";
 import api from "@/lib/api";
 import { AxiosError } from "axios";
-// NOTE: Product component is imported as a type for local definition
+import { useQuery } from "@tanstack/react-query";
 import ProductListing, { Product as ImportedProductType } from "@/components/products/ProductListing";
 
 
@@ -18,7 +18,6 @@ type ProductListingBaseType = Omit<ImportedProductType, 'subcategory_name' | 'us
 
 // Define the local Product interface to safely override properties with string | null
 interface Product extends ProductListingBaseType {
-    // FIX: Redefine the conflicting properties to include 'string | null'
     subcategory_name: string | null;
     user_name: string | null;
 }
@@ -91,6 +90,7 @@ interface RouteContext {
     subId: number | null;
     metaTitle: string | null;
     metaDescription: string | null;
+    errorMsg?: string | null;
 }
 
 // --- END TYPE DEFINITIONS ---
@@ -123,38 +123,13 @@ export default function CategoryOrTypePage({
         currentPage: 1 as number,
     });
 
-    // UI/Data states
-    const [products, setProducts] = useState<Product[]>([]);
-    const [totalProducts, setTotalProducts] = useState<number>(0);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [noProductsFoundMessage, setNoProductsFoundMessage] = useState<string | null>(null);
-    const [totalPages, setTotalPages] = useState<number>(1);
-    const [metaTitle, setMetaTitle] = useState<string>('');
-    const [metaDescription, setMetaDescription] = useState<string>('');
-    const [activeCategoryName, setActiveCategoryName] = useState<string | null>(null);
-    const [activeSubcategoryName, setActiveSubcategoryName] = useState<string | null>(null);
-    const [activeTypeName, setActiveTypeName] = useState<string | null>(null);
-
-    // DESTRUCTURE for easy use in dependency arrays
     const { minPrice, maxPrice, selectedManufacturer, selectedRating, sortBy, currentPage } = filterState;
-
-    // PERFORMANCE: Use a single, stable filter set state for ProductListing
-    const selectedFilters = useMemo(() => {
-        const filters = new Set<string>();
-        if (activeCategoryName) filters.add(activeCategoryName);
-        if (activeSubcategoryName) filters.add(activeSubcategoryName);
-        if (activeTypeName) filters.add(activeTypeName);
-        return filters;
-    }, [activeCategoryName, activeSubcategoryName, activeTypeName]);
 
     // Effect to apply filters from URL search params on initial load
     useEffect(() => {
-        // PERF: Only update state if values actually change
         let changed = false;
         const newFilterState = { ...filterState };
 
-        // PERF: Handle potential null/undefined from searchParams.get
         const minP = searchParams.get('min_price');
         const maxP = searchParams.get('max_price');
         const manufacturer = searchParams.get('search');
@@ -172,252 +147,200 @@ export default function CategoryOrTypePage({
         if (changed) {
             setFilterState(newFilterState);
         }
-    }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [searchParams]);
 
-    // Validate the URL parameter against categories and product types
-    const validateRouteContext = useCallback(async (paramSlug: string, subParamSlug?: string): Promise<RouteContext> => {
-        // PERF: Reset only the necessary states
-        setActiveCategoryName(null);
-        setActiveSubcategoryName(null);
-        setActiveTypeName(null);
-        setErrorMessage(null); // Ensure error message is cleared on navigation
+    // --- React Query 1: Route Validation ---
+    const {
+        data: context,
+        isLoading: isContextLoading,
+        error: contextError
+    } = useQuery<RouteContext>({
+        queryKey: ['routeContext', urlParamSlug, subcategoryParamSlug],
+        queryFn: async () => {
+            const paramSlug = urlParamSlug;
+            const subParamSlug = subcategoryParamSlug;
+            const formattedParamName = formatNameFromSlug(paramSlug);
+            const formattedSubParamName = subParamSlug ? formatNameFromSlug(subParamSlug) : null;
 
-        const formattedParamName = formatNameFromSlug(paramSlug);
-        const formattedSubParamName = subParamSlug ? formatNameFromSlug(subParamSlug) : null;
-
-        // 1. Check if it's a product type
-        if (PRODUCT_TYPE_CHOICES.includes(paramSlug)) {
-            if (subParamSlug) {
-                return { type: 'invalid', name: null, subName: null, id: null, subId: null, metaTitle: null, metaDescription: null };
+            if (PRODUCT_TYPE_CHOICES.includes(paramSlug)) {
+                if (subParamSlug) {
+                    return { type: 'invalid', name: null, subName: null, id: null, subId: null, metaTitle: null, metaDescription: null };
+                }
+                const typeName = formatNameFromSlug(paramSlug);
+                return {
+                    type: 'type',
+                    name: typeName,
+                    subName: null,
+                    id: null,
+                    subId: null,
+                    metaTitle: `${typeName} Products | MHE Bazar`,
+                    metaDescription: `Browse our selection of ${typeName} products.`
+                };
             }
-            const typeName = formatNameFromSlug(paramSlug);
-            setActiveTypeName(typeName);
 
-            const defaultTitle = `${typeName} Products | MHE Bazar`;
-            const defaultDescription = `Browse our selection of ${typeName} products.`;
-            return { type: 'type', name: typeName, subName: null, id: null, subId: null, metaTitle: defaultTitle, metaDescription: defaultDescription };
-        }
+            try {
+                const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedParamName}`);
+                const categories = categoryResponse.data;
 
-        // 2. Check if it's a valid category or subcategory
-        try {
-            // PERF: Fetching by decoded name is less efficient than by slug/ID, but required by API design.
-            const categoryResponse = await api.get<ApiCategory[]>(`/categories/?name=${formattedParamName}`);
-            const categories = categoryResponse.data;
+                if (categories && categories.length > 0) {
+                    const category = categories[0];
 
-            if (categories && categories.length > 0) {
-                const category = categories[0];
-                setActiveCategoryName(category.name);
+                    if (formattedSubParamName) {
+                        const subcategory = category.subcategories.find(
+                            sub => sub.name.toLowerCase() === formattedSubParamName.toLowerCase()
+                        );
 
-                if (formattedSubParamName) {
-                    const subcategory = category.subcategories.find(
-                        sub => sub.name.toLowerCase() === formattedSubParamName.toLowerCase()
-                    );
-
-                    if (subcategory) {
-                        setActiveSubcategoryName(subcategory.name);
-                        return {
-                            type: 'subcategory',
-                            name: category.name,
-                            subName: subcategory.name,
-                            id: category.id,
-                            subId: subcategory.id,
-                            metaTitle: subcategory.meta_title,
-                            metaDescription: subcategory.meta_description
-                        };
+                        if (subcategory) {
+                            return {
+                                type: 'subcategory',
+                                name: category.name,
+                                subName: subcategory.name,
+                                id: category.id,
+                                subId: subcategory.id,
+                                metaTitle: subcategory.meta_title,
+                                metaDescription: subcategory.meta_description
+                            };
+                        } else {
+                            return { type: 'invalid', name: null, subName: null, id: null, subId: null, metaTitle: null, metaDescription: null, errorMsg: `Subcategory not found` };
+                        }
                     } else {
-                        return { type: 'invalid', name: null, subName: null, id: null, subId: null, metaTitle: null, metaDescription: null };
+                        return {
+                            type: 'category',
+                            name: category.name,
+                            subName: null,
+                            id: category.id,
+                            subId: null,
+                            metaTitle: category.meta_title,
+                            metaDescription: category.meta_description
+                        };
                     }
-                } else {
-                    return {
-                        type: 'category',
-                        name: category.name,
-                        subName: null,
-                        id: category.id,
-                        subId: null,
-                        metaTitle: category.meta_title,
-                        metaDescription: category.meta_description
-                    };
+                }
+            } catch (err) {
+                if (err instanceof AxiosError && err.response?.status !== 404) {
+                    return { type: 'invalid', name: null, subName: null, id: null, subId: null, metaTitle: null, metaDescription: null, errorMsg: `API Error: ${err.message}` };
                 }
             }
-        } catch (err) {
-            console.error("[Category/Type Page] Failed to check category existence:", err);
-            setErrorMessage(`Failed to check category existence: API service might be unavailable.`);
-        }
 
-        return { type: 'invalid', name: null, subName: null, id: null, subId: null, metaTitle: null, metaDescription: null };
-    }, []);
+            return { type: 'invalid', name: null, subName: null, id: null, subId: null, metaTitle: null, metaDescription: null };
+        },
+        staleTime: 5 * 60 * 1000, // Cache validation for 5 mins
+    });
 
-    // Fetch products based on the determined context and filters
-    const fetchProductsData = useCallback(async (
-        contextType: 'category' | 'subcategory' | 'type',
-        contextName: string,
-        contextSubName: string | null,
-        categoryId: number | null,
-        subcategoryId: number | null,
-        page: number,
-        minPriceFilter: number | '',
-        maxPriceFilter: number | '',
-        manufacturerFilter: string | null,
-        ratingFilter: number | null,
-        sortByFilter: string
-    ) => {
-        setIsLoading(true);
-        setNoProductsFoundMessage(null);
-        setErrorMessage(null); // Clear previous errors
 
-        try {
+    // --- React Query 2: Product Fetching ---
+    // Only runs if context is valid and not loading
+    const {
+        data: productsData,
+        isLoading: isProductsLoading,
+        isFetching: isProductsFetching,
+        error: productsError
+    } = useQuery({
+        queryKey: [
+            'products',
+            context?.type,
+            context?.name,
+            context?.subName,
+            context?.id,
+            context?.subId,
+            currentPage,
+            minPrice,
+            maxPrice,
+            selectedManufacturer,
+            selectedRating,
+            sortBy
+        ],
+        queryFn: async () => {
             const queryParams = new URLSearchParams();
 
-            if (contextType === 'subcategory' && subcategoryId) {
-                queryParams.append("subcategory", subcategoryId.toString());
-            } else if (contextType === 'category' && categoryId) {
-                queryParams.append("category", categoryId.toString());
-            } else if (contextType === 'type') {
-                if (contextName.toLowerCase() === 'rental') {
-                    // New Logic: When on the rental page, fetch both 'rental' and 'used' products
+            if (context?.type === 'subcategory' && context.subId) {
+                queryParams.append("subcategory", context.subId.toString());
+            } else if (context?.type === 'category' && context.id) {
+                queryParams.append("category", context.id.toString());
+            } else if (context?.type === 'type') {
+                if (context.name?.toLowerCase() === 'rental') {
                     queryParams.append("type", "rental");
                     queryParams.append("type", "used");
-                } else {
-                    queryParams.append("type", contextName.toLowerCase());
+                } else if (context.name) {
+                    queryParams.append("type", context.name.toLowerCase());
                 }
             }
 
-            queryParams.append("page", page.toString());
+            queryParams.append("page", currentPage.toString());
 
-            if (minPriceFilter !== '') queryParams.append("min_price", minPriceFilter.toString());
-            if (maxPriceFilter !== '') queryParams.append("max_price", maxPriceFilter.toString());
-            if (ratingFilter !== null) queryParams.append("average_rating", ratingFilter.toString());
+            if (minPrice !== '') queryParams.append("min_price", minPrice.toString());
+            if (maxPrice !== '') queryParams.append("max_price", maxPrice.toString());
+            if (selectedRating !== null) queryParams.append("average_rating", selectedRating.toString());
 
-            if (manufacturerFilter) queryParams.append("search", manufacturerFilter);
+            if (selectedManufacturer) queryParams.append("search", selectedManufacturer);
 
-            if (sortByFilter && sortByFilter !== 'relevance') {
+            if (sortBy && sortBy !== 'relevance') {
                 let sortParam = '';
-                if (sortByFilter === 'price_asc') sortParam = 'price';
-                else if (sortByFilter === 'price_desc') sortParam = '-price';
-                else if (sortByFilter === 'newest') sortParam = '-created_at';
+                if (sortBy === 'price_asc') sortParam = 'price';
+                else if (sortBy === 'price_desc') sortParam = '-price';
+                else if (sortBy === 'newest') sortParam = '-created_at';
                 if (sortParam) queryParams.append("ordering", sortParam);
             }
 
-            const response = await api.get<ApiResponse<ApiProduct>>(
-                `/products/?${queryParams.toString()}`
-            );
+            const response = await api.get<ApiResponse<ApiProduct>>(`/products/?${queryParams.toString()}`);
 
-            if (response.data && response.data.results) {
-                if (response.data.results.length === 0) {
-                    setNoProductsFoundMessage(`No products found for "${contextSubName || contextName}" with the selected filters.`);
-                }
+            const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
+                id: p.id.toString(),
+                image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
+                title: p.name,
+                subtitle: p.description,
+                price: parseFloat(p.price),
+                currency: "₹",
+                category_name: p.category_name,
+                subcategory_name: p.subcategory_name,
+                direct_sale: p.direct_sale,
+                is_active: p.is_active,
+                hide_price: p.hide_price,
+                stock_quantity: p.stock_quantity,
+                manufacturer: p.manufacturer,
+                average_rating: p.average_rating,
+                type: p.type,
+                category_id: p.category,
+                model: p.model,
+                user_name: p.user_name,
+                created_at: p.created_at
+            }));
 
-                // FIX: Correctly map ApiProduct to the local Product type, handling nulls
-                const transformedProducts: Product[] = response.data.results.map((p: ApiProduct) => ({
-                    id: p.id.toString(),
-                    image: p.images.length > 0 ? p.images[0].image : "/placeholder-product.jpg",
-                    title: p.name,
-                    subtitle: p.description,
-                    price: parseFloat(p.price),
-                    currency: "₹",
-                    category_name: p.category_name,
-                    subcategory_name: p.subcategory_name,
-                    direct_sale: p.direct_sale,
-                    is_active: p.is_active,
-                    hide_price: p.hide_price,
-                    stock_quantity: p.stock_quantity,
-                    manufacturer: p.manufacturer,
-                    average_rating: p.average_rating,
-                    type: p.type,
-                    category_id: p.category,
-                    model: p.model,
-                    user_name: p.user_name,
-                    created_at: p.created_at
-                }));
-
-                setProducts(transformedProducts);
-                setTotalProducts(response.data.count);
-                // PERF: Use constant page size (12)
-                setTotalPages(Math.ceil(response.data.count / 12));
-            } else {
-                setNoProductsFoundMessage(`Failed to load products. Unexpected API response structure.`);
-                setProducts([]);
-            }
-        } catch (err) {
-            if (err instanceof AxiosError) {
-                setErrorMessage(`Failed to load products. API error: ${err.message}`);
-            } else {
-                setErrorMessage(`Failed to load products. An unknown error occurred.`);
-            }
-            setProducts([]);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    // Main effect to determine context and fetch data
-    useEffect(() => {
-        const loadData = async () => {
-            setIsLoading(true);
-            const context = await validateRouteContext(urlParamSlug, subcategoryParamSlug);
-
-            if (context.type !== 'invalid' && context.name) {
-                // Set metadata based on the fetched context
-                setMetaTitle(context.metaTitle || `${context.subName || context.name} Products | MHE Bazar`);
-                setMetaDescription(context.metaDescription || `Browse our wide range of ${context.subName || context.name} products and equipment.`);
-
-                await fetchProductsData(
-                    context.type as 'category' | 'subcategory' | 'type',
-                    context.name,
-                    context.subName,
-                    context.id,
-                    context.subId,
-                    currentPage,
-                    minPrice,
-                    maxPrice,
-                    selectedManufacturer,
-                    selectedRating,
-                    sortBy
-                );
-            } else {
-                setIsLoading(false);
-                notFound(); // Trigger Next.js 404
-            }
-        };
-        // PERF: Only run effect if the core route params change, or filters change.
-        loadData();
-    }, [
-        urlParamSlug,
-        subcategoryParamSlug,
-        validateRouteContext,
-        fetchProductsData,
-        // Include filter state variables in the dependency array
-        currentPage,
-        minPrice,
-        maxPrice,
-        selectedManufacturer,
-        selectedRating,
-        sortBy,
-    ]);
-
-    // Effect to handle dynamic meta title and description updates
-    // useEffect(() => {
-    //     // PERF: This dynamic DOM manipulation is required for client components without Next.js 13+ hooks
-    //     if (metaTitle) {
-    //         document.title = metaTitle;
-    //     }
-    //     if (metaDescription) {
-    //         let meta = document.querySelector('meta[name="description"]');
-    //         if (!meta) {
-    //             meta = document.createElement('meta');
-    //             meta.setAttribute('name', 'description');
-    //             document.head.appendChild(meta);
-    //         }
-    //         meta.setAttribute('content', metaDescription);
-    //     }
-    // }, [metaTitle, metaDescription]);
+            return {
+                products: transformedProducts,
+                totalCount: response.data.count,
+                totalPages: Math.ceil(response.data.count / 12),
+                noProductsFound: response.data.results.length === 0
+            };
+        },
+        enabled: !!context && context.type !== 'invalid' && context.name !== null,
+        staleTime: 60 * 1000,
+    });
 
 
-    // Handle filter changes (consolidated logic)
+    const isLoading = isContextLoading || isProductsLoading;
+
+    // Handle 404s
+    if (!isContextLoading && context?.type === 'invalid' && !contextError && !context?.errorMsg) {
+        notFound();
+    }
+
+
+    const activeCategoryName = context?.type === 'category' || context?.type === 'subcategory' ? context.name : null;
+    const activeSubcategoryName = context?.type === 'subcategory' ? context.subName : null;
+    const activeTypeName = context?.type === 'type' ? context.name : null;
+
+    const selectedFilters = useMemo(() => {
+        const filters = new Set<string>();
+        if (activeCategoryName) filters.add(activeCategoryName);
+        if (activeSubcategoryName) filters.add(activeSubcategoryName);
+        if (activeTypeName) filters.add(activeTypeName);
+        return filters;
+    }, [activeCategoryName, activeSubcategoryName, activeTypeName]);
+
     const handleFilterChange = useCallback((
         filterValue: string | number,
         filterType: "category" | "subcategory" | "type" | "price_range" | "manufacturer" | "rating" | "sort_by",
-        newValue?: string | number | { min: number | ""; max: number | ""; } | null
+        newValue?: string | number | string[] | { min: number | ""; max: number | ""; } | null | undefined
     ) => {
         const currentPath = `/${urlParamSlug}${subcategoryParamSlug ? `/${subcategoryParamSlug}` : ''}`;
         const newSearchParams = new URLSearchParams(searchParams.toString());
@@ -426,11 +349,9 @@ export default function CategoryOrTypePage({
             let newPath = "";
             const formattedFilterSlug = String(filterValue).toLowerCase().replace(/\s+/g, '-');
 
-            // Reset all filters except for the new category/type change
             ['min_price', 'max_price', 'search', 'average_rating', 'sort_by'].forEach(p => newSearchParams.delete(p));
             newSearchParams.set('page', '1');
 
-            // PERF: Update local filter state once before navigation
             setFilterState(prev => ({
                 ...prev,
                 minPrice: '',
@@ -451,7 +372,6 @@ export default function CategoryOrTypePage({
             router.push(`${newPath}?${newSearchParams.toString()}`);
 
         } else {
-            // Handle other filter changes (price_range, manufacturer, rating, sort_by)
             if (filterType === "price_range" && typeof newValue === 'object' && newValue !== null) {
                 const { min, max } = newValue as { min: number | '', max: number | '' };
                 min === '' ? newSearchParams.delete('min_price') : newSearchParams.set('min_price', String(min));
@@ -470,18 +390,14 @@ export default function CategoryOrTypePage({
     }, [urlParamSlug, subcategoryParamSlug, activeCategoryName, router, searchParams]);
 
     const handlePageChange = (page: number) => {
-        // PERF: Direct router push is handled here for better user experience
         const currentPath = `/${urlParamSlug}${subcategoryParamSlug ? `/${subcategoryParamSlug}` : ''}`;
         const newSearchParams = new URLSearchParams(searchParams.toString());
         newSearchParams.set('page', page.toString());
         router.push(`${currentPath}?${newSearchParams.toString()}`);
-
-        // Local state updates handled by useEffect(searchParams) above, but setting it here for immediate feedback
         setFilterState(prev => ({ ...prev, currentPage: page }));
     };
 
     const handleSortChange = (value: string) => {
-        // PERF: Consolidate state updates and navigation
         const currentPath = `/${urlParamSlug}${subcategoryParamSlug ? `/${subcategoryParamSlug}` : ''}`;
         const newSearchParams = new URLSearchParams(searchParams.toString());
 
@@ -489,12 +405,9 @@ export default function CategoryOrTypePage({
         newSearchParams.set('page', '1');
 
         router.push(`${currentPath}?${newSearchParams.toString()}`);
-
-        // Local state updates handled by useEffect(searchParams) above, but setting it here for immediate feedback
         setFilterState(prev => ({ ...prev, sortBy: value, currentPage: 1 }));
     };
 
-    // Breadcrumb calculation is fast, use memo to stabilize for performance
     const breadcrumbItems = useMemo(() => {
         const items = [{ label: "Home", href: "/" }];
         if (activeCategoryName) {
@@ -511,7 +424,6 @@ export default function CategoryOrTypePage({
 
     if (isLoading) {
         return (
-            // PERF: Use static loading indicator to reduce initial component weight/DOM complexity
             <div className="flex justify-center items-center min-h-[calc(100vh-100px)]">
                 <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-500"></div>
                 <p className="ml-4 text-gray-600">Loading products...</p>
@@ -519,14 +431,18 @@ export default function CategoryOrTypePage({
         );
     }
 
-    if (errorMessage) {
+    const errorToDisplay = contextError?.message || context?.errorMsg || productsError?.message;
+    if (errorToDisplay) {
         return (
             <div className="text-center p-8 min-h-[50vh] text-red-600">
                 <h2>Error Loading Data</h2>
-                <p>{errorMessage}</p>
+                <p>{errorToDisplay}</p>
             </div>
         );
     }
+
+    const metaTitle = context?.metaTitle || `${activeSubcategoryName || activeCategoryName || activeTypeName} Products | MHE Bazar`;
+    const metaDescription = context?.metaDescription || `Browse our wide range of ${activeSubcategoryName || activeCategoryName || activeTypeName} products and equipment.`;
 
     return (
         <>
@@ -568,29 +484,31 @@ export default function CategoryOrTypePage({
                 }}
             />
             <Breadcrumb items={breadcrumbItems} />
-            <ProductListing
-                // The cast is needed because we extended the local Product type
-                products={products as ImportedProductType[]}
-                title={activeSubcategoryName || activeCategoryName || activeTypeName || "All Products"}
-                totalCount={totalProducts}
-                onFilterChange={handleFilterChange}
-                selectedFilters={selectedFilters}
-                selectedCategoryName={activeCategoryName}
-                selectedSubcategoryName={activeSubcategoryName}
-                selectedTypeName={activeTypeName}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                noProductsMessage={noProductsFoundMessage}
-                minPrice={minPrice}
-                maxPrice={maxPrice}
-                selectedManufacturer={selectedManufacturer}
-                selectedRating={selectedRating}
-                sortBy={sortBy}
-                onSortChange={handleSortChange}
-                // Pass the URL param type to the listing component
-                pageUrlType={urlParamSlug}
-            />
+
+            {/* Show an indicator when refetching data in background for a seamless experience */}
+            <div className={`transition-opacity duration-300 ${isProductsFetching && !isLoading ? 'opacity-50' : 'opacity-100'}`}>
+                <ProductListing
+                    products={productsData?.products as ImportedProductType[] || []}
+                    title={activeSubcategoryName || activeCategoryName || activeTypeName || "All Products"}
+                    totalCount={productsData?.totalCount || 0}
+                    onFilterChange={handleFilterChange}
+                    selectedFilters={selectedFilters}
+                    selectedCategoryName={activeCategoryName}
+                    selectedSubcategoryName={activeSubcategoryName}
+                    selectedTypeName={activeTypeName}
+                    currentPage={currentPage}
+                    totalPages={productsData?.totalPages || 1}
+                    onPageChange={handlePageChange}
+                    noProductsMessage={productsData?.noProductsFound ? `No products found for "${context?.subName || context?.name}" with the selected filters.` : null}
+                    minPrice={minPrice}
+                    maxPrice={maxPrice}
+                    selectedManufacturer={selectedManufacturer}
+                    selectedRating={selectedRating}
+                    sortBy={sortBy}
+                    onSortChange={handleSortChange}
+                    pageUrlType={urlParamSlug}
+                />
+            </div>
         </>
     );
 }

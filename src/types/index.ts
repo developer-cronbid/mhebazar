@@ -1,3 +1,6 @@
+import { ReactNode } from "react";
+import { StaticImport } from "next/dist/shared/lib/get-img-props";
+
 // MHE Bazar Type Definitions
 
 export type Product = {
@@ -267,11 +270,11 @@ export interface Subcategory {
   category: number;
   category_name: string;
   name: string;
-  description?: string ;
+  description?: string;
   meta_title?: string;
   meta_description?: string;
-  sub_image?: string ;
-  sub_banner?: string ;
+  sub_image?: string;
+  sub_banner?: string;
   product_details: ProductDetailField[] | null;
   created_at: string;
   updated_at: string;
