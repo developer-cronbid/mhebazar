@@ -1,4 +1,4 @@
-
+// proxy.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import axios from "axios";
@@ -21,29 +21,24 @@ const API_KEY = process.env.NEXT_PUBLIC_X_API_KEY;
 // **********************************************
 const redirectMap = redirects as Record<string, string>;
 
-// Build a pathname-based redirect map so we can match against incoming request pathnames.
-// Keys in redirects.json are full URLs like "https://www.mhebazar.in/some/path?query=val"
-// We normalize them to "/some/path?query=val" so they match the request pathname + search.
 const filteredRedirects: Record<string, string> = {};
 
 for (const [rawKey, rawTarget] of Object.entries(redirectMap)) {
-  if (rawKey === "URL") continue; // Skip the CSV header entry
+  if (rawKey === "URL") continue;
 
-  // Clean newlines/spaces from the key
-  const cleanedKey = rawKey.replace(/\n/g, ' ').replace(/\s/g, '%20');
+  const cleanedKey = rawKey.replace(/\n/g, '').trim();
 
-  // Extract the pathname (+ search) from the full URL key
   let keyPathWithSearch: string;
   try {
     const parsed = new URL(cleanedKey);
-    keyPathWithSearch = parsed.pathname + parsed.search;
+    // CRITICAL FIX: Decode the dictionary keys immediately!
+    keyPathWithSearch = decodeURIComponent(parsed.pathname + parsed.search);
   } catch (e) {
-    keyPathWithSearch = cleanedKey; // fallback if it's already a path
+    keyPathWithSearch = decodeURIComponent(cleanedKey); 
   }
 
-  const keyDecodedPathname = decodeURIComponent(keyPathWithSearch.split('?')[0]);
+  const keyDecodedPathname = keyPathWithSearch.split('?')[0];
 
-  // Skip entries covered by dynamic redirect patterns
   const isProductUrl = keyDecodedPathname.match(/-\d+$/);
   const isVendorsListing = keyDecodedPathname.includes('/vendors-listing');
   const isCompare = keyDecodedPathname.includes('/compare/');
@@ -51,7 +46,6 @@ for (const [rawKey, rawTarget] of Object.entries(redirectMap)) {
 
   if (isProductUrl || isVendorsListing || isCompare || isWishlist) continue;
 
-  // Extract pathname from the target URL too (so we redirect on the same origin)
   let targetPath: string;
   try {
     const parsedTarget = new URL(rawTarget);
@@ -62,71 +56,56 @@ for (const [rawKey, rawTarget] of Object.entries(redirectMap)) {
 
   filteredRedirects[keyPathWithSearch] = targetPath;
 }
-
 // **********************************************
-// End CWV FIX: Process Redirects ONLY ONCE
+// End CWV FIX
 // **********************************************
 
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+  
+  // CRITICAL FIX: Decode the incoming request path and search
   const decodedPathname = decodeURIComponent(pathname);
+  const decodedSearch = decodeURIComponent(search);
   const fullUrl = request.url;
 
   // --- Dynamic Redirect Logic (High Priority) ---
-
-  // 1. Handle "vendors-listing" to "vendor-listing" redirect
   if (decodedPathname.includes('/vendors-listing')) {
     const newPath = decodedPathname.replace('/vendors-listing', '/vendor-listing');
     return NextResponse.redirect(new URL(newPath, fullUrl));
   }
 
-  // 2. Handle old-style product URLs ending in -[id]
   const productPathMatch = decodedPathname.match(/(.*\/)?([^/]+)-(\d+)$/);
-  // Redirect only if it's not already in the correct /product/ format
   if (productPathMatch && !decodedPathname.startsWith('/product/')) {
-    const [fullMatch, categoryPath, slug, id] = productPathMatch;
+    const [, , slug, id] = productPathMatch;
     const newPath = `/product/${slug}-${id}`;
     return NextResponse.redirect(new URL(newPath, fullUrl));
   }
 
-  // 3. Handle /compare/ cleanup (Redirects /compare/add/123 to /compare)
-  if (decodedPathname.startsWith('/compare/')) {
-    if (decodedPathname !== '/compare') { // Skip if it's already the canonical path
-      return NextResponse.redirect(new URL('/compare', fullUrl));
-    }
+  if (decodedPathname.startsWith('/compare/') && decodedPathname !== '/compare') {
+    return NextResponse.redirect(new URL('/compare', fullUrl));
   }
 
-  // 4. Handle /wishlist/ cleanup (Redirects /wishlist/add/123 to /account/wishlist)
-  if (decodedPathname.includes('/wishlist/')) {
-    // Check if the current path is NOT the new canonical path
-    if (decodedPathname !== '/account/wishlist') {
-      return NextResponse.redirect(new URL('/account/wishlist', fullUrl));
-    }
+  if (decodedPathname.includes('/wishlist/') && decodedPathname !== '/account/wishlist') {
+    return NextResponse.redirect(new URL('/account/wishlist', fullUrl));
   }
 
-  // --- Filtered Hardcoded Redirects (Now fast) ---
-
-  // Build the lookup key: pathname + query string (to match keys like "/path?sort=desc")
-  const searchString = request.nextUrl.search; // e.g. "?sort=desc" or ""
-  const lookupWithSearch = pathname + searchString;
-
-  // Try matching with query string first, then without
-  const redirectTarget = filteredRedirects[lookupWithSearch] || filteredRedirects[pathname];
+  // --- Filtered Hardcoded Redirects ---
+  // CRITICAL FIX: Use the decoded path and search to look up the redirect
+  const lookupWithSearch = decodedPathname + decodedSearch;
+  const redirectTarget = filteredRedirects[lookupWithSearch] || filteredRedirects[decodedPathname];
 
   if (redirectTarget) {
     return NextResponse.redirect(new URL(redirectTarget, fullUrl), 301);
   }
 
   // --- Authentication and Authorization Logic ---
-
   const accessToken = request.cookies.get("access_token")?.value;
   const refreshToken = request.cookies.get("refresh_token")?.value;
 
   let isAuthenticated = false;
   let userRole: number | null = null;
 
-  // 1. Try validating access token
   if (accessToken) {
     try {
       const userResponse = await axios.get(`${API_BASE_URL}/users/me/`, {
@@ -138,7 +117,6 @@ export async function proxy(request: NextRequest) {
       isAuthenticated = true;
       userRole = userResponse.data?.role?.id;
     } catch (err) {
-      // 2. Try refreshing token if access token fails
       if (refreshToken) {
         try {
           const refreshResponse = await axios.post(
@@ -178,18 +156,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 3. Public Routes: Allow all public paths
   if (publicPaths.includes(pathname)) {
-    if (
-      isAuthenticated &&
-      (pathname === "/login" || pathname === "/register")
-    ) {
+    if (isAuthenticated && (pathname === "/login" || pathname === "/register")) {
       return NextResponse.redirect(new URL("/", fullUrl));
     }
     return NextResponse.next();
   }
 
-  // 4. Protected Routes: Block unauthenticated users
   if (protectedPrefixes.some((prefix) => pathname.startsWith(prefix))) {
     if (!isAuthenticated) {
       const response = NextResponse.redirect(new URL("/login", fullUrl));
@@ -198,11 +171,7 @@ export async function proxy(request: NextRequest) {
       return response;
     }
 
-    // Role-based restrictions
-    if (
-      userRole === ROLES.USER &&
-      (pathname.startsWith("/admin") || pathname.startsWith("/vendor"))
-    ) {
+    if (userRole === ROLES.USER && (pathname.startsWith("/admin") || pathname.startsWith("/vendor"))) {
       return NextResponse.redirect(new URL("/", fullUrl));
     }
 
@@ -211,7 +180,6 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // 5. All other routes
   return NextResponse.next();
 }
 
