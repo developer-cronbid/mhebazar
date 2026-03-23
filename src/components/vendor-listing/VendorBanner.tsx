@@ -43,10 +43,11 @@ export default function VendorBanner({
   productCount,
 }: VendorBannerProps) {
   const [descExpanded, setDescExpanded] = useState(false);
+  
 
   // Use the memoized truncated description to avoid re-calculating on every render
   const { truncatedHtml, isTruncated: isLongDesc } = useMemo(() => {
-    return truncateHtmlString(description, 200);
+    return truncateHtmlString(description, 100);
   }, [description]);
 
   // Ref for the autoplay plugin

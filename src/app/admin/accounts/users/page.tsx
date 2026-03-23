@@ -870,10 +870,10 @@ const UsersTable = () => {
                 <Eye size={16} className="mr-2" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setEditingUser(row.original)}>
+              {/* <DropdownMenuItem onClick={() => setEditingUser(row.original)}>
                 <Edit size={16} className="mr-2" />
                 Edit User
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
               <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={() => handleUserDelete(row.original.id)}
