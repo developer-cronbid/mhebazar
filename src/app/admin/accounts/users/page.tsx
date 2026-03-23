@@ -86,10 +86,10 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({ user, onClose, onEdit }) 
         <div className="flex justify-between items-center border-b p-6">
           <h2 className="text-2xl font-bold text-gray-800">User Details</h2>
           <div className="flex gap-2">
-            <Button onClick={() => onEdit(user)} className="bg-blue-600 hover:bg-blue-700">
+            {/* <Button onClick={() => onEdit(user)} className="bg-blue-600 hover:bg-blue-700">
               <Edit size={16} className="mr-2" />
               Edit
-            </Button>
+            </Button> */}
             <Button onClick={onClose} variant="outline">
               <X size={16} />
             </Button>
