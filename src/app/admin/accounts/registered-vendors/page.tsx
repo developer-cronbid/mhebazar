@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 // VendorCard is assumed to be present at this path
-import VendorCard from "@/components/vendor-listing/VendorCard";
+import VendorCard from "@/components/vendor-listing/vendorcardadmin";
 // AllVendor type is imported from the other component
 import AllVendorsTable, { AllVendor } from "@/components/vendor-listing/AllVendorsTable";
 import api from "@/lib/api";
