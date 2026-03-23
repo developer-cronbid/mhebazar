@@ -11,7 +11,7 @@ import api from "@/lib/api";
 // --- Types ---
 type Vendor = {
   id: number;
-  user_id: number;
+  user_id?: number; // Made optional just in case it's missing from API
   username: string;
   email: string;
   full_name: string;
@@ -28,11 +28,23 @@ type Vendor = {
   };
 };
 
-// Extended type for fetched details matching your DB schema
 type DetailedVendor = Vendor & {
   company_address?: string;
   pcode?: string;
   gst_no?: string;
+};
+
+// New type for the fetched associated user details
+type VendorUser = {
+  id: number;
+  username: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  date_joined: string;
+  is_active: boolean;
+  description?: string;
 };
 
 type UserProfile = {
@@ -61,7 +73,10 @@ export default function VendorCard({ vendor }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [vendorDetails, setVendorDetails] = useState<DetailedVendor | null>(null); // New state for fetched vendor info
+  
+  // States for View Details (Admin)
+  const [vendorDetails, setVendorDetails] = useState<DetailedVendor | null>(null); 
+  const [vendorUserDetails, setVendorUserDetails] = useState<VendorUser | null>(null); 
   
   const [formData, setFormData] = useState({
     first_name: "",
@@ -100,13 +115,28 @@ export default function VendorCard({ vendor }: Props) {
     api.post("/track-vendor-click/", { vendor_id: vendor.id, admin_view: true }).catch(() => {});
 
     try {
-      // Fetch full vendor details from the API
-      const res = await api.get(`/vendor/${vendor.id}/`); // Ensure this matches your exact backend routing
-      setVendorDetails(res.data);
+      // ✅ SAFELY EXTRACT USER ID (Fallback to user_info.id if user_id is missing)
+      const targetUserId = vendor.user_id || vendor.user_info?.id;
+
+      if (!targetUserId) {
+        throw new Error("User ID is missing from the vendor object.");
+      }
+
+      // Fetch both vendor details AND the associated user details in parallel
+      const [vendorRes, userRes] = await Promise.all([
+        api.get(`/vendor/${vendor.id}/`),
+        api.get(`/users/${targetUserId}/`) 
+      ]);
+
+      setVendorDetails(vendorRes.data);
+      setVendorUserDetails(userRes.data);
       setModalStep("details");
     } catch (err: any) {
-      console.error("Failed to fetch vendor details:", err);
-      setError("Unable to load complete vendor details. Please try again.");
+      console.error("Failed to fetch details:", err);
+      // More descriptive error for debugging
+      setError(err.message === "User ID is missing from the vendor object." 
+        ? err.message 
+        : "Unable to load complete vendor and user details. Please try again.");
     }
   };
 
@@ -178,7 +208,7 @@ export default function VendorCard({ vendor }: Props) {
   const getModalTitle = () => {
     switch (modalStep) {
       case "contact_info": return "Vendor Contact Details";
-      case "details": return "Vendor Details";
+      case "details": return "Vendor Profile & User Info";
       case "login_required": return "Login Required";
       case "form": return "Complete Your Profile";
       default: return "Please Wait";
@@ -228,9 +258,9 @@ export default function VendorCard({ vendor }: Props) {
       {/* --- POPUP MODAL --- */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
 
-            <div className="bg-[#5CA131] p-4 flex justify-between items-center">
+            <div className="bg-[#5CA131] p-4 flex justify-between items-center shrink-0">
               <h3 className="text-white font-semibold text-lg">
                 {getModalTitle()}
               </h3>
@@ -242,7 +272,7 @@ export default function VendorCard({ vendor }: Props) {
               </button>
             </div>
 
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto">
               {modalStep === "loading" && !error && (
                 <div className="flex flex-col items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5CA131]"></div>
@@ -258,74 +288,92 @@ export default function VendorCard({ vendor }: Props) {
                 </div>
               )}
 
-              {/* View Details Flow */}
-              {modalStep === "details" && vendorDetails && (
-                <div className="space-y-4">
+              {/* View Details Flow (Table Format) */}
+              {modalStep === "details" && vendorDetails && vendorUserDetails && (
+                <div className="space-y-6">
                   <div className="flex flex-col items-center">
-                    <div className="w-24 h-24 rounded-lg overflow-hidden mb-3">
-                      <Image src={vendor.user_info?.profile_photo || "/placeholder-logo.png"} alt={`${vendorDetails.brand} Logo`} width={96} height={96} className="object-contain" />
+                    <div className="w-20 h-20 rounded-lg overflow-hidden mb-2">
+                      <Image src={vendor.user_info?.profile_photo || "/placeholder-logo.png"} alt={`${vendorDetails.brand} Logo`} width={80} height={80} className="object-contain" />
                     </div>
                     <h4 className="text-xl font-bold text-gray-900">{vendorDetails.brand}</h4>
-                    <p className="text-sm text-gray-500">{vendorDetails.company_name}</p>
+                    <span className={`mt-1 text-xs font-semibold px-2.5 py-1 rounded-full ${vendorDetails.is_approved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {vendorDetails.is_approved ? 'Approved Vendor' : 'Pending Approval'}
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-2">
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase">Company Email</p>
-                      <p className="text-sm text-gray-800 truncate">{vendorDetails.company_email || vendorDetails.email || 'N/A'}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase">Phone</p>
-                      {vendorDetails.company_phone ? (
-                        <a href={`tel:${vendorDetails.company_phone}`} className="text-sm text-[#5CA131] hover:underline">{vendorDetails.company_phone}</a>
-                      ) : (
-                        <p className="text-sm text-gray-500">No number available</p>
-                      )}
-                    </div>
-
-                    {/* NEW DB FIELDS INJECTED HERE */}
-                    {vendorDetails.company_address && (
-                       <div>
-                         <p className="text-xs text-gray-500 uppercase">Address</p>
-                         <p className="text-sm text-gray-800">{vendorDetails.company_address}</p>
-                       </div>
-                    )}
-
-                    {(vendorDetails.pcode || vendorDetails.gst_no) && (
-                      <div className="grid grid-cols-2 gap-2">
-                        {vendorDetails.pcode && (
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase">Pincode</p>
-                            <p className="text-sm text-gray-800">{vendorDetails.pcode}</p>
-                          </div>
-                        )}
-                        {vendorDetails.gst_no && (
-                          <div>
-                            <p className="text-xs text-gray-500 uppercase">GST Number</p>
-                            <p className="text-sm text-gray-800">{vendorDetails.gst_no}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase">Products</p>
-                      <p className="text-sm text-gray-800">{vendorDetails.product_count ?? vendor.product_count ?? 0} items</p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-gray-500 uppercase">Status</p>
-                      <p className={`text-sm font-semibold ${vendorDetails.is_approved ? 'text-green-600' : 'text-amber-600'}`}>
-                        {vendorDetails.is_approved ? 'Approved' : 'Pending'}
-                      </p>
-                    </div>
+                  {/* USER DETAILS TABLE */}
+                  <div>
+                    <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1">User Information</h5>
+                    <table className="w-full text-sm text-left border-collapse">
+                      <tbody>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Name</th>
+                          <td className="py-2 text-gray-800">{vendorUserDetails.first_name} {vendorUserDetails.last_name}</td>
+                        </tr>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Username</th>
+                          <td className="py-2 text-gray-800">{vendorUserDetails.username}</td>
+                        </tr>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Email</th>
+                          <td className="py-2 text-gray-800 break-all">{vendorUserDetails.email}</td>
+                        </tr>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Phone</th>
+                          <td className="py-2 text-gray-800">{vendorUserDetails.phone || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Status</th>
+                          <td className="py-2 text-gray-800">{vendorUserDetails.is_active ? 'Active' : 'Inactive'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
 
-                  <div className="flex gap-3 mt-4">
+                  {/* VENDOR DETAILS TABLE */}
+                  <div>
+                    <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1">Vendor Information</h5>
+                    <table className="w-full text-sm text-left border-collapse">
+                      <tbody>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Company</th>
+                          <td className="py-2 text-gray-800">{vendorDetails.company_name}</td>
+                        </tr>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Comp. Email</th>
+                          <td className="py-2 text-gray-800 break-all">{vendorDetails.company_email}</td>
+                        </tr>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Comp. Phone</th>
+                          <td className="py-2 text-gray-800">
+                            {vendorDetails.company_phone ? (
+                              <a href={`tel:${vendorDetails.company_phone}`} className="text-[#5CA131] hover:underline">{vendorDetails.company_phone}</a>
+                            ) : 'N/A'}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">GST No.</th>
+                          <td className="py-2 text-gray-800">{vendorDetails.gst_no || 'N/A'}</td>
+                        </tr>
+                        <tr className="border-b border-gray-100">
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Products</th>
+                          <td className="py-2 text-gray-800">{vendorDetails.product_count ?? vendor.product_count ?? 0} items listed</td>
+                        </tr>
+                        <tr>
+                          <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Address</th>
+                          <td className="py-2 text-gray-800">
+                            {vendorDetails.company_address || 'N/A'} 
+                            {vendorDetails.pcode && ` (Pin: ${vendorDetails.pcode})`}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
                     <Button variant="outline" className="flex-1" onClick={() => setIsModalOpen(false)}>Close</Button>
                     <Link href={href} className="flex-1">
-                      <Button className="flex-1 bg-[#5CA131] hover:bg-[#4a8f28] text-white">Open Page</Button>
+                      <Button className="w-full bg-[#5CA131] hover:bg-[#4a8f28] text-white">Open Page</Button>
                     </Link>
                   </div>
                 </div>
@@ -334,7 +382,6 @@ export default function VendorCard({ vendor }: Props) {
               {/* Login Required Flow */}
               {modalStep === "login_required" && (
                 <div className="text-center space-y-4 py-4">
-                  {/* ... Existing Login Required ... */}
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto text-gray-500">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
@@ -351,7 +398,6 @@ export default function VendorCard({ vendor }: Props) {
               {/* Profile Completion Form Flow */}
               {modalStep === "form" && (
                 <form onSubmit={handleFormSubmit} className="space-y-4">
-                  {/* ... Existing Form ... */}
                   <p className="text-sm text-gray-600 mb-4">To view the vendor's phone number, please complete your contact information.</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
@@ -378,7 +424,6 @@ export default function VendorCard({ vendor }: Props) {
               {/* Vendor Contact Flow */}
               {modalStep === "contact_info" && (
                 <div className="text-center py-4 space-y-4">
-                  {/* ... Existing Contact Info ... */}
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto text-[#5CA131]">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
