@@ -269,7 +269,7 @@ export default function VendorCard({ vendor }: Props) {
                     <p className="text-sm text-gray-500">{vendorDetails.company_name}</p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-1 gap-2">
                     <div>
                       <p className="text-xs text-gray-500 uppercase">Company Email</p>
                       <p className="text-sm text-gray-800 truncate">{vendorDetails.company_email || vendorDetails.email || 'N/A'}</p>
@@ -325,7 +325,7 @@ export default function VendorCard({ vendor }: Props) {
                   <div className="flex gap-3 mt-4">
                     <Button variant="outline" className="flex-1" onClick={() => setIsModalOpen(false)}>Close</Button>
                     <Link href={href} className="flex-1">
-                      <Button className="w-full bg-[#5CA131] hover:bg-[#4a8f28] text-white">Open Page</Button>
+                      <Button className="flex-1 bg-[#5CA131] hover:bg-[#4a8f28] text-white">Open Page</Button>
                     </Link>
                   </div>
                 </div>
