@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Loader2, Mail, Calendar, Eye, User, Briefcase, Mo
 import Link from "next/link";
 import Image from "next/image";
 import api from "@/lib/api";
+import PopupBannerCarousel from "./PopupBannerCarousel";
 
 // --- Dropdown Menu Components (Mocked or Imported) ---
 const DropdownMenu = ({ children }: { children: React.ReactNode }) => <div className="relative inline-block text-left w-full">{children}</div>;
@@ -322,12 +323,6 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
     const modalProfilePath = vendorUserDetails?.profile_photo ?? detailedVendor?.user_info?.profile_photo ?? selectedVendor?.user_info?.profile_photo ?? null;
     const modalImageSrc = resolveProfileSrc(modalProfilePath);
 
-    // Cover image: use first user_banner image from the fetched user profile (same as vendor page)
-    const modalCoverBanners = vendorUserDetails?.user_banner ?? [];
-    const modalCoverSrc = modalCoverBanners.length > 0
-        ? resolveProfileSrc(modalCoverBanners[0].image)
-        : null;
-
     if (isLoading) {
         return (
             <div className='flex justify-center items-center h-48 bg-white rounded-xl shadow-lg'>
@@ -385,16 +380,24 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                             </button>
                         </div>
 
-                        {/* Cover banner */}
-                        <div className="w-full h-40 sm:h-48 bg-gray-100 relative">
-                            {modalCoverSrc ? (
-                                <Image src={modalCoverSrc} alt={`${detailedVendor?.brand || 'Vendor'} Cover`} fill className="object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-[#5CA131]/20 to-[#5CA131]/5">
-                                    <span className="text-[#5CA131]/40 text-sm">No cover image</span>
+                        {/* Cover banner carousel */}
+                        {modalStep === 'details' && detailedVendor && vendorUserDetails && (() => {
+                            const banners = vendorUserDetails?.user_banner ?? [];
+                            const carouselImages = banners.length > 0 
+                                ? banners.map(b => resolveProfileSrc(b.image)) 
+                                : [];
+
+                            return (
+                                <div className="w-full shrink-0 relative" style={{ height: '192px' }}>
+                                    <PopupBannerCarousel images={carouselImages} alt={`${detailedVendor?.brand || 'Vendor'} Cover`} />
+                                    
+                                    {/* Profile logo overlaid bottom-left */}
+                                    <div className="absolute bottom-0 left-4 translate-y-1/2 z-30 w-16 h-16 rounded-xl bg-white border-2 border-white shadow-lg overflow-hidden">
+                                        <Image src={modalImageSrc} alt={`${detailedVendor?.brand || 'Vendor'} Logo`} width={64} height={64} className="object-contain w-full h-full p-1" />
+                                    </div>
                                 </div>
-                            )}
-                        </div>
+                            );
+                        })()}
 
                         <div className="p-6 overflow-y-auto">
                             {modalStep === 'loading' && !detailsError && (
@@ -414,10 +417,7 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
 
                             {modalStep === 'details' && detailedVendor && vendorUserDetails && (
                                 <div className="space-y-6">
-                                    <div className="flex flex-col items-center">
-                                        <div className="w-20 h-20 rounded-lg overflow-hidden mb-2">
-                                            <Image src={modalImageSrc} alt={`${detailedVendor?.brand || 'Vendor'} Logo`} width={80} height={80} className="object-contain" />
-                                        </div>
+                                    <div className="flex flex-col items-center pt-8">
                                         <h4 className="text-xl font-bold text-gray-900">{detailedVendor.brand}</h4>
                                         <span className={`mt-1 text-xs font-semibold px-2.5 py-1 rounded-full ${detailedVendor.is_approved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                                             {detailedVendor.is_approved ? 'Approved Vendor' : 'Pending Approval'}
@@ -455,9 +455,9 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                                     {/* USER DESCRIPTION */}
                                     <div>
                                         <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1"> Description</h5>
-                                        <div className="bg-gray-50 p-3 rounded-md border border-gray-100 text-sm text-gray-700 max-h-36 overflow-y-auto whitespace-pre-wrap">
+                                        <div className="bg-gray-50 p-3 rounded-md border border-gray-100 text-sm text-gray-700 max-h-36 overflow-y-auto w-full prose prose-sm max-w-none">
                                             {vendorUserDetails.description ? (
-                                                <p className="leading-relaxed">{vendorUserDetails.description}</p>
+                                                <div dangerouslySetInnerHTML={{ __html: vendorUserDetails.description }} />
                                             ) : (
                                                 <p className="text-gray-400">No description provided.</p>
                                             )}
