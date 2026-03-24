@@ -385,22 +385,18 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                             </button>
                         </div>
 
-                        {/* Cover banner — only render in details step, shrink-0 prevents squishing */}
-                        {modalStep === 'details' && detailedVendor && vendorUserDetails && (
-                            <div className="w-full shrink-0 relative" style={{ height: '160px' }}>
-                                {modalCoverSrc ? (
-                                    <Image src={modalCoverSrc} alt={`${detailedVendor?.brand || 'Vendor'} Cover`} fill className="object-cover" sizes="100vw" />
-                                ) : (
-                                    <div className="w-full h-full bg-gradient-to-r from-[#5CA131]/20 to-[#5CA131]/5" />
-                                )}
-                                {/* Profile logo overlaid bottom-left */}
-                                <div className="absolute bottom-0 left-4 translate-y-1/2 z-10 w-16 h-16 rounded-xl bg-white border-2 border-white shadow-lg overflow-hidden">
-                                    <Image src={modalImageSrc} alt={`${detailedVendor?.brand || 'Vendor'} Logo`} width={64} height={64} className="object-contain w-full h-full p-1" />
+                        {/* Cover banner */}
+                        <div className="w-full h-40 sm:h-48 bg-gray-100 relative">
+                            {modalCoverSrc ? (
+                                <Image src={modalCoverSrc} alt={`${detailedVendor?.brand || 'Vendor'} Cover`} fill className="object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-[#5CA131]/20 to-[#5CA131]/5">
+                                    <span className="text-[#5CA131]/40 text-sm">No cover image</span>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
-                        <div className="p-6 overflow-y-auto flex-1 min-h-0">
+                        <div className="p-6 overflow-y-auto">
                             {modalStep === 'loading' && !detailsError && (
                                 <div className="flex flex-col items-center justify-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5CA131]"></div>
@@ -418,8 +414,10 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
 
                             {modalStep === 'details' && detailedVendor && vendorUserDetails && (
                                 <div className="space-y-6">
-                                    {/* Extra top padding to clear the overlapping logo */}
-                                    <div className="flex flex-col items-center pt-8">
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-20 h-20 rounded-lg overflow-hidden mb-2">
+                                            <Image src={modalImageSrc} alt={`${detailedVendor?.brand || 'Vendor'} Logo`} width={80} height={80} className="object-contain" />
+                                        </div>
                                         <h4 className="text-xl font-bold text-gray-900">{detailedVendor.brand}</h4>
                                         <span className={`mt-1 text-xs font-semibold px-2.5 py-1 rounded-full ${detailedVendor.is_approved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                                             {detailedVendor.is_approved ? 'Approved Vendor' : 'Pending Approval'}
@@ -454,17 +452,17 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                                         </table>
                                     </div>
 
-                                        {/* USER DESCRIPTION */}
-                                        <div>
-                                            <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1"> Description</h5>
-                                            <div className="bg-gray-50 p-3 rounded-md border border-gray-100 text-sm text-gray-700 max-h-36 overflow-y-auto whitespace-pre-wrap">
-                                                {vendorUserDetails.description ? (
-                                                    <p className="leading-relaxed">{vendorUserDetails.description}</p>
-                                                ) : (
-                                                    <p className="text-gray-400">No description provided.</p>
-                                                )}
-                                            </div>
+                                    {/* USER DESCRIPTION */}
+                                    <div>
+                                        <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1"> Description</h5>
+                                        <div className="bg-gray-50 p-3 rounded-md border border-gray-100 text-sm text-gray-700 max-h-36 overflow-y-auto whitespace-pre-wrap">
+                                            {vendorUserDetails.description ? (
+                                                <p className="leading-relaxed">{vendorUserDetails.description}</p>
+                                            ) : (
+                                                <p className="text-gray-400">No description provided.</p>
+                                            )}
                                         </div>
+                                    </div>
 
                                     <div>
                                         <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1">Vendor Information</h5>
