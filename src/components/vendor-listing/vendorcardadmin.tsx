@@ -290,24 +290,26 @@ export default function VendorCard({ vendor }: Props) {
               </button>
             </div>
 
-            {/* Cover banner: use user_banner from fetched user profile (same source as vendor page) */}
-            <div className="w-full h-40 sm:h-48 bg-gray-100 relative">
-              {(() => {
-                const banners = vendorUserDetails?.user_banner ?? [];
-                const coverSrc = banners.length > 0
-                  ? resolveProfileSrc(banners[0].image)
-                  : null;
-                return coverSrc ? (
-                  <Image src={coverSrc} alt={`${vendorDetails?.brand || vendor.brand} Cover`} fill className="object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-[#5CA131]/20 to-[#5CA131]/5">
-                    <span className="text-[#5CA131]/40 text-sm">No cover image</span>
+            {/* Cover banner — only render when details are ready, shrink-0 prevents squishing */}
+            {modalStep === "details" && vendorDetails && vendorUserDetails && (() => {
+              const banners = vendorUserDetails?.user_banner ?? [];
+              const coverSrc = banners.length > 0 ? resolveProfileSrc(banners[0].image) : null;
+              return (
+                <div className="w-full shrink-0 relative" style={{ height: '160px' }}>
+                  {coverSrc ? (
+                    <Image src={coverSrc} alt={`${vendorDetails?.brand || vendor.brand} Cover`} fill className="object-cover" sizes="100vw" />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-r from-[#5CA131]/20 to-[#5CA131]/5" />
+                  )}
+                  {/* Profile logo overlaid bottom-left on the banner */}
+                  <div className="absolute bottom-0 left-4 translate-y-1/2 z-10 w-16 h-16 rounded-xl bg-white border-2 border-white shadow-lg overflow-hidden">
+                    <Image src={resolveProfileSrc(vendor.user_info?.profile_photo ?? null)} alt={`${vendorDetails.brand} Logo`} width={64} height={64} className="object-contain w-full h-full p-1" />
                   </div>
-                );
-              })()}
-            </div>
+                </div>
+              );
+            })()}
 
-            <div className="p-6 overflow-y-auto">
+            <div className="p-6 overflow-y-auto flex-1 min-h-0">
               {modalStep === "loading" && !error && (
                 <div className="flex flex-col items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5CA131]"></div>
@@ -326,10 +328,8 @@ export default function VendorCard({ vendor }: Props) {
               {/* View Details Flow (Table Format) */}
               {modalStep === "details" && vendorDetails && vendorUserDetails && (
                 <div className="space-y-6">
-                  <div className="flex flex-col items-center">
-                    <div className="w-20 h-20 rounded-lg overflow-hidden mb-2">
-                      <Image src={resolveProfileSrc(vendor.user_info?.profile_photo ?? null)} alt={`${vendorDetails.brand} Logo`} width={80} height={80} className="object-contain" />
-                    </div>
+                  {/* Extra top padding to clear partially overlapping logo */}
+                  <div className="flex flex-col items-center pt-8">
                     <h4 className="text-xl font-bold text-gray-900">{vendorDetails.brand}</h4>
                     <span className={`mt-1 text-xs font-semibold px-2.5 py-1 rounded-full ${vendorDetails.is_approved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
                       {vendorDetails.is_approved ? 'Approved Vendor' : 'Pending Approval'}
