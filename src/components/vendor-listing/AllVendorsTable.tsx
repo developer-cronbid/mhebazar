@@ -4,6 +4,7 @@
 import { useState, useMemo } from "react";
 import { CheckCircle, XCircle, Loader2, Mail, Calendar, Eye, User, Briefcase, MoreVertical, ChevronUp, ChevronDown, Phone, Check, Clock } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import api from "@/lib/api";
 
 // --- Dropdown Menu Components (Mocked or Imported) ---
@@ -231,8 +232,6 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
     const [modalStep, setModalStep] = useState<'loading' | 'details' | 'error'>('loading');
     const [detailedVendor, setDetailedVendor] = useState<DetailedVendor | null>(null);
     const [vendorUserDetails, setVendorUserDetails] = useState<VendorUser | null>(null);
-    
-    // ✅ ADDED: Keep track of the selected row data so we can use its correct product_count
     const [selectedVendor, setSelectedVendor] = useState<AllVendor | null>(null);
 
     const [isDetailsLoading, setIsDetailsLoading] = useState(false);
@@ -244,7 +243,7 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
         setIsDetailsLoading(true);
         setDetailedVendor(null);
         setVendorUserDetails(null);
-        setSelectedVendor(vendor); // ✅ Set the selected row vendor
+        setSelectedVendor(vendor);
         setDetailsError(null);
 
         try {
@@ -259,7 +258,16 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
 
             const [vendorResp, userResp] = await Promise.all([vendorPromise, userPromise]);
 
-            setDetailedVendor(vendorResp.data || null);
+            const fetchedVendorDetails = vendorResp.data || null;
+            if (fetchedVendorDetails) {
+                setDetailedVendor({
+                    ...fetchedVendorDetails,
+                    product_count: fetchedVendorDetails.product_count ?? vendor.product_count ?? 0
+                });
+            } else {
+                setDetailedVendor(null);
+            }
+
             if (userResp && userResp.data) {
                 setVendorUserDetails(userResp.data as VendorUser);
             }
@@ -369,8 +377,15 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                             {modalStep === 'details' && detailedVendor && vendorUserDetails && (
                                 <div className="space-y-6">
                                     <div className="flex flex-col items-center">
-                                        <div className="w-20 h-20 rounded-lg overflow-hidden mb-2 border border-gray-100 bg-gray-50 flex items-center justify-center">
-                                            <img src={detailedVendor.user_info?.profile_photo || '/placeholder-logo.png'} alt={`${detailedVendor.brand} Logo`} className="object-contain w-full h-full" />
+                                        <div className="w-20 h-20 rounded-lg overflow-hidden mb-2">
+                                            {/* ✅ EXACT MATCH: Uses Next.js Image component pulling from selectedVendor.user_info */}
+                                            <Image 
+                                                src={selectedVendor?.user_info?.profile_photo || "/default-profile.png"} 
+                                                alt={`${detailedVendor.brand} Logo`} 
+                                                width={80} 
+                                                height={80} 
+                                                className="object-contain" 
+                                            />
                                         </div>
                                         <h4 className="text-xl font-bold text-gray-900">{detailedVendor.brand}</h4>
                                         <span className={`mt-1 text-xs font-semibold px-2.5 py-1 rounded-full ${detailedVendor.is_approved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -430,11 +445,10 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                                                     <th className="py-2 text-gray-500 font-medium w-1/3 align-top">GST No.</th>
                                                     <td className="py-2 text-gray-800">{detailedVendor.gst_no || 'N/A'}</td>
                                                 </tr>
-                                                {/* <tr className="border-b border-gray-100">
+                                                <tr className="border-b border-gray-100">
                                                     <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Products</th>
-                                                
                                                     <td className="py-2 text-gray-800">{detailedVendor.product_count || selectedVendor?.product_count || 0} items listed</td>
-                                                </tr> */}
+                                                </tr>
                                                 <tr>
                                                     <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Address</th>
                                                     <td className="py-2 text-gray-800">
