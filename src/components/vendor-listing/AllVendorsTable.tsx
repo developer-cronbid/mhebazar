@@ -27,7 +27,7 @@ const createSlug = (name: string): string => {
 
 export type AllVendor = {
     id: number;
-    user_id?: number; 
+    user_id?: number;
     username: string;
     email: string;
     full_name: string;
@@ -35,9 +35,9 @@ export type AllVendor = {
     company_email: string;
     company_phone: string;
     brand: string;
-    is_approved: boolean; 
-    application_date: string; 
-    product_count?: number; 
+    is_approved: boolean;
+    application_date: string;
+    product_count?: number;
     user_info?: {
         id: number;
         profile_photo: string;
@@ -60,6 +60,8 @@ type VendorUser = {
     date_joined: string;
     is_active: boolean;
     description?: string;
+    profile_photo?: string | null;
+    user_banner?: { id: number; image: string }[];
 };
 
 type FilterStatus = 'all' | 'pending' | 'approved';
@@ -84,11 +86,11 @@ const formatDate = (dateString: string) => {
 };
 
 // --- Sortable Header Component ---
-const SortableHeader = ({ field, label, currentField, currentDirection, onSortChange, align = 'left' }: { 
-    field: string, 
-    label: string, 
-    currentField: string, 
-    currentDirection: 'asc' | 'desc', 
+const SortableHeader = ({ field, label, currentField, currentDirection, onSortChange, align = 'left' }: {
+    field: string,
+    label: string,
+    currentField: string,
+    currentDirection: 'asc' | 'desc',
     onSortChange: (field: string) => void,
     align?: 'left' | 'center' | 'right'
 }) => {
@@ -97,7 +99,7 @@ const SortableHeader = ({ field, label, currentField, currentDirection, onSortCh
     const justifyClass = align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start';
 
     return (
-        <th 
+        <th
             className={`p-4 text-${align} text-xs font-bold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-200 transition-colors w-1/4`}
             onClick={() => onSortChange(field)}
         >
@@ -111,20 +113,20 @@ const SortableHeader = ({ field, label, currentField, currentDirection, onSortCh
 
 
 // --- Row Component ---
-const VendorRow = ({ vendor, onToggleApproval, onViewDetails }: { 
-    vendor: AllVendor; 
+const VendorRow = ({ vendor, onToggleApproval, onViewDetails }: {
+    vendor: AllVendor;
     onToggleApproval: AllVendorsTableProps['onToggleApproval'];
     onViewDetails?: (vendor: AllVendor) => void;
 }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isTogglingApproval, setIsTogglingApproval] = useState(false);
-    
+
     const { id, user_id, user_info, company_name, brand, email, full_name, is_approved, application_date, username, company_phone, company_email } = vendor;
 
     const handleToggleApproval = async () => {
         if (isTogglingApproval) return;
         setIsTogglingApproval(true);
-        
+
         try {
             await onToggleApproval(id, is_approved);
             setIsMenuOpen(false);
@@ -134,7 +136,7 @@ const VendorRow = ({ vendor, onToggleApproval, onViewDetails }: {
             setIsTogglingApproval(false);
         }
     };
-    
+
     const vendorSlug = createSlug(brand);
     const targetUserId = user_id || user_info?.id;
     const adminHref = `/admin/accounts/registered-vendors/${vendorSlug}/?user=${targetUserId}`;
@@ -175,10 +177,9 @@ const VendorRow = ({ vendor, onToggleApproval, onViewDetails }: {
                 </div>
             </td>
             <td className="p-4 text-center">
-                <span 
-                    className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap shadow-sm mb-1 inline-block ${
-                        is_approved ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-yellow-100 text-yellow-800 border border-yellow-300'
-                    }`}
+                <span
+                    className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap shadow-sm mb-1 inline-block ${is_approved ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+                        }`}
                 >
                     {is_approved ? "Approved" : "Pending"}
                 </span>
@@ -186,9 +187,9 @@ const VendorRow = ({ vendor, onToggleApproval, onViewDetails }: {
             <td className="p-4 text-right w-[100px]">
                 <DropdownMenu>
                     <DropdownMenuTrigger onClick={() => setIsMenuOpen(p => !p)}>
-                        <button 
+                        <button
                             className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors border border-transparent hover:border-gray-300"
-                            disabled={isTogglingApproval} 
+                            disabled={isTogglingApproval}
                         >
                             {isTogglingApproval ? <Loader2 size={20} className="animate-spin text-indigo-500" /> : <MoreVertical size={20} />}
                         </button>
@@ -233,8 +234,9 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
     const [detailedVendor, setDetailedVendor] = useState<DetailedVendor | null>(null);
     const [vendorUserDetails, setVendorUserDetails] = useState<VendorUser | null>(null);
     const [selectedVendor, setSelectedVendor] = useState<AllVendor | null>(null);
+    const [modalProductCount, setModalProductCount] = useState<number>(0);
 
-    const [isDetailsLoading, setIsDetailsLoading] = useState(false);
+    const [_isDetailsLoading, setIsDetailsLoading] = useState(false);
     const [detailsError, setDetailsError] = useState<string | null>(null);
 
     const fetchVendorDetails = async (vendor: AllVendor) => {
@@ -245,62 +247,87 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
         setVendorUserDetails(null);
         setSelectedVendor(vendor);
         setDetailsError(null);
+        setModalProductCount(0);
+
+        // Optional: Track click in background just like VendorCard
+        api.post("/track-vendor-click/", { vendor_id: vendor.id, admin_view: true }).catch(() => { });
 
         try {
             const targetUserId = vendor.user_id || vendor.user_info?.id;
-            
+
             if (!targetUserId) {
-                throw new Error("User ID is missing.");
+                throw new Error("User ID is missing from the vendor object.");
             }
 
-            const vendorPromise = api.get(`/vendor/${vendor.id}/`);
-            const userPromise = api.get(`/users/${targetUserId}/`);
+            const [vendorResp, userResp] = await Promise.all([
+                api.get(`/vendor/${vendor.id}/`),
+                api.get(`/users/${targetUserId}/`)
+            ]);
 
-            const [vendorResp, userResp] = await Promise.all([vendorPromise, userPromise]);
+            setDetailedVendor(vendorResp.data);
+            setVendorUserDetails(userResp.data);
 
-            const fetchedVendorDetails = vendorResp.data || null;
-            if (fetchedVendorDetails) {
-                setDetailedVendor({
-                    ...fetchedVendorDetails,
-                    product_count: fetchedVendorDetails.product_count ?? vendor.product_count ?? 0
-                });
-            } else {
-                setDetailedVendor(null);
+            // Fetch real product count from products API
+            try {
+                const prodResp = await api.get(`/products/?user=${targetUserId}&page=1`);
+                setModalProductCount(prodResp.data?.count ?? 0);
+            } catch {
+                // fallback to vendor row's product_count if available
+                setModalProductCount(vendor.product_count ?? 0);
             }
 
-            if (userResp && userResp.data) {
-                setVendorUserDetails(userResp.data as VendorUser);
-            }
-            setModalStep('details');
-        } catch (err) {
+            setModalStep("details");
+
+        } catch (err: any) {
             console.error('Failed to load vendor details', err);
-            setDetailsError('Failed to load complete vendor and user details.');
+            setDetailsError(err.message === "User ID is missing from the vendor object."
+                ? err.message
+                : "Unable to load complete vendor and user details. Please try again.");
             setModalStep('error');
         } finally {
             setIsDetailsLoading(false);
         }
     };
-    
+
     const closeModal = () => {
-        setIsModalOpen(false); 
-        setDetailedVendor(null); 
+        setIsModalOpen(false);
+        setDetailedVendor(null);
         setVendorUserDetails(null);
         setSelectedVendor(null);
+        setModalProductCount(0);
     };
 
     const handleStatusToggle = () => {
         const newStatus = statusFilter === 'all' ? 'pending' : statusFilter === 'pending' ? 'approved' : 'all';
         setStatusFilter(newStatus);
     };
-    
+
     const getStatusLabel = () => {
         if (statusFilter === 'pending') return 'Pending Only';
         if (statusFilter === 'approved') return 'Approved Only';
         return 'Approval Status';
     };
-    
+
     const StatusIcon = statusFilter === 'approved' ? Check : statusFilter === 'pending' ? Clock : ChevronDown;
-    
+
+    // Resolve profile image URL safely (handles full URLs, absolute paths, and relative paths)
+    const resolveProfileSrc = (profilePath?: string | null) => {
+        if (!profilePath) return '/default-profile.png';
+        if (profilePath.startsWith('http')) return profilePath;
+        if (profilePath.startsWith('/')) return `https://api.mhebazar.in${profilePath}`;
+        return `https://api.mhebazar.in/${profilePath}`;
+    };
+
+    // Image source used in the modal (prefer fetched user profile, fall back to selected row)
+    const modalProfilePath = vendorUserDetails?.profile_photo ?? detailedVendor?.user_info?.profile_photo ?? selectedVendor?.user_info?.profile_photo ?? null;
+    const modalImageSrc = resolveProfileSrc(modalProfilePath);
+
+    // Cover image: use first user_banner image from the fetched user profile (same as vendor page)
+    const modalCoverBanners = vendorUserDetails?.user_banner ?? [];
+    const modalCoverSrc = modalCoverBanners.length > 0
+        ? resolveProfileSrc(modalCoverBanners[0].image)
+        : null;
+
     if (isLoading) {
         return (
             <div className='flex justify-center items-center h-48 bg-white rounded-xl shadow-lg'>
@@ -309,7 +336,6 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
             </div>
         );
     }
-
     return (
         <div className="bg-white border border-gray-200 rounded-xl shadow-2xl">
             <div className="overflow-x-auto">
@@ -344,11 +370,12 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                 </table>
             </div>
 
+
             {/* Details Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-                        
+
                         <div className="bg-[#5CA131] p-4 flex justify-between items-center shrink-0">
                             <h3 className="text-white font-semibold text-lg">
                                 {modalStep === 'details' ? 'Vendor Profile & User Info' : 'Loading Details'}
@@ -357,9 +384,20 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                                 {'×'}
                             </button>
                         </div>
-                        
+
+                        {/* Cover banner */}
+                        <div className="w-full h-40 sm:h-48 bg-gray-100 relative">
+                            {modalCoverSrc ? (
+                                <Image src={modalCoverSrc} alt={`${detailedVendor?.brand || 'Vendor'} Cover`} fill className="object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-[#5CA131]/20 to-[#5CA131]/5">
+                                    <span className="text-[#5CA131]/40 text-sm">No cover image</span>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="p-6 overflow-y-auto">
-                            {modalStep === 'loading' && (
+                            {modalStep === 'loading' && !detailsError && (
                                 <div className="flex flex-col items-center justify-center py-8">
                                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5CA131]"></div>
                                 </div>
@@ -378,14 +416,7 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                                 <div className="space-y-6">
                                     <div className="flex flex-col items-center">
                                         <div className="w-20 h-20 rounded-lg overflow-hidden mb-2">
-                                            {/* ✅ EXACT MATCH: Uses Next.js Image component pulling from selectedVendor.user_info */}
-                                            <Image 
-                                                src={selectedVendor?.user_info?.profile_photo || "/default-profile.png"} 
-                                                alt={`${detailedVendor.brand} Logo`} 
-                                                width={80} 
-                                                height={80} 
-                                                className="object-contain" 
-                                            />
+                                            <Image src={modalImageSrc} alt={`${detailedVendor?.brand || 'Vendor'} Logo`} width={80} height={80} className="object-contain" />
                                         </div>
                                         <h4 className="text-xl font-bold text-gray-900">{detailedVendor.brand}</h4>
                                         <span className={`mt-1 text-xs font-semibold px-2.5 py-1 rounded-full ${detailedVendor.is_approved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -421,6 +452,18 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                                         </table>
                                     </div>
 
+                                        {/* USER DESCRIPTION */}
+                                        <div>
+                                            <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1"> Description</h5>
+                                            <div className="bg-gray-50 p-3 rounded-md border border-gray-100 text-sm text-gray-700 max-h-36 overflow-y-auto whitespace-pre-wrap">
+                                                {vendorUserDetails.description ? (
+                                                    <p className="leading-relaxed">{vendorUserDetails.description}</p>
+                                                ) : (
+                                                    <p className="text-gray-400">No description provided.</p>
+                                                )}
+                                            </div>
+                                        </div>
+
                                     <div>
                                         <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1">Vendor Information</h5>
                                         <table className="w-full text-sm text-left border-collapse">
@@ -447,12 +490,12 @@ export default function AllVendorsTable({ vendors, onToggleApproval, isLoading, 
                                                 </tr>
                                                 <tr className="border-b border-gray-100">
                                                     <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Products</th>
-                                                    <td className="py-2 text-gray-800">{detailedVendor.product_count || selectedVendor?.product_count || 0} items listed</td>
+                                                    <td className="py-2 text-gray-800">{modalProductCount} items listed</td>
                                                 </tr>
                                                 <tr>
                                                     <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Address</th>
                                                     <td className="py-2 text-gray-800">
-                                                        {detailedVendor.company_address || 'N/A'} 
+                                                        {detailedVendor.company_address || 'N/A'}
                                                         {detailedVendor.pcode && ` (Pin: ${detailedVendor.pcode})`}
                                                     </td>
                                                 </tr>

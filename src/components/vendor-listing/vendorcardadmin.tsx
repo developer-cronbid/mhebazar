@@ -45,6 +45,8 @@ type VendorUser = {
   date_joined: string;
   is_active: boolean;
   description?: string;
+  profile_photo?: string | null;
+  user_banner?: { id: number; image: string }[];
 };
 
 type UserProfile = {
@@ -76,7 +78,8 @@ export default function VendorCard({ vendor }: Props) {
   
   // States for View Details (Admin)
   const [vendorDetails, setVendorDetails] = useState<DetailedVendor | null>(null); 
-  const [vendorUserDetails, setVendorUserDetails] = useState<VendorUser | null>(null); 
+  const [vendorUserDetails, setVendorUserDetails] = useState<VendorUser | null>(null);
+  const [modalProductCount, setModalProductCount] = useState<number>(0);
   
   const [formData, setFormData] = useState({
     first_name: "",
@@ -89,6 +92,14 @@ export default function VendorCard({ vendor }: Props) {
   useEffect(() => {
     setIsAdminPath(window.location.pathname.startsWith("/admin/"));
   }, []);
+
+  // Resolve media URL (handles full urls, absolute paths and relative paths)
+  const resolveProfileSrc = (path?: string | null) => {
+    if (!path) return "/default-profile.png";
+    if (path.startsWith("http")) return path;
+    if (path.startsWith("/")) return `https://api.mhebazar.in${path}`;
+    return `https://api.mhebazar.in/${path}`;
+  };
 
   const vendorSlug = createSlug(vendor.brand);
   const href = isAdminPath
@@ -110,19 +121,18 @@ export default function VendorCard({ vendor }: Props) {
     setIsModalOpen(true);
     setModalStep("loading");
     setError("");
+    setModalProductCount(0);
 
     // Track click in background
     api.post("/track-vendor-click/", { vendor_id: vendor.id, admin_view: true }).catch(() => {});
 
     try {
-      // ✅ SAFELY EXTRACT USER ID (Fallback to user_info.id if user_id is missing)
       const targetUserId = vendor.user_id || vendor.user_info?.id;
 
       if (!targetUserId) {
         throw new Error("User ID is missing from the vendor object.");
       }
 
-      // Fetch both vendor details AND the associated user details in parallel
       const [vendorRes, userRes] = await Promise.all([
         api.get(`/vendor/${vendor.id}/`),
         api.get(`/users/${targetUserId}/`) 
@@ -130,10 +140,18 @@ export default function VendorCard({ vendor }: Props) {
 
       setVendorDetails(vendorRes.data);
       setVendorUserDetails(userRes.data);
+
+      // Fetch real product count
+      try {
+        const prodResp = await api.get(`/products/?user=${targetUserId}&page=1`);
+        setModalProductCount(prodResp.data?.count ?? 0);
+      } catch {
+        setModalProductCount(vendor.product_count ?? 0);
+      }
+
       setModalStep("details");
     } catch (err: any) {
       console.error("Failed to fetch details:", err);
-      // More descriptive error for debugging
       setError(err.message === "User ID is missing from the vendor object." 
         ? err.message 
         : "Unable to load complete vendor and user details. Please try again.");
@@ -226,7 +244,7 @@ export default function VendorCard({ vendor }: Props) {
 
         <div className="relative w-28 h-28 my-4 rounded-xl flex items-center justify-center overflow-hidden">
           <Image
-            src={vendor.user_info?.profile_photo || "/placeholder-logo.png"}
+            src={resolveProfileSrc(vendor.user_info?.profile_photo ?? null)}
             alt={`${vendor.brand} Logo`}
             width={112}
             height={112}
@@ -272,6 +290,23 @@ export default function VendorCard({ vendor }: Props) {
               </button>
             </div>
 
+            {/* Cover banner: use user_banner from fetched user profile (same source as vendor page) */}
+            <div className="w-full h-40 sm:h-48 bg-gray-100 relative">
+              {(() => {
+                const banners = vendorUserDetails?.user_banner ?? [];
+                const coverSrc = banners.length > 0
+                  ? resolveProfileSrc(banners[0].image)
+                  : null;
+                return coverSrc ? (
+                  <Image src={coverSrc} alt={`${vendorDetails?.brand || vendor.brand} Cover`} fill className="object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-r from-[#5CA131]/20 to-[#5CA131]/5">
+                    <span className="text-[#5CA131]/40 text-sm">No cover image</span>
+                  </div>
+                );
+              })()}
+            </div>
+
             <div className="p-6 overflow-y-auto">
               {modalStep === "loading" && !error && (
                 <div className="flex flex-col items-center justify-center py-8">
@@ -293,7 +328,7 @@ export default function VendorCard({ vendor }: Props) {
                 <div className="space-y-6">
                   <div className="flex flex-col items-center">
                     <div className="w-20 h-20 rounded-lg overflow-hidden mb-2">
-                      <Image src={vendor.user_info?.profile_photo || "/placeholder-logo.png"} alt={`${vendorDetails.brand} Logo`} width={80} height={80} className="object-contain" />
+                      <Image src={resolveProfileSrc(vendor.user_info?.profile_photo ?? null)} alt={`${vendorDetails.brand} Logo`} width={80} height={80} className="object-contain" />
                     </div>
                     <h4 className="text-xl font-bold text-gray-900">{vendorDetails.brand}</h4>
                     <span className={`mt-1 text-xs font-semibold px-2.5 py-1 rounded-full ${vendorDetails.is_approved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -330,6 +365,18 @@ export default function VendorCard({ vendor }: Props) {
                     </table>
                   </div>
 
+                  {/* USER DESCRIPTION */}
+                  <div>
+                    <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1"> Description</h5>
+                    <div className="bg-gray-50 p-3 rounded-md border border-gray-100 text-sm text-gray-700 max-h-36 overflow-y-auto whitespace-pre-wrap">
+                      {vendorUserDetails.description ? (
+                        <p className="leading-relaxed">{vendorUserDetails.description}</p>
+                      ) : (
+                        <p className="text-gray-400">No description provided.</p>
+                      )}
+                    </div>
+                  </div>
+
                   {/* VENDOR DETAILS TABLE */}
                   <div>
                     <h5 className="text-sm font-bold text-gray-900 mb-2 border-b pb-1">Vendor Information</h5>
@@ -357,7 +404,7 @@ export default function VendorCard({ vendor }: Props) {
                         </tr>
                         <tr className="border-b border-gray-100">
                           <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Products</th>
-                          <td className="py-2 text-gray-800">{vendorDetails.product_count ?? vendor.product_count ?? 0} items listed</td>
+                          <td className="py-2 text-gray-800">{modalProductCount} items listed</td>
                         </tr>
                         <tr>
                           <th className="py-2 text-gray-500 font-medium w-1/3 align-top">Address</th>
