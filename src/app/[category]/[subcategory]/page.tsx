@@ -264,8 +264,9 @@ export default function SubCategoryPage({
 
     const isLoading = isContextLoading || isProductsLoading;
 
+    // Handle 404s (Commented out to show fallback products instead)
     if (!isContextLoading && !context?.category && !contextError && !context?.errorMsg) {
-        notFound();
+        // notFound();
     }
 
     const validCategoryName = context?.category || null;
@@ -371,7 +372,7 @@ export default function SubCategoryPage({
         );
     }
 
-    const errorToDisplay = contextError?.message || context?.errorMsg || productsError?.message;
+    const errorToDisplay = contextError?.message || (context?.errorMsg && !context?.errorMsg.includes("not found") ? context.errorMsg : null) || productsError?.message;
     if (errorToDisplay) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] text-center">

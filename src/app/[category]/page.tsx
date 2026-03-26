@@ -319,9 +319,9 @@ export default function CategoryOrTypePage({
 
     const isLoading = isContextLoading || isProductsLoading;
 
-    // Handle 404s
+    // Handle 404s (Commented out to show fallback products instead)
     if (!isContextLoading && context?.type === 'invalid' && !contextError && !context?.errorMsg) {
-        notFound();
+        // notFound();
     }
 
 
@@ -431,7 +431,7 @@ export default function CategoryOrTypePage({
         );
     }
 
-    const errorToDisplay = contextError?.message || context?.errorMsg || productsError?.message;
+    const errorToDisplay = contextError?.message || (context?.errorMsg && !context?.errorMsg.includes("not found") ? context.errorMsg : null) || productsError?.message;
     if (errorToDisplay) {
         return (
             <div className="text-center p-8 min-h-[50vh] text-red-600">
