@@ -97,15 +97,17 @@ export default function ProductDetails() {
                 </Badge>
               </div>
             </div>
-            <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="gap-2">
+                <Button  variant="outline" className="gap-2">
                   <Pencil className="h-4 w-4" />
                   Edit Product
                 </Button>
               </SheetTrigger>
-              <SheetContent>
-                <ProductForm product={product} />
+              <SheetContent className="flex flex-col h-full p-0 sm:max-w-xl">
+                <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
+                  <ProductForm product={product} />
+                </div>
               </SheetContent>
             </Sheet>
           </div>

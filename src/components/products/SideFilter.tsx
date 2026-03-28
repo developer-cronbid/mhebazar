@@ -2,10 +2,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, JSX } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, ChevronUp, Funnel } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
+import { getManufacturers } from "@/lib/product-api";
 import categoriesData from "@/data/categories.json";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -73,8 +75,6 @@ const SideFilter = ({
   showManufacturerFilter = true,
 }: SideFilterProps): JSX.Element => {
   const [search, setSearch] = useState<string>("");
-  const [manufacturers, setManufacturers] = useState<string[]>([]);
-  const [isLoadingManufacturers, setIsLoadingManufacturers] = useState<boolean>(true);
   const pathname = usePathname();
 
   const categories: Category[] = categoriesData;
@@ -90,24 +90,16 @@ const SideFilter = ({
     setLocalMaxPrice(maxPrice);
   }, [minPrice, maxPrice]);
 
-  const fetchManufacturers = useCallback(async () => {
-    setIsLoadingManufacturers(true);
-    try {
-      const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/");
-      const uniqueManufacturers = Array.from(new Set(response.data.results.map(item => item.manufacturer)));
-      setManufacturers(uniqueManufacturers.filter(Boolean) as string[]);
-    } catch (err) {
-      console.error("[SideFilter] Failed to fetch manufacturers:", err);
-    } finally {
-      setIsLoadingManufacturers(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (showManufacturerFilter) {
-      fetchManufacturers();
-    }
-  }, [fetchManufacturers, showManufacturerFilter]);
+  // --- React Query for Manufacturers ---
+  const { 
+    data: manufacturers = [], 
+    isLoading: isLoadingManufacturers 
+  } = useQuery({
+    queryKey: ['manufacturers'],
+    queryFn: getManufacturers,
+    enabled: showManufacturerFilter,
+    staleTime: 10 * 60 * 1000, // Manufacturers don't change often
+  });
 
   useEffect(() => {
     if (categories.length > 0 && pathname) {

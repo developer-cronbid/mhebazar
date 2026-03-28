@@ -4,7 +4,11 @@
 import React, { useState } from "react";
 import { ChevronDown, List, Menu, X } from "lucide-react";
 import { ProductCardContainer } from "@/components/elements/Product";
-import SideFilter from "./SideFilter";
+import dynamic from "next/dynamic";
+const SideFilter = dynamic(() => import("./SideFilter"), {
+  loading: () => <div className="w-64 h-screen bg-gray-100 animate-pulse" />,
+  ssr: false, // Filters are purely client-side interactive
+});
 import Image from "next/image";
 import { Toaster, toast } from "sonner";
 import QuoteForm from "../forms/enquiryForm/quotesForm";
@@ -41,7 +45,7 @@ export interface Product {
   currency: string;
   direct_sale: boolean;
   category_name: string;
-  subcategory_name: string;
+  subcategory_name: string | null;
   is_active: boolean;
   hide_price: boolean;
   stock_quantity: number;
@@ -50,7 +54,7 @@ export interface Product {
   category_id: number | null;
   model: string | null;
   user_name: string;
-  created_at: string | null; // Added created_at to interface
+  created_at: string | null;
 }
 
 interface ProductGridProps {
@@ -58,6 +62,7 @@ interface ProductGridProps {
   viewMode?: "grid" | "list";
   noProductsMessage: string | null;
   pageUrlType: string;
+  isInitialPage?: boolean;
 }
 
 function ProductGrid({
@@ -65,6 +70,7 @@ function ProductGrid({
   viewMode = "grid",
   noProductsMessage,
   pageUrlType,
+  isInitialPage = true,
 }: ProductGridProps) {
   const router = useRouter();
   const { addToCart, isProductInCart, user } = useUser();
@@ -131,7 +137,7 @@ function ProductGrid({
           <p className="text-gray-400 text-sm italic mt-1">No exact matches found. Showing top picks from MHE Bazar.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6">
-          {fallbackProducts.map((product: Product) => (
+          {fallbackProducts.map((product: Product, index: number) => (
             <ProductCardContainer
               key={product.id}
               id={parseInt(product.id, 10)}
@@ -151,6 +157,7 @@ function ProductGrid({
               manufacturer={product.manufacturer}
               user_name={product.user_name}
               created_at={product.created_at}
+              priority={isInitialPage && index < 2}
             />
           ))}
         </div>
@@ -202,7 +209,7 @@ function ProductGrid({
   if (viewMode === "list") {
     return (
       <div className="space-y-4 md:space-y-6">
-        {products.map((product: Product) => (
+        {products.map((product: Product, index: number) => (
           <div
             key={product.id}
             className={`group bg-white rounded-xl shadow-sm border-2 border-gray-100 hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-green-50/30 transition-all duration-300 overflow-hidden backdrop-blur-sm ${(!product.is_active || (product.direct_sale && product.stock_quantity === 0))
@@ -220,6 +227,7 @@ function ProductGrid({
                   height={300}
                   className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-300"
                   quality={90}
+                  priority={isInitialPage && index < 2}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </div>
@@ -316,7 +324,7 @@ function ProductGrid({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8 p-2 sm:p-4 md:p-6">
-      {products.map((product: Product) => (
+      {products.map((product: Product, index: number) => (
         // console.log(product),
         <ProductCardContainer
           key={product.id}
@@ -337,6 +345,7 @@ function ProductGrid({
           manufacturer={product.manufacturer}
           user_name={product.user_name}
           created_at={product.created_at}
+          priority={isInitialPage && index < 2}
         />
       ))}
     </div>
@@ -568,7 +577,7 @@ export default function ProductListing({
 
           {/* Products Grid and Pagination */}
           <div className="p-4 sm:p-6 lg:p-8">
-            <ProductGrid products={products} viewMode={currentView} noProductsMessage={noProductsMessage} pageUrlType={pageUrlType} />
+            <ProductGrid products={products} viewMode={currentView} noProductsMessage={noProductsMessage} pageUrlType={pageUrlType} isInitialPage={currentPage === 1} />
 
             {totalPages > 1 && (
               <div className="mt-8 sm:mt-12 flex justify-center">

@@ -79,6 +79,7 @@ interface ProductCardDisplayProps {
   productData: Record<string, unknown>;
   productType: string;
   pageUrlType: string;
+  priority?: boolean;
 }
 
 // Custom Image component with an error handler to show a fallback
@@ -91,6 +92,7 @@ const FallbackImage = ({
   fallbackSrc,
   sizes,
   quality,
+  priority,
 }: {
   src: string | null | undefined;
   alt: string;
@@ -100,6 +102,7 @@ const FallbackImage = ({
   fallbackSrc?: string | null;
   sizes?: string;
   quality?: number;
+  priority?: boolean;
 }) => {
   const [imgSrc, setImgSrc] = useState<string>(src || "/placeholder-image.png");
   const [error, setError] = useState(false);
@@ -129,6 +132,7 @@ const FallbackImage = ({
       className={className}
       quality={quality}
       sizes={sizes}
+      priority={priority}
       unoptimized={
         imgSrc?.startsWith("/placeholder-image.png") || imgSrc === fallbackSrc
       }
@@ -164,14 +168,15 @@ const ProductCard = ({
   productData,
   productType,
   pageUrlType,
+  priority = false,
 }: ProductCardDisplayProps) => {
   const isAvailable = is_active && (!directSale || stock_quantity > 0);
   const isPurchasable = is_active && (!directSale || stock_quantity > 0);
 
   // ✅ Slug: Use the perfect slugify function
-  const cleanTitleForSlug = `${(productData.user_name || "").replace("_", " ")} ${
+  const cleanTitleForSlug = `${(String(productData.user_name || "")).replace("_", " ")} ${
     title || ""
-  } ${productData.model || ""}`.trim();
+  } ${String(productData.model || "")}`.trim();
   const productSlug = slugify(cleanTitleForSlug);
   const productDetailUrl = `/product/${productSlug}-${id}`; // Use hyphen to separate slug and ID
 
@@ -234,9 +239,9 @@ const ProductCard = ({
   };
   
   // ✅ FIX: Clean the displayed title, allowing all requested punctuation for UI presentation
-  const displayTitle = `${(productData.user_name || "").replace("_", " ")} ${
+  const displayTitle = `${(String(productData.user_name || "")).replace("_", " ")} ${
     title || ""
-  } ${productData.model || ""}`
+  } ${String(productData.model || "")}`
     // Allow letters, numbers, spaces, and all requested punctuation marks.
     .replace(/[^a-zA-Z0-9 \-\.\(\)/\\*?,!@#$^&%]/g, "") 
     .replace(/\s+/g, " ")
@@ -258,6 +263,7 @@ const ProductCard = ({
             height={224}
             className="object-contain w-full h-full transition-transform duration-300 hover:scale-110"
             quality={85}
+            priority={priority}
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
             fallbackSrc={categoryFallbackImage}
           />
@@ -314,10 +320,11 @@ const ProductCard = ({
               }
 
               // CASE 2: Handle all other badge types.
+              const badgeStyle = badgeStyles[type as keyof typeof badgeStyles] || "default-badge-style";
               return (
                 <Badge
                   key={index}
-                  className={badgeStyles[type] || "default-badge-style"}
+                  className={badgeStyle}
                 >
                   {/* Capitalize the first letter for better display */}
                   {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -507,6 +514,7 @@ interface ProductCardContainerProps {
   manufacturer: string | null;
   user_name: string | null;
   created_at: string | null;
+  priority?: boolean;
 }
 
 interface ApiProductData {
@@ -559,6 +567,7 @@ export const ProductCardContainer = ({
   manufacturer,
   user_name,
   created_at, // Add created_at to the destructured props
+  priority = false,
 }: ProductCardContainerProps) => {
   const router = useRouter();
   const userContext = useUser();
@@ -598,6 +607,7 @@ export const ProductCardContainer = ({
     manufacturer,
     user_name,
     created_at,
+    priority,
   };
 
   const handleAddToCart = useCallback(
