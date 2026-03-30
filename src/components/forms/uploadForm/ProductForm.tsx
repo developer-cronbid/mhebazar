@@ -215,38 +215,33 @@ export default function ProductForm({ product, onSuccess, defaultType,isVendor =
 useEffect(() => {
   const fetchVendorBrand = async () => {
     try {
+      // Only fetch default brand for NEW products
       if (!user?.id || product) return;
 
       setVendorLoading(true);
 
-      const res = await api.get('/vendor/approved/');
-      const vendors = res.data?.results || [];
+      // Fetch the specific logged-in vendor's details directly
+      const res = await api.get('/vendor/dashboard/');
+      const vendorDetails = res.data?.vendor_details;
 
-      const myVendor = vendors.find(
-        (v: any) => v.user_info?.id === user.id
-      );
-
-      if (myVendor) {
+      if (vendorDetails) {
+        // Prioritize brand, fallback to company name
         const manufacturer =
-          myVendor.brand?.trim() || myVendor.company_name?.trim();
+          vendorDetails.brand?.trim() || vendorDetails.company_name?.trim();
 
         if (manufacturer) {
           setValue('manufacturer', manufacturer, { shouldDirty: false });
         }
       }
     } catch (err) {
-      console.error('Failed to load vendor brand', err);
+      console.error('Failed to load vendor brand from DB', err);
     } finally {
       setVendorLoading(false);
     }
   };
 
   fetchVendorBrand();
-}, [user, product, setValue]);
-
-
-
-  // 徴 NEW EFFECT: Set the user ID for NEW products from context
+}, [user, product, setValue]);  // 徴 NEW EFFECT: Set the user ID for NEW products from context
   useEffect(() => {
     if (!product && user?.id) {
       // Set the user ID for creation
@@ -1062,7 +1057,7 @@ useEffect(() => {
                     {...register('manufacturer')}
                     placeholder="Vendor name"
                     className="h-10 border-gray-300 text-sm"
-                      readOnly
+                      
                   />
                 </div>
 
