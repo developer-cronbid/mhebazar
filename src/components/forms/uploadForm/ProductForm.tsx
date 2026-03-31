@@ -248,7 +248,7 @@ useEffect(() => {
       setValue("user", String(user.id));
     }
   }, [user, product, setValue]);
-
+// 
   // ✅ Meta Title/Description: Pre-fill logic based on productName
   useEffect(() => {
     if (!product || !product.meta_title) {
