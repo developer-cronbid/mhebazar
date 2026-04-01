@@ -38,6 +38,24 @@ const containsHTML = (text?: string) => {
   return /<\/?[a-z][\s\S]*>/i.test(text)
 }
 
+// Helper to safely parse JSON
+const parseJsonSafe = (data: any, fallback: any = {}) => {
+  if (!data) return fallback;
+  if (typeof data === 'string') {
+    try { 
+      let parsed = JSON.parse(data); 
+      // Handle potential double-stringification by the backend
+      if (typeof parsed === 'string') {
+         try { parsed = JSON.parse(parsed); } catch(e) {}
+      }
+      return parsed;
+    } catch(e) { 
+      return fallback; 
+    }
+  }
+  return data;
+};
+
 type FieldOption = {
   label: string
   value: string
@@ -100,6 +118,7 @@ const TYPE_OPTIONS = [
   { value: 'used', label: 'Used' },
   { value: 'rental', label: 'Rental' },
   { value: 'attachments', label: 'Attachments' },
+  
 ]
 
 // --- CONSTANTS FOR IMAGE VALIDATION ---
@@ -153,7 +172,7 @@ export default function ProductForm({ product, onSuccess, defaultType,isVendor =
         manufacturer: product.manufacturer,
         model: product.model,
         price: product.price,
-        type: product ? product.type : [],
+        type: product ? parseJsonSafe(product.type, []) : [],
 
 
 
@@ -161,9 +180,7 @@ export default function ProductForm({ product, onSuccess, defaultType,isVendor =
         hide_price: product.hide_price,
         online_payment: product.online_payment,
         stock_quantity: product.stock_quantity,
-        product_details: typeof product.product_details === 'string'
-          ? JSON.parse(product.product_details || '{}')
-          : product.product_details || {},
+        product_details: product ? parseJsonSafe(product.product_details, {}) : {},
       }
       : {
         // Default values for new product
@@ -187,11 +204,19 @@ export default function ProductForm({ product, onSuccess, defaultType,isVendor =
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [dynamicFields, setDynamicFields] = useState<ProductDetailField[]>([])
   const [dynamicValues, setDynamicValues] = useState<Record<string, string>>(() => {
-    if (product && typeof product.product_details === 'string') {
-      return JSON.parse(product.product_details || '{}');
-    }
-    return product?.product_details || {};
+    return product ? parseJsonSafe(product.product_details, {}) : {};
   });
+
+  useEffect(() => {
+    if (product) {
+       console.log("PRODUCT DETAILS FROM BACKEND:", product.product_details);
+       const parsed = parseJsonSafe(product.product_details, {});
+       console.log("PARSED VALUES:", parsed);
+       setDynamicValues(parsed);
+    } else {
+       setDynamicValues({});
+    }
+  }, [product]);
 
   const selectedCategoryId = watch('category')
   const selectedSubcategoryId = watch('subcategory')
@@ -215,8 +240,9 @@ export default function ProductForm({ product, onSuccess, defaultType,isVendor =
 useEffect(() => {
   const fetchVendorBrand = async () => {
     try {
-      // Only fetch default brand for NEW products
-      if (!user?.id || product) return;
+      if (!user?.id) return;
+      // If editing an existing product and it already has a manufacturer, don't overwrite
+      if (product && product.manufacturer) return;
 
       setVendorLoading(true);
 
@@ -323,7 +349,7 @@ useEffect(() => {
 
     // Set dynamic fields
     if (subs.length === 0) {
-      const catDetails = selectedCat.product_details || []
+      const catDetails = parseJsonSafe(selectedCat.product_details, []);
       setDynamicFields(catDetails)
       setWarning(catDetails.length > 0 ? '' : 'No product details defined in this category.')
     } else if (!subToSet) {
@@ -349,7 +375,7 @@ useEffect(() => {
     const sub = subcategories.find((s) => String(s.id) === selectedSubcategoryId)
     if (!sub) return
 
-    const subDetails = sub.product_details || []
+    const subDetails = parseJsonSafe(sub.product_details, []);
     setDynamicFields(subDetails)
     setWarning(subDetails.length > 0 ? '' : 'No product details defined in this subcategory.')
   }, [selectedSubcategoryId, subcategories, selectedCategoryId, categories])
@@ -420,7 +446,7 @@ useEffect(() => {
     let productId: number | undefined;
 
     try {
-      const method = product ? 'patch' : 'post'; 
+      const method = product ? 'put' : 'post'; 
       const url = product ? `/products/${product.id}/` : '/products/';
       
       // 1. Save/Update Main Product Data (This also saves the NEW YouTube links in the backend via perform_create/update)
