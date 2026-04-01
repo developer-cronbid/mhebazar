@@ -102,9 +102,18 @@ export const PRODUCT_TYPE_CHOICES = ["new", "used", "rental", "attachments"];
 /**
  * Validates the route based on slug and sub-slug.
  */
+// Helper: convert a name to a URL-safe slug (must match SideFilter.tsx toSlug exactly)
+function nameToSlug(name: string): string {
+    let slug = name.toLowerCase();
+    slug = slug.replace(/\s*\((\w[\w-]*)\)/g, '-$1'); // "(Lead-Acid)" → "-Lead-Acid"
+    slug = slug.replace(/[^a-z0-9-]/g, '-');           // non-alphanumeric → hyphen
+    slug = slug.replace(/--+/g, '-');                   // collapse multiple hyphens
+    slug = slug.replace(/^-+|-+$/g, '');               // trim leading/trailing hyphens
+    return slug;
+}
+
 export async function getRouteContext(urlParamSlug: string, subcategoryParamSlug?: string): Promise<RouteContext> {
     const formattedParamName = urlParamSlug.replace(/-/g, ' ').split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    const formattedSubParamName = subcategoryParamSlug ? subcategoryParamSlug.replace(/-/g, ' ').split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : null;
 
     if (PRODUCT_TYPE_CHOICES.includes(urlParamSlug)) {
         if (subcategoryParamSlug) {
@@ -128,9 +137,12 @@ export async function getRouteContext(urlParamSlug: string, subcategoryParamSlug
         if (categories && categories.length > 0) {
             const category = categories[0];
 
-            if (formattedSubParamName) {
+            if (subcategoryParamSlug) {
+                // 🚨 FIX: Compare slugs instead of reconstructed names.
+                // e.g. "Electric (Lead-Acid) Forklift" → slug "electric-lead-acid-forklift"
+                // This correctly matches URL param "electric-lead-acid-forklift".
                 const subcategory = category.subcategories.find(
-                    sub => sub.name.toLowerCase() === formattedSubParamName.toLowerCase()
+                    sub => nameToSlug(sub.name) === subcategoryParamSlug
                 );
 
                 if (subcategory) {
