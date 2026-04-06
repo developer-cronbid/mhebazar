@@ -56,6 +56,44 @@ const parseJsonSafe = (data: any, fallback: any = {}) => {
   return data;
 };
 
+// ✅ UPGRADED: Ultimate Helper to convert Arrays, Objects, and Strings into clean multi-line text
+const normalizeProductDetails = (details: any) => {
+    const parsed = parseJsonSafe(details, {});
+    const cleaned: Record<string, string> = {};
+    
+    Object.keys(parsed).forEach(key => {
+        let val = parsed[key];
+        
+        // 1. Try to parse stringified JSON values inside the specific field
+        if (typeof val === 'string' && (val.trim().startsWith('[') || val.trim().startsWith('{'))) {
+            try {
+                val = JSON.parse(val);
+            } catch(e) {
+                // If it fails to parse, leave it as a string
+            }
+        }
+
+        // 2. Format the value perfectly based on what it is
+        if (Array.isArray(val)) {
+            // It's an Array: ["Item 1", "Item 2"] -> "Item 1\nItem 2"
+            cleaned[key] = val
+                .map(item => typeof item === 'object' ? JSON.stringify(item) : String(item))
+                .join('\n');
+                
+        } else if (val !== null && typeof val === 'object') {
+            // It's a Key-Value Object: {"Brand": "MHE", "Color": "Red"} -> "Brand: MHE\nColor: Red"
+            cleaned[key] = Object.entries(val)
+                .map(([k, v]) => `${k}: ${v}`)
+                .join('\n');
+                
+        } else {
+            // It's just a standard string, number, or boolean
+            cleaned[key] = String(val || '');
+        }
+    });
+    return cleaned;
+};
+
 type FieldOption = {
   label: string
   value: string
@@ -203,16 +241,17 @@ export default function ProductForm({ product, onSuccess, defaultType,isVendor =
   const [categories, setCategories] = useState<Category[]>([])
   const [subcategories, setSubcategories] = useState<Subcategory[]>([])
   const [dynamicFields, setDynamicFields] = useState<ProductDetailField[]>([])
-  const [dynamicValues, setDynamicValues] = useState<Record<string, string>>(() => {
-    return product ? parseJsonSafe(product.product_details, {}) : {};
-  });
+ const [dynamicValues, setDynamicValues] = useState<Record<string, string>>(() => {
+    // ✅ Call the function here
+    return product ? normalizeProductDetails(product.product_details) : {};
+  });;
 
   useEffect(() => {
     if (product) {
-       console.log("PRODUCT DETAILS FROM BACKEND:", product.product_details);
-       const parsed = parseJsonSafe(product.product_details, {});
-       console.log("PARSED VALUES:", parsed);
-       setDynamicValues(parsed);
+      //  console.log("PRODUCT DETAILS FROM BACKEND:", product.product_details);
+      //  const parsed = parseJsonSafe(product.product_details, {});
+      //  console.log("PARSED VALUES:", parsed);
+      setDynamicValues(normalizeProductDetails(product.product_details));
     } else {
        setDynamicValues({});
     }
@@ -346,18 +385,62 @@ useEffect(() => {
     // Set default/existing subcategory only if available
     setDefaultSubcategory(subToSet);
     if (subToSet) setValue('subcategory', subToSet);
+  }, [selectedCategoryId, categories, resetField, product, setValue])
 
-    // Set dynamic fields
-    if (subs.length === 0) {
-      const catDetails = parseJsonSafe(selectedCat.product_details, []);
+  // Dynamic Schema Inference Helper
+ // Dynamic Schema Inference Helper
+  const inferDynamicFieldsIfNeeded = (schemaDetails: any[], productData: any) => {
+    if (!productData || Object.keys(productData).length === 0) return schemaDetails;
+    
+    // 1. Create a copy of the existing category schema
+    const mergedSchema = [...schemaDetails];
+    
+    // 2. Keep track of field names we already have so we don't duplicate them
+    const existingFieldNames = new Set(schemaDetails.map((f: any) => f.name));
+    
+    // 3. Loop through all the actual data from the database
+    Object.keys(productData).forEach(key => {
+      // If the database has a key that isn't in our standard category schema, add it dynamically!
+      if (!existingFieldNames.has(key)) {
+        const val = productData[key];
+        mergedSchema.push({
+          name: key,
+          label: key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+          // Use textarea if it's long or has newlines
+          type: (typeof val === 'string' && (val.length > 100 || val.includes('\n'))) ? 'textarea' : 'text',
+          required: false // Extra mapped fields shouldn't block submission
+        });
+      }
+    });
+
+    return mergedSchema;
+  };
+
+  // Set dynamic fields for Category
+  useEffect(() => {
+    if (!selectedCategoryId) return;
+
+    const selectedCat = categories.find(c => String(c.id) === selectedCategoryId)
+    const subs = subcategories.length > 0 ? subcategories : (selectedCat?.subcategories || []);
+
+    if (subs.length === 0 && selectedCat) {
+      let catDetails = parseJsonSafe(selectedCat.product_details, []);
+      
+      // ✅ FIX: Magically map unmapped JSON key-value objects back to the form during Editing
+      if (product && product.product_details) {
+          const parsedProductData = parseJsonSafe(product.product_details, {});
+          catDetails = inferDynamicFieldsIfNeeded(catDetails, parsedProductData);
+      }
+
       setDynamicFields(catDetails)
       setWarning(catDetails.length > 0 ? '' : 'No product details defined in this category.')
-    } else if (!subToSet) {
+    } else if (!selectedSubcategoryId) {
       setDynamicFields([])
-      setWarning('Select a subcategory to load product details.')
+      if (subs.length > 0) {
+          setWarning('Select a subcategory to load product details.')
+      }
     }
-    // If a subcategory is selected, the next effect handles dynamic fields
-  }, [selectedCategoryId, categories, resetField, product, setValue])
+  }, [selectedCategoryId, categories, selectedSubcategoryId, subcategories, product])
 
   // Handle subcategory change (sets dynamic fields)
   useEffect(() => {
@@ -365,7 +448,14 @@ useEffect(() => {
         // Fallback to category-level details if no subcategory is selected and none exist
         const selectedCat = categories.find((cat) => String(cat.id) === selectedCategoryId)
         if (selectedCat && selectedCat.subcategories.length === 0) {
-            const catDetails = selectedCat.product_details || []
+            let catDetails = parseJsonSafe(selectedCat.product_details, [])
+            
+            // ✅ FIX: Magically map unmapped JSON
+            if (product && product.product_details) {
+                const parsedProductData = parseJsonSafe(product.product_details, {});
+                catDetails = inferDynamicFieldsIfNeeded(catDetails, parsedProductData);
+            }
+
             setDynamicFields(catDetails)
             setWarning(catDetails.length > 0 ? '' : 'No product details defined in this category.')
         }
@@ -375,10 +465,17 @@ useEffect(() => {
     const sub = subcategories.find((s) => String(s.id) === selectedSubcategoryId)
     if (!sub) return
 
-    const subDetails = parseJsonSafe(sub.product_details, []);
+    let subDetails = parseJsonSafe(sub.product_details, []);
+
+    // ✅ FIX: Magically map unmapped JSON
+    if (product && product.product_details) {
+        const parsedProductData = parseJsonSafe(product.product_details, {});
+        subDetails = inferDynamicFieldsIfNeeded(subDetails, parsedProductData);
+    }
+
     setDynamicFields(subDetails)
     setWarning(subDetails.length > 0 ? '' : 'No product details defined in this subcategory.')
-  }, [selectedSubcategoryId, subcategories, selectedCategoryId, categories])
+  }, [selectedSubcategoryId, subcategories, selectedCategoryId, categories, product])
 
   const handleDynamicValueChange = (fieldName: string, value: string) => {
     setDynamicValues(prev => ({
@@ -717,9 +814,14 @@ useEffect(() => {
           />
         )
       case 'textarea':
+        // ✅ FIX: Calculate lines based on '\n' to set dynamic height, and allow vertical resizing
+        const lineCount = (fieldValue || '').split('\n').length;
+        const dynamicMinHeight = Math.max(80, lineCount * 24); // roughly 24px height per line
+
         return (
           <Textarea
-            className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 min-h-[80px] text-sm resize-none"
+            className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm resize-y"
+            style={{ minHeight: `${dynamicMinHeight}px` }}
             placeholder={placeholder}
             value={fieldValue || ''}
             onChange={(e) => handleDynamicValueChange(field.name, e.target.value)}
