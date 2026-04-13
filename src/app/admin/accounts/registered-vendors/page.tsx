@@ -3,12 +3,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 // VendorCard is assumed to be present at this path
-import VendorCard from "@/components/vendor-listing/vendorcardadmin";
+import VendorCardadmin from "@/components/vendor-listing/vendorcardadmin";
 // AllVendor type is imported from the other component
 import AllVendorsTable, { AllVendor } from "@/components/vendor-listing/AllVendorsTable";
 import api from "@/lib/api";
-import { Loader2, AlertTriangle, Search, ChevronLeft, ChevronRight, CheckCircle, Clock, Users } from "lucide-react";
+import { Loader2, AlertTriangle, Search, ChevronLeft, ChevronRight, CheckCircle, Clock, Users, LayoutList } from "lucide-react";
 import { Calendar as CalendarIcon, X } from "lucide-react";
+import VendorProductsTab from "@/components/admin/VendorProductsTab";
 
 
 // Define the Vendor type to be compatible with both API structures.
@@ -73,7 +74,7 @@ const sortVendors = (vendors: Vendor[], field: string, direction: 'asc' | 'desc'
 export default function VendorsPage() {
   const PAGE_SIZE = 10;
 
-  const [activeTab, setActiveTab] = useState<"approved" | "all">("approved");
+  const [activeTab, setActiveTab] = useState<"approved" | "all" | "vendor-products">("approved");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -313,14 +314,16 @@ if (activeTab === "all" && (dateRange.start || dateRange.end)) {
 
   // --- Component Renders (unchanged) ---
 
-  const TabButton = ({ tabName, label }: { tabName: "approved" | "all", label: string }) => (
+  const TabButton = ({ tabName, label, icon: Icon }: { tabName: "approved" | "all" | "vendor-products", label: string, icon?: React.ElementType }) => (
     <button
       onClick={() => setActiveTab(tabName)}
-      className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 border-b-2 ${activeTab === tabName
+      className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-all duration-200 border-b-2 ${
+        activeTab === tabName
           ? "border-[#5CA131] text-[#5CA131] bg-white shadow-md"
           : "border-transparent text-gray-500 hover:text-[#5CA131] hover:border-gray-300"
-        }`}
+      }`}
     >
+      {Icon && <Icon className="w-4 h-4" />}
       {label}
     </button>
   );
@@ -363,12 +366,19 @@ if (activeTab === "all" && (dateRange.start || dateRange.end)) {
         <h1 className="text-3xl font-bold mb-8 text-gray-800">Vendor Management</h1>
 
         {/* Tab Toggle */}
-        <div className="flex space-x-4 border-b border-gray-200 mb-8">
+        <div className="flex space-x-2 border-b border-gray-200 mb-8 overflow-x-auto">
           <TabButton tabName="approved" label="Approved Vendors" />
           <TabButton tabName="all" label="All Vendors (Admin View)" />
+          <TabButton tabName="vendor-products" label="Vendor Products" icon={LayoutList} />
         </div>
 
-        {/* Search Input */}
+        {/* Vendor Products Tab — has its own search & filter inside */}
+        {activeTab === "vendor-products" && (
+          <VendorProductsTab />
+        )}
+
+        {/* Search Input – only shown for approved/all tabs */}
+        {activeTab !== "vendor-products" && (
         <div className="mb-6 flex items-center border border-gray-300 rounded-xl overflow-hidden shadow-sm focus-within:border-[#5CA131] focus-within:ring-1 focus-within:ring-[#5CA131]">
           <Search className="w-5 h-5 text-gray-400 ml-4" />
           <input
@@ -380,9 +390,10 @@ if (activeTab === "all" && (dateRange.start || dateRange.end)) {
             disabled={loading}
           />
         </div>
+        )}
         {/* Date Range Selector UI */}
 
-        {activeTab === "all" && (
+        {activeTab !== "vendor-products" && activeTab === "all" && (
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
             
             {/* Status Filtration Buttons */}
@@ -467,7 +478,8 @@ if (activeTab === "all" && (dateRange.start || dateRange.end)) {
         {/* </div> */}
 
 
-        {/* Content Area */}
+        {/* Content Area – hidden when Vendor Products tab is active */}
+        {activeTab !== "vendor-products" && (
         <div className="min-h-[400px]">
           {loading && displayedVendors.length === 0 && (
             <div className="flex justify-center items-center h-full pt-20">
@@ -493,7 +505,7 @@ if (activeTab === "all" && (dateRange.start || dateRange.end)) {
           {!loading && !error && displayedVendors.length > 0 && activeTab === "approved" && (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 justify-items-center">
               {displayedVendors.map(vendor => (
-                <VendorCard
+                <VendorCardadmin
                   key={vendor.id}
                   vendor={vendor}
                   // @ts-ignore: VendorCard doesn't need this prop in this tab
@@ -514,12 +526,14 @@ if (activeTab === "all" && (dateRange.start || dateRange.end)) {
               handleSortChange={handleSortChange}
               statusFilter={approvalFilter}          // ✅ PASS
               setStatusFilter={setApprovalFilter}
+              
             />
           )}
         </div>
+        )}
 
-        {/* Pagination Controls */}
-        {totalFilteredCount > 0 && !error && <PaginationControls />}
+        {/* Pagination Controls – hidden on vendor-products tab */}
+        {activeTab !== "vendor-products" && totalFilteredCount > 0 && !error && <PaginationControls />}
       </main>
     </div>
   );

@@ -615,8 +615,8 @@ const VendorProducts = () => {
                     </TableCell>
                     <TableCell className="flex items-center justify-center gap-2">
                       <div className="flex items-center justify-center space-x-2">
-                        {/* Approve Button */}
-                        {product.status !== 'approved' && (
+                         {/* Approve Button (Only if not already approved) */}
+                         {product.status !== 'approved' && (
                             <Button
                                 size="sm"
                                 className="bg-[#5CA131] hover:bg-green-700 text-white h-8 px-2"
@@ -746,7 +746,11 @@ const VendorProducts = () => {
 
           <div className="flex-1 overflow-y-auto">
             {/* Note: Ensure ProductForm can handle 'null' for add mode and triggers a re-fetch on save */}
-            <ProductForm product={selectedProduct} onSave={() => setIsSheetOpen(false)} />
+            <ProductForm
+              product={selectedProduct}
+              onSuccess={() => setIsSheetOpen(false)}
+              initialUserId={selectedVendorId !== 'all' ? selectedVendorId : undefined}
+            />
           </div>
         </SheetContent>
       </Sheet>
