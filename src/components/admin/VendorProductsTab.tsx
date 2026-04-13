@@ -69,15 +69,23 @@ const isApprovedStatus = (s: string | null | undefined): boolean => {
 const resolveImageSrc = (path?: string | null): string => {
   if (!path) return "/default-profile.png";
   if (path.startsWith("http")) return path;
-  if (path.startsWith("/")) return `https://api.mhebazar.in${path}`;
-  return `https://api.mhebazar.in/${path}`;
+  
+  const base = "https://api.mhebazar.in";
+  // Standardize: ensure path doesn't have duplicate media markers
+  const cleanPath = path.replace(/^\/media\//, "").replace(/^media\//, "").replace(/^\//, "");
+  
+  return `${base}/media/${cleanPath}`;
 };
 
 const getProductImageUrl = (img?: string): string => {
   if (!img) return "/no-product.jpg";
   if (img.startsWith("http")) return img;
-  if (img.startsWith("/")) return `https://api.mhebazar.in${img}`;
-  return `https://api.mhebazar.in/${img}`;
+
+  const base = "https://api.mhebazar.in";
+  // Standardize: ensure path doesn't have duplicate media markers
+  const cleanPath = img.replace(/^\/media\//, "").replace(/^media\//, "").replace(/^\//, "");
+
+  return `${base}/media/${cleanPath}`;
 };
 
 const isProductApproved = (p: VendorProduct) =>
