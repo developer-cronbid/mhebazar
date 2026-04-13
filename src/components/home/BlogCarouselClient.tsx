@@ -209,7 +209,7 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
                           />
                       </div>
                       <div className="absolute top-3 right-3">
-                        <Badge className="bg-[#5ca131] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">
+                        <Badge className="bg-[#f39c12] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">
                           {blog.blog_category_name || 'Blog'}
                         </Badge>
                       </div>
