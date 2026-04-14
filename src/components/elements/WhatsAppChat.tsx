@@ -9,6 +9,32 @@ const WhatsAppChat = () => {
   const whatsappLink =
     'https://api.whatsapp.com/send/?phone=917305950939&text=Hello+MHE+Bazar%21+I%27+d+like+to+know+more+about+your+Material+Handling+Equipment+%28MHE%29+solutions.+Could+you+please+assist+me%3F&type=phone_number&app_absent=0';
 
+  const handleWhatsAppClick = () => {
+    try {
+      let userId = localStorage.getItem('mhe_wa_uid');
+      if (!userId) {
+        // Generate a random stable unique ID including timestamp
+        userId = 'user_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+        localStorage.setItem('mhe_wa_uid', userId);
+      }
+
+      // Dynamically get the backend URL (works for localhost and AWS Live)
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mhebazar.in/api';
+      
+      // Fire and forget unique tracking hit to your stable Django API
+      fetch(`${API_BASE}/track-whatsapp/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      }).catch(err => console.error("WhatsApp tracking error", err));
+    } catch (error) {
+      console.error("Local storage error on track string", error);
+    }
+    // We let the native <a target="_blank"> navigate unhindered
+  };
+
   return (
     <div className="whatsapp-chat-container">
       {/* Floating WhatsApp Badge Button */}
@@ -73,6 +99,7 @@ const WhatsAppChat = () => {
             href={whatsappLink}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleWhatsAppClick}
             className="w-full flex items-center justify-center bg-[#25D366] text-white font-semibold py-2 rounded-full hover:bg-[#1DA851] transition duration-200 shadow"
           >
             <Image
