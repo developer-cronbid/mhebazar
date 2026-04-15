@@ -24,6 +24,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 
+import { Badge } from "@/components/ui/badge";
+
 import {
   Pagination,
   PaginationContent,
@@ -64,6 +66,22 @@ interface ProductGridProps {
   pageUrlType: string;
   isInitialPage?: boolean;
 }
+
+const badgeStyles = {
+  new: "border-green-400 bg-green-100 text-green-800",
+  used: "border-yellow-400 bg-yellow-100 text-yellow-800",
+  rental: "border-blue-400 bg-blue-100 text-blue-800",
+  attachments: "border-slate-400 bg-slate-100 text-slate-800",
+};
+
+const showNewBadge = (createdAt: string | null | undefined) => {
+  if (!createdAt) return false;
+  const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+  const productDate = new Date(createdAt);
+  const currentDate = new Date();
+  const differenceInMs = currentDate.getTime() - productDate.getTime();
+  return differenceInMs <= thirtyDaysInMs;
+};
 
 function ProductGrid({
   products,
@@ -235,7 +253,56 @@ function ProductGrid({
               {/* Content Section */}
               <div className="flex-1 p-4 sm:p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between min-h-[140px] sm:min-h-[128px] md:min-h-[144px] lg:min-h-[160px]">
                 {/* Product Info */}
-                <div className="flex-1 min-w-0 mb-4 sm:mb-0 sm:pr-6">
+                <div className="flex-1 min-w-0 mb-4 sm:mb-0 sm:pr-6 w-full">
+                  {/* Badges */}
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    {Array.isArray(product.type) &&
+                      product.type.map((type, index) => {
+                        // CASE 1: Handle the special logic for the 'new' badge.
+                        if (type === "new") {
+                          return (
+                            showNewBadge(product.created_at) && (
+                              <Badge
+                                key={index}
+                                className={badgeStyles.new || "default-new-badge"}
+                              >
+                                New
+                              </Badge>
+                            )
+                          );
+                        }
+
+                        // CASE 2: Handle all other badge types.
+                        const badgeStyle = badgeStyles[type as keyof typeof badgeStyles] || "default-badge-style";
+                        return (
+                          <Badge
+                            key={index}
+                            className={badgeStyle}
+                          >
+                            {/* Capitalize the first letter for better display */}
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </Badge>
+                        );
+                      })}
+                    
+                    {/* Availability badge for category 18 */}
+                    {product.category_id == 18 && (
+                      <Badge
+                        className={
+                          product.stock_quantity > 0
+                            ? "border-green-400 bg-green-100 text-green-800"
+                            : "border-red-400 bg-red-100 text-red-800"
+                        }
+                      >
+                        {product.is_active
+                          ? product.stock_quantity > 0
+                            ? `Available`
+                            : "Unavailable"
+                          : "Inactive"}
+                      </Badge>
+                    )}
+                  </div>
+                  
                   <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors duration-200">
                     {product.title}
                   </h3>
