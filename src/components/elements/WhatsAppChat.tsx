@@ -19,7 +19,7 @@ const WhatsAppChat = () => {
       }
 
       // Dynamically get the backend URL (works for localhost and AWS Live)
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.mhebazar.in/api';
+      const API_BASE = 'https://api.mhebazar.in/api';
       
       // Fire and forget unique tracking hit to your stable Django API
       fetch(`${API_BASE}/track-whatsapp/`, {
