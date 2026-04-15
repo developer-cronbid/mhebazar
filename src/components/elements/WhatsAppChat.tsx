@@ -1,13 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 const WhatsAppChat = () => {
   const [isOpen, setIsOpen] = useState(false);
+  // 1. New state to hold the total click count
+  const [clickCount, setClickCount] = useState(0);
 
   const whatsappLink =
     'https://api.whatsapp.com/send/?phone=917305950939&text=Hello+MHE+Bazar%21+I%27+d+like+to+know+more+about+your+Material+Handling+Equipment+%28MHE%29+solutions.+Could+you+please+assist+me%3F&type=phone_number&app_absent=0';
+
+  const API_BASE = 'https://api.mhebazar.in/api';
+
+  // 2. Fetch the initial count when the component loads
+useEffect(() => {
+    fetch(`${API_BASE}/track-whatsapp/`, { cache: 'no-store' }) // Forces fresh data
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.count !== undefined) {
+          setClickCount(data.count);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch WhatsApp count:", err));
+  }, []);
 
   const handleWhatsAppClick = () => {
     try {
@@ -18,9 +34,6 @@ const WhatsAppChat = () => {
         localStorage.setItem('mhe_wa_uid', userId);
       }
 
-      // Dynamically get the backend URL (works for localhost and AWS Live)
-      const API_BASE = 'https://api.mhebazar.in/api';
-      
       // Fire and forget unique tracking hit to your stable Django API
       fetch(`${API_BASE}/track-whatsapp/`, {
         method: 'POST',
@@ -28,7 +41,15 @@ const WhatsAppChat = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ userId }),
-      }).catch(err => console.error("WhatsApp tracking error", err));
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          // 3. Instantly update the count on the screen if the POST is successful
+          if (data.count !== undefined) {
+            setClickCount(data.count);
+          }
+        })
+        .catch((err) => console.error("WhatsApp tracking error", err));
     } catch (error) {
       console.error("Local storage error on track string", error);
     }
@@ -94,7 +115,7 @@ const WhatsAppChat = () => {
         </div>
 
         {/* Start Chat */}
-        <div className="bg-white px-4 py-3">
+        <div className="bg-white px-4 py-3 text-center">
           <a
             href={whatsappLink}
             target="_blank"
@@ -111,6 +132,13 @@ const WhatsAppChat = () => {
             />
             Start Chat
           </a>
+          
+          {/* 4. Display the dynamic count here */}
+          {clickCount > 0 && (
+            <p className="text-xs text-gray-500 mt-2">
+              Join {clickCount} others who have contacted us!
+            </p>
+          )}
         </div>
       </div>
     </div>
