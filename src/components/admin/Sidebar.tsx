@@ -20,34 +20,6 @@ const Sidebar = () => {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(true);
   const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
-  
-  // 1. Add State for the WhatsApp count
-  const [waCount, setWaCount] = useState<number | string>("...");
-
-  // 2. Fetch the data when the component mounts
- // 2. Fetch the data when the component mounts
-  useEffect(() => {
-    // Read the base URL from your environment, or fallback to localhost
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    const djangoUrl = `${baseUrl}/api/track-whatsapp/`;
-
-    fetch(djangoUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data.count !== undefined) {
-          setWaCount(data.count);
-        }
-      })
-      .catch((error) => {
-        console.error('Error fetching WhatsApp clicks:', error);
-        setWaCount("Error");
-      });
-  }, []);
 
   const menuItems = [
     {
@@ -105,13 +77,7 @@ const Sidebar = () => {
       label: "Vendor Tracking",
       href: "/admin/vendor-tracking",
     },
-    // 3. Add the WhatsApp Tracker as a clean menu item
-    {
-      icon: MessageSquare, // You can change this to a WhatsApp icon if you have one
-      label: "WhatsApp Clicks",
-      // No href, so it acts purely as a display metric
-      rightElement: <span className="font-bold text-green-600 ml-auto pr-2">{waCount}</span>
-    }
+
   ];
 
   const toggleSubmenu = (index: number) => {
@@ -214,8 +180,7 @@ const Sidebar = () => {
                             </span>
                           )}
 
-                          {/* 4. Render the rightElement (WhatsApp count) if it exists */}
-                          {item.rightElement && item.rightElement}
+                     
 
                           {item.subItems && (
                             <div className="p-1 rounded">

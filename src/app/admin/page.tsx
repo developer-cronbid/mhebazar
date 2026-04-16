@@ -103,6 +103,7 @@ interface DashboardStats {
 }
 
 
+
 // --- Helper Components ---
 const StatsCard = React.memo(({ icon, number, label, link, highlight, isLoading }: any) => {
   const router = useRouter();
@@ -180,6 +181,15 @@ const CompleteDashboard = () => {
     total_applications: 0, approved_vendors: 0, pending_applications: 0, recent_applications: 0
   });
 
+  
+
+  const [count, setCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('https://api.mhebazar.in/api/track-whatsapp/?format=json')
+      .then((res) => res.json())
+      .then((data) => setCount(data.count));
+  }, []);
 
 
   // MODAL STATES (kept the same)
@@ -363,6 +373,48 @@ setPendingProducts(grouped);
                 highlight={vendorStats.pending_applications > 0} // Highlight if there are pending apps
               />
             </div>
+            <div className="min-h-[200px] flex items-center justify-center bg-gray-50 p-4 font-sans">
+  <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-8 w-full max-w-sm text-center transition-all hover:scale-[1.02]">
+    
+    {/* Status Indicator */}
+    <div className="flex items-center justify-center gap-2 mb-4">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#25D366]"></span>
+      </span>
+      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+        Live Analytics
+      </span>
+    </div>
+
+    {/* Label */}
+    <h3 className="text-gray-500 text-sm font-medium mb-1">
+      WhatsApp Inquiries
+    </h3>
+
+    {/* The Count */}
+    <div className="text-6xl font-black text-gray-900 tracking-tighter mb-4">
+      {count !== null ? (
+        <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">
+          {count.toLocaleString()}
+        </span>
+      ) : (
+        <div className="h-12 w-24 bg-gray-100 animate-pulse rounded-lg mx-auto"></div>
+      )}
+    </div>
+
+    {/* Footer Badge */}
+    <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-50 border border-green-100">
+      <svg className="w-3 h-3 text-[#25D366] mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
+      </svg>
+      <span className="text-xs font-semibold text-[#128C7E]">
+        Verified Connection
+      </span>
+    </div>
+
+  </div>
+</div>
 
             {/* Analytics Dashboard (Graph) - Pass the fetched vendorStats data */}
             <AnalyticsDashboard />
@@ -439,13 +491,21 @@ setPendingProducts(grouped);
                           </div>
                         ))}
                       </div>
+                      
                     </div>
+
                   ))}
                 </CardContent>
               </Card>
             )}
           </div>
+          
         </div>
+
+
+
+  
+
       </div>
 
       {/* --- MODALS (Unchanged) --- */}
