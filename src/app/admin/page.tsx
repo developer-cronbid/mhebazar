@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-// Added 'Calendar' icon for the sleek date picker
 import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info, Loader2, Users, Calendar } from 'lucide-react';
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
@@ -175,21 +174,9 @@ const CompleteDashboard = () => {
       .then((res) => res.json())
       .then((data) => {
         setCount(data.count);
-        
-        // 🚀 TypeScript Fix: Strictly typed as a Record (Object) of string keys and number values
-        const processedDaily: Record<string, number> = { ...(data.daily_counts || {}) };
-        
-        // 🚀 TypeScript Fix: Explicitly told the reducer that 'sum' and 'val' are numbers
-        const totalTracked = Object.values(processedDaily).reduce((sum: number, val) => sum + Number(val), 0);
-        const untrackedClicks = data.count - totalTracked;
-
-        // Ensure old clicks don't disappear
-        if (untrackedClicks > 0) {
-           const todayStr = new Date().toISOString().split('T')[0];
-           processedDaily[todayStr] = (processedDaily[todayStr] || 0) + untrackedClicks;
-        }
-        
-        setRawDailyData(processedDaily);
+        // 🚀 THE FIX: Removed the fallback math completely. 
+        // Now it perfectly matches your API response!
+        setRawDailyData(data.daily_counts || {});
       });
   }, []);
 
@@ -209,7 +196,7 @@ const CompleteDashboard = () => {
 
     sortedDates.forEach((dateStr) => {
       const date = new Date(dateStr);
-      // Since users can pick across months, "15 Apr" format is much clearer than just "15"
+      // Formats the day exactly like screenshot: "20 Apr"
       const displayKey = `${String(date.getDate()).padStart(2, '0')} ${date.toLocaleString('default', { month: 'short' })}`;
       
       aggregated[displayKey] = (aggregated[displayKey] || 0) + rawDailyData[dateStr];
@@ -392,83 +379,67 @@ const CompleteDashboard = () => {
                     Live Analytics
                   </span>
                 </div>
+                
                 <h3 className="text-gray-500 text-sm font-medium mb-1">
                   {startDate || endDate ? 'Clicks in Selected Range' : 'Total WhatsApp Inquiries'}
                 </h3>
-                <div className="text-6xl font-black text-gray-900 tracking-tighter mb-4 mt-2">
+                
+                {/* 🚀 UI FIX: Re-structured this div so the text NEVER overlaps! */}
+                <div className="text-6xl font-black text-gray-900 tracking-tighter mb-1 mt-2 flex justify-center">
                   {count !== null ? (
-                    <div className="flex flex-col items-center">
-                      <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">
-                        {(startDate || endDate) ? filteredClicksTotal.toLocaleString() : count.toLocaleString()}
-                      </span>
-                      {(startDate || endDate) && (
-                        <span className="text-xs text-gray-400 font-medium mt-3 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                          All-time total: {count}
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">
+                      {(startDate || endDate) ? filteredClicksTotal.toLocaleString() : count.toLocaleString()}
+                    </span>
                   ) : (
                     <div className="h-12 w-24 bg-gray-100 animate-pulse rounded-lg mx-auto"></div>
                   )}
                 </div>
+                
+                {/* Placed OUTSIDE the big text div to prevent squishing */}
+                {(startDate || endDate) && count !== null && (
+                  <div className="mt-3 text-xs text-gray-500 font-medium bg-gray-50 px-4 py-1.5 rounded-full border border-gray-200 mx-auto w-max shadow-sm">
+                    All-time total: {count}
+                  </div>
+                )}
               </div>
 
               {/* Right Side: Dynamic Trend Graph */}
               <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-6 w-full lg:w-2/3">
                 
-                {/* 🚀 Sleek, modern header layout */}
-               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-
-  {/* Title */}
-  <h3 className="text-gray-800 text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
-    <svg className="w-4 h-4 text-[#25D366]" fill="currentColor" viewBox="0 0 20 20">
-      <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-    </svg>
-    WhatsApp 
-  </h3>
-
-  {/* Date Range Picker */}
-  <div className="flex items-center justify-between lg:justify-end w-full lg:w-auto">
-    
-    <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow-sm px-3 py-2 gap-2 w-full sm:w-auto">
-
-      {/* Calendar Icon */}
-      <Calendar className="w-4 h-4 text-gray-400" />
-
-      {/* Start Date */}
-      <input
-        type="date"
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-        className="bg-transparent text-sm text-gray-700 outline-none w-full sm:w-auto"
-      />
-
-      <span className="text-gray-300">–</span>
-
-      {/* End Date */}
-      <input
-        type="date"
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-        className="bg-transparent text-sm text-gray-700 outline-none w-full sm:w-auto"
-      />
-
-      {/* Clear Button */}
-      {(startDate || endDate) && (
-        <button
-          onClick={() => {
-            setStartDate('');
-            setEndDate('');
-          }}
-          className="ml-1 p-1.5 rounded-md bg-red-50 text-red-500 hover:bg-red-100 transition"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-    </div>
-
-  </div>
-</div>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                  <h3 className="text-gray-700 text-sm font-bold flex items-center gap-2 whitespace-nowrap">
+                    <svg className="w-4 h-4 text-[#25D366]" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                    </svg>
+                    WhatsApp
+                  </h3>
+                  
+                  <div className="flex items-center bg-white border border-gray-200 shadow-sm rounded-lg px-2 py-1.5 w-full sm:w-auto">
+                    <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                    <input 
+                      type="date" 
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="bg-transparent text-xs text-gray-600 outline-none cursor-pointer w-full"
+                    />
+                    <span className="text-gray-300 text-xs font-medium px-2">-</span>
+                    <input 
+                      type="date" 
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="bg-transparent text-xs text-gray-600 outline-none cursor-pointer w-full"
+                    />
+                    {(startDate || endDate) && (
+                      <button 
+                        onClick={() => { setStartDate(''); setEndDate(''); }}
+                        className="ml-2 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 p-1 rounded transition-colors"
+                        title="Clear Dates"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
 
                 <div className="h-48 w-full mt-4">
                   {chartData.length > 0 ? (
