@@ -82,7 +82,7 @@ const ChartHeader = ({
 
 
 // --- Main Dashboard Component ---
-const AnalyticsDashboard = () => {
+const AnalyticsDashboard = ({ data = [] }: any) => {
   // --- State Management ---
   const [productQuoteData, setProductQuoteData] = useState<ChartDataPoint[]>([]);
   const [rentBuyData, setRentBuyData] = useState<ChartDataPoint[]>([]);

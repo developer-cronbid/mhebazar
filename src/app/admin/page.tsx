@@ -1,21 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useState, useCallback } from 'react';
-// IMPORT THE LOADER ICON
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+// 1. Correct Lucide Import (No BarChart here)
 import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info, Loader2, Users } from 'lucide-react';
-// import AnalyticsDashboard from '@/components/admin/Graph';
+// 2. Correct Recharts Import
+import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
 import api from '@/lib/api';
 import dynamic from 'next/dynamic';
-// import Cookies from 'js-cookie';
 import { toast } from "sonner";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
+
 const AnalyticsDashboard = dynamic(() => import('@/components/admin/Graph'), {
   ssr: false,
   loading: () => <div className="h-[300px] animate-pulse bg-gray-100 rounded-xl" />
 });
-// Shadcn UI Components
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,8 +32,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 // --- Type Definitions ---
-
-// NEW: Type for the vendor stats API response
 export interface VendorStats {
   total_applications: number;
   approved_vendors: number;
@@ -44,7 +44,6 @@ export interface StatsCardProps {
   number: string;
   label: string;
   link: string;
-  // Optional: Highlight color for important cards (like pending actions)
   highlight?: boolean;
 }
 
@@ -102,8 +101,6 @@ interface DashboardStats {
   contactRequests: number;
 }
 
-
-
 // --- Helper Components ---
 const StatsCard = React.memo(({ icon, number, label, link, highlight, isLoading }: any) => {
   const router = useRouter();
@@ -127,27 +124,18 @@ const StatsCard = React.memo(({ icon, number, label, link, highlight, isLoading 
   const arrowClasses = highlight ? "h-6 w-6 md:h-7 md:w-7 text-red-600 transition-transform duration-300 group-hover:translate-x-1" : "h-6 w-6 md:h-7 md:w-7 text-green-600 transition-transform duration-300 group-hover:translate-x-1";
 
   return (
-    <div
-      className={cardClasses}
-      onClick={handleCardClick}
-    >
-      {/* Icon Container - Placed at the top */}
+    <div className={cardClasses} onClick={handleCardClick}>
       <div className="mb-4">
-        {/* Using a Lucide icon for the Pending Vendors card, otherwise use Image */}
         {highlight && label === "Pending Vendors" ? (
           <Users className="w-12 h-12 md:w-16 md:h-16 text-red-600" />
         ) : (
           <Image src={icon} alt={label} width={64} height={64} className="w-12 h-12 md:w-16 md:h-16" />
         )}
       </div>
-
-      {/* Text content */}
       <div>
         <h2 className={numberClasses}>{number}</h2>
         <p className="text-base md:text-lg text-gray-500">{label}</p>
       </div>
-
-      {/* Chevron icon is now absolutely positioned for perfect vertical centering. */}
       <div className="absolute top-1/2 right-3 transform -translate-y-1/2">
         <ChevronRightIcon className={arrowClasses} />
       </div>
@@ -164,35 +152,65 @@ const DetailRow: React.FC<{ label: string; value: React.ReactNode }> = ({ label,
   </div>
 );
 
-
 // --- Main Dashboard Component ---
 const CompleteDashboard = () => {
   const [vendorApps, setVendorApps] = useState<VendorApplication[]>([]);
   const [pendingProducts, setPendingProducts] = useState<GroupedProducts>({});
-
-  // NEW: State to hold general statistics
   const [stats, setStats] = useState<DashboardStats>({
-    productQuotes: 0, directBuys: 0, rentals: 0, trainingRequests: 0,
-    contactRequests: 0,
+    productQuotes: 0, directBuys: 0, rentals: 0, trainingRequests: 0, contactRequests: 0,
   });
-
-  // NEW: State to hold Vendor specific statistics
   const [vendorStats, setVendorStats] = useState<VendorStats>({
     total_applications: 0, approved_vendors: 0, pending_applications: 0, recent_applications: 0
   });
 
-  
-
+  // Graph States
   const [count, setCount] = useState<number | null>(null);
+  const [rawDailyData, setRawDailyData] = useState<{ [key: string]: number }>({});
+  const [timeFilter, setTimeFilter] = useState<'days' | 'months' | 'years'>('days');
 
   useEffect(() => {
     fetch('https://api.mhebazar.in/api/track-whatsapp/?format=json')
       .then((res) => res.json())
-      .then((data) => setCount(data.count));
+      .then((data) => {
+        setCount(data.count);
+        let processedDaily = data.daily_counts || {};
+
+        // Give old data a visual presence on the graph on today's date
+        const totalTracked = Object.values(processedDaily).reduce((sum: any, val: any) => sum + val, 0);
+        if (data.count > 0 && totalTracked === 0) {
+           const todayStr = new Date().toISOString().split('T')[0];
+           processedDaily = { [todayStr]: data.count };
+        }
+        setRawDailyData(processedDaily);
+      });
   }, []);
 
+  const chartData = useMemo(() => {
+    if (!rawDailyData || Object.keys(rawDailyData).length === 0) return [];
 
-  // MODAL STATES (kept the same)
+    const aggregated: Record<string, number> = {};
+    const sortedDates = Object.keys(rawDailyData).sort();
+
+    sortedDates.forEach((dateStr) => {
+      const date = new Date(dateStr);
+      let displayKey = dateStr;
+
+      if (timeFilter === 'months') {
+        displayKey = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+      } else if (timeFilter === 'years') {
+        displayKey = `${date.getFullYear()}`;
+      } else {
+        // Formats the day exactly like screenshot: "01", "05", "14"
+        displayKey = String(date.getDate()).padStart(2, '0');
+      }
+
+      aggregated[displayKey] = (aggregated[displayKey] || 0) + rawDailyData[dateStr];
+    });
+
+    return Object.entries(aggregated).map(([date, clicks]) => ({ date, clicks }));
+  }, [rawDailyData, timeFilter]);
+
+  // Modal States
   const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
   const [isVendorRejectModalOpen, setIsVendorRejectModalOpen] = useState(false);
   const [vendorRejectionReason, setVendorRejectionReason] = useState("");
@@ -201,68 +219,57 @@ const CompleteDashboard = () => {
   const [isProductRejectModalOpen, setIsProductRejectModalOpen] = useState(false);
   const [productRejectionReason, setProductRejectionReason] = useState("");
 
-  // NEW LOADING STATES (kept the same)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingVendorId, setLoadingVendorId] = useState<number | null>(null);
-
   const [isStatsLoading, setIsStatsLoading] = useState(true);
   const [isListsLoading, setIsListsLoading] = useState(true);
 
-
   // --- Data Fetching ---
- const fetchData = useCallback(async () => {
-  setIsStatsLoading(true);
-  setIsListsLoading(true);
+  const fetchData = useCallback(async () => {
+    setIsStatsLoading(true);
+    setIsListsLoading(true);
 
-  try {
-    const res = await api.get('/admin/summary/');
-    const { stats, vendorStats, vendorApps, pendingProducts } = res.data;
+    try {
+      const res = await api.get('/admin/summary/');
+      const { stats, vendorStats, vendorApps, pendingProducts } = res.data;
 
-    // These setStates are nearly instant now
-    setStats(stats);
-    setVendorStats(vendorStats);
-    setVendorApps(vendorApps);
+      setStats(stats);
+      setVendorStats(vendorStats);
+      setVendorApps(vendorApps);
 
-    const onlyPending = pendingProducts.filter((p: Product) => !p.is_active);
-    // Grouping products (logic remains the same)
-    const grouped = onlyPending.reduce((acc: GroupedProducts, p: Product) => {
-  const vName = p.user_name || 'Unknown Vendor';
-  if (!acc[vName]) acc[vName] = [];
-  acc[vName].push(p);
-  return acc;
-}, {});
-setPendingProducts(grouped);
+      const onlyPending = pendingProducts.filter((p: Product) => !p.is_active);
+      const grouped = onlyPending.reduce((acc: GroupedProducts, p: Product) => {
+        const vName = p.user_name || 'Unknown Vendor';
+        if (!acc[vName]) acc[vName] = [];
+        acc[vName].push(p);
+        return acc;
+      }, {});
+      setPendingProducts(grouped);
 
-  }  catch (error: any) {
-  // This will tell you if it's a 404 (wrong URL) or 500 (Backend crashed)
-  console.error("Sync Error:", error);
-  toast.error(`Sync Failed: ${error.response?.status || error.message}`);
-} finally {
-    setIsStatsLoading(false);
-    setIsListsLoading(false);
-  }
-}, []);
+    } catch (error: any) {
+      console.error("Sync Error:", error);
+      toast.error(`Sync Failed: ${error.response?.status || error.message}`);
+    } finally {
+      setIsStatsLoading(false);
+      setIsListsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    //  api.get('/users/me/') check because proxy.ts handles it!
     fetchData();
   }, [fetchData]);
 
-  // --- Handler Functions (Unchanged) ---
-
-  // Vendor Handlers
+  // --- Handlers ---
   const handleVendorApprove = async (vendorId: number) => {
-    setLoadingVendorId(vendorId); // Set loading for specific vendor
+    setLoadingVendorId(vendorId);
     try {
       await api.post(`/vendor/${vendorId}/approve/`, { action: 'approve' });
       toast.success("Vendor Approved");
       fetchData();
-    } catch (error)
-    // eslint-disable-next-line no-empty
-    {
+    } catch (error) {
       toast.error("Approval Failed");
     } finally {
-      setLoadingVendorId(null); // Clear loading state
+      setLoadingVendorId(null);
     }
   };
 
@@ -275,7 +282,7 @@ setPendingProducts(grouped);
     if (!selectedVendor || !vendorRejectionReason.trim()) {
       return toast.error("Rejection reason is required.");
     }
-    setIsSubmitting(true); // Set general modal submitting state
+    setIsSubmitting(true);
     try {
       await api.post(`/vendor/${selectedVendor.id}/approve/`, { action: 'reject', reason: vendorRejectionReason });
       toast.success("Vendor Rejected");
@@ -285,11 +292,10 @@ setPendingProducts(grouped);
     } catch (error: any) {
       toast.error("Rejection Failed", { description: error.response?.data?.error });
     } finally {
-      setIsSubmitting(false); // Clear submitting state
+      setIsSubmitting(false);
     }
   };
 
-  // Product Handlers
   const handleOpenProductDetailModal = (product: Product) => {
     setSelectedProduct(product);
     setIsProductDetailModalOpen(true);
@@ -303,9 +309,7 @@ setPendingProducts(grouped);
       toast.success("Product Approved", { description: `${selectedProduct.name} is now live.` });
       setIsProductDetailModalOpen(false);
       fetchData();
-    } catch (error)
-    // eslint-disable-next-line no-empty
-    {
+    } catch (error) {
       toast.error("Approval Failed");
     } finally {
       setIsSubmitting(false);
@@ -338,90 +342,127 @@ setPendingProducts(grouped);
 
   const totalPendingProducts = Object.values(pendingProducts).reduce((sum, prods) => sum + prods.length, 0);
 
-  // Data for the AnalyticsDashboard (Graph)
-  // const graphData = {
-  //   totalApplications: vendorStats.total_applications,
-  //   approvedVendors: vendorStats.approved_vendors,
-  //   pendingApplications: vendorStats.pending_applications,
-  // };
-
-
   return (
     <>
-      {/* Main layout and stats cards remain the same */}
       <div className="overflow-auto bg-gray-50 p-6 sm:p-8 lg:p-10 min-h-screen">
         <h2 className="text-3xl font-bold text-gray-900 mb-8">Admin Dashboard</h2>
 
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Main content area */}
           <div className="flex-1 space-y-8">
-            {/* Stats Cards - Adjusted grid for better flow on all screens */}
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
-
               <StatsCard icon='/prodQuote.png' number={String(stats.productQuotes)} label="Product Quotes" isLoading={isStatsLoading} link=" https://www.mhebazar.in/admin/forms/quotes" />
               <StatsCard icon='/rentBuy.png' number={String(stats.directBuys)} label="Direct Buys (Orders)" isLoading={isStatsLoading} link=" https://www.mhebazar.in/admin/forms/direct-buy" />
               <StatsCard icon='/Rental.png' number={String(stats.rentals)} label="Rentals" isLoading={isStatsLoading} link=" https://www.mhebazar.in/admin/forms/rentals" />
               <StatsCard icon='/getCAt.png' number={String(stats.trainingRequests)} label="Training Requests" isLoading={isStatsLoading} link=" https://www.mhebazar.in/admin/forms/training-registrations" />
               <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" isLoading={isStatsLoading} link=" https://www.mhebazar.in/admin/contact/contact-form" />
-              {/* NEW: Pending Vendors Card with Redirection */}
               <StatsCard
                 isLoading={isStatsLoading}
-                icon='' // Using Lucide icon inside the component based on highlight prop
+                icon='' 
                 number={String(vendorStats.pending_applications)}
                 label="Pending Vendors"
                 link=" https://www.mhebazar.in/admin/accounts/registered-vendors"
-                highlight={vendorStats.pending_applications > 0} // Highlight if there are pending apps
+                highlight={vendorStats.pending_applications > 0} 
               />
             </div>
-            <div className="min-h-[200px] flex items-center justify-center bg-gray-50 p-4 font-sans">
-  <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-8 w-full max-w-sm text-center transition-all hover:scale-[1.02]">
-    
-    {/* Status Indicator */}
-    <div className="flex items-center justify-center gap-2 mb-4">
-      <span className="relative flex h-2 w-2">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#25D366]"></span>
-      </span>
-      <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-        Live Analytics
-      </span>
-    </div>
+            
+            <div className="flex flex-col lg:flex-row gap-6 w-full mb-6">
+              {/* Left Side: Total Count Card */}
+              <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-8 w-full lg:w-1/3 text-center flex flex-col justify-center">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#25D366]"></span>
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                    Live Analytics
+                  </span>
+                </div>
+                <h3 className="text-gray-500 text-sm font-medium mb-1">Total WhatsApp Inquiries</h3>
+                <div className="text-6xl font-black text-gray-900 tracking-tighter mb-4">
+                  {count !== null ? (
+                    <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">
+                      {count.toLocaleString()}
+                    </span>
+                  ) : (
+                    <div className="h-12 w-24 bg-gray-100 animate-pulse rounded-lg mx-auto"></div>
+                  )}
+                </div>
+              </div>
 
-    {/* Label */}
-    <h3 className="text-gray-500 text-sm font-medium mb-1">
-      WhatsApp Inquiries
-    </h3>
+              {/* Right Side: Dynamic Trend Graph */}
+              <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-6 w-full lg:w-2/3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                  <h3 className="text-gray-700 text-sm font-bold flex items-center gap-2">
+                    <svg className="w-4 h-4 text-[#25D366]" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                    </svg>
+                    WhatsApp Clicks Trend
+                  </h3>
+                  
+                  <div className="flex bg-gray-50 border border-gray-200 p-1 rounded-lg">
+                    {['days', 'months', 'years'].map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setTimeFilter(filter as 'days' | 'months' | 'years')}
+                        className={`px-3 py-1 text-xs font-medium rounded-md capitalize transition-all ${
+                          timeFilter === filter 
+                            ? 'bg-white text-gray-800 shadow-sm border border-gray-200' 
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        {filter}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-    {/* The Count */}
-    <div className="text-6xl font-black text-gray-900 tracking-tighter mb-4">
-      {count !== null ? (
-        <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">
-          {count.toLocaleString()}
-        </span>
-      ) : (
-        <div className="h-12 w-24 bg-gray-100 animate-pulse rounded-lg mx-auto"></div>
-      )}
-    </div>
+                <div className="h-48 w-full mt-4">
+                  {chartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#E5E7EB" />
+                        <XAxis 
+                          dataKey="date" 
+                          tick={{ fontSize: 12, fill: '#6B7280' }} 
+                          tickLine={false} 
+                          axisLine={{ stroke: '#E5E7EB', strokeDasharray: '3 3' }} 
+                          tickMargin={8}
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 12, fill: '#6B7280' }} 
+                          tickLine={false} 
+                          axisLine={false} 
+                          allowDecimals={false} 
+                          tickMargin={8}
+                        />
+                        <Tooltip 
+                          cursor={{ fill: '#F3F4F6', opacity: 0.4 }}
+                          contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                        {/* MATCHES SCREENSHOT: Thin bar, correct blue color */}
+                        <Bar 
+                          dataKey="clicks" 
+                          fill="#3b82f6" 
+                          barSize={6} 
+                          radius={[4, 4, 0, 0]} 
+                          name="Clicks" 
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center text-sm text-gray-400">
+                      <p>No date-tracked clicks yet.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
 
-    {/* Footer Badge */}
-    <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-50 border border-green-100">
-      <svg className="w-3 h-3 text-[#25D366] mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" />
-      </svg>
-      <span className="text-xs font-semibold text-[#128C7E]">
-        Verified Connection
-      </span>
-    </div>
-
-  </div>
-</div>
-
-            {/* Analytics Dashboard (Graph) - Pass the fetched vendorStats data */}
             <AnalyticsDashboard />
-
           </div>
 
-          {/* Pending Actions Sidebar (Unchanged) */}
+          {/* Pending Actions Sidebar */}
           <div className="w-full lg:w-1/3 space-y-8">
             <div>
               <h3 className="text-2xl font-semibold text-gray-800 mb-4">Pending Actions</h3>
@@ -434,7 +475,6 @@ setPendingProducts(grouped);
               ) : null}
             </div>
 
-            {/* Vendor Applications with Loading Buttons */}
             {vendorApps.length > 0 && (
               <Card>
                 <CardHeader>
@@ -465,7 +505,6 @@ setPendingProducts(grouped);
               </Card>
             )}
 
-            {/* Product Approvals section */}
             {totalPendingProducts > 0 && (
               <Card>
                 <CardHeader>
@@ -491,26 +530,16 @@ setPendingProducts(grouped);
                           </div>
                         ))}
                       </div>
-                      
                     </div>
-
                   ))}
                 </CardContent>
               </Card>
             )}
           </div>
-          
         </div>
-
-
-
-  
-
       </div>
 
-      {/* --- MODALS (Unchanged) --- */}
-
-      {/* Vendor Rejection Modal */}
+      {/* --- MODALS --- */}
       <Dialog open={isVendorRejectModalOpen} onOpenChange={setIsVendorRejectModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -528,7 +557,6 @@ setPendingProducts(grouped);
         </DialogContent>
       </Dialog>
 
-      {/* Product Detail and Approval Modal */}
       <Dialog open={isProductDetailModalOpen} onOpenChange={setIsProductDetailModalOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           {selectedProduct && (
@@ -604,7 +632,6 @@ setPendingProducts(grouped);
         </DialogContent>
       </Dialog>
 
-      {/* Product Rejection Reason Modal */}
       <Dialog open={isProductRejectModalOpen} onOpenChange={setIsProductRejectModalOpen}>
         <DialogContent>
           <DialogHeader>

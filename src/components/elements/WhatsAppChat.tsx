@@ -133,12 +133,7 @@ useEffect(() => {
             Start Chat
           </a>
           
-          {/* 4. Display the dynamic count here */}
-          {clickCount > 0 && (
-            <p className="text-xs text-gray-500 mt-2">
-              Join {clickCount} others who have contacted us!
-            </p>
-          )}
+       
         </div>
       </div>
     </div>
