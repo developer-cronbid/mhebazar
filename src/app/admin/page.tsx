@@ -2,9 +2,8 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-// 1. Correct Lucide Import (No BarChart here)
-import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info, Loader2, Users } from 'lucide-react';
-// 2. Correct Recharts Import
+// Added 'Calendar' icon for the sleek date picker
+import { Check, X, Building, PackageCheck, PackageX, Package, ChevronRightIcon, Info, Loader2, Users, Calendar } from 'lucide-react';
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import api from '@/lib/api';
@@ -165,22 +164,31 @@ const CompleteDashboard = () => {
 
   // Graph States
   const [count, setCount] = useState<number | null>(null);
-  const [rawDailyData, setRawDailyData] = useState<{ [key: string]: number }>({});
-  const [timeFilter, setTimeFilter] = useState<'days' | 'months' | 'years'>('days');
+  const [rawDailyData, setRawDailyData] = useState<Record<string, number>>({});
+  
+  // Date Range States
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
 
   useEffect(() => {
     fetch('https://api.mhebazar.in/api/track-whatsapp/?format=json')
       .then((res) => res.json())
       .then((data) => {
         setCount(data.count);
-        let processedDaily = data.daily_counts || {};
+        
+        // 🚀 TypeScript Fix: Strictly typed as a Record (Object) of string keys and number values
+        const processedDaily: Record<string, number> = { ...(data.daily_counts || {}) };
+        
+        // 🚀 TypeScript Fix: Explicitly told the reducer that 'sum' and 'val' are numbers
+        const totalTracked = Object.values(processedDaily).reduce((sum: number, val) => sum + Number(val), 0);
+        const untrackedClicks = data.count - totalTracked;
 
-        // Give old data a visual presence on the graph on today's date
-        const totalTracked = Object.values(processedDaily).reduce((sum: any, val: any) => sum + val, 0);
-        if (data.count > 0 && totalTracked === 0) {
+        // Ensure old clicks don't disappear
+        if (untrackedClicks > 0) {
            const todayStr = new Date().toISOString().split('T')[0];
-           processedDaily = { [todayStr]: data.count };
+           processedDaily[todayStr] = (processedDaily[todayStr] || 0) + untrackedClicks;
         }
+        
         setRawDailyData(processedDaily);
       });
   }, []);
@@ -189,26 +197,31 @@ const CompleteDashboard = () => {
     if (!rawDailyData || Object.keys(rawDailyData).length === 0) return [];
 
     const aggregated: Record<string, number> = {};
-    const sortedDates = Object.keys(rawDailyData).sort();
+    let sortedDates = Object.keys(rawDailyData).sort();
+
+    // Apply Date Range Filters safely
+    if (startDate) {
+      sortedDates = sortedDates.filter(date => date >= startDate);
+    }
+    if (endDate) {
+      sortedDates = sortedDates.filter(date => date <= endDate);
+    }
 
     sortedDates.forEach((dateStr) => {
       const date = new Date(dateStr);
-      let displayKey = dateStr;
-
-      if (timeFilter === 'months') {
-        displayKey = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
-      } else if (timeFilter === 'years') {
-        displayKey = `${date.getFullYear()}`;
-      } else {
-        // Formats the day exactly like screenshot: "01", "05", "14"
-        displayKey = String(date.getDate()).padStart(2, '0');
-      }
-
+      // Since users can pick across months, "15 Apr" format is much clearer than just "15"
+      const displayKey = `${String(date.getDate()).padStart(2, '0')} ${date.toLocaleString('default', { month: 'short' })}`;
+      
       aggregated[displayKey] = (aggregated[displayKey] || 0) + rawDailyData[dateStr];
     });
 
     return Object.entries(aggregated).map(([date, clicks]) => ({ date, clicks }));
-  }, [rawDailyData, timeFilter]);
+  }, [rawDailyData, startDate, endDate]);
+
+  const filteredClicksTotal = useMemo(() => {
+    return chartData.reduce((sum, item) => sum + item.clicks, 0);
+  }, [chartData]);
+
 
   // Modal States
   const [selectedVendor, setSelectedVendor] = useState<VendorApplication | null>(null);
@@ -367,8 +380,9 @@ const CompleteDashboard = () => {
             </div>
             
             <div className="flex flex-col lg:flex-row gap-6 w-full mb-6">
+              
               {/* Left Side: Total Count Card */}
-              <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-8 w-full lg:w-1/3 text-center flex flex-col justify-center">
+              <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-8 w-full lg:w-1/3 text-center flex flex-col justify-center min-h-[250px]">
                 <div className="flex items-center justify-center gap-2 mb-4">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -378,12 +392,21 @@ const CompleteDashboard = () => {
                     Live Analytics
                   </span>
                 </div>
-                <h3 className="text-gray-500 text-sm font-medium mb-1">Total WhatsApp Inquiries</h3>
-                <div className="text-6xl font-black text-gray-900 tracking-tighter mb-4">
+                <h3 className="text-gray-500 text-sm font-medium mb-1">
+                  {startDate || endDate ? 'Clicks in Selected Range' : 'Total WhatsApp Inquiries'}
+                </h3>
+                <div className="text-6xl font-black text-gray-900 tracking-tighter mb-4 mt-2">
                   {count !== null ? (
-                    <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">
-                      {count.toLocaleString()}
-                    </span>
+                    <div className="flex flex-col items-center">
+                      <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">
+                        {(startDate || endDate) ? filteredClicksTotal.toLocaleString() : count.toLocaleString()}
+                      </span>
+                      {(startDate || endDate) && (
+                        <span className="text-xs text-gray-400 font-medium mt-3 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                          All-time total: {count}
+                        </span>
+                      )}
+                    </div>
                   ) : (
                     <div className="h-12 w-24 bg-gray-100 animate-pulse rounded-lg mx-auto"></div>
                   )}
@@ -392,30 +415,60 @@ const CompleteDashboard = () => {
 
               {/* Right Side: Dynamic Trend Graph */}
               <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-6 w-full lg:w-2/3">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                  <h3 className="text-gray-700 text-sm font-bold flex items-center gap-2">
-                    <svg className="w-4 h-4 text-[#25D366]" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                    </svg>
-                    WhatsApp Clicks Trend
-                  </h3>
-                  
-                  <div className="flex bg-gray-50 border border-gray-200 p-1 rounded-lg">
-                    {['days', 'months', 'years'].map((filter) => (
-                      <button
-                        key={filter}
-                        onClick={() => setTimeFilter(filter as 'days' | 'months' | 'years')}
-                        className={`px-3 py-1 text-xs font-medium rounded-md capitalize transition-all ${
-                          timeFilter === filter 
-                            ? 'bg-white text-gray-800 shadow-sm border border-gray-200' 
-                            : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      >
-                        {filter}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                
+                {/* 🚀 Sleek, modern header layout */}
+               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+
+  {/* Title */}
+  <h3 className="text-gray-800 text-sm font-semibold flex items-center gap-2 whitespace-nowrap">
+    <svg className="w-4 h-4 text-[#25D366]" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+    </svg>
+    WhatsApp 
+  </h3>
+
+  {/* Date Range Picker */}
+  <div className="flex items-center justify-between lg:justify-end w-full lg:w-auto">
+    
+    <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow-sm px-3 py-2 gap-2 w-full sm:w-auto">
+
+      {/* Calendar Icon */}
+      <Calendar className="w-4 h-4 text-gray-400" />
+
+      {/* Start Date */}
+      <input
+        type="date"
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value)}
+        className="bg-transparent text-sm text-gray-700 outline-none w-full sm:w-auto"
+      />
+
+      <span className="text-gray-300">–</span>
+
+      {/* End Date */}
+      <input
+        type="date"
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
+        className="bg-transparent text-sm text-gray-700 outline-none w-full sm:w-auto"
+      />
+
+      {/* Clear Button */}
+      {(startDate || endDate) && (
+        <button
+          onClick={() => {
+            setStartDate('');
+            setEndDate('');
+          }}
+          className="ml-1 p-1.5 rounded-md bg-red-50 text-red-500 hover:bg-red-100 transition"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+
+  </div>
+</div>
 
                 <div className="h-48 w-full mt-4">
                   {chartData.length > 0 ? (
@@ -440,7 +493,6 @@ const CompleteDashboard = () => {
                           cursor={{ fill: '#F3F4F6', opacity: 0.4 }}
                           contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                         />
-                        {/* MATCHES SCREENSHOT: Thin bar, correct blue color */}
                         <Bar 
                           dataKey="clicks" 
                           fill="#3b82f6" 
@@ -452,7 +504,7 @@ const CompleteDashboard = () => {
                     </ResponsiveContainer>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center text-sm text-gray-400">
-                      <p>No date-tracked clicks yet.</p>
+                      <p>No clicks tracked in this date range.</p>
                     </div>
                   )}
                 </div>
