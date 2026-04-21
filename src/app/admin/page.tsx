@@ -420,12 +420,14 @@ const CompleteDashboard = () => {
                       type="date" 
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
+                      max={endDate || undefined} 
                       className="bg-transparent text-xs text-gray-600 outline-none cursor-pointer w-full"
                     />
                     <span className="text-gray-300 text-xs font-medium px-2">-</span>
                     <input 
                       type="date" 
                       value={endDate}
+                      min={startDate || undefined}
                       onChange={(e) => setEndDate(e.target.value)}
                       className="bg-transparent text-xs text-gray-600 outline-none cursor-pointer w-full"
                     />
