@@ -164,7 +164,7 @@ const CompleteDashboard = () => {
   // Graph States
   const [count, setCount] = useState<number | null>(null);
   const [rawDailyData, setRawDailyData] = useState<Record<string, number>>({});
-  
+
   // Date Range States
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -198,7 +198,7 @@ const CompleteDashboard = () => {
       const date = new Date(dateStr);
       // Formats the day exactly like screenshot: "20 Apr"
       const displayKey = `${String(date.getDate()).padStart(2, '0')} ${date.toLocaleString('default', { month: 'short' })}`;
-      
+
       aggregated[displayKey] = (aggregated[displayKey] || 0) + rawDailyData[dateStr];
     });
 
@@ -358,16 +358,16 @@ const CompleteDashboard = () => {
               <StatsCard icon='/specs.png' number={String(stats.contactRequests)} label="Contact Requests" isLoading={isStatsLoading} link=" https://www.mhebazar.in/admin/contact/contact-form" />
               <StatsCard
                 isLoading={isStatsLoading}
-                icon='' 
+                icon=''
                 number={String(vendorStats.pending_applications)}
                 label="Pending Vendors"
                 link=" https://www.mhebazar.in/admin/accounts/registered-vendors"
-                highlight={vendorStats.pending_applications > 0} 
+                highlight={vendorStats.pending_applications > 0}
               />
             </div>
-            
+
             <div className="flex flex-col lg:flex-row gap-6 w-full mb-6">
-              
+
               {/* Left Side: Total Count Card */}
               <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-8 w-full lg:w-1/3 text-center flex flex-col justify-center min-h-[250px]">
                 <div className="flex items-center justify-center gap-2 mb-4">
@@ -379,22 +379,24 @@ const CompleteDashboard = () => {
                     Live Analytics
                   </span>
                 </div>
-                
+
                 <h3 className="text-gray-500 text-sm font-medium mb-1">
                   {startDate || endDate ? 'Clicks in Selected Range' : 'Total WhatsApp Inquiries'}
                 </h3>
-                
+
                 {/* 🚀 UI FIX: Re-structured this div so the text NEVER overlaps! */}
                 <div className="text-6xl font-black text-gray-900 tracking-tighter mb-1 mt-2 flex justify-center">
-                  {count !== null ? (
+                  {count !== null && count !== undefined ? (
                     <span className="text-transparent bg-clip-text bg-gradient-to-br from-gray-900 to-gray-600">
-                      {(startDate || endDate) ? filteredClicksTotal.toLocaleString() : count.toLocaleString()}
+                      {(startDate || endDate)
+                        ? (filteredClicksTotal ?? 0).toLocaleString()
+                        : (count ?? 0).toLocaleString()}
                     </span>
                   ) : (
                     <div className="h-12 w-24 bg-gray-100 animate-pulse rounded-lg mx-auto"></div>
                   )}
                 </div>
-                
+
                 {/* Placed OUTSIDE the big text div to prevent squishing */}
                 {(startDate || endDate) && count !== null && (
                   <div className="mt-3 text-xs text-gray-500 font-medium bg-gray-50 px-4 py-1.5 rounded-full border border-gray-200 mx-auto w-max shadow-sm">
@@ -405,7 +407,7 @@ const CompleteDashboard = () => {
 
               {/* Right Side: Dynamic Trend Graph */}
               <div className="bg-white border border-gray-100 shadow-xl shadow-green-900/5 rounded-3xl p-6 w-full lg:w-2/3">
-                
+
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
                   <h3 className="text-gray-700 text-sm font-bold flex items-center gap-2 whitespace-nowrap">
                     <svg className="w-4 h-4 text-[#25D366]" fill="currentColor" viewBox="0 0 20 20">
@@ -413,26 +415,26 @@ const CompleteDashboard = () => {
                     </svg>
                     WhatsApp
                   </h3>
-                  
+
                   <div className="flex items-center bg-white border border-gray-200 shadow-sm rounded-lg px-2 py-1.5 w-full sm:w-auto">
                     <Calendar className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       value={startDate}
                       onChange={(e) => setStartDate(e.target.value)}
-                      max={endDate || undefined} 
+                      max={endDate || undefined}
                       className="bg-transparent text-xs text-gray-600 outline-none cursor-pointer w-full"
                     />
                     <span className="text-gray-300 text-xs font-medium px-2">-</span>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       value={endDate}
                       min={startDate || undefined}
                       onChange={(e) => setEndDate(e.target.value)}
                       className="bg-transparent text-xs text-gray-600 outline-none cursor-pointer w-full"
                     />
                     {(startDate || endDate) && (
-                      <button 
+                      <button
                         onClick={() => { setStartDate(''); setEndDate(''); }}
                         className="ml-2 bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-700 p-1 rounded transition-colors"
                         title="Clear Dates"
@@ -448,30 +450,30 @@ const CompleteDashboard = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="#E5E7EB" />
-                        <XAxis 
-                          dataKey="date" 
-                          tick={{ fontSize: 12, fill: '#6B7280' }} 
-                          tickLine={false} 
-                          axisLine={{ stroke: '#E5E7EB', strokeDasharray: '3 3' }} 
+                        <XAxis
+                          dataKey="date"
+                          tick={{ fontSize: 12, fill: '#6B7280' }}
+                          tickLine={false}
+                          axisLine={{ stroke: '#E5E7EB', strokeDasharray: '3 3' }}
                           tickMargin={8}
                         />
-                        <YAxis 
-                          tick={{ fontSize: 12, fill: '#6B7280' }} 
-                          tickLine={false} 
-                          axisLine={false} 
-                          allowDecimals={false} 
+                        <YAxis
+                          tick={{ fontSize: 12, fill: '#6B7280' }}
+                          tickLine={false}
+                          axisLine={false}
+                          allowDecimals={false}
                           tickMargin={8}
                         />
-                        <Tooltip 
+                        <Tooltip
                           cursor={{ fill: '#F3F4F6', opacity: 0.4 }}
                           contentStyle={{ borderRadius: '8px', border: '1px solid #E5E7EB', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                         />
-                        <Bar 
-                          dataKey="clicks" 
-                          fill="#3b82f6" 
-                          barSize={6} 
-                          radius={[4, 4, 0, 0]} 
-                          name="Clicks" 
+                        <Bar
+                          dataKey="clicks"
+                          fill="#3b82f6"
+                          barSize={6}
+                          radius={[4, 4, 0, 0]}
+                          name="Clicks"
                         />
                       </BarChart>
                     </ResponsiveContainer>
@@ -543,7 +545,7 @@ const CompleteDashboard = () => {
                         {products.map(product => (
                           <div key={product.id} className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4 min-w-0">
-                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name}  width={48} height={48} className="rounded object-cover border w-12 h-12 flex-shrink-0" />
+                              <Image src={product.images?.[0]?.image || '/no-product.png'} alt={product.name} width={48} height={48} className="rounded object-cover border w-12 h-12 flex-shrink-0" />
                               <div className='min-w-0'>
                                 <p className="font-medium text-gray-900 truncate">{product.name}</p>
                                 <p className="text-sm text-gray-500">{product.category_name}</p>
