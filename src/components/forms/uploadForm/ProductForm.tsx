@@ -1216,9 +1216,9 @@ export default function ProductForm({ product, onSuccess, defaultType, isVendor 
                       className="h-10 border-gray-300 text-sm"
                     />
                   </div>
-                  <div className="text-[10px] sm:text-xs text-gray-500 bg-blue-50 p-2 rounded border border-blue-100">
-                    <p className="truncate"><span className="font-semibold">Live Name:</span> {livePreviewName || '...'}</p>
-                    <p className="truncate"><span className="font-semibold">Live URL:</span> <span className="text-blue-600">{livePreviewUrl}</span></p>
+                  <div className="text-[10px] sm:text-xs text-gray-500 bg-blue-50 p-2 rounded border border-blue-100 break-words">
+                    <p className="mb-1"><span className="font-semibold">Live Name:</span> {livePreviewName || '...'}</p>
+                    <p className="break-all"><span className="font-semibold">Live URL:</span> <span className="text-blue-600">{livePreviewUrl}</span></p>
                   </div>
                 </div>
               )}
