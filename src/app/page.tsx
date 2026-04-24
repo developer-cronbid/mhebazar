@@ -12,6 +12,7 @@ import { Suspense } from "react";
 import  TestimonialsCarousel from "@/components/elements/Testimonials";
 import { BlogCarousel } from "@/components/home/BlogCarousal";
 import MostPopularSection from "@/components/home/product/MostPopularSection";
+import ImagePopup from "@/components/common/ImagePopup";
 
 
 export default async function HomePage() {
@@ -90,7 +91,7 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* <ImagePopup /> */}
+      <ImagePopup />
     </>
   );
 }

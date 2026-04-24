@@ -7,6 +7,8 @@ import Image from "next/image";
 const ImagePopup = () => {
   const [show, setShow] = useState(false);
   const [minimized, setMinimized] = useState(false);
+  
+  const register_url="https://fmereg.com/IWEXPO26/visreg"
 
   useEffect(() => {
     // Show popup after 3 seconds
@@ -14,6 +16,9 @@ const ImagePopup = () => {
     return () => clearTimeout(timer);
   }, []);
 
+const handle_registration = () => {
+    window.open(register_url, "_blank");
+  };
   const handleClose = () => {
     setShow(false);
     setMinimized(true);
@@ -30,6 +35,7 @@ const ImagePopup = () => {
           <div className="relative inline-block pointer-events-auto">
             <button
               onClick={handleClose}
+              
               // Close button is now positioned on the corner of the image
               className="absolute -top-4 -right-4 bg-black/80 hover:bg-black p-1.5 rounded-full z-10 shadow-lg"
             >
@@ -37,8 +43,9 @@ const ImagePopup = () => {
             </button>
 
             <Image
-              src="/invite.jpg"
+              src="/1080.png"
               alt="Invite"
+              onClick={handle_registration}
               width={450}
               height={450}
               priority
@@ -56,7 +63,7 @@ const ImagePopup = () => {
           onClick={() => setShow(true)}
         >
           <Image
-            src="/invite.jpg"
+            src="/1080.png"
             alt="Invite Thumbnail"
             width={100}
             height={100}
