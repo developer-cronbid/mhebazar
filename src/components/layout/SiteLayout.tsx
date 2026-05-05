@@ -6,8 +6,8 @@ import WhatsAppChat from "@/components/elements/WhatsAppChat";
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Agar route /admin se start hota hai toh Navbar/Footer/WhatsApp mat dikhao
-  if (pathname.startsWith("/admin")) {
+  // Hide navbar/footer for admin and home maintenance page
+  if (pathname.startsWith("/admin") || pathname === "/") {
     return <>{children}</>;
   }
   return (
