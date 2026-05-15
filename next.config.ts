@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+   experimental: {
+    cpus: 1,
+    workerThreads: false,
+  },
   images: {
     unoptimized: true, // Disable Next.js image optimization
     remotePatterns: [
