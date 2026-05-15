@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   const isProd = process.env.NODE_ENV === "production";
   const siteUrl = isProd ? "https://mhebazar.in" : "http://localhost:3000";
-  const apiUrl = isProd ? "https://api.mhebazar.in" : "http://127.0.0.1:8000";
-  const API_BASE = `${apiUrl}/api`;
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.mhebazar.in/api";
+  const apiUrl = API_BASE.replace(/\/api\/?$/, "");
 
   const formattedCatName = formatNameFromSlug(catSlug);
   const formattedSubcatName = formatNameFromSlug(subcatSlug);

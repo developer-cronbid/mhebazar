@@ -132,6 +132,10 @@ export default function MostPopular({ initialData }: MostPopularProps) {
     return popularData?.products || [];
   }, [popularData]);
 
+  if (!popularData) {
+    return null;
+  }
+
   
 
   

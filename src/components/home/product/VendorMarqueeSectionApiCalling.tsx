@@ -3,7 +3,7 @@ import VendorMarquee from '@/components/home/Marquee';
 // src/components/home/VendorMarqueeSection.tsx
 export default async function VendorMarqueeSection() {
     // 🔍 DEBUG: Log this to your terminal to see if it's undefined
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "localhost";
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.mhebazar.in/api";
 
     try {
         const res = await fetch(`${baseUrl}/vendor/approved/`, {

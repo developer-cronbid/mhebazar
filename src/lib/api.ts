@@ -3,7 +3,7 @@
 import axios, { AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.mhebazar.com/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.mhebazar.in/api";
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
