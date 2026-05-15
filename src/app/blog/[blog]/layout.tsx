@@ -10,7 +10,8 @@ type Props = {
 const getAbsoluteImageUrl = (imagePath: string | null): string => {
   const isProd = process.env.NODE_ENV === "production";
   const siteUrl = isProd ? "https://www.mhebazar.in" : "http://localhost:3000";
-  const apiUrl = isProd ? "https://api.mhebazar.in" : "http://127.0.0.1:8000";
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.mhebazar.in/api";
+  const apiUrl = API_BASE.replace(/\/api\/?$/, "");
 
   if (!imagePath) return `${siteUrl}/mhe-logo.png`;
   let finalPath = imagePath.trim().replace(/\/$/, "");
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const siteUrl = isProd ? "https://www.mhebazar.in" : "http://localhost:3000";
   
   // Define your base API URL
-  const API_BASE = isProd ? "https://api.mhebazar.in/api" : "http://127.0.0.1:8000/api";
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.mhebazar.in/api";
 
   try {
     // ✅ Performance Fix: Using native fetch with revalidate (1 hour)
