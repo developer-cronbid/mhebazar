@@ -29,15 +29,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { blog: slug } = await params;
   const isProd = process.env.NODE_ENV === "production";
   const siteUrl = isProd ? "https://www.mhebazar.in" : "http://localhost:3000";
-  
+
   // Define your base API URL
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.mhebazar.in/api";
 
   try {
     // ✅ Performance Fix: Using native fetch with revalidate (1 hour)
     // This stops the server from waiting for the API on every single request
-    const res = await fetch(`${API_BASE}/blogs/${slug}/`, { 
-      next: { revalidate: 3600 } 
+    const res = await fetch(`${API_BASE}/blogs/${slug}/`, {
+      next: { revalidate: 3600 }
     });
 
     if (!res.ok) throw new Error('Blog not found');
