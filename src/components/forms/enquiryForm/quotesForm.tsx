@@ -10,14 +10,14 @@ import api from "@/lib/api";
 import { toast } from "sonner";
 import { Product } from "@/types";
 import { useUser } from "@/context/UserContext";
+import { slugify } from "@/lib/product-functions";
 import countrycode from "@/data/countrycode_cleaned.json";
 import Image from "next/image"; // Added Image import
 
 // Utility function to generate a safe slug for the product link
 const generateProductSlug = (product: Product): string => {
-  const titleSlug =
-    product.title?.toLowerCase().replace(/\s+/g, "-") ||
-    product.name?.toLowerCase().replace(/\s+/g, "-");
+  const titleSource = product.title || product.name || "";
+  const titleSlug = slugify(String(titleSource));
   return `${titleSlug}-${product.id}`;
 };
 

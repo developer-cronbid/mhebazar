@@ -11,14 +11,8 @@ import { useUser } from "@/context/UserContext";
 import { Loader2, MessageSquare } from "lucide-react"; // Added MessageSquare
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { slugify } from "@/lib/product-functions";
 import countrycode from "@/data/countrycode_cleaned.json";
-
-// Since we don't have slugify source, we'll implement a basic one here for safety:
-const slugify = (str: string): string =>
-  str
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
 
 interface RentalFormProps {
   productId: number;
