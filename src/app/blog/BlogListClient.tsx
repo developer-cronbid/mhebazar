@@ -330,9 +330,11 @@ const BlogListClient: React.FC<BlogListClientProps> = ({
                     />
                   </div>
                   <div className="absolute top-3 right-3">
-                    <Badge className="bg-[#5ca131] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">
-                      {blog.blog_category_name}
-                    </Badge>
+                    <Badge
+  className="bg-yellow-500 text-white border-0 px-3 py-1 rounded-full text-xs font-semibold"
+>
+  {blog.blog_category_name}
+</Badge>
                   </div>
                 </div>
                 <div className="flex-1 p-6 md:p-8">
