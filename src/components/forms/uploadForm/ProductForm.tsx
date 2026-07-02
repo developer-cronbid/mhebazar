@@ -19,6 +19,7 @@ import Image from 'next/image'
 import { Product } from '@/types'
 import { toast } from "sonner"
 import Link from 'next/link'
+import { Editor } from '@tinymce/tinymce-react'
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
@@ -1028,27 +1029,7 @@ export default function ProductForm({ product, onSuccess, defaultType, isVendor 
     return mainImage ? mainImage.id : null;
   }, [displayableImages]);
 
-  // Add ref + state to support contentEditable HTML editing for description
-  const descriptionRef = useRef<HTMLDivElement | null>(null)
-  const [isHtmlMode, setIsHtmlMode] = useState<boolean>(false)
 
-  // Keep isHtmlMode in sync with the description content
-  useEffect(() => {
-    setIsHtmlMode(containsHTML(descriptionValue))
-  }, [descriptionValue])
-
-  // Ensure contentEditable reflects latest description when in HTML mode
-  useEffect(() => {
-    if (isHtmlMode && descriptionRef.current) {
-      descriptionRef.current.innerHTML = descriptionValue || ''
-    }
-  }, [isHtmlMode, descriptionValue])
-
-  // Handler for contentEditable updates -> update react-hook-form value
-  const handleDescriptionInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const html = (e.target as HTMLDivElement).innerHTML
-    setValue('description', html)
-  }
 
   // Handler for type selection, implementing mutual exclusivity for 'new' and 'used'
   const handleTypeChange = (optionValue: string, checked: boolean | "indeterminate") => {
@@ -1260,26 +1241,24 @@ export default function ProductForm({ product, onSuccess, defaultType, isVendor 
                 {/* Description */}
                 <div>
                   <Label className="text-sm text-gray-600 mb-1 block">Description</Label>
-
-                  {isHtmlMode ? (
-                    // Render editable HTML view when HTML is detected
-                    <div
-                      ref={descriptionRef}
-                      contentEditable
-                      suppressContentEditableWarning
-                      onInput={handleDescriptionInput}
-                      aria-label="Product Description (HTML)"
-                      className="border-gray-300 min-h-[80px] text-sm resize-none p-2 rounded"
-                    // initial content is synced via useEffect above
-                    />
-                  ) : (
-                    // Plain textarea when no HTML is present
-                    <Textarea
-                      {...register('description')}
-                      placeholder="Enter product description"
-                      className="border-gray-300 min-h-[80px] text-sm resize-none"
-                    />
-                  )}
+                  <Editor
+                    value={descriptionValue || ''}
+                    onEditorChange={(content) => setValue('description', content)}
+                    init={{
+                      height: 300,
+                      menubar: false,
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+                      ],
+                      toolbar: 'undo redo | blocks | ' +
+                        'bold italic forecolor | alignleft aligncenter ' +
+                        'alignright alignjustify | bullist numlist outdent indent | ' +
+                        'removeformat | help',
+                      content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                    }}
+                  />
                 </div>
 
                 {/* Vendor (Manufacturer) */}

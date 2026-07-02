@@ -46,26 +46,26 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
   const [error] = React.useState<string | null>(initialError);
   const [scrollIndex, setScrollIndex] = React.useState(0);
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
-  
+
   // State to track permanently failed image IDs
-  const [imageFailed, setImageFailed] = React.useState<{ [key: number]: boolean }>({}); 
+  const [imageFailed, setImageFailed] = React.useState<{ [key: number]: boolean }>({});
 
   // Image Error Handler that STOPS LOOPS AND FORCES FALLBACK
   const handleImageError = useCallback((id: number) => {
     // Only update state if the image is NOT already marked as failed
     setImageFailed(prev => {
-        if (!prev[id]) {
-            console.warn(`[Image Error] Blog ID ${id} image failed. Switching to permanent fallback.`);
-            // CRITICAL FIX: Ensure state update happens only once
-            return { ...prev, [id]: true }; 
-        }
-        return prev;
+      if (!prev[id]) {
+        console.warn(`[Image Error] Blog ID ${id} image failed. Switching to permanent fallback.`);
+        // CRITICAL FIX: Ensure state update happens only once
+        return { ...prev, [id]: true };
+      }
+      return prev;
     });
   }, []);
 
   // FIX: Simplified image URL getter. Checks failure state first.
   const getOptimizedImageUrl = useCallback((imagePath: string | null, id: number): string => {
-    
+
     // CRITICAL FIX: If marked as failed, RETURN THE FALLBACK URL DIRECTLY. 
     // This is the only way to make the Next.js Image component stop requesting the bad src.
     if (imageFailed[id]) {
@@ -80,9 +80,9 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
     if (imagePath.startsWith("http")) {
       return imagePath;
     }
-    
+
     return `https://api.mhebazar.in/media/${imagePath}`;
-  }, [imageFailed]); 
+  }, [imageFailed]);
 
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return "Date Unknown";
@@ -93,7 +93,7 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
         day: "numeric",
       });
     } catch {
-        return "Invalid Date";
+      return "Invalid Date";
     }
   };
 
@@ -101,7 +101,7 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
     if (!html) return "";
     // PERF: Check if running in a browser environment
     if (typeof document === 'undefined') {
-        return html.replace(/<[^>]*>?/gm, ''); 
+      return html.replace(/<[^>]*>?/gm, '');
     }
     const temp = document.createElement("div");
     temp.innerHTML = html;
@@ -118,7 +118,7 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
       const style = window.getComputedStyle(carouselContent);
       const gapMatch = style.gap.match(/(\d+)px/);
       const gap = gapMatch ? parseInt(gapMatch[1], 10) : 16;
-      
+
       const itemWidth = firstChild.clientWidth + gap;
 
       carouselContent.scrollTo({
@@ -159,17 +159,17 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
       <div
         ref={scrollContainerRef}
         // CWV FIX: Use native scrolling. Removed Embla dependencies for simplicity and performance.
-        className="flex overflow-x-auto snap-x snap-mandatory -ml-4 gap-4 pb-4" 
+        className="flex overflow-x-auto snap-x snap-mandatory -ml-4 gap-4 pb-4"
         style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
         onScroll={(e) => {
           const carouselContent = e.currentTarget;
           const firstChild = carouselContent.children[0] as HTMLElement;
           if (!firstChild) return;
-          
+
           const style = window.getComputedStyle(carouselContent);
           const gapMatch = style.gap.match(/(\d+)px/);
           const gap = gapMatch ? parseInt(gapMatch[1], 10) : 16;
-          
+
           const itemWidth = firstChild.clientWidth + gap;
 
           const newIndex = Math.round(carouselContent.scrollLeft / itemWidth);
@@ -179,7 +179,7 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
         {memoBlogs.map((blog) => {
           const imageUrl = getOptimizedImageUrl(blog.image1, blog.id);
           const isFallback = imageUrl === FALLBACK_URL;
-          
+
           return (
             <div
               key={`blog-${blog.id}`}
@@ -196,17 +196,17 @@ function _BlogCarouselClient({ initialBlogs, initialError }: BlogCarouselClientP
                     {/* Image Area: Consistent Aspect Ratio is CRITICAL for CLS */}
                     <div className="relative overflow-hidden rounded-t-lg w-full bg-gray-50">
                       <div className="w-full aspect-[155/96] relative">
-                          <Image
-                            src={imageUrl}
-                            alt={blog.blog_title || 'blog image'}
-                            fill
-                            sizes="(max-width: 640px) 100vw, 33vw"
-                            style={{ objectFit: isFallback ? 'contain' : 'cover' }}
-                            className={isFallback ? "bg-gray-50 p-4" : "bg-gray-50"}
-                            onError={() => handleImageError(blog.id)}
-                            loading="lazy"
-                            // If it's a fallback, Next/Image knows the source is local and should stop trying to fetch the original
-                          />
+                        <Image
+                          src={imageUrl}
+                          alt={blog.blog_title || 'blog image'}
+                          fill
+                          sizes="(max-width: 640px) 100vw, 33vw"
+                          style={{ objectFit: isFallback ? 'contain' : 'cover' }}
+                          className={isFallback ? "bg-gray-50 p-4" : "bg-gray-50"}
+                          onError={() => handleImageError(blog.id)}
+                          loading="lazy"
+                        // If it's a fallback, Next/Image knows the source is local and should stop trying to fetch the original
+                        />
                       </div>
                       <div className="absolute top-3 right-3">
                         <Badge className="bg-[#f39c12] text-white border-0 px-3 py-1 rounded-full text-xs font-semibold">

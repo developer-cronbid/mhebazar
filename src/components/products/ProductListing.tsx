@@ -101,10 +101,54 @@ function ProductGrid({
       const fetchMHEProducts = async () => {
         setIsFallbackLoading(true);
         try {
-          // Changed query param to 'user' as per your URL sample
-          const response = await api.get('/products/?user=24&page_size=1to12');
+          let response;
+          let fetchedSpecial = false;
+          const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
 
-          if (response.data && response.data.results) {
+          const specialCategoryUrls: Record<string, string> = {
+            "/forklift-attachments/tissue-roll-clamp": "forklift-attachments",
+            "/forklift-attachments/forks-plus": "forklift-attachments",
+            "/forklift-attachments/double-deep": "forklift-attachments",
+            "/forklift-attachments/hose-reel": "forklift-attachments",
+            "/conveyor/truckloading-conveyor": "conveyor",
+            "/conveyor/belt-conveyor": "conveyor",
+            "/conveyor/modular-belt-conveyor": "conveyor",
+            "/conveyor/slat-belt-conveyor": "conveyor",
+            "/conveyor/telescopic-conveyor": "conveyor",
+            "/conveyor/roller-conveyor": "conveyor",
+            "/conveyor/skate-wheel-conveyor": "conveyor",
+            "/conveyor/gravity-spiral-roller-conveyor": "conveyor",
+            "/wrapping-machine/stretch-wrapping-machine": "wrapping-machine",
+            "/wrapping-machine/paper-roll-stretch-wrapping-machine": "wrapping-machine",
+            "/wrapping-machine/top-pressure-pallet-stretch-wrapping-machine": "wrapping-machine",
+            "/wrapping-machine/box-stretch-wrapping-machine": "wrapping-machine"
+          };
+
+          if (pathname && specialCategoryUrls[pathname]) {
+            const targetSlug = specialCategoryUrls[pathname];
+            const formattedParamName = targetSlug.replace(/-/g, ' ').split(' ').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            
+            try {
+              const catRes = await api.get(`/categories/?name=${formattedParamName}`);
+              if (catRes.data && catRes.data.length > 0) {
+                const catId = catRes.data[0].id;
+                const targetProdRes = await api.get(`/products/?category=${catId}&page_size=1to12`);
+                if (targetProdRes.data && targetProdRes.data.results && targetProdRes.data.results.length > 0) {
+                  response = targetProdRes;
+                  fetchedSpecial = true;
+                }
+              }
+            } catch (err) {
+              console.error("Error fetching special category products", err);
+            }
+          }
+
+          if (!fetchedSpecial) {
+            // Changed query param to 'user' as per your URL sample
+            response = await api.get('/products/?user=24&page_size=1to12');
+          }
+
+          if (response?.data && response.data.results) {
             const transformed = response.data.results.map((p: any) => ({
               id: p.id.toString(),
               image: p.images?.[0]?.image || "/placeholder.jpg",
@@ -284,7 +328,7 @@ function ProductGrid({
                           </Badge>
                         );
                       })}
-                    
+
                     {/* Availability badge for category 18 */}
                     {product.category_id == 18 && (
                       <Badge
@@ -302,7 +346,7 @@ function ProductGrid({
                       </Badge>
                     )}
                   </div>
-                  
+
                   <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-700 transition-colors duration-200">
                     {product.title}
                   </h3>

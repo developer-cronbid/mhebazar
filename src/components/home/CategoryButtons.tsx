@@ -54,7 +54,7 @@ const itemVariants = {
 const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element => {
   const [showInitials, setShowInitials] = useState<boolean>(false);
   const fullImageUrl = getImageUrl(imageSrc);
-  
+
 
   const handleImageError = () => {
     setShowInitials(true);
@@ -76,13 +76,13 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
         whileHover={{ scale: 1.05 }}
         initial={false}
         whileInView="visible"
-        viewport={{once:true}}
+        viewport={{ once: true }}
         whileTap={{ scale: 0.95 }}
         className="flex flex-col w-[130px] h-[130px] items-center justify-center px-0 py-6 relative rounded-[1000px] aspect-[1] bg-[linear-gradient(143deg,rgba(212,234,250,1)_0%,rgba(255,255,255,1)_100%)] group"
       >
         {fullImageUrl && !showInitials ? (
           <motion.div
-          
+
             className="relative w-[100px] h-[100px]"
             whileHover={{
               scale: 1.1,
@@ -98,8 +98,8 @@ const CategoryItem = ({ imageSrc, label, slug }: CategoryItemProps): JSX.Element
               className="object-contain"
               onError={handleImageError}
               sizes="100px"
-            
-              // priority
+
+            // priority
             />
           </motion.div>
         ) : (
@@ -123,8 +123,8 @@ const containerVariants = {
 
 export default function CategoriesSection(): JSX.Element {
   const [showAll, setShowAll] = useState(false);
-  
- // PRE-PROCESS DATA ONCE
+
+  // PRE-PROCESS DATA ONCE
   const processedCategories = useMemo(() => {
     return (categoriesData as Category[]).map(cat => ({
       ...cat,
@@ -141,16 +141,16 @@ export default function CategoriesSection(): JSX.Element {
       <h1 className="text-3xl font-bold mb-8 text-left text-black-900">
         MHE Categories
       </h1>
-      
+
       <motion.div
-        
+
         variants={containerVariants}
         initial={false}
         // initial="hidden"
         whileInView="visible"
-        
+
         viewport={{ once: true, margin: "-50px" }}
-        
+
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 xl:grid-cols-8 gap-x-4 min-h-[150px] gap-y-8 justify-items-center"
       >
         {displayedCategories.map((cat) => (
@@ -167,7 +167,7 @@ export default function CategoriesSection(): JSX.Element {
             className="flex flex-col items-center"
           >
             <motion.button
-            
+
               onClick={() => setShowAll(!showAll)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
