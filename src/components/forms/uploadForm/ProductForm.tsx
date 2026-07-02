@@ -1241,7 +1241,9 @@ export default function ProductForm({ product, onSuccess, defaultType, isVendor 
                 {/* Description */}
                 <div>
                   <Label className="text-sm text-gray-600 mb-1 block">Description</Label>
+                  <style>{`.tox-notifications-container { display: none !important; }`}</style>
                   <Editor
+                    apiKey="no-api-key"
                     value={descriptionValue || ''}
                     onEditorChange={(content) => setValue('description', content)}
                     init={{
