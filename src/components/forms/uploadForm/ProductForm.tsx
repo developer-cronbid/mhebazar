@@ -12,14 +12,18 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { FileText, Image as ImageIcon, Package, AlertCircle, X, Loader2, Youtube, Users } from 'lucide-react'
+import { FileText, Image as ImageIcon, Package, AlertCircle, X, Loader2, Youtube, Users, Table } from 'lucide-react'
 import api from '@/lib/api'
 import { useUser } from '@/context/UserContext'
 import Image from 'next/image'
 import { Product } from '@/types'
 import { toast } from "sonner"
 import Link from 'next/link'
-import { Editor } from '@tinymce/tinymce-react'
+// import 'react-quill-new/dist/quill.snow.css'
+import dynamic from 'next/dynamic'
+
+
+const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false })
 
 // Helper function for SEO-friendly slug
 const slugify = (text: string): string => {
@@ -181,6 +185,14 @@ interface ProductFormProps {
   initialUserId?: string;
 }
 
+const quillModules = {
+  toolbar: [
+    [{ 'header': [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    ['link', 'clean'] // 'clean' removes formatting
+  ],
+}
 
 
 export default function ProductForm({ product, onSuccess, defaultType, isVendor = false, initialUserId }: ProductFormProps) {
@@ -559,6 +571,28 @@ export default function ProductForm({ product, onSuccess, defaultType, isVendor 
       // Note: We don't populate the 'youtubeLinks' state for existing links, only for new ones
     }
   }, [product])
+
+  // Inject a clean HTML table into the Quill Editor
+  const handleInsertTable = () => {
+    const currentDesc = watch('description') || '';
+    const tableHTML = `
+      <table data-row="2" data-col="2" style="width:100%; border-collapse: collapse; border: 1px solid #e5e7eb; margin: 10px 0;">
+        <tbody>
+          <tr>
+            <td style="border: 1px solid #e5e7eb; padding: 8px;"><strong>Header 1</strong></td>
+            <td style="border: 1px solid #e5e7eb; padding: 8px;"><strong>Header 2</strong></td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #e5e7eb; padding: 8px;">Data 1</td>
+            <td style="border: 1px solid #e5e7eb; padding: 8px;">Data 2</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><br></p>
+    `;
+    // Append the table to the current content
+    setValue('description', currentDesc + tableHTML, { shouldDirty: true });
+  };
 
 
   const onSubmit = async (data: ProductFormData) => {
@@ -1237,30 +1271,23 @@ export default function ProductForm({ product, onSuccess, defaultType, isVendor 
                 </div> */}
 
 
-
-                {/* Description */}
+{/* Description */}
                 <div>
-                  <Label className="text-sm text-gray-600 mb-1 block">Description</Label>
-                  <style>{`.tox-notifications-container { display: none !important; }`}</style>
-                  <Editor
-                    apiKey="no-api-key"
-                    value={descriptionValue || ''}
-                    onEditorChange={(content) => setValue('description', content)}
-                    init={{
-                      height: 300,
-                      menubar: false,
-                      plugins: [
-                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                        'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-                      ],
-                      toolbar: 'undo redo | blocks | ' +
-                        'bold italic forecolor | alignleft aligncenter ' +
-                        'alignright alignjustify | bullist numlist outdent indent | ' +
-                        'removeformat | help',
-                      content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
-                    }}
-                  />
+                  <Label className="text-sm text-gray-600 mb-2 block">Description</Label>
+                  <div className="bg-white rounded-md overflow-hidden">
+                    <JoditEditor
+                      value={descriptionValue || ''}
+                      config={{
+                        readonly: false,
+                        placeholder: 'Type your product description here...',
+                        height: 300,
+                        // ✅ FIX: Disable the hidden paste popup so Ctrl+V works instantly
+                        askBeforePasteHTML: false,
+                        askBeforePasteFromWord: false,
+                      }}
+                      onBlur={(newContent) => setValue('description', newContent, { shouldDirty: true })}
+                    />
+                  </div>
                 </div>
 
                 {/* Vendor (Manufacturer) */}

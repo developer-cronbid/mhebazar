@@ -1504,14 +1504,14 @@ export default function ProductSection({
               <ChevronDown className="w-5 h-5" />
             </motion.div>
           </button>
-          <AnimatePresence>
+         <AnimatePresence>
             {openAccordion === "desc" && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="px-4 py-3 text-gray-700 text-sm whitespace-pre-line overflow-hidden prose max-w-none"
+                className="px-4 py-3 text-gray-700 text-sm overflow-hidden prose max-w-none [&_table]:border-collapse [&_table]:w-full [&_table]:my-4 [&_td]:border [&_td]:border-gray-300 [&_td]:p-3 [&_th]:border [&_th]:border-gray-300 [&_th]:p-3 [&_th]:bg-gray-100"
                 dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
               />
             )}
@@ -1697,10 +1697,9 @@ export default function ProductSection({
                       {data.user_name || "N/A"}
                     </p>
 
-                    {/* ✅ FIX: Render vendor description as HTML output */}
-                    {data.user_description ? (
+                  {data.user_description ? (
                       <div
-                        className="mt-2 text-sm text-gray-700 prose max-w-none"
+                        className="mt-2 text-sm text-gray-700 prose max-w-none [&_table]:border-collapse [&_table]:w-full [&_table]:my-4 [&_td]:border [&_td]:border-gray-300 [&_td]:p-3 [&_th]:border [&_th]:border-gray-300 [&_th]:p-3 [&_th]:bg-gray-100"
                         dangerouslySetInnerHTML={{ __html: sanitizedVendorDesc }}
                       />
                     ) : (

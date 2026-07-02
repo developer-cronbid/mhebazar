@@ -18,11 +18,11 @@ const TYPE_COLORS = {
   attachments: "bg-pink-500",
 };
 
-const stripHtmlTags = (html: string) => {
-  const tmp = document.createElement('DIV');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
-};
+// const stripHtmlTags = (html: string) => {
+//   const tmp = document.createElement('DIV');
+//   tmp.innerHTML = html;
+//   return tmp.textContent || tmp.innerText || '';
+// };
 
 export default function ProductDetails() {
   const params = useParams();
@@ -141,9 +141,14 @@ export default function ProductDetails() {
 
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h2 className="text-lg font-semibold mb-4">Description</h2>
-              <p className="text-gray-600 whitespace-pre-wrap">
-                {product.description ? stripHtmlTags(product.description) : "No description provided"}
-              </p>
+              {product.description ? (
+                <div 
+                  className="text-gray-600 text-sm space-y-2 [&_table]:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-gray-300 [&_td]:p-2 [&_th]:border [&_th]:border-gray-300 [&_th]:p-2 [&_th]:bg-gray-50 [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5"
+                  dangerouslySetInnerHTML={{ __html: product.description }} 
+                />
+              ) : (
+                <p className="text-gray-600 text-sm">No description provided</p>
+              )}
             </div>
           </div>
 
