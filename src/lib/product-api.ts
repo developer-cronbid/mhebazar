@@ -262,8 +262,8 @@ export async function getProducts(params: {
  */
 export async function getManufacturers(): Promise<string[]> {
     try {
-        const response = await api.get<{ results: { manufacturer: string }[] }>("/products/unique-manufacturers/");
-        const uniqueManufacturers = Array.from(new Set(response.data.results.map(item => item.manufacturer)));
+        const response = await api.get<{ results: any[] }>("/vendor/approved/?page_size=1000");
+        const uniqueManufacturers = Array.from(new Set(response.data.results.map(item => item.brand || item.company_name)));
         return uniqueManufacturers.filter(Boolean) as string[];
     } catch (err) {
         console.error("[product-api] Failed to fetch manufacturers:", err);
